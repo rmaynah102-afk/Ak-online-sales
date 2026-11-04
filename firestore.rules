@@ -1,13 +1,36 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Each signed-in shop can read and write only its own private data.
-    match /users/{userId}/private/{document=**} {
-      allow read, write: if request.auth != null
-                         && request.auth.uid == userId;
+    function hasActiveLicense(uid) {
+      let license = get(/databases/$(database)/documents/licenses/$(uid)).data;
+      return request.auth != null
+        && request.auth.uid == uid
+        && license.status in ['trial', 'active']
+        && license.expiresAt > request.time;
     }
 
-    // Deny every path not explicitly allowed above.
+    match /licenses/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      // Only trusted Cloud Functions (Admin SDK) can create or extend licenses.
+      allow write: if false;
+    }
+
+    match /users/{userId}/private/{document=**} {
+      allow read, write: if hasActiveLicense(userId);
+    }
+
+    match /paymentRequests/{requestId} {
+      allow create: if request.auth != null
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.days in [30, 90, 180, 365]
+        && request.resource.data.reference is string
+        && request.resource.data.reference.size() >= 3;
+      allow read: if request.auth != null
+        && resource.data.uid == request.auth.uid;
+      allow update, delete: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

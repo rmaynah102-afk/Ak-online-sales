@@ -56,6 +56,11 @@ jobs:
         run: npm install
       - name: Prepare web app
         run: npm run copy-web
+      - name: Validate Firebase Functions
+        run: |
+          npm --prefix functions install --package-lock=false
+          node --check functions/index.js
+          node -e "JSON.parse(require('fs').readFileSync('functions/package.json','utf8')); console.log('Firebase Functions package.json valid')"
       - name: Generate Android project
         run: npx cap add android
       - name: Set Android app version
@@ -78,17 +83,6 @@ jobs:
           NODE
       - name: Sync Android project
         run: npx cap sync android
-      - name: Build debug APK
-        working-directory: android
-        run: ./gradlew assembleDebug --no-daemon
-      - name: Upload debug APK (testing only)
-        uses: actions/upload-artifact@v4
-        with:
-          name: AK-Sale-Software-debug-APK
-          path: android/app/build/outputs/apk/debug/app-debug.apk
-          if-no-files-found: error
-          retention-days: 30
-
       - name: Check release signing secrets
         id: signing
         env:

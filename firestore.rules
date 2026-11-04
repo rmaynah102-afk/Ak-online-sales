@@ -105,7 +105,7 @@ service cloud.firestore {
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.status == 'pending'
         && request.resource.data.days in [30, 90, 180, 365]
-        && request.resource.data.method in ['KBZPay', 'WavePay', 'AYAPay', 'CBPay', 'KBZBank', 'AYABank', 'CB Bank', 'OtherBank']
+        && request.resource.data.method == 'KBZPay'
         && request.resource.data.reference is string
         && request.resource.data.reference.size() >= 3;
       allow read: if request.auth != null

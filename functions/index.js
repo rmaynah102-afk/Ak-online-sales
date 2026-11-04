@@ -93,6 +93,34 @@ exports.revokeShopDevice = functions.https.onCall(async (data, context) => {
   return { ok: true };
 });
 
+exports.listPendingAds = functions.https.onCall(async (data, context) => {
+  requireAdmin(context);
+  const snap = await db.collection("sponsoredAds").where("status", "==", "pending").limit(100).get();
+  return { ads: snap.docs.map(doc => { const x=doc.data(); return {
+    id:doc.id, ownerUid:x.ownerUid||"", email:x.email||"", shopName:x.shopName||"",
+    title:x.title||"", text:x.text||"", url:x.url||""
+  }; }) };
+});
+
+exports.reviewSponsoredAd = functions.https.onCall(async (data, context) => {
+  const reviewer = requireAdmin(context);
+  const adId = String(data.adId || "").trim();
+  const decision = String(data.decision || "");
+  if (!adId || adId.length > 150 || !["approved","rejected"].includes(decision)) {
+    throw new functions.https.HttpsError("invalid-argument", "ကြော်ငြာအချက်အလက် မမှန်ပါ။");
+  }
+  const ref = db.collection("sponsoredAds").doc(adId);
+  await db.runTransaction(async tx => {
+    const snap = await tx.get(ref);
+    if (!snap.exists || snap.data().status !== "pending") {
+      throw new functions.https.HttpsError("failed-precondition", "Pending ကြော်ငြာ မတွေ့ပါ။");
+    }
+    tx.update(ref, { status:decision, reviewedBy:reviewer,
+      reviewedAt:admin.firestore.FieldValue.serverTimestamp() });
+  });
+  return { ok:true, status:decision };
+});
+
 exports.listPendingPayments = functions.https.onCall(async (data, context) => {
   requireAdmin(context);
   const snap = await db.collection("paymentRequests")

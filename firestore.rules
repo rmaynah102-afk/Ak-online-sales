@@ -41,7 +41,7 @@ service cloud.firestore {
         && request.resource.data.township.size() <= 80
         && request.resource.data.phone is string
         && request.resource.data.phone.size() <= 32;
-      allow update: if request.auth != null
+      allow update: if hasActiveLicense(request.auth.uid)
         && resource.data.ownerUid == request.auth.uid
         && request.resource.data.ownerUid == resource.data.ownerUid
         && request.resource.data.status == 'published'

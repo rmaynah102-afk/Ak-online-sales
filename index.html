@@ -465,4 +465,67 @@ if(typeof pages!=="undefined"&&!pages.some(x=>x[0]==="centerManagement")){pages.
 cmRender();
 })();
 </script>
+
+<style>
+/* Public storefront mode: only published products are shown. */
+body.ak-public{background:#f3f7fb}
+body.ak-public header{position:sticky;top:0;z-index:20;box-shadow:0 5px 22px #102b4618}
+body.ak-public header small{display:block}
+body.ak-public #saveState,body.ak-public #nav{display:none!important}
+body.ak-public main{max-width:1180px;margin:0 auto}
+body.ak-public .ak-public-hero{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin:18px 0;padding:22px;border-radius:22px;color:white;background:linear-gradient(120deg,#102c55,#087f86 70%,#25a78e)}
+body.ak-public .ak-public-hero h2{margin:0 0 8px;font-size:clamp(22px,4vw,34px)}
+body.ak-public .ak-public-hero p{margin:0;color:#e4f5ff}
+body.ak-public .ak-public-hero a{display:inline-block;padding:11px 16px;border-radius:12px;background:white;color:#123b5c;text-decoration:none;font-weight:800}
+body.ak-public #market .panel{border:1px solid #e0eaf2;box-shadow:0 8px 28px #173b5b0b}
+body.ak-public #marketFeed{grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),1fr));gap:14px}
+body.ak-public #marketFeed article{overflow:hidden;border:1px solid #e0eaf2;border-radius:18px;padding:12px;background:#fff}
+body.ak-public #marketFeed article h3{margin:10px 0 5px}
+body.ak-public #marketFeed article .stat{font-size:21px;color:#087b75}
+body.ak-public #marketFeed article .preview{border-radius:12px;background:#eef3f7}
+body.ak-public #marketFeed article .actions button{flex:1}
+body.ak-public #market .ak-public-note{padding:12px 14px;border-radius:12px;background:#e9f6f5;color:#145b58}
+body.ak-public footer{display:block}
+</style>
+<script>
+(function(){
+ "use strict";
+ const params=new URLSearchParams(location.search);
+ const isHosted=location.hostname.endsWith("github.io");
+ const publicMode=params.get("market")==="1" || (isHosted && params.get("app")!=="1");
+ if(!publicMode)return;
+ document.body.classList.add("ak-public");
+ document.title="Ak shopping markets · မြန်မာ့အွန်လိုင်းဈေး";
+ const desc=document.querySelector('meta[name="description"]');
+ if(desc)desc.content="မြန်မာနိုင်ငံတစ်ဝှမ်း ပစ္စည်းရှာဖွေ၊ ဈေးနှိုင်းယှဉ်၊ ဆိုင်များနှင့် တိုက်ရိုက်ဆက်သွယ်နိုင်သော Ak shopping markets";
+ document.querySelectorAll("main > .view").forEach(el=>el.classList.toggle("active",el.id==="market"));
+ const nav=document.getElementById("nav");if(nav)nav.hidden=true;
+ const market=document.getElementById("market");
+ if(market){
+  const hero=document.createElement("div");hero.className="ak-public-hero";
+  hero.innerHTML='<div><h2>မြန်မာ့ဈေးကွက်ကို တစ်နေရာတည်းမှာ ရှာဖွေပါ</h2><p>ကုန်မာ၊ လျှပ်စစ်၊ ဆောက်လုပ်ရေးနှင့် အိမ်သုံးပစ္စည်းများ · ဈေးနှိုင်းယှဉ် · ဆိုင်ကို တိုက်ရိုက်ဆက်သွယ်</p></div><a href="?app=1#backup">ဆိုင်ပိုင်ရှင် Login / ဆိုင်သုံး APK</a>';
+  market.prepend(hero);
+  const postPanel=document.getElementById("marketForm")?.parentElement;
+  if(postPanel)postPanel.style.display="none";
+  const note=document.createElement("div");note.className="ak-public-note";
+  note.textContent="အများပြည်သူကြည့်ရှုရန် ပစ္စည်းကြော်ငြာများသာ ပြသထားသည်။ ဆိုင်ပိုင်ရှင်၏ အရောင်းစာရင်း၊ အမြတ်၊ အကြွေးနှင့် ငွေစာရင်းများကို ဤစာမျက်နှာတွင် မပြပါ။";
+  hero.after(note);
+ }
+ // The Firebase Web App config is public client configuration, but must be
+ // supplied by the project owner; security is enforced by Firestore/Storage rules.
+ async function connectPublicCatalog(){
+  try{
+   const raw=window.AK_FIREBASE_PUBLIC_CONFIG || localStorage.getItem("ak_firebase_config");
+   if(!raw){const status=document.getElementById("marketStatus");if(status)status.textContent="ဈေးစာရင်းဖတ်ရန် Firebase Web App Config မချိတ်ရသေးပါ။ ဆိုင်သုံး App ထဲတွင်လည်း အများကြည့်ရန် Config ကို သတ်မှတ်ရပါမည်။";return;}
+   const cfg=typeof raw==="string"?JSON.parse(raw):raw;
+   if(!window.firebase)throw Error("Firebase SDK မရပါ။ Internet စစ်ပါ။");
+   if(!firebase.apps.length)firebase.initializeApp(cfg);
+   window.fbApp=firebase.app();window.fbStore=firebase.firestore();
+   if(typeof window.loadMarket==="function")await window.loadMarket();
+  }catch(e){const status=document.getElementById("marketStatus");if(status)status.textContent="Public Market ချိတ်ဆက်မရပါ: "+e.message;}
+ }
+ connectPublicCatalog();
+})();
+</script>
+
 </body></html>

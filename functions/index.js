@@ -40,6 +40,59 @@ function requireAdmin(context) {
   return callerEmail;
 }
 
+function requireActiveShop(context) {
+  if (!context.auth) throw new functions.https.HttpsError("unauthenticated", "Login လိုအပ်သည်။");
+  return context.auth.uid;
+}
+
+exports.claimShopDevice = functions.https.onCall(async (data, context) => {
+  const uid = requireActiveShop(context);
+  const deviceId = String(data.deviceId || "").trim();
+  const label = String(data.label || "Device").slice(0, 110);
+  if (!/^akd_[a-zA-Z0-9_-]{8,100}$/.test(deviceId)) {
+    throw new functions.https.HttpsError("invalid-argument", "Device ID မမှန်ပါ။");
+  }
+  const licenseSnap = await db.collection("licenses").doc(uid).get();
+  const license = licenseSnap.data() || {};
+  if (!licenseSnap.exists || !["trial", "active"].includes(license.status) ||
+      !license.expiresAt || license.expiresAt.toMillis() <= Date.now()) {
+    throw new functions.https.HttpsError("permission-denied", "Subscription သက်တမ်းမရှိပါ။");
+  }
+  const devices = db.collection("users").doc(uid).collection("devices");
+  const ref = devices.doc(deviceId);
+  return db.runTransaction(async tx => {
+    const [ownSnap, allSnap] = await Promise.all([tx.get(ref), tx.get(devices)]);
+    if (!ownSnap.exists && allSnap.size >= 5) {
+      throw new functions.https.HttpsError("resource-exhausted", "ဖုန်း ၅ လုံး ပြည့်နေပါသည်။ Owner က စက်ဟောင်းကို အရင်ဖြုတ်ပါ။");
+    }
+    tx.set(ref, {
+      deviceId, label, createdAt: ownSnap.exists ? ownSnap.data().createdAt : admin.firestore.FieldValue.serverTimestamp(),
+      lastSeenAt: admin.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+    return { ok: true, count: ownSnap.exists ? allSnap.size : allSnap.size + 1, limit: 5 };
+  });
+});
+
+exports.listShopDevices = functions.https.onCall(async (data, context) => {
+  const uid = requireActiveShop(context);
+  const snap = await db.collection("users").doc(uid).collection("devices").orderBy("lastSeenAt", "desc").limit(5).get();
+  return { devices: snap.docs.map(doc => {
+    const x = doc.data();
+    return { deviceId: doc.id, label: x.label || "Device",
+      lastSeen: x.lastSeenAt && x.lastSeenAt.toDate ? x.lastSeenAt.toDate().toISOString() : "" };
+  }) };
+});
+
+exports.revokeShopDevice = functions.https.onCall(async (data, context) => {
+  const uid = requireActiveShop(context);
+  const deviceId = String(data.deviceId || "").trim();
+  if (!/^akd_[a-zA-Z0-9_-]{8,100}$/.test(deviceId)) {
+    throw new functions.https.HttpsError("invalid-argument", "Device ID မမှန်ပါ။");
+  }
+  await db.collection("users").doc(uid).collection("devices").doc(deviceId).delete();
+  return { ok: true };
+});
+
 exports.listPendingPayments = functions.https.onCall(async (data, context) => {
   requireAdmin(context);
   const snap = await db.collection("paymentRequests")

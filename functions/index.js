@@ -34,13 +34,20 @@ function requireAdmin(context) {
   return callerEmail;
 }
 
-function requireActiveShop(context) {
+async function requireActiveShop(context) {
   if (!context.auth) throw new functions.https.HttpsError("unauthenticated", "Login လိုအပ်သည်။");
-  return context.auth.uid;
+  const uid = context.auth.uid;
+  const snap = await db.collection("licenses").doc(uid).get();
+  const license = snap.data() || {};
+  if (!snap.exists || license.status !== "active" || !license.expiresAt ||
+      license.expiresAt.toMillis() <= Date.now()) {
+    throw new functions.https.HttpsError("permission-denied", "ငွေပေးချေမှုအတည်ပြုထားသော Subscription လိုအပ်သည်။");
+  }
+  return uid;
 }
 
 exports.claimShopDevice = functions.https.onCall(async (data, context) => {
-  const uid = requireActiveShop(context);
+  const uid = await requireActiveShop(context);
   const deviceId = String(data.deviceId || "").trim();
   const label = String(data.label || "Device").slice(0, 110);
   if (!/^akd_[a-zA-Z0-9_-]{8,100}$/.test(deviceId)) {
@@ -68,7 +75,7 @@ exports.claimShopDevice = functions.https.onCall(async (data, context) => {
 });
 
 exports.listShopDevices = functions.https.onCall(async (data, context) => {
-  const uid = requireActiveShop(context);
+  const uid = await requireActiveShop(context);
   const snap = await db.collection("users").doc(uid).collection("devices").orderBy("lastSeenAt", "desc").limit(5).get();
   return { devices: snap.docs.map(doc => {
     const x = doc.data();
@@ -78,7 +85,7 @@ exports.listShopDevices = functions.https.onCall(async (data, context) => {
 });
 
 exports.revokeShopDevice = functions.https.onCall(async (data, context) => {
-  const uid = requireActiveShop(context);
+  const uid = await requireActiveShop(context);
   const deviceId = String(data.deviceId || "").trim();
   if (!/^akd_[a-zA-Z0-9_-]{8,100}$/.test(deviceId)) {
     throw new functions.https.HttpsError("invalid-argument", "Device ID မမှန်ပါ။");
@@ -91,10 +98,10 @@ exports.revokeShopDevice = functions.https.onCall(async (data, context) => {
 // Automatically publish only the shop's public-facing profile from its private app data.
 // Sales, stock, cost, customers, debts, and address are never copied to the public directory.
 exports.syncPublicShopProfile = functions.https.onCall(async (data, context) => {
-  const uid = requireActiveShop(context);
+  const uid = await requireActiveShop(context);
   const licenseSnap = await db.collection("licenses").doc(uid).get();
   const license = licenseSnap.data() || {};
-  if (!licenseSnap.exists || !["trial", "active"].includes(license.status) ||
+  if (!licenseSnap.exists || license.status !== "active" ||
       !license.expiresAt || license.expiresAt.toMillis() <= Date.now()) {
     throw new functions.https.HttpsError("permission-denied", "Subscription သက်တမ်းမရှိပါ။");
   }

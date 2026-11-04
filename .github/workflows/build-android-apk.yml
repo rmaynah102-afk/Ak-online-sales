@@ -9,6 +9,10 @@ on:
       - 'package.json'
       - 'capacitor.config.json'
       - '.github/workflows/build-android-apk.yml'
+      - 'firebase.json'
+      - 'firestore.rules'
+      - 'storage.rules'
+      - 'functions/**'
 
 permissions:
   contents: read
@@ -77,10 +81,73 @@ jobs:
       - name: Build debug APK
         working-directory: android
         run: ./gradlew assembleDebug --no-daemon
-      - name: Upload APK artifact
+      - name: Upload debug APK (testing only)
         uses: actions/upload-artifact@v4
         with:
           name: AK-Sale-Software-debug-APK
           path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Check release signing secrets
+        id: signing
+        env:
+          AK_RELEASE_KEYSTORE_BASE64: ${{ secrets.AK_RELEASE_KEYSTORE_BASE64 }}
+          AK_RELEASE_STORE_PASSWORD: ${{ secrets.AK_RELEASE_STORE_PASSWORD }}
+          AK_RELEASE_KEY_ALIAS: ${{ secrets.AK_RELEASE_KEY_ALIAS }}
+          AK_RELEASE_KEY_PASSWORD: ${{ secrets.AK_RELEASE_KEY_PASSWORD }}
+        run: |
+          if [ -n "$AK_RELEASE_KEYSTORE_BASE64" ] && [ -n "$AK_RELEASE_STORE_PASSWORD" ] && [ -n "$AK_RELEASE_KEY_ALIAS" ] && [ -n "$AK_RELEASE_KEY_PASSWORD" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "Release signing secrets are not configured; signed release APK will be skipped."
+          fi
+
+      - name: Configure Android release signing
+        if: steps.signing.outputs.ready == 'true'
+        working-directory: android
+        env:
+          AK_RELEASE_KEYSTORE_BASE64: ${{ secrets.AK_RELEASE_KEYSTORE_BASE64 }}
+          AK_RELEASE_STORE_PASSWORD: ${{ secrets.AK_RELEASE_STORE_PASSWORD }}
+          AK_RELEASE_KEY_ALIAS: ${{ secrets.AK_RELEASE_KEY_ALIAS }}
+          AK_RELEASE_KEY_PASSWORD: ${{ secrets.AK_RELEASE_KEY_PASSWORD }}
+        run: |
+          echo "$AK_RELEASE_KEYSTORE_BASE64" | base64 --decode > app/ak-release.keystore
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p = Path("app/build.gradle")
+          s = p.read_text()
+          signing = '''
+              signingConfigs {
+                  release {
+                      storeFile file("ak-release.keystore")
+                      storePassword System.getenv("AK_RELEASE_STORE_PASSWORD")
+                      keyAlias System.getenv("AK_RELEASE_KEY_ALIAS")
+                      keyPassword System.getenv("AK_RELEASE_KEY_PASSWORD")
+                  }
+              }
+          '''
+          if "signingConfigs {" not in s:
+              s = re.sub(r'android\\s*\\{', lambda m: m.group(0) + signing, s, count=1)
+          if "signingConfig signingConfigs.release" not in s:
+              s = re.sub(r'buildTypes\\s*\\{', 'buildTypes {\\n        release { signingConfig signingConfigs.release }', s, count=1)
+          if "signingConfig signingConfigs.release" not in s:
+              raise SystemExit("Could not configure release signing")
+          p.write_text(s)
+          PY
+
+      - name: Build signed release APK
+        if: steps.signing.outputs.ready == 'true'
+        working-directory: android
+        run: ./gradlew assembleRelease --no-daemon
+
+      - name: Upload signed release APK
+        if: steps.signing.outputs.ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: AK-Sale-Software-signed-release-APK
+          path: android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 30

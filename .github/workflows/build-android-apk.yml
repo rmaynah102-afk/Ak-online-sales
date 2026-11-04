@@ -139,6 +139,10 @@ jobs:
       - name: Build signed release APK
         if: steps.signing.outputs.ready == 'true'
         working-directory: android
+        env:
+          AK_RELEASE_STORE_PASSWORD: ${{ secrets.AK_RELEASE_STORE_PASSWORD }}
+          AK_RELEASE_KEY_ALIAS: ${{ secrets.AK_RELEASE_KEY_ALIAS }}
+          AK_RELEASE_KEY_PASSWORD: ${{ secrets.AK_RELEASE_KEY_PASSWORD }}
         run: ./gradlew assembleRelease --no-daemon
 
       - name: Prepare browser download filename

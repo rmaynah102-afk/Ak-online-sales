@@ -147,6 +147,9 @@ jobs:
         working-directory: android
         run: ./gradlew assembleRelease --no-daemon
 
+      - name: Prepare browser download filename
+        if: steps.signing.outputs.ready == 'true'
+        run: cp android/app/build/outputs/apk/release/app-release.apk AK-Sale-Software.apk
 
       - name: Publish signed APK to GitHub Release
         if: steps.signing.outputs.ready == 'true'
@@ -154,7 +157,7 @@ jobs:
         with:
           tag_name: ak-v${{ github.run_number }}
           name: AK Sale Software v${{ github.run_number }}
-          files: android/app/build/outputs/apk/release/app-release.apk
+          files: AK-Sale-Software.apk
           generate_release_notes: true
           make_latest: true
 

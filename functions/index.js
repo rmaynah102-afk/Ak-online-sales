@@ -43,7 +43,7 @@ exports.approveSubscription = functions.https.onCall(async (data, context) => {
   const days = Number(data.days);
   const reference = String(data.reference || "").trim();
 
-  if (!uid || !Number.isInteger(days) || days < 1 || days > 3650 || reference.length < 3) {
+  if (!uid || ![30, 90, 180, 365].includes(days) || reference.length < 3) {
     throw new functions.https.HttpsError("invalid-argument", "UID၊ ရက်အရေအတွက်နှင့် ငွေလွှဲအထောက်အထား စစ်ဆေးပါ။");
   }
 

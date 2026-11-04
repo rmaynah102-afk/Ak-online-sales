@@ -5,7 +5,7 @@ service cloud.firestore {
       let license = get(/databases/$(database)/documents/licenses/$(uid)).data;
       return request.auth != null
         && request.auth.uid == uid
-        && license.status in ['trial', 'active']
+        && license.status == 'active'
         && license.expiresAt > request.time;
     }
 

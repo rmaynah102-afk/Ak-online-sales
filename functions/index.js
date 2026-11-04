@@ -93,6 +93,40 @@ exports.revokeShopDevice = functions.https.onCall(async (data, context) => {
   return { ok: true };
 });
 
+
+// Automatically publish only the shop's public-facing profile from its private app data.
+// Sales, stock, cost, customers, debts, and address are never copied to the public directory.
+exports.syncPublicShopProfile = functions.https.onCall(async (data, context) => {
+  const uid = requireActiveShop(context);
+  const licenseSnap = await db.collection("licenses").doc(uid).get();
+  const license = licenseSnap.data() || {};
+  if (!licenseSnap.exists || !["trial", "active"].includes(license.status) ||
+      !license.expiresAt || license.expiresAt.toMillis() <= Date.now()) {
+    throw new functions.https.HttpsError("permission-denied", "Subscription သက်တမ်းမရှိပါ။");
+  }
+  const appSnap = await db.collection("users").doc(uid).collection("private").doc("appData").get();
+  if (!appSnap.exists || !appSnap.data().data) {
+    throw new functions.https.HttpsError("failed-precondition", "ဆိုင်ဒေတာ မတွေ့ပါ။");
+  }
+  const shop = appSnap.data().data.shop || {};
+  const shopName = String(shop.name || "").trim().slice(0, 90);
+  if (shopName.length < 2) {
+    throw new functions.https.HttpsError("failed-precondition", "ဆိုင်အမည်ကို အရင်သတ်မှတ်ပါ။");
+  }
+  const city = String(shop.city || "").trim().slice(0, 80);
+  const township = String(shop.township || "").trim().slice(0, 80);
+  const logo = String(shop.logo || "").trim();
+  const safeLogo = /^https:\/\//i.test(logo) ? logo.slice(0, 1000) : "";
+  await db.collection("publicShops").doc(uid).set({
+    ownerUid: uid, shopName, category: "အထွေထွေ",
+    city, township, logo: safeLogo,
+    about: "AK Sale Software အသုံးပြုသော ဆိုင်",
+    status: "approved", autoListed: true,
+    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+  }, { merge: true });
+  return { ok: true, shopName };
+});
+
 exports.listPendingShopProfiles = functions.https.onCall(async (data, context) => {
   requireAdmin(context);
   const snap = await db.collection("publicShopSubmissions").where("status","==","pending").limit(100).get();

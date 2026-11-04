@@ -93,6 +93,41 @@ exports.revokeShopDevice = functions.https.onCall(async (data, context) => {
   return { ok: true };
 });
 
+exports.listPendingShopProfiles = functions.https.onCall(async (data, context) => {
+  requireAdmin(context);
+  const snap = await db.collection("publicShopSubmissions").where("status","==","pending").limit(100).get();
+  return { shops: snap.docs.map(doc => { const x=doc.data(); return {
+    ownerUid:doc.id, shopName:x.shopName||"", category:x.category||"အခြား",
+    city:x.city||"", township:x.township||"", phone:x.phone||"", link:x.link||"", about:x.about||""
+  }; }) };
+});
+
+exports.reviewShopProfile = functions.https.onCall(async (data, context) => {
+  const reviewer = requireAdmin(context);
+  const ownerUid = String(data.ownerUid||"").trim();
+  const decision = String(data.decision||"");
+  if (!ownerUid || ownerUid.length > 128 || !["approved","rejected"].includes(decision)) {
+    throw new functions.https.HttpsError("invalid-argument","ဆိုင်အချက်အလက် မမှန်ပါ။");
+  }
+  const submissionRef = db.collection("publicShopSubmissions").doc(ownerUid);
+  const publicRef = db.collection("publicShops").doc(ownerUid);
+  await db.runTransaction(async tx => {
+    const snap = await tx.get(submissionRef);
+    if (!snap.exists || snap.data().status !== "pending") {
+      throw new functions.https.HttpsError("failed-precondition","Pending ဆိုင်စာရင်း မတွေ့ပါ။");
+    }
+    const x=snap.data();
+    tx.update(submissionRef,{status:decision,reviewedBy:reviewer,reviewedAt:admin.firestore.FieldValue.serverTimestamp()});
+    if (decision === "approved") tx.set(publicRef,{
+      ownerUid, shopName:x.shopName, category:x.category||"အခြား", city:x.city||"",
+      township:x.township||"", phone:x.phone||"", link:x.link||"", about:x.about||"",
+      status:"approved", updatedAt:admin.firestore.FieldValue.serverTimestamp()
+    });
+    else tx.delete(publicRef);
+  });
+  return {ok:true,status:decision};
+});
+
 exports.listPendingAds = functions.https.onCall(async (data, context) => {
   requireAdmin(context);
   const snap = await db.collection("sponsoredAds").where("status", "==", "pending").limit(100).get();

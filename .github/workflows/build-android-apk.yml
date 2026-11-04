@@ -130,11 +130,15 @@ jobs:
               }
           '''
           if "signingConfigs {" not in s:
-              s = re.sub(r'android\\s*\\{', lambda m: m.group(0) + signing, s, count=1)
+              marker = "android {"
+              if marker not in s:
+                  raise SystemExit("Android Gradle block not found")
+              s = s.replace(marker, marker + "\\n" + signing, 1)
           if "signingConfig signingConfigs.release" not in s:
-              s = re.sub(r'buildTypes\\s*\\{', 'buildTypes {\\n        release { signingConfig signingConfigs.release }', s, count=1)
-          if "signingConfig signingConfigs.release" not in s:
-              raise SystemExit("Could not configure release signing")
+              pattern = r'(buildTypes\\s*\\{\\s*release\\s*\\{)'
+              s, count = re.subn(pattern, r'\\1\\n            signingConfig signingConfigs.release', s, count=1)
+              if count != 1:
+                  raise SystemExit("Could not find release build type")
           p.write_text(s)
           PY
 

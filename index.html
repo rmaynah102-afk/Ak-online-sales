@@ -2,7 +2,7 @@
 <html lang="my">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#123b2a"><meta name="description" content="Ak shopping markets - Myanmar retail, wholesale and shopping center management">
+<meta name="theme-color" content="#123b2a"><meta name="description" content="AK Sale Software: Myanmar shop POS, inventory, wholesale, retail and AK Shopping Markets."><meta name="application-name" content="AK Sale Software"><meta property="og:title" content="AK Sale Software · AK Shopping Markets"><meta property="og:description" content="ဆိုင်အရောင်း၊ ကုန်ပစ္စည်း၊ စာရင်းနှင့် မြန်မာ့အွန်လိုင်းဈေးကွက်"><meta property="og:type" content="website"><link rel="manifest" href="./manifest.webmanifest"><link rel="icon" href="./ak-logo.svg" type="image/svg+xml">
 <title>Ak shopping markets</title>
 <style>
 :root{--g:#123b2a;--g2:#1e6045;--bg:#f1f5f2;--line:#d8e2db;--red:#b42318;--gold:#fff4d6}
@@ -205,7 +205,7 @@ footer{text-align:center;padding:24px 12px;color:#60736a}
 </style>
 </head>
 <body>
-<header><div><h1 id="brandTitle">Ak shopping markets</h1><small>Hardware & Electrical Goods</small></div><div class="actions no-print"><a href="https://rmaynah102-afk.github.io/Ak-online-sales/" target="_blank" rel="noopener" style="color:white">🌐 Web Market</a><span class="pill" id="saveState">ဖုန်းထဲသိမ်းဆည်းမည်</span></div></header>
+<header><div><h1 id="brandTitle">Ak shopping markets</h1><small>Hardware & Electrical Goods</small></div><div class="actions no-print"><a href="https://rmaynah102-afk.github.io/Ak-online-sales/" target="_blank" rel="noopener" style="color:white">🌐 Web Market</a><button id="akInstallBtn" class="alt" type="button" hidden>Install</button><button id="akShareBtn" class="alt" type="button">Share</button><span class="pill" id="saveState">ဖုန်းထဲသိမ်းဆည်းမည်</span></div></header>
 <main>
 <nav id="nav" class="no-print"></nav>
 <section id="home" class="view active">
@@ -615,4 +615,16 @@ body.ak-public footer{display:block}
 })();
 </script>
 
+
+<script>
+(function(){
+ let installPrompt=null;
+ const installBtn=document.getElementById("akInstallBtn");
+ window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();installPrompt=e;if(installBtn)installBtn.hidden=false});
+ if(installBtn)installBtn.addEventListener("click",async()=>{if(!installPrompt){alert("Chrome Menu > Add to Home screen ကိုနှိပ်ပါ။");return;}installPrompt.prompt();await installPrompt.userChoice;installPrompt=null;installBtn.hidden=true});
+ window.akShareApp=async function(){const data={title:"AK Sale Software",text:"ဆိုင်အရောင်း၊ ကုန်ပစ္စည်းစာရင်း၊ အကြွေး၊ ဆိုင်ခွဲနှင့် AK Shopping Mall — AK Sale Software ကို စမ်းသုံးကြည့်ပါ။",url:"https://rmaynah102-afk.github.io/Ak-online-sales/?app=1"};try{if(navigator.share)await navigator.share(data);else if(navigator.clipboard){await navigator.clipboard.writeText(data.text+" "+data.url);alert("ကြော်ငြာစာသားနှင့် Link ကို Copy လုပ်ပြီးပါပြီ။");}else prompt("ဒီ Link ကို Copy လုပ်ပါ",data.url)}catch(e){if(e.name!=="AbortError")alert("မျှဝေမရပါ။ Link ကို Copy လုပ်ပါ: "+data.url)}};
+ const shareBtn=document.getElementById("akShareBtn");if(shareBtn)shareBtn.addEventListener("click",window.akShareApp);
+ if("serviceWorker" in navigator && /^https?:$/.test(location.protocol)){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(e=>console.warn("Offline cache unavailable",e)))}
+})();
+</script>
 </body></html>

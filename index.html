@@ -1,0 +1,274 @@
+
+<!DOCTYPE html>
+<html lang="my">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#123b2a">
+<title>AK Sale Software</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,sans-serif;background:#f2f5f3;color:#172820}
+header{background:#123b2a;color:white;padding:20px 16px}
+header h1{margin:0;font-size:25px}
+header p{margin:5px 0 0;color:#d5e8db}
+main{max-width:850px;margin:auto;padding:15px}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.stat,.panel{background:white;padding:15px;border-radius:13px;margin-bottom:12px;box-shadow:0 2px 8px #00000008}
+.stat small{color:#66756b}
+.stat strong{display:block;font-size:20px;margin-top:8px;overflow-wrap:anywhere}
+h2{font-size:18px;margin:0 0 13px}
+input,button,select{font:inherit}
+input{width:100%;padding:11px;border:1px solid #ccd6ce;border-radius:8px;margin:5px 0 10px;background:white}
+label{font-size:13px;color:#526258}
+button{border:0;border-radius:8px;padding:11px 14px;background:#17663f;color:white;cursor:pointer}
+button:active{opacity:.8}
+.secondary{background:#e6eee8;color:#17442e}
+.danger{background:#b42318}
+.row{display:flex;gap:8px;align-items:center}
+.row>*{min-width:0;flex:1}
+.product{border-bottom:1px solid #e5ebe6;padding:12px 0}
+.product:last-child{border-bottom:0}
+.product b{display:block}
+.muted{color:#68786e;font-size:13px;margin-top:4px}
+.price{font-weight:700;color:#17663f}
+.actions{display:flex;gap:6px;margin-top:9px}
+.actions button{padding:8px;font-size:13px}
+nav{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px}
+nav button{flex:1;min-width:90px}
+nav button.active{background:#123b2a}
+.hidden{display:none!important}
+.empty{color:#7b877f;text-align:center;padding:18px 0}
+footer{text-align:center;color:#7b877f;font-size:12px;padding:15px}
+@media(min-width:600px){.stats{grid-template-columns:repeat(4,1fr)}}
+</style>
+</head>
+<body>
+<header>
+  <h1>AK Sale Software</h1>
+  <p>အရောင်း · ကုန်ပစ္စည်း · အမြတ်စာရင်း</p>
+</header>
+<main>
+  <section class="stats">
+    <div class="stat"><small>ဒီနေ့ အရောင်း</small><strong id="todaySales">0 Ks</strong></div>
+    <div class="stat"><small>ဒီနေ့ အမြတ်</small><strong id="todayProfit">0 Ks</strong></div>
+    <div class="stat"><small>ကုန်ပစ္စည်းအမျိုးအစား</small><strong id="productCount">0</strong></div>
+    <div class="stat"><small>လက်ကျန်ပစ္စည်းစုစုပေါင်း</small><strong id="stockCount">0</strong></div>
+  </section>
+
+  <nav>
+    <button class="active" data-tab="inventory">ကုန်ပစ္စည်း</button>
+    <button class="secondary" data-tab="sale">အရောင်း</button>
+    <button class="secondary" data-tab="history">မှတ်တမ်း</button>
+  </nav>
+
+  <section id="inventory">
+    <div class="panel">
+      <h2>ကုန်ပစ္စည်းအသစ် ထည့်ရန်</h2>
+      <form id="productForm">
+        <label>ပစ္စည်းအမည်</label>
+        <input id="pName" placeholder="ဥပမာ - မီးလုံး 12W" required>
+        <div class="row">
+          <div><label>ဝယ်ဈေး (Ks)</label><input id="pCost" type="number" min="0" step="any" required placeholder="ဝယ်ဈေး"></div>
+          <div><label>ရောင်းဈေး (Ks)</label><input id="pPrice" type="number" min="0" step="any" required placeholder="ရောင်းဈေး"></div>
+        </div>
+        <label>စတင်လက်ကျန် အရေအတွက်</label>
+        <input id="pStock" type="number" min="0" step="1" required placeholder="0">
+        <button type="submit">+ ပစ္စည်းထည့်မယ်</button>
+      </form>
+    </div>
+    <div class="panel">
+      <h2>ကုန်ပစ္စည်းစာရင်း</h2>
+      <input id="search" placeholder="ပစ္စည်းအမည်ဖြင့် ရှာရန်">
+      <div id="products"></div>
+    </div>
+  </section>
+
+  <section id="sale" class="hidden">
+    <div class="panel">
+      <h2>ပစ္စည်းရောင်းရန်</h2>
+      <form id="saleForm">
+        <label>ပစ္စည်းရွေးပါ</label>
+        <select id="saleProduct" required></select>
+        <label>ရောင်းမည့်အရေအတွက်</label>
+        <input id="saleQty" type="number" min="1" step="1" value="1" required>
+        <button type="submit">အရောင်းစာရင်းသွင်းမယ်</button>
+      </form>
+      <p class="muted">ရောင်းချပြီးပါက လက်ကျန်နှင့် အမြတ်ကို အလိုအလျောက်တွက်ချက်မည်။</p>
+    </div>
+  </section>
+
+  <section id="history" class="hidden">
+    <div class="panel">
+      <h2>အရောင်းမှတ်တမ်း</h2>
+      <div id="historyList"></div>
+      <button class="secondary" id="exportBtn">CSV စာရင်းဒေါင်းလုဒ်</button>
+    </div>
+  </section>
+  <footer>AK Sale Software · စမ်းသပ်အသုံးပြုရန် ဗားရှင်း</footer>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const money = n => Number(n).toLocaleString("en-US",{maximumFractionDigits:2})+" Ks";
+const today = () => new Date().toLocaleDateString("en-CA");
+const load = (key, fallback) => {
+  try { return JSON.parse(localStorage.getItem(key)) ?? fallback; }
+  catch { return fallback; }
+};
+let products = load("ak_products", []);
+let sales = load("ak_sales", []);
+
+function save(){
+  localStorage.setItem("ak_products", JSON.stringify(products));
+  localStorage.setItem("ak_sales", JSON.stringify(sales));
+  render();
+}
+
+function render(){
+  const q = $("search").value.trim().toLowerCase();
+  $("products").innerHTML = "";
+  const shown = products.filter(p => p.name.toLowerCase().includes(q));
+  if(!shown.length) $("products").innerHTML = '<div class="empty">ပစ္စည်းမရှိသေးပါ။</div>';
+
+  shown.forEach(p => {
+    const el = document.createElement("div");
+    el.className = "product";
+    const name = document.createElement("b");
+    name.textContent = p.name;
+    const info = document.createElement("div");
+    info.className = "muted";
+    info.textContent = "ဝယ်ဈေး "+money(p.cost)+" · ရောင်းဈေး "+money(p.price);
+    const stock = document.createElement("div");
+    stock.className = "price";
+    stock.textContent = "လက်ကျန်: "+p.stock;
+    const actions = document.createElement("div");
+    actions.className = "actions";
+    const add = document.createElement("button");
+    add.textContent = "လက်ကျန်တိုး";
+    add.className = "secondary";
+    add.onclick = () => {
+      const n = prompt("ထပ်ထည့်မည့် အရေအတွက်");
+      if(n === null) return;
+      const qty = Number(n);
+      if(!Number.isInteger(qty) || qty < 1) return alert("အရေအတွက်မှန်မှန်ထည့်ပါ။");
+      p.stock += qty;
+      save();
+    };
+    const remove = document.createElement("button");
+    remove.textContent = "ဖျက်မယ်";
+    remove.className = "danger";
+    remove.onclick = () => {
+      if(sales.some(s => s.productId === p.id))
+        return alert("အရောင်းမှတ်တမ်းရှိသော ပစ္စည်းကို မဖျက်နိုင်ပါ။");
+      if(confirm(p.name+" ကို ဖျက်မှာ သေချာပါသလား?")){
+        products = products.filter(x => x.id !== p.id);
+        save();
+      }
+    };
+    actions.append(add,remove);
+    el.append(name,info,stock,actions);
+    $("products").append(el);
+  });
+
+  $("saleProduct").innerHTML = "";
+  products.filter(p=>p.stock>0).forEach(p=>{
+    const opt = document.createElement("option");
+    opt.value = p.id;
+    opt.textContent = p.name+" (လက်ကျန် "+p.stock+")";
+    $("saleProduct").append(opt);
+  });
+  if(!products.some(p=>p.stock>0)){
+    const opt=document.createElement("option");
+    opt.value="";
+    opt.textContent="ရောင်းရန်လက်ကျန်မရှိပါ";
+    $("saleProduct").append(opt);
+  }
+
+  const daySales = sales.filter(s=>s.date===today());
+  $("todaySales").textContent = money(daySales.reduce((a,s)=>a+s.total,0));
+  $("todayProfit").textContent = money(daySales.reduce((a,s)=>a+s.profit,0));
+  $("productCount").textContent = products.length;
+  $("stockCount").textContent = products.reduce((a,p)=>a+p.stock,0);
+
+  $("historyList").innerHTML = "";
+  if(!sales.length) $("historyList").innerHTML='<div class="empty">အရောင်းမှတ်တမ်းမရှိသေးပါ။</div>';
+  [...sales].reverse().forEach(s=>{
+    const el=document.createElement("div");
+    el.className="product";
+    const b=document.createElement("b");
+    b.textContent=s.name+" × "+s.qty;
+    const info=document.createElement("div");
+    info.className="muted";
+    info.textContent=s.date+" · "+s.time;
+    const total=document.createElement("div");
+    total.className="price";
+    total.textContent="ရောင်းရငွေ "+money(s.total)+" · အမြတ် "+money(s.profit);
+    el.append(b,info,total);
+    $("historyList").append(el);
+  });
+}
+
+$("productForm").addEventListener("submit",e=>{
+  e.preventDefault();
+  const name=$("pName").value.trim();
+  const cost=Number($("pCost").value);
+  const price=Number($("pPrice").value);
+  const stock=Number($("pStock").value);
+  if(!name || cost<0 || price<0 || stock<0 ||
+     !Number.isFinite(cost) || !Number.isFinite(price) ||
+     !Number.isInteger(stock)) return alert("အချက်အလက်များကို စစ်ဆေးပါ။");
+  products.push({id:Date.now().toString()+Math.random().toString(36).slice(2),name,cost,price,stock});
+  e.target.reset();
+  save();
+  alert("ပစ္စည်းစာရင်းထည့်ပြီးပါပြီ။");
+});
+
+$("saleForm").addEventListener("submit",e=>{
+  e.preventDefault();
+  const p=products.find(x=>x.id===$("saleProduct").value);
+  const qty=Number($("saleQty").value);
+  if(!p || !Number.isInteger(qty) || qty<1) return alert("ပစ္စည်းနှင့် အရေအတွက်ကို စစ်ဆေးပါ။");
+  if(qty>p.stock) return alert("လက်ကျန်ပစ္စည်း မလုံလောက်ပါ။");
+  const now=new Date();
+  const total=p.price*qty;
+  const profit=(p.price-p.cost)*qty;
+  p.stock-=qty;
+  sales.push({
+    productId:p.id,name:p.name,qty,total,profit,
+    date:today(),time:now.toLocaleTimeString()
+  });
+  $("saleQty").value=1;
+  save();
+  alert("အရောင်းသွင်းပြီးပါပြီ။\nရောင်းရငွေ: "+money(total)+"\nတွက်ချက်ထားသော အမြတ်: "+money(profit));
+});
+
+$("search").addEventListener("input",render);
+document.querySelectorAll("[data-tab]").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    document.querySelectorAll("main section[id]").forEach(s=>s.classList.add("hidden"));
+    $(btn.dataset.tab).classList.remove("hidden");
+    document.querySelectorAll("[data-tab]").forEach(b=>{
+      b.classList.toggle("active",b===btn);
+      b.classList.toggle("secondary",b!==btn);
+    });
+  });
+});
+
+$("exportBtn").addEventListener("click",()=>{
+  const quote = v => '"'+String(v).replace(/"/g,'""')+'"';
+  const rows=[
+    ["Date","Time","Product","Quantity","Sales MMK","Estimated Profit MMK"],
+    ...sales.map(s=>[s.date,s.time,s.name,s.qty,s.total,s.profit])
+  ];
+  const csv="\uFEFF"+rows.map(r=>r.map(quote).join(",")).join("\r\n");
+  const url=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8;"}));
+  const a=document.createElement("a");
+  a.href=url;a.download="AK-Sale-Sales.csv";a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+});
+
+render();
+</script>
+</body>
+</html>

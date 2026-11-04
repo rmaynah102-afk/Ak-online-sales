@@ -51,7 +51,98 @@ footer{padding:24px 10px;color:#829087}
 @media(max-width:600px){header{padding:13px 14px}nav{top:57px}nav button{padding:8px 13px;font-size:13px}.panel{border-radius:13px}.actions button,.actions .btn{flex:1 1 auto}.stats .panel{min-height:94px}input,select,textarea{font-size:16px}table{min-width:620px}}
 @media print{body{background:#fff}.panel{box-shadow:none;border:0}}
 
-@media(min-width:1000px){body{max-width:1600px;margin:0 auto;padding:24px}#nav{position:sticky;top:0;z-index:20;display:flex;flex-wrap:wrap;gap:8px;padding:12px;background:#f5f8f5;border-radius:12px}#nav button{min-width:120px}.view .grid{grid-template-columns:repeat(3,minmax(0,1fr))}.tablewrap{overflow-x:auto}.tablewrap table{min-width:760px}.panel{padding:22px}}@media(max-width:999px){body{padding:12px}#nav{display:flex;flex-wrap:wrap;gap:6px}#nav button{flex:1 1 125px}}@media print{#nav,button,form,.no-print{display:none!important}body{max-width:none;background:#fff}.view{display:block!important}.panel{box-shadow:none;break-inside:avoid}}</style>
+@media(min-width:1000px){body{max-width:1600px;margin:0 auto;padding:24px}#nav{position:sticky;top:0;z-index:20;display:flex;flex-wrap:wrap;gap:8px;padding:12px;background:#f5f8f5;border-radius:12px}#nav button{min-width:120px}.view .grid{grid-template-columns:repeat(3,minmax(0,1fr))}.tablewrap{overflow-x:auto}.tablewrap table{min-width:760px}.panel{padding:22px}}@media(max-width:999px){body{padding:12px}#nav{display:flex;flex-wrap:wrap;gap:6px}#nav button{flex:1 1 125px}}@media print{#nav,button,form,.no-print{display:none!important}body{max-width:none;background:#fff}.view{display:block!important}.panel{box-shadow:none;break-inside:avoid}}
+/* AK Shopping Markets — vivid modern visual system */
+:root{
+ --g:#102b46;--g2:#176b87;--bg:#f1f5fb;--line:#dce5f0;
+ --ink:#17283d;--red:#d9485f;--gold:#fff1cf;
+ --accent:#ffb84d;--teal:#12a99a;--violet:#7257d8;
+}
+body{
+ background:
+  radial-gradient(ellipse at 5% 0%,#d9f4f0 0,transparent 30%),
+  radial-gradient(ellipse at 100% 8%,#e8e1ff 0,transparent 28%),
+  linear-gradient(180deg,#f7f9fe 0%,#edf3fa 100%);
+ color:var(--ink);
+}
+header{
+ background:linear-gradient(115deg,#10233f 0%,#174e70 52%,#087e83 100%);
+ border-bottom:4px solid #ffb84d;
+ box-shadow:0 8px 26px #142d4b35;
+}
+header .pill{background:#ffffff20;border-color:#ffffff40;color:#fff}
+nav{
+ background:#f2f6fbea;
+ border:1px solid #dce6f1;
+ border-radius:16px;
+ box-shadow:0 5px 18px #1d3d5b12;
+ padding:10px;
+}
+nav button{
+ background:linear-gradient(180deg,#fff,#f2f7fc);
+ color:#244766;
+ border:1px solid #d6e3ef;
+ box-shadow:0 3px 9px #183a5710;
+}
+nav button:hover,nav button:focus-visible{
+ background:linear-gradient(135deg,#dff7f3,#e9e5ff);
+ border-color:#69bdb7;
+ color:#123f59;
+}
+.panel{
+ border:1px solid #dce6f1;
+ border-radius:18px;
+ background:linear-gradient(145deg,#fff 0%,#fafdff 100%);
+ box-shadow:0 7px 22px #1838580d;
+}
+.view>.panel:first-child{border-top:3px solid #1aa99a}
+h2{color:#173d60}
+h3{color:#176b87}
+.stats .panel:nth-child(4n+1){background:linear-gradient(140deg,#fff,#e5f6f3);border-color:#c9ebe4}
+.stats .panel:nth-child(4n+2){background:linear-gradient(140deg,#fff,#eeeaff);border-color:#ded7fb}
+.stats .panel:nth-child(4n+3){background:linear-gradient(140deg,#fff,#fff2df);border-color:#f5e1bd}
+.stats .panel:nth-child(4n){background:linear-gradient(140deg,#fff,#e8f0ff);border-color:#d4e2fb}
+.stats .panel:after{background:#b8e8df}
+.stat{color:#087f78}
+button,.btn{
+ background:linear-gradient(130deg,#167c91,#126b82);
+ border-radius:11px;
+ box-shadow:0 4px 10px #126b8228;
+}
+button.alt{
+ background:linear-gradient(130deg,#e8f4ff,#e6f7f3);
+ color:#24516b;border:1px solid #cfe3ed;
+}
+button.red{background:linear-gradient(130deg,#e45c68,#c8324e)}
+input,select,textarea{
+ border-color:#cfdeeb;
+ background:#fff;
+}
+input:focus,select:focus,textarea:focus{
+ border-color:#16a69a;
+ box-shadow:0 0 0 3px #16a69a20;
+}
+label{color:#425d75}
+th{background:linear-gradient(90deg,#e8f3f8,#eaf7f4);color:#244d68}
+tbody tr:nth-child(even){background:#f7faff}
+tbody tr:hover{background:#eaf8f6}
+.notice{background:linear-gradient(120deg,#fff5d9,#fff0e5);border-color:#f1d9a8;color:#70501b}
+.pill{background:#e1f4ef;color:#08776f}
+.tablewrap{border-color:#dce7f0}
+footer{color:#72869b}
+@media(max-width:600px){
+ body{padding:8px}
+ header{border-radius:0 0 16px 16px}
+ nav{border-radius:13px}
+ .panel{border-radius:15px}
+}
+@media(prefers-reduced-motion:no-preference){
+ .panel,button,.btn,nav button{transition:transform .16s ease,box-shadow .16s ease,filter .16s ease}
+ .panel:hover{box-shadow:0 10px 26px #18385815}
+ button:active,.btn:active{transform:translateY(1px) scale(.985)}
+}
+
+</style>
 </head>
 <body>
 <header><div><h1 id="brandTitle">Ak shopping markets</h1><small>Hardware & Electrical Goods</small></div><span class="pill" id="saveState">ဖုန်းထဲသိမ်းဆည်းမည်</span></header>

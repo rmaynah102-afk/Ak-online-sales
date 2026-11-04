@@ -1,0 +1,19 @@
+{
+  "name": "Ak shopping markets",
+  "short_name": "Ak Markets",
+  "description": "Myanmar retail, wholesale and shopping center management",
+  "lang": "my",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f1f5f2",
+  "theme_color": "#123b2a",
+  "icons": [
+    {
+      "src": "./ak-logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

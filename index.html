@@ -136,7 +136,22 @@ footer{padding:24px 10px;color:#829087}
 <div class="actions"><button type="submit">AK Market သို့ အခမဲ့တင်မည်</button><button type="button" class="alt" onclick="resetMarketForm()">ရှင်းမည်</button></div>
 <p id="marketStatus" class="muted">Public ပို့စ်များကို အောက်တွင်ကြည့်နိုင်သည်။</p>
 </form></div>
-<div class="panel"><div class="split"><h2>အများပြည်သူ ပစ္စည်းများ</h2><input id="marketQuery" style="max-width:230px" placeholder="ပစ္စည်း / မြို့ ရှာရန်" oninput="renderMarket()"></div><div id="marketFeed" class="grid"></div></div>
+<div class="panel">
+<h2>AI Smart Search · ဈေးနှိုင်းယှဉ်</h2>
+<p class="muted">မြန်မာ/English စကားလုံး၊ အမျိုးအစား၊ မြို့နယ်၊ ဈေးနှုန်းတို့နဲ့ ရှာနိုင်ပါတယ်။ အခမဲ့ Smart Matching ဖြစ်ပြီး AI API ကြေးမလိုပါ။</p>
+<label>ဘာပစ္စည်းရှာချင်ပါသလဲ</label><input id="marketQuery" placeholder="ဥပမာ - မီးလုံး၊ LED bulb၊ drill၊ သံ၊ ပိုက်..." oninput="renderMarket()">
+<div class="grid">
+<div><label>အမျိုးအစား</label><select id="marketCategoryFilter" onchange="renderMarket()"><option value="">အမျိုးအစားအားလုံး</option><option>ကုန်မာ</option><option>လျှပ်စစ်ပစ္စည်း</option><option>ဆောက်လုပ်ရေး</option><option>လက်工具 / Tools</option><option>အိမ်သုံးပစ္စည်း</option><option>အခြား</option></select></div>
+<div><label>မြို့ / မြို့နယ်</label><input id="marketPlaceFilter" placeholder="ဥပမာ - မန္တလေး၊ ချမ်းအေးသာစံ" oninput="renderMarket()"></div>
+<div><label>အနည်းဆုံးဈေး (ကျပ်)</label><input id="marketMinPrice" type="number" min="0" placeholder="0" oninput="renderMarket()"></div>
+<div><label>အများဆုံးဈေး (ကျပ်)</label><input id="marketMaxPrice" type="number" min="0" placeholder="ကန့်သတ်မထား" oninput="renderMarket()"></div>
+<div><label>စီစဉ်ပုံ</label><select id="marketSort" onchange="renderMarket()"><option value="relevance">သက်ဆိုင်မှုအလိုက်</option><option value="low">ဈေးအနည်းဆုံးမှ</option><option value="high">ဈေးအများဆုံးမှ</option><option value="new">အသစ်တင်ထားတာ</option></select></div>
+</div>
+<div class="actions"><button type="button" class="alt" onclick="resetMarketSearch()">ရှာဖွေမှုရှင်းမည်</button><span class="pill" id="marketResultCount">0 ခု</span></div>
+<p id="marketSearchHint" class="muted">ရှာဖွေမှုရလဒ်များကို ဆိုင်အလိုက်ကြည့်နိုင်ပါတယ်။</p>
+</div>
+<div class="panel"><h2>တူညီသောပစ္စည်း ဈေးနှိုင်းယှဉ်ချက်</h2><p class="muted">ပစ္စည်းအမည်တူ Listing များကို ဆိုင်ဈေးနှုန်းအလိုက် နှိုင်းယှဉ်ပြသည်။ ဆိုင်ထံမှ ဈေးနှုန်းနှင့် လက်ကျန်ကို ထပ်မံအတည်ပြုပါ။</p><div id="marketCompare"></div></div>
+<div class="panel"><h2>ရှာတွေ့သော ဆိုင်များနှင့် ပစ္စည်းများ</h2><div id="marketFeed" class="grid"></div></div>
 </section>
 \n<section id="backup" class="view">
 <div class="panel"><h2>Backup / Restore</h2><p class="muted">ပစ္စည်း၊ အရောင်း၊ အဝယ်၊ လူစာရင်း၊ အကြွေးဆပ်မှတ်တမ်းနှင့် အသုံးစရိတ်အားလုံးကို JSON ဖိုင်အဖြစ် ထုတ်နိုင်သည်။</p><div class="actions"><button onclick="backup()">Backup JSON ထုတ်မည်</button><label class="btn">Restore JSON<input type="file" accept=".json,application/json" id="restoreInput" hidden onchange="restore(event)"></label><button class="alt" onclick="csvExport()">အရောင်း CSV ထုတ်မည်</button></div></div>
@@ -241,7 +256,50 @@ let marketPhotoFile=null,marketListings=[];
 function resetMarketForm(){ $("marketForm").reset();marketPhotoFile=null;$("mPreview").src="";$("mPreview").classList.add("hidden");}
 $("mPhoto").addEventListener("change",e=>{const f=e.target.files[0];marketPhotoFile=f||null;if(!f){$("mPreview").classList.add("hidden");return}if(!/^image\/(jpeg|png|webp)$/.test(f.type)||f.size>2*1024*1024){marketPhotoFile=null;e.target.value="";return alert("JPG၊ PNG သို့မဟုတ် WebP ပုံ 2MB အောက်သာ ရွေးပါ။")}const r=new FileReader();r.onload=()=>{$("mPreview").src=r.result;$("mPreview").classList.remove("hidden")};r.readAsDataURL(f)});
 async function loadMarket(){try{if(!fbStore){renderMarket();return}const snap=await fbStore.collection("marketListings").where("status","==","published").orderBy("createdAt","desc").limit(60).get();marketListings=snap.docs.map(d=>({id:d.id,...d.data()}));renderMarket()}catch(e){$("marketStatus").textContent="Marketplace ဖတ်မရပါ။ Firebase ချိတ်ဆက်မှုနှင့် Index/Rules စစ်ဆေးပါ။ "+e.message;renderMarket()}}
-function renderMarket(){const host=$("marketFeed");if(!host)return;const q=($("marketQuery").value||"").toLowerCase();const items=marketListings.filter(x=>(x.title+" "+x.city+" "+x.township+" "+x.category).toLowerCase().includes(q));host.innerHTML=items.length?items.map(x=>'<article class="panel" style="margin:0"><img class="preview" style="width:100%;aspect-ratio:4/3;object-fit:cover" src="'+esc(x.imageUrl)+'" alt="'+esc(x.title)+'"><h3>'+esc(x.title)+'</h3><div class="stat">'+money(x.price)+'</div><p class="muted">'+esc(x.category||"အခြား")+' · '+esc([x.township,x.city].filter(Boolean).join(", "))+'</p><p>'+esc(x.description||"")+'</p><div class="actions"><button type="button" data-market-contact="'+esc(x.phone||"")+'">ဆက်သွယ်ရန်</button><button type="button" class="alt" data-market-share="'+esc(x.id)+'">Share</button></div></article>').join(""):'<div class="notice">ပစ္စည်းမတွေ့သေးပါ။ အများမြင်ပို့စ်များ ရလာသောအခါ ဒီမှာပြပါမည်။</div>';host.onclick=e=>{const contact=e.target.closest("[data-market-contact]");const share=e.target.closest("[data-market-share]");if(contact)contactMarketSeller(contact.dataset.marketContact);if(share)shareMarketListing(share.dataset.marketShare)}}
+const marketSynonyms={
+ "မီးလုံး":["မီး","led","bulb","lamp","မီးသီး","မီးချောင်း"],
+ "မီးသီး":["မီး","led","bulb","lamp","မီးလုံး"],
+ "led":["မီးလုံး","မီးသီး","bulb","lamp"],
+ "ဝါယာ":["ကြိုး","wire","cable","လျှပ်စစ်ကြိုး"],
+ "ကြိုး":["wire","cable","ဝါယာ","လျှပ်စစ်ကြိုး"],
+ "ပိုက်":["pipe","pvc","ရေပိုက်","ပလတ်စတစ်ပိုက်"],
+ "သံ":["steel","iron","metal","သံချောင်း"],
+ "ဆေး":["paint","အရောင်","ဆေးသုတ်"],
+ "drill":["စက်","ဖောက်စက်","လက်工具","tools"],
+ "ဖောက်စက်":["drill","စက်","tools"],
+ "ပန်ကာ":["fan","လေထိုးစက်"],
+ "ဘက်ထရီ":["battery","အားသွင်း","ဓာတ်ခဲ"],
+ "ဖုန်း":["phone","mobile","smartphone"],
+ "အုတ်":["brick","ဆောက်လုပ်ရေး"],
+ "ဘိလပ်မြေ":["cement","ဆောက်လုပ်ရေး"]
+};
+function marketWords(value){const raw=String(value||"").toLowerCase().trim().split(/[\s၊,./-]+/).filter(Boolean);const out=new Set(raw);for(const word of raw){for(const [key,values] of Object.entries(marketSynonyms)){if(word===key||values.some(v=>v.toLowerCase()===word)){out.add(key);values.forEach(v=>out.add(v.toLowerCase()))}}}return [...out]}
+function marketDate(value){if(!value)return 0;if(value.toMillis)return value.toMillis();if(value.toDate)return value.toDate().getTime();const n=new Date(value).getTime();return Number.isFinite(n)?n:0}
+function marketFreshLabel(value){const t=marketDate(value);if(!t)return "ရက်စွဲမသိ";const days=Math.floor((Date.now()-t)/86400000);return days<=1?"မကြာသေးမီ":days<=7?days+" ရက်အတွင်း":new Date(t).toLocaleDateString("my-MM")}
+function marketProductKey(value){return String(value||"").toLowerCase().replace(/[0-9]+/g," ").replace(/[^\p{L}\p{N}]+/gu," ").trim().replace(/\s+/g," ")}
+function resetMarketSearch(){["marketQuery","marketPlaceFilter","marketMinPrice","marketMaxPrice"].forEach(id=>$(id).value="");$("marketCategoryFilter").value="";$("marketSort").value="relevance";renderMarket()}
+function renderMarket(){
+ const host=$("marketFeed");if(!host)return;
+ const query=$("marketQuery").value||"",place=($("marketPlaceFilter").value||"").toLowerCase().trim(),category=$("marketCategoryFilter").value||"",min=Number($("marketMinPrice").value||0),max=Number($("marketMaxPrice").value||0),sort=$("marketSort").value||"relevance";
+ const words=marketWords(query);
+ let items=marketListings.filter(x=>{
+  const hay=[x.title,x.description,x.category,x.city,x.township,x.shopName].join(" ").toLowerCase();
+  const textMatch=!words.length||words.some(w=>hay.includes(w));
+  const placeMatch=!place||[x.city,x.township].join(" ").toLowerCase().includes(place);
+  return textMatch&&placeMatch&&(!category||x.category===category)&&Number(x.price)>=(min||0)&&(!max||Number(x.price)<=max);
+ });
+ if(sort==="low")items.sort((a,b)=>Number(a.price)-Number(b.price));
+ else if(sort==="high")items.sort((a,b)=>Number(b.price)-Number(a.price));
+ else if(sort==="new")items.sort((a,b)=>marketDate(b.createdAt)-marketDate(a.createdAt));
+ else if(words.length)items.sort((a,b)=>Number(b.title.toLowerCase().includes(query.toLowerCase()))-Number(a.title.toLowerCase().includes(query.toLowerCase())));
+ $("marketResultCount").textContent=items.length+" ခု";
+ $("marketSearchHint").textContent=items.length?"ဈေးနှုန်းများသည် ရောင်းသူတင်ထားသော အချက်အလက်များဖြစ်သည်။ ဝယ်ယူမီ ဖုန်းဆက်အတည်ပြုပါ။":"ကိုက်ညီသောပစ္စည်း မတွေ့ပါ။ စာလုံးပေါင်း၊ မြို့နယ် သို့မဟုတ် ဈေးကန့်သတ်ချက် ပြောင်းရှာပါ။";
+ const groups={};for(const x of items){const k=marketProductKey(x.title);if(k)(groups[k]||(groups[k]=[])).push(x)}
+ const comparisons=Object.values(groups).filter(g=>g.length>1).sort((a,b)=>a[0].title.localeCompare(b[0].title));
+ $("marketCompare").innerHTML=comparisons.length?comparisons.map(g=>{const ordered=[...g].sort((a,b)=>Number(a.price)-Number(b.price));return '<div class="tablewrap" style="margin:10px 0"><table><thead><tr><th colspan="4">'+esc(g[0].title)+' · '+g.length+' ဆိုင်</th></tr><tr><th>ဆိုင်</th><th>ဈေးနှုန်း</th><th>တည်နေရာ</th><th>တင်သည့်ရက်</th></tr></thead><tbody>'+ordered.map(x=>'<tr><td>'+esc(x.shopName||"အမည်မဖော်ပြသောဆိုင်")+'</td><td><b>'+money(x.price)+'</b></td><td>'+esc([x.township,x.city].filter(Boolean).join(", "))+'</td><td>'+esc(marketFreshLabel(x.createdAt))+'</td></tr>').join("")+'</tbody></table></div>'}).join(""):'<p class="muted">ရှာဖွေထားသောပစ္စည်းအမည်တူ ဆိုင် ၂ ဆိုင်ထက်မပိုသေးပါ။ ဆိုင်များ ပိုမိုစာရင်းတင်လာသောအခါ နှိုင်းယှဉ်ဇယား ပေါ်လာပါမည်။</p>';
+ host.innerHTML=items.length?items.map(x=>'<article class="panel" style="margin:0"><img class="preview" style="width:100%;aspect-ratio:4/3;object-fit:cover" src="'+esc(/^https:\/\//i.test(x.imageUrl||"")?x.imageUrl:"")+'" alt="'+esc(x.title)+'"><h3>'+esc(x.title)+'</h3><div class="stat">'+money(x.price)+'</div><p class="muted">'+esc(x.shopName||"ဆိုင်အမည်မသိ")+' · '+esc(x.category||"အခြား")+'</p><p class="muted">'+esc([x.township,x.city].filter(Boolean).join(", "))+' · '+esc(marketFreshLabel(x.createdAt))+'</p><p>'+esc(x.description||"")+'</p><div class="actions"><button type="button" data-market-contact="'+esc(x.phone||"")+'">ဆိုင်ကိုဖုန်းဆက်ရန်</button><button type="button" class="alt" data-market-share="'+esc(x.id)+'">Share</button></div></article>').join(""):'<div class="notice">ပစ္စည်းမတွေ့သေးပါ။ ရှာဖွေမှုစကားလုံး သို့မဟုတ် စစ်ထုတ်မှု ပြောင်းကြည့်ပါ။</div>';
+ host.onclick=e=>{const contact=e.target.closest("[data-market-contact]");const share=e.target.closest("[data-market-share]");if(contact)contactMarketSeller(contact.dataset.marketContact);if(share)shareMarketListing(share.dataset.marketShare)};
+}
 async function publishMarketListing(e){e.preventDefault();try{if(!fbAuth?.currentUser)throw Error("ပစ္စည်းတင်ရန် ဆိုင်အကောင့် Login ဝင်ပါ။");if(!cloudReady||!await refreshLicense())throw Error("အသုံးပြုခွင့်ရှိသော Trial/Subscription လိုအပ်သည်။");if(!marketPhotoFile)throw Error("ပစ္စည်းဓာတ်ပုံရွေးပါ။");if(!window.firebase?.storage)throw Error("Firebase Storage SDK မရပါ။");if(!firebase.storage().app.options.storageBucket)throw Error("Firebase Config တွင် storageBucket မပါသေးပါ။ Firebase Storage ကို ဖွင့်ပြီး Config အသစ်ထည့်ပါ။");const title=$("mTitle").value.trim(),price=Number($("mPrice").value);if(title.length<2||!Number.isFinite(price)||price<=0)throw Error("ပစ္စည်းအမည်နှင့် ဈေးနှုန်း မှန်ကန်စွာထည့်ပါ။");$("marketStatus").textContent="ပုံတင်နေသည်...";const id=uid(),path="market/"+fbAuth.currentUser.uid+"/"+id+"/photo";const ref=firebase.storage().ref(path);await ref.put(marketPhotoFile,{contentType:marketPhotoFile.type,cacheControl:"public,max-age=3600"});const imageUrl=await ref.getDownloadURL();const data={ownerUid:fbAuth.currentUser.uid,shopName:db.shop.name||"AK Shop",title,price, currency:"MMK",category:$("mCategory").value,city:$("mCity").value.trim(),township:$("mTownship").value.trim(),phone:$("mPhone").value.trim(),description:$("mDescription").value.trim(),imageUrl,imagePath:path,status:"published",createdAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()};await fbStore.collection("marketListings").doc(id).set(data);marketListings.unshift({...data,id,createdAt:new Date()});renderMarket();resetMarketForm();$("marketStatus").textContent="AK Market သို့ ပို့စ်တင်ပြီးပါပြီ။";}catch(err){$("marketStatus").textContent="ပို့စ်တင်မရပါ: "+err.message;}}
 $("marketForm").addEventListener("submit",publishMarketListing);
 function contactMarketSeller(phone){if(!phone)return alert("ရောင်းသူက ဖုန်းနံပါတ် မဖော်ပြထားပါ။");location.href="tel:"+phone.replace(/[^0-9+]/g,"")}

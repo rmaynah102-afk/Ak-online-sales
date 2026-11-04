@@ -520,8 +520,8 @@ body.ak-public footer{display:block}
    const cfg=typeof raw==="string"?JSON.parse(raw):raw;
    if(!window.firebase)throw Error("Firebase SDK မရပါ။ Internet စစ်ပါ။");
    if(!firebase.apps.length)firebase.initializeApp(cfg);
-   window.fbApp=firebase.app();window.fbStore=firebase.firestore();
-   if(typeof window.loadMarket==="function")await window.loadMarket();
+   fbApp=firebase.app();fbStore=firebase.firestore();
+   if(typeof loadMarket==="function")await loadMarket();
   }catch(e){const status=document.getElementById("marketStatus");if(status)status.textContent="Public Market ချိတ်ဆက်မရပါ: "+e.message;}
  }
  connectPublicCatalog();

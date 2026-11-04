@@ -1,10 +1,11 @@
 
-const CACHE_NAME = "ak-sale-v2";
+const CACHE_NAME = "ak-sale-v3";
 
 const FILES_TO_CACHE = [
   "./",
   "./index.html",
-  "./manifest.json"
+  "./manifest.webmanifest",
+  "./ak-logo.svg"
 ];
 
 self.addEventListener("install", event => {

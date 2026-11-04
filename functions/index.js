@@ -1,7 +1,7 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const { defineString } = require("firebase-functions/params");
-const ADMIN_EMAIL = defineString("ADMIN_EMAIL");
+const ADMIN_EMAIL = defineString("ADMIN_EMAIL", { default: "sannnlinpaing@gmail.com" });
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -28,7 +28,8 @@ function requireAdmin(context) {
   }
   const configuredAdmin = String(ADMIN_EMAIL.value() || "").trim().toLowerCase();
   const callerEmail = String(context.auth.token.email || "").trim().toLowerCase();
-  if (!configuredAdmin || callerEmail !== configuredAdmin) {
+  const emailVerified = context.auth.token.email_verified === true;
+  if (!configuredAdmin || callerEmail !== configuredAdmin || !emailVerified) {
     throw new functions.https.HttpsError("permission-denied", "Admin ခွင့်ပြုချက်မရှိပါ။");
   }
   return callerEmail;

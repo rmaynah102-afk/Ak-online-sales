@@ -1,45 +1,29 @@
-# Ak shopping markets
+# AK Sale Software · AK Shopping Markets
 
-Myanmar-first retail, wholesale, inventory and shopping-centre management app.
+Myanmar-first shop POS, stock, wholesale/retail, customer/supplier, debts, expenses, reports, center management and public product market.
 
-## Current delivery
+## Web + Android APK
 
-- Responsive web app for Android phones and desktop browsers.
-- Android APK build through GitHub Actions (debug/testing APK).
-- Local/offline-first records with JSON backup and restore.
-- Optional Firebase Email/Password login, Firestore shop-data storage and subscription foundation.
-- KPay payment-reference submission with manual receipt verification.
-- AK Market listing foundation with Firebase Storage image upload rules.
+- **Public Shopping Mall:** https://rmaynah102-afk.github.io/Ak-online-sales/
+- **Shop Web App:** https://rmaynah102-afk.github.io/Ak-online-sales/?app=1
+- **Source:** https://github.com/rmaynah102-afk/Ak-online-sales
+- **Android build:** GitHub Actions → **Build AK Sale Android APK** → latest successful run → Artifacts → `AK-Sale-Software-debug-APK`.
+- Android APK is built from the same `index.html` as the web app using Capacitor. The web app also has an installable PWA manifest and offline app-shell cache.
 
-## Free-first distribution
+## Advertising
 
-- GitHub repository and GitHub Pages can host the web app at no hosting charge within GitHub's applicable limits.
-- GitHub Actions can build a test APK within its included usage allowance; usage limits apply.
-- APK artifacts are temporary build downloads, not a permanent public app store.
-- A public, signed Android release APK needs a persistent signing keystore. Keep it private and configure it as GitHub Actions secrets. Never commit the keystore or passwords.
-- Firebase Authentication and Firestore have no-cost quotas, but quotas and regional availability apply. Cloud Functions deployment may require a billing-enabled Firebase plan. Do not promise unlimited free cloud service.
-- KPay is not automatically verified. An administrator must verify the actual payment independently before approving a subscription.
+- Approved shop-sponsored ads are displayed in the public Market and app's sponsored-ad section.
+- Shops can submit an ad after Gmail login and an active trial/subscription; the admin reviews and approves it.
+- Ad duration and fee are controlled by the admin. An ad is not automatically paid or approved.
+- The share action creates a ready-to-share AK Sale promotional link for Facebook, Viber, Telegram and other supported share targets.
+- Google AdSense is **not active by default**. It requires the owner's approved AdSense account, publisher ID, ad-slot IDs, site review and policy compliance. Do not paste private account passwords or keys into source code.
 
-## Firebase setup (optional cloud features)
+## Free-first operating limits
 
-1. Create a Firebase project and register the Android/web app.
-2. Enable Email/Password Authentication, Firestore and Storage.
-3. Add the Firebase Web App config to the app's Firebase settings.
-4. Deploy Firestore and Storage rules from this repository.
-5. Deploy Cloud Functions only after setting the admin email and reviewing billing requirements.
-6. Test with separate shop accounts: data isolation, trial expiry, denied expired access, payment approval, backup/restore and two-device sync.
+GitHub Pages, GitHub Actions and Firebase have usage limits. Firebase free quotas and feature availability can change. Do not enable billing or paid services without the owner's explicit approval. Image uploads/Cloud Functions may require billing depending on Firebase's current plan and project configuration.
 
-## Release checklist before charging customers
+## Release status and safety
 
-- [ ] Firebase project configured and rules deployed.
-- [ ] Trial and subscription functions deployed and tested.
-- [ ] Cross-account data isolation tested.
-- [ ] Signed release APK built and installed on multiple Android versions.
-- [ ] Update APK signed with the same private keystore.
-- [ ] Backup/restore and printer output tested on real devices.
-- [ ] Privacy policy, terms, support contact and refund policy published.
-- [ ] Payment process and support process tested with pilot shops.
+The Android workflow currently creates a **debug/testing APK**. A signed public release APK requires a private signing keystore stored only in GitHub Actions secrets. Do not commit keystore files or passwords. Google Play publication also requires a Play Console developer account, store listing, app signing, privacy disclosures and policy review.
 
-## Important limitations
-
-This repository's current APK workflow creates a **debug/testing APK** by default. It is not yet a verified, signed public release. Cloud sync, subscriptions, payment approval, market listing and multi-device behavior must be tested against a configured Firebase project before selling. Browser-only POS data is stored locally until a shop signs in and cloud sync is configured.
+Before selling: deploy and test Firebase rules/functions, account isolation, subscription expiry, device limits, backups, QR/payment workflow, printer behavior, real Android devices and a signed release build. KPay references are manually verified; never mark a payment as received from a QR screenshot alone.

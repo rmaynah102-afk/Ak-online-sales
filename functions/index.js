@@ -270,3 +270,87 @@ exports.approveSubscription = functions.https.onCall(async (data, context) => {
 
   return { uid: result.uid, expiresAt: result.expiresAt.toDate().toISOString() };
 });
+
+// Shop staff identity and role administration.
+// Staff must already have registered with Firebase Authentication.
+// This establishes trusted server-side roles; access to the monolithic appData
+// document remains owner-only until the data model is split by permission.
+const SHOP_STAFF_ROLES = ["manager", "cashier", "employee"];
+
+exports.assignShopStaffRole = functions.https.onCall(async (data, context) => {
+  const ownerUid = await requireActiveShop(context);
+  const email = String(data.email || "").trim().toLowerCase();
+  const role = String(data.role || "").trim().toLowerCase();
+  if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email) ||
+      !SHOP_STAFF_ROLES.includes(role)) {
+    throw new functions.https.HttpsError("invalid-argument", "ဝန်ထမ်း Gmail သို့မဟုတ် ရာထူး မမှန်ပါ။");
+  }
+  const configuredAdmin = String(ADMIN_EMAIL.value() || "").trim().toLowerCase();
+  if (configuredAdmin && email === configuredAdmin) {
+    throw new functions.https.HttpsError("permission-denied", "CEO အကောင့်ကို ဆိုင်ဝန်ထမ်းအဖြစ် မသတ်မှတ်နိုင်ပါ။");
+  }
+  let staff;
+  try {
+    staff = await admin.auth().getUserByEmail(email);
+  } catch (err) {
+    if (err.code === "auth/user-not-found") {
+      throw new functions.https.HttpsError("not-found", "ဝန်ထမ်းသည် Gmail ဖြင့် အရင် Account ဖွင့်ထားရန် လိုအပ်သည်။");
+    }
+    throw err;
+  }
+  if (staff.uid === ownerUid || staff.customClaims?.platformAdmin === true) {
+    throw new functions.https.HttpsError("permission-denied", "ဤအကောင့်ကို ဝန်ထမ်းအဖြစ် သတ်မှတ်ခွင့်မရှိပါ။");
+  }
+  const existingShop = staff.customClaims?.shopId;
+  if (existingShop && existingShop !== ownerUid) {
+    throw new functions.https.HttpsError("already-exists", "ဤ Gmail ကို အခြားဆိုင်တွင် ချိတ်ဆက်ထားပြီးဖြစ်သည်။");
+  }
+  const claims = { ...(staff.customClaims || {}), shopId: ownerUid, shopRole: role };
+  await admin.auth().setCustomUserClaims(staff.uid, claims);
+  await db.collection("shopMembers").doc(staff.uid).set({
+    uid: staff.uid, shopId: ownerUid, email, role,
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    updatedBy: ownerUid
+  }, { merge: true });
+  await db.collection("users").doc(ownerUid).collection("auditLogs").add({
+    action: "staff_role_assigned", targetUid: staff.uid, email, role,
+    actorUid: ownerUid, createdAt: admin.firestore.FieldValue.serverTimestamp()
+  });
+  return { ok: true, uid: staff.uid, email, role };
+});
+
+exports.listShopStaff = functions.https.onCall(async (data, context) => {
+  const ownerUid = await requireActiveShop(context);
+  const snap = await db.collection("shopMembers").where("shopId", "==", ownerUid).limit(100).get();
+  return { members: snap.docs.map(doc => {
+    const x = doc.data();
+    return { uid: doc.id, email: x.email || "", role: x.role || "employee" };
+  }) };
+});
+
+exports.removeShopStaff = functions.https.onCall(async (data, context) => {
+  const ownerUid = await requireActiveShop(context);
+  const memberUid = String(data.memberUid || "").trim();
+  if (!memberUid || memberUid === ownerUid || memberUid.length > 128) {
+    throw new functions.https.HttpsError("invalid-argument", "ဝန်ထမ်းအကောင့် ID မမှန်ပါ။");
+  }
+  const ref = db.collection("shopMembers").doc(memberUid);
+  const snap = await ref.get();
+  if (!snap.exists || snap.data().shopId !== ownerUid) {
+    throw new functions.https.HttpsError("not-found", "ဤဆိုင်၏ ဝန်ထမ်းအကောင့် မတွေ့ပါ။");
+  }
+  const staff = await admin.auth().getUser(memberUid);
+  const claims = { ...(staff.customClaims || {}) };
+  if (claims.shopId === ownerUid) {
+    delete claims.shopId;
+    delete claims.shopRole;
+    await admin.auth().setCustomUserClaims(memberUid, claims);
+  }
+  await ref.delete();
+  await db.collection("users").doc(ownerUid).collection("auditLogs").add({
+    action: "staff_removed", targetUid: memberUid, actorUid: ownerUid,
+    createdAt: admin.firestore.FieldValue.serverTimestamp()
+  });
+  return { ok: true };
+});
+

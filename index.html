@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#123b2a">
+<meta name="description" content="AK Sale Software - Retail POS and inventory management">
+<title>AK Sale Software</title>
+<link rel="manifest" href="manifest.json">
+<style>
+:root{--green:#123b2a;--green2:#17663f;--bg:#f2f5f3;--ink:#172820;--muted:#68786e;--line:#e3eae5;--red:#b42318;--gold:#9a6700}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--ink)}
+header{background:linear-gradient(135deg,#123b2a,#1b6843);color:#fff;padding:18px 16px 16px;position:sticky;top:0;z-index:5;box-shadow:0 3px 12px #0002}
+.top{display:flex;align-items:center;gap:12px}.logo{width:44px;height:44px;border-radius:12px;object-fit:cover;background:#ffffff22;display:grid;place-items:center;font-weight:800;font-size:20px}.brand{min-width:0;flex:1}.brand h1{font-size:21px;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.brand p{margin:3px 0 0;color:#d5e8db;font-size:12px}.header-actions{display:flex;gap:6px}.header-actions button{background:#ffffff20;color:#fff;padding:9px}
+main{max-width:1050px;margin:auto;padding:14px;padding-bottom:90px}
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-bottom:13px}.stat,.panel{background:#fff;border-radius:14px;padding:14px;box-shadow:0 2px 9px #00000008;margin-bottom:12px}.stat small{color:var(--muted)}.stat strong{display:block;font-size:19px;margin-top:6px;overflow-wrap:anywhere}.stat em{font-style:normal;font-size:11px;color:var(--muted)}
+nav{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin-bottom:13px}button,input,select,textarea{font:inherit}button{border:0;border-radius:9px;padding:10px 12px;background:var(--green2);color:white;cursor:pointer}button:active{opacity:.78}button:disabled{opacity:.45}.tab{background:#e5eee8;color:#17442e;font-size:13px;padding:10px 5px}.tab.active{background:var(--green);color:white}.secondary{background:#e6eee8;color:#17442e}.danger{background:var(--red);color:white}.warning{background:#fff2cc;color:#714d00}.smallbtn{font-size:12px;padding:7px 9px}
+h2{font-size:17px;margin:0 0 13px}h3{font-size:14px;margin:12px 0 8px}.muted{color:var(--muted);font-size:12px}.field{margin-bottom:9px}.field label{display:block;font-size:12px;color:#526258;margin-bottom:4px}input,select,textarea{width:100%;padding:11px;border:1px solid #ccd6ce;border-radius:9px;background:#fff;color:var(--ink);min-width:0}textarea{min-height:75px;resize:vertical}.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}.actions button{font-size:12px;padding:8px 10px}.item{border-bottom:1px solid var(--line);padding:12px 0}.item:last-child{border:0}.item-title{font-weight:700}.item-meta{font-size:12px;color:var(--muted);margin-top:4px;line-height:1.5}.amount{font-weight:700;color:var(--green2);margin-top:5px}.empty{text-align:center;color:#7b877f;padding:20px 8px;font-size:13px}.hidden{display:none!important}.pill{display:inline-block;border-radius:30px;background:#e6eee8;color:#17442e;padding:3px 8px;font-size:11px}.pill.red{background:#fde8e7;color:#9c2019}.pill.gold{background:#fff2cc;color:#805900}.section-head{display:flex;justify-content:space-between;align-items:center;gap:8px}.section-head h2{margin:0 0 10px}.notice{background:#fff8e6;border:1px solid #f0dca5;color:#684e0a;padding:10px;border-radius:10px;font-size:12px;line-height:1.5;margin-bottom:12px}.divider{height:1px;background:var(--line);margin:12px 0}.wide{width:100%}.receipt{font-family:monospace;white-space:pre-wrap;background:#fff;padding:12px;border:1px dashed #999;border-radius:8px;font-size:12px}.footer{text-align:center;color:#87928a;font-size:11px;padding:20px}
+@media(min-width:650px){.stats{grid-template-columns:repeat(4,1fr)}nav{grid-template-columns:repeat(8,minmax(0,1fr))}.tab{font-size:14px}.stat strong{font-size:22px}}
+@media print{header,nav,.no-print,button{display:none!important}body{background:white}main{padding:0}.panel{box-shadow:none;border:0}.print-only{display:block!important}}
+</style>
+</head>
+<body>
+<header>
+ <div class="top">
+  <div class="logo" id="logoMark">AK</div>
+  <div class="brand"><h1 id="headerShop">AK Sale Software</h1><p id="headerSub">အရောင်း · ကုန်ပစ္စည်း · အမြတ်စာရင်း</p></div>
+  <div class="header-actions"><button id="shareAppBtn" title="မျှဝေရန်">↗</button><button id="backupQuick" title="Backup">⬇</button></div>
+ </div>
+</header>
+<main>
+ <div class="notice" id="storageNotice">လက်ရှိအချက်အလက်များကို ဒီဖုန်း Browser ထဲတွင် သိမ်းထားသည်။ ဖုန်းပြောင်းခြင်းမပြုမီ Backup ထုတ်ထားပါ။ Firebase Cloud Sync မချိတ်ရသေးပါ။</div>
+ <section class="stats">
+  <div class="stat"><small>ဒီနေ့ အရောင်း</small><strong id="todaySales">0 Ks</strong><em id="todaySalesCount">0 ကြိမ်</em></div>
+  <div class="stat"><small>ဒီနေ့ ခန့်မှန်းအမြတ်</small><strong id="todayProfit">0 Ks</strong><em>ရောင်းဈေး − အရင်းဈေး</em></div>
+  <div class="stat"><small>ကုန်ပစ္စည်းအမျိုးအစား</small><strong id="productCount">0</strong><em>စာရင်းဝင်ပစ္စည်း</em></div>
+  <div class="stat"><small>လက်ကျန်စုစုပေါင်း</small><strong id="stockCount">0</strong><em>ယူနစ်</em></div>
+ </section>
+ <nav class="no-print">
+  <button class="tab active" data-tab="dashboard">ပင်မ</button><button class="tab" data-tab="inventory">ပစ္စည်း</button><button class="tab" data-tab="sale">အရောင်း</button><button class="tab" data-tab="purchase">အဝယ်</button><button class="tab" data-tab="people">လူစာရင်း</button><button class="tab" data-tab="expenses">အသုံးစရိတ်</button><button class="tab" data-tab="reports">စာရင်းချုပ်</button><button class="tab" data-tab="settings">ဆက်တင်</button>
+ </nav>
+
+ <section id="dashboard" class="page">
+  <div class="panel"><div class="section-head"><h2>လုပ်ဆောင်ချက်များ</h2><span class="pill">AK POS</span></div>
+   <div class="grid2"><button onclick="showTab('sale')">＋ အရောင်းသွင်းရန်</button><button class="secondary" onclick="showTab('inventory')">＋ ပစ္စည်းထည့်ရန်</button><button class="secondary" onclick="showTab('purchase')">＋ ပစ္စည်းဝယ်ရန်</button><button class="secondary" onclick="showTab('expenses')">＋ အသုံးစရိတ်</button></div>
+  </div>
+  <div class="panel"><h2>သတိပေးချက်များ</h2><div id="alerts"></div></div>
+  <div class="panel"><h2>နောက်ဆုံးအရောင်းများ</h2><div id="recentSales"></div></div>
+ </section>
+
+ <section id="inventory" class="page hidden">
+  <div class="panel">
+   <h2>ကုန်ပစ္စည်းအသစ် / ပြင်ဆင်ရန်</h2>
+   <form id="productForm">
+    <input type="hidden" id="pId">
+    <div class="field"><label>ပစ္စည်းအမည် *</label><input id="pName" required placeholder="ဥပမာ - မီးလုံး 12W"></div>
+    <div class="grid2"><div class="field"><label>ကုဒ် / SKU / Barcode</label><input id="pCode" placeholder="မဖြစ်မနေမဟုတ်"></div><div class="field"><label>အမျိုးအစား</label><input id="pCategory" placeholder="Hardware / Grocery"></div></div>
+    <div class="grid2"><div class="field"><label>ဝယ်ဈေး (Ks) *</label><input id="pCost" type="number" min="0" step="any" required></div><div class="field"><label>ရောင်းဈေး (Ks) *</label><input id="pPrice" type="number" min="0" step="any" required></div></div>
+    <div class="grid2"><div class="field"><label>စတင်လက်ကျန် *</label><input id="pStock" type="number" min="0" step="any" required></div><div class="field"><label>ယူနစ်</label><input id="pUnit" placeholder="ခု / ထုပ် / ပုံး" value="ခု"></div></div>
+    <div class="field"><label>လက်ကျန်နည်းသတိပေးအရေအတွက်</label><input id="pMin" type="number" min="0" step="any" value="3"></div>
+    <div class="actions"><button type="submit" id="productSubmit">ပစ္စည်းသိမ်းမယ်</button><button type="button" class="secondary" id="cancelEdit">ရှင်းမယ်</button></div>
+   </form>
+  </div>
+  <div class="panel"><h2>ကုန်ပစ္စည်းစာရင်း</h2><input id="productSearch" placeholder="အမည်၊ ကုဒ်၊ အမျိုးအစား ရှာရန်"><div id="productList"></div></div>
+ </section>
+
+ <section id="sale" class="page hidden">
+  <div class="panel"><h2>ပစ္စည်းရောင်းရန်</h2>
+   <form id="saleForm">
+    <div class="field"><label>ပစ္စည်းရွေးပါ</label><select id="saleProduct" required></select></div>
+    <div class="grid2"><div class="field"><label>အရေအတွက်</label><input id="saleQty" type="number" min="0.01" step="any" value="1" required></div><div class="field"><label>တစ်ခုရောင်းဈေး (ပြင်နိုင်သည်)</label><input id="salePrice" type="number" min="0" step="any" required></div></div>
+    <div class="grid2"><div class="field"><label>ဖောက်သည်</label><select id="saleCustomer"></select></div><div class="field"><label>ပေးချေမှု</label><select id="salePayment"><option value="paid">ငွေအပြည့်ပေး</option><option value="partial">တစ်စိတ်တစ်ပိုင်း</option><option value="credit">အကြွေး</option></select></div></div>
+    <div class="grid2"><div class="field"><label>ပေးငွေ (Ks)</label><input id="salePaid" type="number" min="0" step="any" value="0"></div><div class="field"><label>မှတ်ချက်</label><input id="saleNote" placeholder="မှတ်ချက်"></div></div>
+    <div class="notice" id="salePreview">ပစ္စည်းရွေးပြီး အရောင်းတန်ဖိုးကို ကြည့်နိုင်သည်။</div>
+    <button class="wide" type="submit">အရောင်းစာရင်းသွင်းမယ်</button>
+   </form>
+  </div>
+ </section>
+
+ <section id="purchase" class="page hidden">
+  <div class="panel"><h2>ပစ္စည်းဝယ်ယူ / လက်ကျန်တိုးရန်</h2>
+   <form id="purchaseForm">
+    <div class="field"><label>ပစ္စည်းရွေးပါ</label><select id="buyProduct" required></select></div>
+    <div class="grid2"><div class="field"><label>ဝယ်အရေအတွက်</label><input id="buyQty" type="number" min="0.01" step="any" required></div><div class="field"><label>တစ်ခုဝယ်ဈေး</label><input id="buyCost" type="number" min="0" step="any" required></div></div>
+    <div class="grid2"><div class="field"><label>ပစ္စည်းပေးသွင်းသူ</label><select id="buySupplier"></select></div><div class="field"><label>ပေးချေမှု</label><select id="buyPayment"><option value="paid">ငွေအပြည့်ပေး</option><option value="credit">အကြွေးဝယ်</option></select></div></div>
+    <button class="wide" type="submit">ဝယ်ယူမှုသိမ်းမယ်</button>
+   </form>
+  </div>
+  <div class="panel"><h2>ဝယ်ယူမှုမှတ်တမ်း</h2><div id="purchaseList"></div></div>
+ </section>
+
+ <section id="people" class="page hidden">
+  <div class="panel"><h2>ဖောက်သည် / ပစ္စည်းပေးသွင်းသူ</h2>
+   <form id="personForm"><div class="grid2"><div class="field"><label>အမည်</label><input id="personName" required></div><div class="field"><label>အမျိုးအစား</label><select id="personType"><option value="customer">ဖောက်သည်</option><option value="supplier">ပေးသွင်းသူ</option></select></div></div>
+    <div class="grid2"><div class="field"><label>ဖုန်း</label><input id="personPhone" inputmode="tel"></div><div class="field"><label>မှတ်ချက်</label><input id="personNote"></div></div><button type="submit">စာရင်းထည့်မယ်</button>
+   </form>
+  </div>
+  <div class="panel"><h2>လူစာရင်းနှင့် အကြွေး</h2><div id="peopleList"></div></div>
+ </section>
+
+ <section id="expenses" class="page hidden">
+  <div class="panel"><h2>အသုံးစရိတ်ထည့်ရန်</h2>
+   <form id="expenseForm"><div class="grid2"><div class="field"><label>အသုံးစရိတ်အမျိုးအစား</label><input id="expenseName" required placeholder="ဥပမာ - ဆိုင်ခန်းခ"></div><div class="field"><label>ငွေပမာဏ (Ks)</label><input id="expenseAmount" type="number" min="0.01" step="any" required></div></div><div class="field"><label>မှတ်ချက်</label><input id="expenseNote"></div><button type="submit">အသုံးစရိတ်သိမ်းမယ်</button></form>
+  </div><div class="panel"><h2>အသုံးစရိတ်မှတ်တမ်း</h2><div id="expenseList"></div></div>
+ </section>
+
+ <section id="reports" class="page hidden">
+  <div class="panel"><h2>စာရင်းချုပ်</h2><div class="field"><label>ရက်စွဲမှ</label><input type="date" id="reportFrom"></div><div class="field"><label>ရက်စွဲအထိ</label><input type="date" id="reportTo"></div><button id="runReport">စာရင်းတွက်မယ်</button><div class="divider"></div><div id="reportResult"></div></div>
+  <div class="panel"><h2>Data ထုတ်ယူရန်</h2><div class="actions"><button id="csvSales" class="secondary">အရောင်း CSV</button><button id="csvProducts" class="secondary">ပစ္စည်း CSV</button><button id="printReport">စာရင်း Print</button></div></div>
+ </section>
+
+ <section id="settings" class="page hidden">
+  <div class="panel"><h2>ဆိုင်အချက်အလက်</h2><form id="shopForm"><div class="field"><label>ဆိုင်အမည်</label><input id="shopName" value="AK Sale Software" required></div><div class="grid2"><div class="field"><label>ဖုန်းနံပါတ်</label><input id="shopPhone"></div><div class="field"><label>လိပ်စာ</label><input id="shopAddress"></div></div><div class="field"><label>ငွေကြေးအမည်</label><input id="currency" value="Ks"></div><button type="submit">ဆိုင်အချက်အလက် သိမ်းမယ်</button></form></div>
+  <div class="panel"><h2>Backup / Restore</h2><p class="muted">ဖုန်းပြောင်းမည်၊ Browser Data ဖျက်မည်ဆိုပါက Backup ကို အရင်ထုတ်ပါ။</p><div class="actions"><button id="backupBtn">Backup ဒေါင်းလုဒ်</button><button class="secondary" id="restoreBtn">Backup ပြန်သွင်း</button><input id="restoreFile" type="file" accept="application/json" class="hidden"></div></div>
+  <div class="panel"><h2>ကြော်ငြာမျှဝေရန်</h2><p class="muted">ပစ္စည်းကြော်ငြာစာသား/လင့်ခ်ကို Android Share ဖြင့် Viber၊ TikTok စသည်တို့သို့ ပို့နိုင်သည်။</p><button id="shareBtn">မျှဝေရန်</button></div>
+  <div class="panel"><h2>Cloud / Firebase</h2><div class="notice">ဒီဗားရှင်းမှာ Firebase ချိတ်ဆက်မှု မဖွင့်ရသေးပါ။ ဆိုင်အကောင့်စနစ်၊ Cloud Sync နဲ့ ဆိုင်အလိုက် Data လုံခြုံရေးအတွက် Firebase Project Config နှင့် Firestore Security Rules ကို သီးခြားတပ်ဆင်ရမည်။ Local data ကို Cloud data ဟု မယူဆပါနှင့်။</div><span class="pill gold">Local Mode</span></div>
+  <div class="panel"><h2>အန္တရာယ်ရှိသောလုပ်ဆောင်ချက်</h2><button class="danger" id="clearData">ဒီဖုန်းထဲက Data အားလုံးဖျက်မယ်</button></div>
+ </section>
+ <div class="footer">AK Sale Software · Local Version · Backup ကို ပုံမှန်သိမ်းထားပါ</div>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const read=(k,d)=>{try{return JSON.parse(localStorage.getItem("ak3_"+k))??d}catch{return d}};
+let db={products:read("products",[]),sales:read("sales",[]),purchases:read("purchases",[]),people:read("people",[]),expenses:read("expenses",[]),shop:read("shop",{name:"AK Sale Software",phone:"",address:"",currency:"Ks"})};
+const id=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+const today=()=>{let d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-")};
+const money=n=>Number(n||0).toLocaleString("en-US",{maximumFractionDigits:2})+" "+(db.shop.currency||"Ks");
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function persist(){Object.entries(db).forEach(([k,v])=>localStorage.setItem("ak3_"+k,JSON.stringify(v)));render()}
+function showTab(tab){document.querySelectorAll(".page").forEach(x=>x.classList.toggle("hidden",x.id!==tab));document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x.dataset.tab===tab));window.scrollTo({top:0,behavior:"smooth"})}
+document.querySelectorAll("[data-tab]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));
+function personOptions(type,selected=""){let list=db.people.filter(p=>p.type===type);return '<option value="">မရွေးထားပါ</option>'+list.map(p=>`<option value="${p.id}" ${p.id===selected?"selected":""}>${esc(p.name)}</option>`).join("")}
+function render(){
+ $("headerShop").textContent=db.shop.name||"AK Sale Software";$("headerSub").textContent=[db.shop.phone,db.shop.address].filter(Boolean).join(" · ")||"အရောင်း · ကုန်ပစ္စည်း · အမြတ်စာရင်း";
+ $("shopName").value=db.shop.name||"";$("shopPhone").value=db.shop.phone||"";$("shopAddress").value=db.shop.address||"";$("currency").value=db.shop.currency||"Ks";
+ const t=today(),ds=db.sales.filter(s=>s.date===t);
+ $("todaySales").textContent=money(ds.reduce((a,s)=>a+s.total,0));$("todayProfit").textContent=money(ds.reduce((a,s)=>a+s.profit,0));$("todaySalesCount").textContent=ds.length+" ကြိမ်";$("productCount").textContent=db.products.length;$("stockCount").textContent=db.products.reduce((a,p)=>a+Number(p.stock||0),0);
+ const q=$("productSearch").value.toLowerCase();let ps=db.products.filter(p=>(p.name+" "+p.code+" "+p.category).toLowerCase().includes(q));
+ $("productList").innerHTML=ps.length?ps.map(p=>`<div class="item"><div class="item-title">${esc(p.name)} <span class="pill">${esc(p.category||"အထွေထွေ")}</span></div><div class="item-meta">ကုဒ်: ${esc(p.code||"-")} · ဝယ် ${money(p.cost)} · ရောင်း ${money(p.price)} · ယူနစ် ${esc(p.unit||"ခု")}</div><div class="amount">လက်ကျန် ${p.stock} ${esc(p.unit||"ခု")} ${p.stock<=Number(p.min||0)?'<span class="pill red">လက်ကျန်နည်း</span>':""}</div><div class="actions"><button class="secondary smallbtn" onclick="editProduct('${p.id}')">ပြင်မယ်</button><button class="secondary smallbtn" onclick="adjustStock('${p.id}')">လက်ကျန်တိုး/လျှော့</button><button class="secondary smallbtn" onclick="shareProduct('${p.id}')">ကြော်ငြာ</button><button class="danger smallbtn" onclick="deleteProduct('${p.id}')">ဖျက်မယ်</button></div></div>`).join(""):'<div class="empty">ကုန်ပစ္စည်းမရှိသေးပါ။</div>';
+ let available=db.products.filter(p=>p.stock>0);
+ $("saleProduct").innerHTML=available.map(p=>`<option value="${p.id}">${esc(p.name)} · လက်ကျန် ${p.stock}</option>`).join("")||'<option value="">ရောင်းရန်လက်ကျန်မရှိပါ</option>';
+ $("buyProduct").innerHTML=db.products.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join("")||'<option value="">ပစ္စည်းအရင်ထည့်ပါ</option>';
+ $("saleCustomer").innerHTML=personOptions("customer");$("buySupplier").innerHTML=personOptions("supplier");
+ let alerts=db.products.filter(p=>Number(p.stock)<=Number(p.min||0));$("alerts").innerHTML=alerts.length?alerts.map(p=>`<div class="item">${esc(p.name)} — လက်ကျန် ${p.stock} <span class="pill red">ပြန်ဝယ်ရန်</span></div>`).join(""):'<div class="empty">လက်ကျန်နည်းသတိပေးချက် မရှိပါ။</div>';
+ $("recentSales").innerHTML=db.sales.length?[...db.sales].slice(-5).reverse().map(s=>`<div class="item"><b>${esc(s.name)} × ${s.qty}</b><div class="item-meta">${s.date} ${s.time} · ${esc(s.customerName||"ဖောက်သည်မရွေး")}</div><div class="amount">${money(s.total)} · အမြတ် ${money(s.profit)}</div></div>`).join(""):'<div class="empty">အရောင်းမှတ်တမ်းမရှိသေးပါ။</div>';
+ $("purchaseList").innerHTML=db.purchases.length?[...db.purchases].reverse().slice(0,30).map(p=>`<div class="item"><b>${esc(p.name)} × ${p.qty}</b><div class="item-meta">${p.date} · ${esc(p.supplierName||"ပေးသွင်းသူမရွေး")} · ${p.payment==="credit"?"အကြွေး":"ပေးချေပြီး"}</div><div class="amount">${money(p.total)}</div></div>`).join(""):'<div class="empty">ဝယ်ယူမှုမရှိသေးပါ။</div>';
+ $("peopleList").innerHTML=db.people.length?db.people.map(p=>{let due=p.type==="customer"?db.sales.filter(s=>s.customerId===p.id).reduce((a,s)=>a+s.due,0):db.purchases.filter(x=>x.supplierId===p.id&&x.payment==="credit").reduce((a,x)=>a+x.total,0);return `<div class="item"><b>${esc(p.name)} <span class="pill">${p.type==="customer"?"ဖောက်သည်":"ပေးသွင်းသူ"}</span></b><div class="item-meta">${esc(p.phone||"ဖုန်းမရှိ")} · ${esc(p.note||"")}</div><div class="amount">${p.type==="customer"?"ရရန်အကြွေး":"ပေးရန်အကြွေး"} ${money(due)}</div><div class="actions"><button class="secondary smallbtn" onclick="recordPayment('${p.id}')">အကြွေးဆပ်/ပေး</button><button class="danger smallbtn" onclick="deletePerson('${p.id}')">ဖျက်မယ်</button></div></div>`}).join(""):'<div class="empty">လူစာရင်းမရှိသေးပါ။</div>';
+ $("expenseList").innerHTML=db.expenses.length?[...db.expenses].reverse().slice(0,50).map(x=>`<div class="item"><b>${esc(x.name)}</b><div class="item-meta">${x.date} · ${esc(x.note||"")}</div><div class="amount">${money(x.amount)}</div></div>`).join(""):'<div class="empty">အသုံးစရိတ်မရှိသေးပါ။</div>';
+}
+$("productForm").addEventListener("submit",e=>{e.preventDefault();let pid=$("pId").value,name=$("pName").value.trim(),cost=+$("pCost").value,price=+$("pPrice").value,stock=+$("pStock").value,min=+$("pMin").value;if(!name||![cost,price,stock,min].every(Number.isFinite)||cost<0||price<0||stock<0||min<0)return alert("အချက်အလက်စစ်ဆေးပါ");let p={id:pid||id(),name,code:$("pCode").value.trim(),category:$("pCategory").value.trim(),cost,price,stock,unit:$("pUnit").value.trim()||"ခု",min};if(pid){let old=db.products.find(x=>x.id===pid);if(old){p.stock=stock;Object.assign(old,p)}}else db.products.push(p);e.target.reset();$("pId").value="";$("pUnit").value="ခု";$("pMin").value="3";$("productSubmit").textContent="ပစ္စည်းသိမ်းမယ်";persist();alert("ပစ္စည်းစာရင်း သိမ်းပြီးပါပြီ")});
+function editProduct(pid){let p=db.products.find(x=>x.id===pid);if(!p)return;$("pId").value=p.id;$("pName").value=p.name;$("pCode").value=p.code||"";$("pCategory").value=p.category||"";$("pCost").value=p.cost;$("pPrice").value=p.price;$("pStock").value=p.stock;$("pUnit").value=p.unit||"ခု";$("pMin").value=p.min||0;$("productSubmit").textContent="ပြင်ဆင်ချက်သိမ်းမယ်";showTab("inventory");window.scrollTo(0,0)}
+function adjustStock(pid){let p=db.products.find(x=>x.id===pid);if(!p)return;let v=prompt("လက်ကျန်တိုးရန် အပေါင်း၊ လျှော့ရန် အနုတ် ထည့်ပါ။ လက်ရှိ "+p.stock,prompt? "1":"1");if(v===null)return;let n=Number(v);if(!Number.isFinite(n)||p.stock+n<0)return alert("အရေအတွက်မမှန်ပါ");p.stock+=n;persist()}
+function deleteProduct(pid){let p=db.products.find(x=>x.id===pid);if(!p)return;if(!confirm(p.name+" ကို ဖျက်မလား။"))return;db.products=db.products.filter(x=>x.id!==pid);persist()}
+$("cancelEdit").onclick=()=>{$("productForm").reset();$("pId").value="";$("pUnit").value="ခု";$("pMin").value="3";$("productSubmit").textContent="ပစ္စည်းသိမ်းမယ်"};
+$("productSearch").addEventListener("input",render);
+function updateSalePreview(){let p=db.products.find(x=>x.id===$("saleProduct").value);if(!p){$("salePreview").textContent="ရောင်းရန်ပစ္စည်းမရှိပါ";return}let q=+$("saleQty").value||0,price=+$("salePrice").value||p.price;$("salePreview").textContent="စုစုပေါင်း "+money(q*price)+" · ခန့်မှန်းအမြတ် "+money(q*(price-p.cost))+" · လက်ကျန် "+p.stock}
+$("saleProduct").onchange=()=>{let p=db.products.find(x=>x.id===$("saleProduct").value);if(p)$("salePrice").value=p.price;updateSalePreview()};["saleQty","salePrice"].forEach(x=>$(x).addEventListener("input",updateSalePreview));
+$("saleForm").addEventListener("submit",e=>{e.preventDefault();let p=db.products.find(x=>x.id===$("saleProduct").value),qty=+$("saleQty").value,price=+$("salePrice").value,paid=+$("salePaid").value;if(!p||qty<=0||price<0||paid<0||qty>p.stock)return alert("ပစ္စည်း၊ အရေအတွက်၊ ဈေးနှုန်း သို့မဟုတ် လက်ကျန်ကို စစ်ဆေးပါ");let total=qty*price;if(paid>total)return alert("ပေးငွေသည် စုစုပေါင်းထက် မများရပါ");let c=db.people.find(x=>x.id===$("saleCustomer").value),now=new Date();p.stock-=qty;db.sales.push({id:id(),productId:p.id,name:p.name,qty,price,cost:p.cost,total,profit:(price-p.cost)*qty,paid,due:total-paid,payment:paid>=total?"paid":paid>0?"partial":"credit",customerId:c?.id||"",customerName:c?.name||"",note:$("saleNote").value,date:today(),time:now.toLocaleTimeString()});e.target.reset();$("saleQty").value=1;persist();alert("အရောင်းသွင်းပြီးပါပြီ။ စုစုပေါင်း "+money(total)+" · အကြွေး "+money(total-paid));showTab("dashboard")});
+$("purchaseForm").addEventListener("submit",e=>{e.preventDefault();let p=db.products.find(x=>x.id===$("buyProduct").value),qty=+$("buyQty").value,cost=+$("buyCost").value;if(!p||qty<=0||cost<0)return alert("အချက်အလက်စစ်ဆေးပါ");let s=db.people.find(x=>x.id===$("buySupplier").value);p.stock+=qty;p.cost=cost;db.purchases.push({id:id(),productId:p.id,name:p.name,qty,cost,total:qty*cost,supplierId:s?.id||"",supplierName:s?.name||"",payment:$("buyPayment").value,date:today()});e.target.reset();persist();alert("ဝယ်ယူမှုသိမ်းပြီး လက်ကျန်တိုးပြီးပါပြီ")});
+$("personForm").addEventListener("submit",e=>{e.preventDefault();db.people.push({id:id(),name:$("personName").value.trim(),type:$("personType").value,phone:$("personPhone").value.trim(),note:$("personNote").value.trim()});e.target.reset();persist()});
+function deletePerson(pid){if(!confirm("ဒီလူစာရင်းကို ဖျက်မလား။ အရောင်းမှတ်တမ်းကို မဖျက်ပါ။"))return;db.people=db.people.filter(p=>p.id!==pid);persist()}
+function recordPayment(pid){let p=db.people.find(x=>x.id===pid);if(!p)return;let amt=Number(prompt("အကြွေးဆပ်/ပေးငွေ ပမာဏ (Ks)"));if(!Number.isFinite(amt)||amt<=0)return;db.expenses.push({id:id(),name:(p.type==="customer"?"ဖောက်သည်အကြွေးရငွေ - ":"Supplier ပေးငွေ - ")+p.name,amount:p.type==="customer"?-amt:amt,note:"အကြွေးရှင်းတမ်း (ရိုးရှင်းမှတ်တမ်း)",date:today()});alert("ငွေလှုပ်ရှားမှုကို အသုံးစရိတ်မှတ်တမ်းတွင် မှတ်ထားသည်။ အရောင်း/ဝယ်ယူမှုအကြွေးကို အလိုအလျောက်မလျှော့သေးပါ။");persist()}
+$("expenseForm").addEventListener("submit",e=>{e.preventDefault();let amount=+$("expenseAmount").value;if(amount<=0)return alert("ငွေပမာဏစစ်ဆေးပါ");db.expenses.push({id:id(),name:$("expenseName").value.trim(),amount,note:$("expenseNote").value.trim(),date:today()});e.target.reset();persist()});
+$("shopForm").addEventListener("submit",e=>{e.preventDefault();db.shop={name:$("shopName").value.trim(),phone:$("shopPhone").value.trim(),address:$("shopAddress").value.trim(),currency:$("currency").value.trim()||"Ks"};persist();alert("ဆိုင်အချက်အလက် သိမ်းပြီးပါပြီ")});
+function runReport(){let from=$("reportFrom").value||"0000-01-01",to=$("reportTo").value||"9999-12-31",sales=db.sales.filter(x=>x.date>=from&&x.date<=to),purchases=db.purchases.filter(x=>x.date>=from&&x.date<=to),expenses=db.expenses.filter(x=>x.date>=from&&x.date<=to);let revenue=sales.reduce((a,x)=>a+x.total,0),profit=sales.reduce((a,x)=>a+x.profit,0),exp=expenses.reduce((a,x)=>a+x.amount,0),buy=purchases.reduce((a,x)=>a+x.total,0),due=sales.reduce((a,x)=>a+x.due,0);$("reportResult").innerHTML=`<div class="item">အရောင်းစုစုပေါင်း <b class="amount">${money(revenue)}</b></div><div class="item">ခန့်မှန်းကုန်အမြတ် <b class="amount">${money(profit)}</b></div><div class="item">အသုံးစရိတ် <b class="amount">${money(exp)}</b></div><div class="item">ခန့်မှန်းအမြတ် (အသုံးစရိတ်နုတ်ပြီး) <b class="amount">${money(profit-exp)}</b></div><div class="item">ဝယ်ယူမှုစုစုပေါင်း <b class="amount">${money(buy)}</b></div><div class="item">ဖောက်သည်အကြွေးကျန် (ရွေးထားသောကာလ) <b class="amount">${money(due)}</b></div><div class="muted">မှတ်ချက် - အကြွေးပြန်ဆပ်မှု၊ ပစ္စည်းပြန်အမ်းမှုနှင့် စာရင်းညှိနှိုင်းမှုအပြည့်အစုံ မပါသေးသော ခန့်မှန်းအစီရင်ခံစာဖြစ်သည်။</div>`}
+$("runReport").onclick=runReport;$("reportFrom").value=today().slice(0,8)+"01";$("reportTo").value=today();
+function download(name,content,type){let a=document.createElement("a"),url=URL.createObjectURL(new Blob([content],{type}));a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1500)}
+function csv(rows,name){let q=v=>'"'+String(v??"").replace(/"/g,'""')+'"';download(name,"\uFEFF"+rows.map(r=>r.map(q).join(",")).join("\r\n"),"text/csv;charset=utf-8")}
+$("csvSales").onclick=()=>csv([["Date","Time","Product","Qty","Sales","Cost","Profit","Paid","Due"],...db.sales.map(s=>[s.date,s.time,s.name,s.qty,s.total,s.cost*s.qty,s.profit,s.paid,s.due])],"AK-Sales.csv");
+$("csvProducts").onclick=()=>csv([["Name","Code","Category","Cost","Price","Stock","Unit"],...db.products.map(p=>[p.name,p.code,p.category,p.cost,p.price,p.stock,p.unit])],"AK-Products.csv");
+function backup(){download("AK-Sale-Backup-"+today()+".json",JSON.stringify({app:"AK Sale Software",version:3,exportedAt:new Date().toISOString(),data:db},null,2),"application/json")}
+$("backupBtn").onclick=backup;$("backupQuick").onclick=backup;
+$("restoreBtn").onclick=()=>$("restoreFile").click();
+$("restoreFile").onchange=async e=>{let f=e.target.files[0];if(!f)return;try{let obj=JSON.parse(await f.text()),d=obj.data;if(!d||!Array.isArray(d.products)||!Array.isArray(d.sales))throw Error();if(!confirm("လက်ရှိ Data ကို Backup ထဲက Data နဲ့ အစားထိုးမလား။"))return;db={products:d.products||[],sales:d.sales||[],purchases:d.purchases||[],people:d.people||[],expenses:d.expenses||[],shop:d.shop||db.shop};persist();alert("Backup ပြန်သွင်းပြီးပါပြီ")}catch(err){alert("Backup ဖိုင်မမှန်ပါ")}e.target.value=""};
+function shareProduct(pid){let p=db.products.find(x=>x.id===pid);if(!p)return;shareText(`${p.name}\nဈေးနှုန်း - ${money(p.price)}\n${db.shop.name}\n${db.shop.phone||""}\n${db.shop.address||""}`)}
+function shareText(text){if(navigator.share)navigator.share({title:db.shop.name,text}).catch(()=>{});else if(navigator.clipboard)navigator.clipboard.writeText(text).then(()=>alert("ကြော်ငြာစာသား Copy လုပ်ပြီးပါပြီ။ Viber/TikTok မှာ Paste လုပ်ပါ။")).catch(()=>prompt("Copy လုပ်ပါ",text));else prompt("Copy လုပ်ပါ",text)}
+$("shareBtn").onclick=()=>shareText(`${db.shop.name}\n${db.shop.phone}\n${db.shop.address}\nAK Sale Software ဖြင့် စီမံထားသော ဆိုင်စာရင်း`);
+$("shareAppBtn").onclick=()=>shareText("AK Sale Software - အရောင်း၊ ကုန်ပစ္စည်း၊ စာရင်းချုပ် စီမံခန့်ခွဲမှု");
+$("printReport").onclick=()=>{runReport();window.print()};
+$("clearData").onclick=()=>{if(!confirm("ဒီဖုန်း Browser ထဲက AK Sale Data အားလုံးကို အပြီးဖျက်မှာ သေချာပါသလား။ Backup ရှိမှ ဆက်လုပ်ပါ။"))return;Object.keys(db).forEach(k=>localStorage.removeItem("ak3_"+k));location.reload()};
+$("salePaid").value="0";
+render();
+if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+</script>
+</body>
+</html>

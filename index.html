@@ -153,7 +153,17 @@ footer{padding:24px 10px;color:#829087}
 <div class="panel"><h2>တူညီသောပစ္စည်း ဈေးနှိုင်းယှဉ်ချက်</h2><p class="muted">ပစ္စည်းအမည်တူ Listing များကို ဆိုင်ဈေးနှုန်းအလိုက် နှိုင်းယှဉ်ပြသည်။ ဆိုင်ထံမှ ဈေးနှုန်းနှင့် လက်ကျန်ကို ထပ်မံအတည်ပြုပါ။</p><div id="marketCompare"></div></div>
 <div class="panel"><h2>ရှာတွေ့သော ဆိုင်များနှင့် ပစ္စည်းများ</h2><div id="marketFeed" class="grid"></div></div>
 </section>
-\n<section id="backup" class="view">
+\n<section id="apkGuide" class="view">
+<div class="panel"><h2>Ak shopping markets · Android APK</h2><p class="muted">APK တည်ဆောက်မှု၊ စမ်းသပ်မှု၊ ထည့်သွင်းမှုနှင့် Update လုပ်နည်း</p>
+<div class="notice"><b>အရေးကြီး:</b> Debug APK သည် စမ်းသပ်ရန်သာဖြစ်သည်။ ဆိုင်များထံ ရောင်းချဖြန့်ဝေရန်အတွက် ကိုယ်ပိုင် keystore ဖြင့် လက်မှတ်ထိုးထားသော Release APK ကိုသာ အသုံးပြုပါ။</div>
+<div class="actions"><a class="btn" href="https://github.com/rmaynah102-afk/Ak-online-sales/actions/workflows/build-android-apk.yml" target="_blank" rel="noopener">APK Build / Download</a><a class="btn alt" href="https://github.com/rmaynah102-afk/Ak-online-sales" target="_blank" rel="noopener">Source Code</a></div>
+<h3>၁။ APK ရယူရန်</h3><ol><li>APK Build / Download ကိုနှိပ်ပါ။</li><li>နောက်ဆုံးအောင်မြင်သော Build ကိုဖွင့်ပါ။</li><li>Artifacts အောက်မှ <b>AK-Sale-Software-debug-APK</b> ကို Download လုပ်ပါ။</li><li>ZIP ဖိုင်ကိုဖြည်ပြီး APK ဖိုင်ကို ရွေးပါ။</li></ol>
+<h3>၂။ Android ဖုန်းတွင် ထည့်သွင်းရန်</h3><ol><li>Download လုပ်ထားသော APK ကိုနှိပ်ပါ။</li><li>Android က တားလျှင် သက်ဆိုင်ရာ Browser / File Manager အတွက် “Install unknown apps” ခွင့်ပြုပါ။</li><li>Install ကိုနှိပ်ပြီး App ကိုဖွင့်ပါ။</li><li>Google Play Protect သတိပေးချက်ကို မျက်ကွယ်မပြုဘဲ APK ၏ Source နှင့် Signature ကို စစ်ဆေးပါ။ မယုံကြည်ရသော APK ကို မတပ်ဆင်ပါနှင့်။</li></ol>
+<h3>၃။ Update လုပ်ရန်</h3><p>နောက်ဗားရှင်းကို တပ်ဆင်ရာတွင် ယခင် APK နှင့် တူညီသော Android package ID နှင့် signing key လိုအပ်သည်။ App ကို uninstall မလုပ်မီ Backup JSON ထုတ်ထားပါ။ Signing key ပျောက်ဆုံးပါက ရှိပြီးသား App ကို ပုံမှန် Update မလုပ်နိုင်ပါ။</p>
+<h3>၄။ ရောင်းချမည့်အခါ မဖြစ်မနေစစ်ရန်</h3><ul><li>Release APK ကို signed ဖြစ်ကြောင်း စစ်ဆေးရန်။</li><li>Gmail Login၊ Firebase Cloud Sync နှင့် ဆိုင်တစ်ဆိုင်ချင်းစီ data ခွဲထားမှုကို ဖုန်းနှစ်လုံးဖြင့် စမ်းရန်။</li><li>Printer၊ Backup/Restore၊ အရောင်း၊ အကြွေးနှင့် KPay လုပ်ငန်းစဉ်များကို စမ်းရန်။</li><li>အသုံးပြုသူလက်စွဲ၊ Version၊ Support ဆက်သွယ်ရန်နှင့် ဈေးနှုန်းကို ထည့်ရန်။</li></ul>
+<p class="muted">လက်ရှိ Build အခြေအနေနှင့် Artifact ရရှိမှုကို GitHub Actions ထဲတွင် အတည်ပြုပါ။ Build အောင်မြင်ခြင်းတစ်ခုတည်းသည် Release APK ကို လုံခြုံစိတ်ချစွာ ရောင်းချရန် အသင့်ဖြစ်ကြောင်း မဆိုလိုပါ။</p>
+</div></section>
+<section id="backup" class="view">
 <div class="panel"><h2>Backup / Restore</h2><p class="muted">ပစ္စည်း၊ အရောင်း၊ အဝယ်၊ လူစာရင်း၊ အကြွေးဆပ်မှတ်တမ်းနှင့် အသုံးစရိတ်အားလုံးကို JSON ဖိုင်အဖြစ် ထုတ်နိုင်သည်။</p><div class="actions"><button onclick="backup()">Backup JSON ထုတ်မည်</button><label class="btn">Restore JSON<input type="file" accept=".json,application/json" id="restoreInput" hidden onchange="restore(event)"></label><button class="alt" onclick="csvExport()">အရောင်း CSV ထုတ်မည်</button></div></div>
 <div class="panel"><h2>အသုံးပြုခွင့် / လစဉ်ကြေး</h2>
 <div class="notice">စမ်းသုံးကာလနှင့် Subscription သက်တမ်းကို Server မှ စစ်ဆေးသည်။ သက်တမ်းတိုးရန် KPay ငွေလွှဲပြီး အောက်ပါအချက်အလက်ဖြင့် တောင်းဆိုပါ။</div>
@@ -198,7 +208,7 @@ const money=n=>Number(n||0).toLocaleString("en-US")+" "+(db.shop.currency||"MMK"
 const dateNow=()=>new Date().toISOString();
 const dateKey=s=>String(s||"").slice(0,10);
 function persist(){try{localStorage.setItem(fbUser?userDBKey(fbUser.uid):DBKEY,JSON.stringify(db));$("saveState").textContent=fbUser?"Cloud အကောင့်ထဲ သိမ်းဆည်းရန် အသင့်":"ဖုန်းထဲ သိမ်းပြီး";renderAll();if(fbUser&&cloudReady)cloudSave()}catch(e){alert("ဖုန်းထဲသိမ်းမရပါ။ ဓာတ်ပုံအရွယ်အစားလျှော့ပြီး Backup စစ်ပါ။");console.error(e)}}
-const pages=[["home","ပင်မ"],["products","ပစ္စည်း"],["sales","အရောင်း"],["purchases","အဝယ်"],["people","Customer/Supplier"],["expenses","အသုံးစရိတ်"],["reports","အစီရင်ခံစာ"],["ads","ကြော်ငြာ"],["market","AK Market"],["centerManagement","စင်တာထိန်းချုပ်မှု"],["backup","Backup / Settings"]];
+const pages=[["home","ပင်မ"],["products","ပစ္စည်း"],["sales","အရောင်း"],["purchases","အဝယ်"],["people","Customer/Supplier"],["expenses","အသုံးစရိတ်"],["reports","အစီရင်ခံစာ"],["ads","ကြော်ငြာ"],["market","AK Market"],["centerManagement","စင်တာထိန်းချုပ်မှု"],["apkGuide","APK လမ်းညွှန်"],["backup","Backup / Settings"]];
 $("nav").innerHTML=pages.map(([id,n])=>`<button onclick="go('${id}')">${n}</button>`).join("");
 function go(id){document.querySelectorAll(".view").forEach(x=>x.classList.toggle("active",x.id===id));renderAll()}
 function resetProduct(){ $("productForm").reset();$("pId").value="";$("pUnit").value="ခု";$("pCost").value=0;$("pRetail").value=0;$("pWholesale").value=0;$("pStock").value=0;productImageData="";$("photoPreview").classList.add("hidden")}

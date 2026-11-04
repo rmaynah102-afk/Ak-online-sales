@@ -26,11 +26,7 @@ These changes are committed to GitHub, but they are **not live in Firebase until
    ```sh
    firebase use --add
    ```
-3. Set the email address that will be the subscription administrator (must be a Firebase Authentication account):
-   ```sh
-   firebase functions:secrets:set ADMIN_EMAIL
-   ```
-   If using the parameter prompt for `ADMIN_EMAIL`, enter the exact admin Gmail address used to sign in to AK Sale Software.
+3. During the first Functions deployment, Firebase CLI will ask for the `ADMIN_EMAIL` parameter. Enter the exact admin Gmail address that will sign in to AK Sale Software. This must be a Firebase Authentication account. For repeatable deployments, save the parameter in the Functions environment file for the selected project; do not commit private credentials.
 4. Deploy rules, hosting and functions:
    ```sh
    firebase deploy --only firestore:rules,functions,hosting

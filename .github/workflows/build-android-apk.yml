@@ -15,7 +15,7 @@ on:
       - 'functions/**'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -146,6 +146,17 @@ jobs:
         if: steps.signing.outputs.ready == 'true'
         working-directory: android
         run: ./gradlew assembleRelease --no-daemon
+
+
+      - name: Publish signed APK to GitHub Release
+        if: steps.signing.outputs.ready == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ak-v${{ github.run_number }}
+          name: AK Sale Software v${{ github.run_number }}
+          files: android/app/build/outputs/apk/release/app-release.apk
+          generate_release_notes: true
+          make_latest: true
 
       - name: Upload signed release APK
         if: steps.signing.outputs.ready == 'true'

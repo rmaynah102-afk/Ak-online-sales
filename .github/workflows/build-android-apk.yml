@@ -23,6 +23,20 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+      - name: Validate inline JavaScript
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          const vm = require('vm');
+          const html = fs.readFileSync('index.html', 'utf8');
+          const scripts = [...html.matchAll(/<script\\b([^>]*)>([\\s\\S]*?)<\\/script>/gi)]
+            .filter(([, attrs]) => !/\\bsrc\\s*=/.test(attrs));
+          if (!scripts.length) throw new Error('No inline JavaScript found in index.html');
+          scripts.forEach((match, index) => {
+            new vm.Script(match[2], { filename: 'index.html:inline-script-' + (index + 1) });
+          });
+          console.log('Validated', scripts.length, 'inline JavaScript blocks.');
+          NODE
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
@@ -50,11 +64,11 @@ jobs:
           const versionName = pkg.version + '.' + run;
           const gradlePath = 'android/app/build.gradle';
           let gradle = fs.readFileSync(gradlePath, 'utf8');
-          if (!/versionCode\s+\d+/.test(gradle) || !/versionName\s+"[^"]+"/.test(gradle)) {
+          if (!/versionCode\\s+\\d+/.test(gradle) || !/versionName\\s+"[^"]+"/.test(gradle)) {
             throw new Error('Could not find Android versionCode/versionName in app/build.gradle');
           }
-          gradle = gradle.replace(/versionCode\s+\d+/, 'versionCode ' + versionCode);
-          gradle = gradle.replace(/versionName\s+"[^"]+"/, 'versionName "' + versionName + '"');
+          gradle = gradle.replace(/versionCode\\s+\\d+/, 'versionCode ' + versionCode);
+          gradle = gradle.replace(/versionName\\s+"[^"]+"/, 'versionName "' + versionName + '"');
           fs.writeFileSync(gradlePath, gradle);
           console.log('Android version:', versionName, 'code:', versionCode);
           NODE

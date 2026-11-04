@@ -32,14 +32,27 @@ service cloud.firestore {
         && request.resource.data.price > 0
         && request.resource.data.currency == 'MMK'
         && request.resource.data.imageUrl is string
-        && request.resource.data.imagePath is string;
+        && request.resource.data.imagePath == 'market/' + request.auth.uid + '/' + listingId + '/photo'
+        && request.resource.data.description is string
+        && request.resource.data.description.size() <= 700
+        && request.resource.data.city is string
+        && request.resource.data.city.size() <= 80
+        && request.resource.data.township is string
+        && request.resource.data.township.size() <= 80
+        && request.resource.data.phone is string
+        && request.resource.data.phone.size() <= 32;
       allow update: if request.auth != null
         && resource.data.ownerUid == request.auth.uid
         && request.resource.data.ownerUid == resource.data.ownerUid
         && request.resource.data.status == 'published'
         && request.resource.data.title is string
+        && request.resource.data.title.size() >= 2
+        && request.resource.data.title.size() <= 90
         && request.resource.data.price is number
-        && request.resource.data.price > 0;
+        && request.resource.data.price > 0
+        && request.resource.data.currency == 'MMK'
+        && request.resource.data.description is string
+        && request.resource.data.description.size() <= 700;
       allow delete: if request.auth != null && resource.data.ownerUid == request.auth.uid;
     }
 

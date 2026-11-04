@@ -50,11 +50,11 @@ jobs:
           const versionName = pkg.version + '.' + run;
           const gradlePath = 'android/app/build.gradle';
           let gradle = fs.readFileSync(gradlePath, 'utf8');
-          if (!/versionCode\\s+\\d+/.test(gradle) || !/versionName\\s+"[^"]+"/.test(gradle)) {
+          if (!/versionCode\s+\d+/.test(gradle) || !/versionName\s+"[^"]+"/.test(gradle)) {
             throw new Error('Could not find Android versionCode/versionName in app/build.gradle');
           }
-          gradle = gradle.replace(/versionCode\\s+\\d+/, 'versionCode ' + versionCode);
-          gradle = gradle.replace(/versionName\\s+"[^"]+"/, 'versionName "' + versionName + '"');
+          gradle = gradle.replace(/versionCode\s+\d+/, 'versionCode ' + versionCode);
+          gradle = gradle.replace(/versionName\s+"[^"]+"/, 'versionName "' + versionName + '"');
           fs.writeFileSync(gradlePath, gradle);
           console.log('Android version:', versionName, 'code:', versionCode);
           NODE

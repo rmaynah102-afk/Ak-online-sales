@@ -11,18 +11,12 @@ exports.startTrial = functions.auth.user().onCreate(async (user) => {
   const snap = await ref.get();
   if (snap.exists) return null;
 
-  const now = Date.now();
-  const expiresAt = admin.firestore.Timestamp.fromDate(
-    new Date(now + 7 * 24 * 60 * 60 * 1000)
-  );
-
+  // New accounts stay locked until the owner verifies payment and approves.
   await ref.create({
     uid: user.uid,
     email: user.email || "",
-    status: "trial",
-    plan: "trial-7-days",
-    startsAt: admin.firestore.FieldValue.serverTimestamp(),
-    expiresAt,
+    status: "pending_payment",
+    plan: "awaiting-owner-approval",
     createdAt: admin.firestore.FieldValue.serverTimestamp()
   });
   return null;
@@ -54,7 +48,7 @@ exports.claimShopDevice = functions.https.onCall(async (data, context) => {
   }
   const licenseSnap = await db.collection("licenses").doc(uid).get();
   const license = licenseSnap.data() || {};
-  if (!licenseSnap.exists || !["trial", "active"].includes(license.status) ||
+  if (!licenseSnap.exists || license.status !== "active" ||
       !license.expiresAt || license.expiresAt.toMillis() <= Date.now()) {
     throw new functions.https.HttpsError("permission-denied", "Subscription သက်တမ်းမရှိပါ။");
   }

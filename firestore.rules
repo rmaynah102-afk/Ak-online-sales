@@ -19,6 +19,30 @@ service cloud.firestore {
       allow read, write: if hasActiveLicense(userId);
     }
 
+    match /marketListings/{listingId} {
+      allow read: if resource.data.status == 'published'
+        || (request.auth != null && resource.data.ownerUid == request.auth.uid);
+      allow create: if hasActiveLicense(request.auth.uid)
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.status == 'published'
+        && request.resource.data.title is string
+        && request.resource.data.title.size() >= 2
+        && request.resource.data.title.size() <= 90
+        && request.resource.data.price is number
+        && request.resource.data.price > 0
+        && request.resource.data.currency == 'MMK'
+        && request.resource.data.imageUrl is string
+        && request.resource.data.imagePath is string;
+      allow update: if request.auth != null
+        && resource.data.ownerUid == request.auth.uid
+        && request.resource.data.ownerUid == resource.data.ownerUid
+        && request.resource.data.status == 'published'
+        && request.resource.data.title is string
+        && request.resource.data.price is number
+        && request.resource.data.price > 0;
+      allow delete: if request.auth != null && resource.data.ownerUid == request.auth.uid;
+    }
+
     match /paymentRequests/{requestId} {
       allow create: if request.auth != null
         && request.resource.data.uid == request.auth.uid

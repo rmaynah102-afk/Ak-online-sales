@@ -67,6 +67,21 @@ if (!html.includes('akCloudConflict=false;akLocalDirty=false;')) {
   console.error('Explicit Cloud Load must clear conflict state only after replacing local data.');
   process.exitCode = 1;
 }
+if (!serverCallables.has('createPaymentRequest') || !clientCallables.has('createPaymentRequest')) {
+  console.error('Payment submissions must use the trusted createPaymentRequest callable.');
+  process.exitCode = 1;
+}
+if (!functionsSource.includes('paymentReferences') ||
+    !functionsSource.includes('status: "pending"') ||
+    !functionsSource.includes('paymentRequestId: requestRef.id')) {
+  console.error('Payment submission must atomically reserve a unique transaction reference.');
+  process.exitCode = 1;
+}
+const paymentRule = rules.match(/match \/paymentRequests\/\{requestId\} \{([\s\S]*?)\n\s*\}/);
+if (!paymentRule || !/allow create, update, delete: if false/.test(paymentRule[1])) {
+  console.error('Clients must not write payment requests directly.');
+  process.exitCode = 1;
+}
 if (!process.exitCode) console.log('Firestore owner-only private data and trusted staff membership guards OK.');
 
 if (!functionsSource.includes('paymentReferences') || !functionsSource.includes('tx.create(referenceRef')) {

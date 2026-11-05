@@ -1,12 +1,19 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    function isVerifiedOwner() {
+      return request.auth != null
+        && request.auth.token.email == 'sannnlinpaing@gmail.com'
+        && request.auth.token.email_verified == true;
+    }
+
     function hasActiveLicense(uid) {
       let license = get(/databases/$(database)/documents/licenses/$(uid)).data;
-      return request.auth != null
-        && request.auth.uid == uid
-        && license.status == 'active'
-        && license.expiresAt > request.time;
+      return isVerifiedOwner()
+        || (request.auth != null
+          && request.auth.uid == uid
+          && license.status == 'active'
+          && license.expiresAt > request.time);
     }
 
     // Staff membership is written only by trusted Cloud Functions.

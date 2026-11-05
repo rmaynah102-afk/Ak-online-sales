@@ -8,12 +8,12 @@ service cloud.firestore {
     }
 
     function hasActiveLicense(uid) {
-      let license = get(/databases/$(database)/documents/licenses/$(uid)).data;
       return isVerifiedOwner()
         || (request.auth != null
           && request.auth.uid == uid
-          && license.status == 'active'
-          && license.expiresAt > request.time);
+          && exists(/databases/$(database)/documents/licenses/$(uid))
+          && get(/databases/$(database)/documents/licenses/$(uid)).data.status == 'active'
+          && get(/databases/$(database)/documents/licenses/$(uid)).data.expiresAt > request.time);
     }
 
     // Staff membership is written only by trusted Cloud Functions.

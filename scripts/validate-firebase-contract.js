@@ -77,6 +77,11 @@ if (!functionsSource.includes('paymentReferences') ||
   console.error('Payment submission must atomically reserve a unique transaction reference.');
   process.exitCode = 1;
 }
+if ((functionsSource.match(/update\\("KBZPay:" \\+ normalizedReference\\)/g) || []).length < 2 ||
+    !functionsSource.includes('replace(/\\\\s+/g, "").toUpperCase()')) {
+  console.error('KBZPay references must use the same whitespace/case normalization at submission and approval.');
+  process.exitCode = 1;
+}
 const paymentRule = rules.match(/match \/paymentRequests\/\{requestId\} \{([\s\S]*?)\n\s*\}/);
 if (!paymentRule || !/allow create, update, delete: if false/.test(paymentRule[1])) {
   console.error('Clients must not write payment requests directly.');

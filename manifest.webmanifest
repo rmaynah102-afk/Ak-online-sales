@@ -1,13 +1,17 @@
 {
-  "name": "Ak shopping markets",
-  "short_name": "Ak Markets",
-  "description": "Myanmar retail, wholesale and shopping center management",
+  "id": "./",
+  "name": "AK Sale Software",
+  "short_name": "AK Sale",
+  "description": "AK Sale Software — Myanmar hardware and electrical shop sales, inventory and business management.",
   "lang": "my",
-  "start_url": "./",
+  "categories": ["business", "productivity"],
+  "start_url": "./?app=1",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#f1f5f2",
-  "theme_color": "#123b2a",
+  "orientation": "any",
+  "prefer_related_applications": false,
+  "background_color": "#f5f7f6",
+  "theme_color": "#0b3d35",
   "icons": [
     {
       "src": "./ak-logo.svg",

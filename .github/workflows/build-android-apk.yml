@@ -130,10 +130,10 @@ jobs:
           fs.writeFileSync(gradlePath, gradle);
           console.log('Android version:', versionName, 'code:', versionCode);
           NODE
-      - name: Generate AK Sale Android launcher icons
-        run: node scripts/generate-android-icons.js
       - name: Sync Android project
         run: npx cap sync android
+      - name: Generate AK Sale Android launcher icons
+        run: node scripts/generate-android-icons.js
       - name: Check release signing secrets
         id: signing
         env:

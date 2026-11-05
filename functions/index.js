@@ -96,12 +96,6 @@ exports.revokeShopDevice = functions.https.onCall(async (data, context) => {
 // Sales, stock, cost, customers, debts, and address are never copied to the public directory.
 exports.syncPublicShopProfile = functions.https.onCall(async (data, context) => {
   const uid = await requireActiveShop(context);
-  const licenseSnap = await db.collection("licenses").doc(uid).get();
-  const license = licenseSnap.data() || {};
-  if (!licenseSnap.exists || license.status !== "active" ||
-      !license.expiresAt || license.expiresAt.toMillis() <= Date.now()) {
-    throw new functions.https.HttpsError("permission-denied", "Subscription သက်တမ်းမရှိပါ။");
-  }
   const appSnap = await db.collection("users").doc(uid).collection("private").doc("appData").get();
   if (!appSnap.exists || !appSnap.data().data) {
     throw new functions.https.HttpsError("failed-precondition", "ဆိုင်ဒေတာ မတွေ့ပါ။");

@@ -2,7 +2,7 @@ name: Build AK Sale Android APK
 
 concurrency:
   group: ak-sale-build-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 on:
   workflow_dispatch:
@@ -24,6 +24,8 @@ on:
       - 'storage.rules'
       - 'functions/**'
       - 'scripts/**'
+      - 'USER-GUIDE-MY.md'
+      - 'README.md'
 
 permissions:
   contents: write

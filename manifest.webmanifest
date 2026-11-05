@@ -13,8 +13,8 @@
   "display": "standalone",
   "orientation": "any",
   "prefer_related_applications": false,
-  "background_color": "#07183f",
-  "theme_color": "#0649b8",
+  "background_color": "#071b57",
+  "theme_color": "#071b57",
   "icons": [
     {
       "src": "./ak-logo.svg",

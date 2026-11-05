@@ -4,7 +4,7 @@
   "private": true,
   "description": "Myanmar retail, wholesale, inventory and shopping center management app",
   "scripts": {
-    "copy-web": "node -e \"require('fs').mkdirSync('www',{recursive:true});require('fs').copyFileSync('index.html','www/index.html')\"",
+    "copy-web": "node -e \"const fs=require('fs');const path=require('path');fs.mkdirSync('www',{recursive:true});for(const f of ['index.html','ak-logo.svg','manifest.webmanifest','sw.js','download.html','USER-GUIDE-MY.md','USER-GUIDE-EN.md','BUSINESS-GUIDE-MY.md','BUSINESS-GUIDE-EN.md']){if(fs.existsSync(f))fs.copyFileSync(f,path.join('www',f));else if(f==='index.html')throw new Error('Missing index.html');}\"",
     "android:sync": "npm run copy-web && cap sync android"
   },
   "dependencies": {

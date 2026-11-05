@@ -408,8 +408,8 @@ function akApplyAnnouncementAdminVisibility(){const el=document.getElementById("
 
 function persist(){if(document.body.classList.contains("ak-license-locked")){alert("အသုံးပြုခွင့်မရှိသေးပါ။ Gmail ဖြင့် Login ဝင်ပြီး ငွေပေးချေမှုအတည်ပြုချက် ရယူပါ။");return}try{localStorage.setItem(fbUser?userDBKey(fbUser.uid):DBKEY,JSON.stringify(db));$("saveState").textContent=fbUser?"Cloud အကောင့်ထဲ သိမ်းဆည်းရန် အသင့်":"ဖုန်းထဲ သိမ်းပြီး";renderAll();if(fbUser&&cloudReady)cloudSave()}catch(e){alert("ဖုန်းထဲသိမ်းမရပါ။ ဓာတ်ပုံအရွယ်အစားလျှော့ပြီး Backup စစ်ပါ။");console.error(e)}}
 const pages=[["home","ပင်မ"],["products","ပစ္စည်း"],["sales","အရောင်း"],["purchases","အဝယ်"],["people","Customer/Supplier"],["expenses","အသုံးစရိတ်"],["reports","အစီရင်ခံစာ"],["ads","ကြော်ငြာ"],["market","AK Market"],["centerManagement","စင်တာထိန်းချုပ်မှု"],["userGuide","အသုံးပြုသူလမ်းညွှန်"],["apkGuide","APK လမ်းညွှန်"],["backup","Backup / Settings"]];
-$("nav").innerHTML=pages.map(([id,n])=>`<button onclick="go('${id}')">${n}</button>`).join("");
-function go(id){if(document.body.classList.contains("ak-license-locked")&&id!=="backup"){alert("AK Sale အသုံးပြုရန် အရင် Login ဝင်ပြီး Package ငွေပေးချေကာ Owner အတည်ပြုချက် ရယူပါ။");id="backup"}document.querySelectorAll(".view").forEach(x=>x.classList.toggle("active",x.id===id));renderAll()}
+$("nav").innerHTML=pages.map(([id,n])=>'<button type="button" data-view="'+id+'" aria-label="'+n+'" title="'+n+'" onclick="go(\''+id+'\')">'+n+'</button>').join("");
+function go(id){if(document.body.classList.contains("ak-license-locked")&&id!=="backup"){alert("AK Sale အသုံးပြုရန် အရင် Login ဝင်ပြီး Package ငွေပေးချေကာ Owner အတည်ပြုချက် ရယူပါ။");id="backup"}document.querySelectorAll(".view").forEach(x=>x.classList.toggle("active",x.id===id));document.querySelectorAll("#nav button").forEach(b=>b.classList.toggle("active",b.dataset.view===id));const activeNav=document.querySelector('#nav button[data-view="'+id+'"]');if(activeNav&&window.matchMedia("(max-width: 650px)").matches)activeNav.scrollIntoView({block:"nearest",inline:"nearest",behavior:"smooth"});renderAll()}
 function resetProduct(){ $("productForm").reset();$("pId").value="";$("pUnit").value="ခု";$("pCost").value=0;$("pRetail").value=0;$("pWholesale").value=0;$("pStock").value=0;productImageData="";$("photoPreview").classList.add("hidden")}
 $("pPhoto").addEventListener("change",e=>{let f=e.target.files[0];if(!f)return;if(f.size>1.5*1024*1024)return alert("ဓာတ်ပုံ 1.5MB အောက်ရွေးပါ");let r=new FileReader();r.onload=()=>{productImageData=r.result;$("photoPreview").src=productImageData;$("photoPreview").classList.remove("hidden")};r.readAsDataURL(f)});
 // Product photos use Firebase Storage so the same shop account can view them in Web and Android.
@@ -672,6 +672,36 @@ body.ak-public #marketFeed article .preview{border-radius:12px;background:#eef3f
 body.ak-public #marketFeed article .actions button{flex:1}
 body.ak-public #market .ak-public-note{padding:12px 14px;border-radius:12px;background:#e9f6f5;color:#145b58}
 body.ak-public footer{display:block}
+
+/* Phone navigation: persistent bottom dock with readable, swipeable sections. */
+@media(max-width:650px){
+ body{padding:0 0 calc(94px + env(safe-area-inset-bottom))!important}
+ main{padding:8px 8px 14px!important}
+ #nav{
+  position:fixed!important;left:0!important;right:0!important;bottom:0!important;top:auto!important;
+  z-index:1000!important;display:flex!important;flex-wrap:nowrap!important;align-items:stretch!important;
+  gap:7px!important;width:100%!important;max-width:none!important;height:calc(76px + env(safe-area-inset-bottom))!important;
+  margin:0!important;padding:8px 10px calc(8px + env(safe-area-inset-bottom))!important;
+  overflow-x:auto!important;overflow-y:hidden!important;overscroll-behavior-x:contain!important;
+  -webkit-overflow-scrolling:touch!important;scrollbar-width:thin!important;
+  background:rgba(9,45,39,.97)!important;border:0!important;border-top:2px solid #ffbd59!important;
+  border-radius:15px 15px 0 0!important;box-shadow:0 -5px 22px rgba(8,35,30,.22)!important;
+  backdrop-filter:blur(14px)!important
+ }
+ #nav button{
+  flex:0 0 auto!important;min-width:76px!important;max-width:112px!important;height:48px!important;
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  white-space:nowrap!important;overflow:visible!important;text-overflow:clip!important;
+  padding:7px 12px!important;margin:0!important;border-radius:12px!important;
+  border:1px solid rgba(255,255,255,.2)!important;background:rgba(255,255,255,.1)!important;
+  color:#f5fff9!important;font-size:13px!important;font-weight:700!important;line-height:1.25!important;
+  box-shadow:none!important
+ }
+ #nav button.active{background:#ffbd59!important;color:#17372d!important;border-color:#ffe0a3!important;box-shadow:0 3px 10px #0003!important}
+ #nav button:focus-visible{outline:3px solid #ffbd59!important;outline-offset:2px!important}
+ body.ak-license-locked #nav{display:none!important}
+}
+@media(min-width:651px){#nav button.active{background:#176b5b!important;color:#fff!important;border-color:#176b5b!important}}
 </style>
 <script>
 (function(){

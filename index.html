@@ -369,7 +369,7 @@ body.ak-license-locked main>#backup>#akFirebasePanel{display:block!important}
 <p id="akStaffStatus" class="muted">ဆိုင် Owner Login နှင့် Active Subscription လိုအပ်သည်။</p>
 <div class="tablewrap"><table><thead><tr><th>Gmail</th><th>ရာထူး</th><th>Print ခွင့်</th><th>လုပ်ဆောင်ချက်</th></tr></thead><tbody id="akStaffRows"><tr><td colspan="3">မဖတ်ရသေးပါ</td></tr></tbody></table></div></div>
 <div class="panel hidden" id="globalAnnouncementAdmin"><h2>Owner ကြေညာချက် · APK ဝယ်ယူသူအားလုံး</h2><p class="muted">CEO Owner အကောင့်မှသာ ကြေညာချက်အသစ် ပို့နိုင်သည်။ Login ဝင်ထားသော အသုံးပြုသူများ၏ ပင်မစာမျက်နှာတွင် ပြသမည်။</p><div class="grid"><div><label>ခေါင်းစဉ်</label><input id="globalAnnouncementTitle" maxlength="120" placeholder="ဥပမာ - AK Software Update"></div><div><label>ကြေညာချက်စာသား</label><textarea id="globalAnnouncementMessage" maxlength="800" placeholder="အသုံးပြုသူများအား အသိပေးလိုသည့်အကြောင်းအရာ"></textarea></div></div><div class="actions"><button onclick="publishGlobalAnnouncement()">ကြေညာချက် ပို့မည်</button><button class="alt" onclick="loadGlobalAnnouncements()">ကြေညာချက် ပြန်ဖတ်မည်</button></div><p id="globalAnnouncementStatus" class="muted">Owner Login ဝင်ထားမှ ပို့နိုင်သည်။</p></div><div class="panel"><h2>အရောင်ဒီဇိုင်း ပြောင်းရန်</h2><p class="muted">ဒီဖုန်း / Browser အတွက် ဆော့ဖ်ဝဲလ် Theme အရောင်ကို ရွေးပါ။</p><label>အရောင် Theme</label><select id="akThemeSelect" onchange="localStorage.setItem('ak_sale_theme_v1',this.value);applyAkTheme()"><option value="green">အစိမ်း</option><option value="blue">အပြာ</option><option value="purple">ခရမ်း</option><option value="orange">လိမ္မော်</option></select></div><div class="panel"><h2>လုပ်ငန်းအမှတ်တံဆိပ်နှင့် တည်နေရာ</h2><div class="grid"><div><label>လုပ်ငန်း / AK အမည်</label><input id="shopName" placeholder="ဥပမာ - AK Hardware"></div><div><label>ငွေကြေး</label><input id="currency" value="MMK"></div><div><label>မြို့</label><input id="shopCity" placeholder="ဥပမာ - မန္တလေး"></div><div><label>မြို့နယ်</label><input id="shopTownship" placeholder="မြို့နယ်အမည်"></div><div><label>ဆိုင်လိပ်စာ</label><input id="shopAddress" placeholder="လမ်း၊ ရပ်ကွက်၊ အဆောက်အအုံ"></div><div><label>ဆက်သွယ်ရန်ဖုန်း</label><input id="shopPhone" inputmode="tel" placeholder="09xxxxxxxxx"></div><div><label>Logo ပုံ URL (မဖြစ်မနေမဟုတ်)</label><input id="shopLogo" type="url" placeholder="https://..."></div></div><div class="actions"><button onclick="saveShop()">အချက်အလက် သိမ်းမည်</button><button class="red" onclick="clearAll()">ဒေတာအားလုံးဖျက်ရန်</button></div><p class="muted">ဆိုင်ခွဲတစ်ခုချင်းစီ၏ လိပ်စာကို Shopping Center ထဲတွင် သီးခြားသတ်မှတ်နိုင်သည်။</p></div>
-<div class="panel"><h2>Printer / ချိတ်ဆက်မှု</h2><p>Wi-Fi Printer သို့မဟုတ် Android Print Service ထည့်ထားပါက အောက်ပါ Print ကိုသုံးနိုင်သည်။</p><button onclick="window.print()">Print စမ်းရန်</button><p class="muted">Bluetooth Classic ESC/POS printer များကို browser HTML တစ်ခုတည်းမှ တိုက်ရိုက်ချိတ်ဆက်နိုင်မည်ဟု အာမမခံနိုင်ပါ။ Printer app သို့မဟုတ် Android APK/native bridge လိုနိုင်သည်။</p></div>
+<div class="panel" id="akPrinterManager"><h2>Printer အများအပြား စီမံရန်</h2><p class="muted">Printer တစ်လုံးချင်းစီ၏ အမည်နှင့် ချိတ်ဆက်မှုကို မှတ်သားထားနိုင်သည်။ Print နှိပ်လျှင် ဖုန်း/ကွန်ပျူတာ၏ Print Service မှ Printer ကို ရွေးပါ။</p><div class="grid"><div><label>Printer အမည်</label><input id="akPrinterName" maxlength="60" placeholder="ဥပမာ - ကောင်တာ ၁ Printer"></div><div><label>ချိတ်ဆက်မှုအမျိုးအစား</label><select id="akPrinterType"><option value="system">Android / System Print</option><option value="wifi">Wi-Fi / Network</option><option value="bluetooth">Bluetooth (Printer App လိုနိုင်)</option><option value="usb">USB (Device support လို)</option></select></div></div><div class="actions"><button type="button" onclick="akSavePrinter()">Printer ထည့်မည်</button><button type="button" class="alt" onclick="akPrintTest()">စမ်းသပ် Print</button></div><div class="tablewrap"><table><thead><tr><th>Printer</th><th>ချိတ်ဆက်မှု</th><th>Default</th><th>လုပ်ဆောင်ချက်</th></tr></thead><tbody id="akPrinterRows"><tr><td colspan="4">Printer မထည့်ရသေးပါ</td></tr></tbody></table></div><p class="muted" id="akPrinterStatus">Printer စာရင်းကို ဒီ Browser/ဖုန်းထဲတွင် သိမ်းထားသည်။ Bluetooth/USB တိုက်ရိုက်ထိန်းချုပ်မှုအတွက် သက်ဆိုင်ရာ Android Print Service သို့မဟုတ် Native ချိတ်ဆက်မှုလိုအပ်သည်။</p></div>
 </section>
 
 <section id="centerManagement" class="view">
@@ -702,6 +702,22 @@ body.ak-public footer{display:block}
  body.ak-license-locked #nav{display:none!important}
 }
 @media(min-width:651px){#nav button.active{background:#176b5b!important;color:#fff!important;border-color:#176b5b!important}}
+
+/* Compact navigation and clearer primary actions */
+@media(max-width:759px){
+ #nav{position:fixed!important;left:8px!important;right:8px!important;bottom:calc(7px + env(safe-area-inset-bottom))!important;top:auto!important;z-index:1000!important;display:flex!important;flex-wrap:nowrap!important;gap:4px!important;padding:6px!important;border-radius:14px!important;overflow-x:auto!important;overflow-y:hidden!important;box-shadow:0 5px 22px #102b4630!important;background:#ffffffed!important;backdrop-filter:blur(12px)!important;scrollbar-width:thin!important}
+ #nav button{flex:0 0 auto!important;min-width:58px!important;padding:7px 9px!important;font-size:11px!important;line-height:1.25!important;border-radius:9px!important;white-space:nowrap!important}
+ body{padding:0 0 calc(78px + env(safe-area-inset-bottom))!important}
+ main{padding:9px!important}
+ #home .stats .panel{min-height:112px!important;padding:15px!important}
+ #home .stat{font-size:clamp(22px,6vw,30px)!important;font-weight:850!important}
+ #home .grid.stats{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important}
+ #home .view>.panel h2,#sales h2,#products h2{font-size:19px!important}
+ #home .actions button,#sales .actions button,#products .actions button{min-height:46px!important;font-size:15px!important;font-weight:750!important}
+}
+@media(min-width:760px){#nav button{padding:9px 12px!important;font-size:13px!important}#home .stat{font-size:30px!important}}
+#nav button.active{outline:2px solid var(--accent,#ffb84d)!important;outline-offset:-2px!important;filter:saturate(1.15)!important}
+#akPrinterManager table{min-width:520px}
 </style>
 <script>
 (function(){
@@ -754,6 +770,21 @@ body.ak-public footer{display:block}
  window.akShareApp=async function(){const data={title:"AK Sale Software",text:"ဆိုင်အရောင်း၊ ကုန်ပစ္စည်းစာရင်း၊ အကြွေး၊ ဆိုင်ခွဲနှင့် AK Shopping Mall — AK Sale Software ကို စမ်းသုံးကြည့်ပါ။",url:"https://rmaynah102-afk.github.io/Ak-online-sales/?app=1"};try{if(navigator.share)await navigator.share(data);else if(navigator.clipboard){await navigator.clipboard.writeText(data.text+" "+data.url);alert("ကြော်ငြာစာသားနှင့် Link ကို Copy လုပ်ပြီးပါပြီ။");}else prompt("ဒီ Link ကို Copy လုပ်ပါ",data.url)}catch(e){if(e.name!=="AbortError")alert("မျှဝေမရပါ။ Link ကို Copy လုပ်ပါ: "+data.url)}};
  const shareBtn=document.getElementById("akShareBtn");if(shareBtn)shareBtn.addEventListener("click",window.akShareApp);
  if("serviceWorker" in navigator && /^https?:$/.test(location.protocol)){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(e=>console.warn("Offline cache unavailable",e)))}
+})();
+</script>
+
+<script>
+(function(){
+ const KEY="ak_sale_printer_profiles_v1";
+ function read(){try{const x=JSON.parse(localStorage.getItem(KEY)||"[]");return Array.isArray(x)?x:[]}catch(e){return[]}}
+ function write(x){localStorage.setItem(KEY,JSON.stringify(x));render()}
+ function escP(x){return String(x||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+ function render(){const body=document.getElementById("akPrinterRows");if(!body)return;const rows=read();body.innerHTML=rows.length?rows.map((p,i)=>'<tr><td>'+escP(p.name)+'</td><td>'+escP(({system:"System Print",wifi:"Wi-Fi / Network",bluetooth:"Bluetooth",usb:"USB"})[p.type]||p.type)+'</td><td>'+(p.default?'အဓိက':'<button type="button" class="alt" onclick="akSetDefaultPrinter('+i+')">Default ထား</button>')+'</td><td><button type="button" class="red" onclick="akRemovePrinter('+i+')">ဖျက်မည်</button></td></tr>').join(""):'<tr><td colspan="4">Printer မထည့်ရသေးပါ</td></tr>'}
+ window.akSavePrinter=function(){const name=(document.getElementById("akPrinterName")?.value||"").trim();const type=document.getElementById("akPrinterType")?.value||"system";if(!name){alert("Printer အမည်ထည့်ပါ");return}const rows=read();if(rows.some(x=>x.name.toLowerCase()===name.toLowerCase())){alert("ဒီ Printer အမည် ရှိပြီးသားပါ");return}rows.push({name,type,default:rows.length===0});write(rows);document.getElementById("akPrinterName").value="";document.getElementById("akPrinterStatus").textContent="Printer စာရင်း သိမ်းပြီးပါပြီ။ Print Service မှာလည်း Printer ကို ရွေးချိတ်ပါ။"}
+ window.akSetDefaultPrinter=function(i){const rows=read().map((p,n)=>({...p,default:n===i}));write(rows)}
+ window.akRemovePrinter=function(i){const rows=read();rows.splice(i,1);if(rows.length&&!rows.some(p=>p.default))rows[0].default=true;write(rows)}
+ window.akPrintTest=function(){const p=read().find(x=>x.default);if(!p){alert("အရင်ဆုံး Printer တစ်လုံးထည့်ပြီး Default ထားပါ");return}const w=window.open("","_blank","width=420,height=600");if(!w){alert("Popup ခွင့်ပြုပါ");return}w.document.write('<!doctype html><html lang="my"><meta charset="utf-8"><title>Printer Test</title><body style="font-family:system-ui;text-align:center;padding:20px"><h2>AK Sale Software</h2><p>Printer စမ်းသပ်စာရွက်</p><p>'+escP(p.name)+'</p><p>'+new Date().toLocaleString()+'</p><p>Printer Print Service မှ မှန်ကန်သောစက်ကို ရွေးပါ။</p><script>window.onload=()=>setTimeout(()=>window.print(),250)<\/script></body></html>');w.document.close()}
+ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",render);else render();
 })();
 </script>
 </body></html>

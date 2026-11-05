@@ -1,7 +1,7 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
-const { defineString } = require("firebase-functions/params");
-const ADMIN_EMAIL = defineString("ADMIN_EMAIL", { default: "sannnlinpaing@gmail.com" });
+// Sole platform owner; fixed allowlist, never client-configurable.
+const OWNER_EMAIL = "sannnlinpaing@gmail.com";
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -26,10 +26,9 @@ function requireAdmin(context) {
   if (!context.auth) {
     throw new functions.https.HttpsError("unauthenticated", "Login လိုအပ်သည်။");
   }
-  const configuredAdmin = String(ADMIN_EMAIL.value() || "").trim().toLowerCase();
   const callerEmail = String(context.auth.token.email || "").trim().toLowerCase();
   const emailVerified = context.auth.token.email_verified === true;
-  if (!configuredAdmin || callerEmail !== configuredAdmin || !emailVerified) {
+  if (callerEmail !== OWNER_EMAIL || !emailVerified) {
     throw new functions.https.HttpsError("permission-denied", "Admin ခွင့်ပြုချက်မရှိပါ။");
   }
   return callerEmail;
@@ -311,8 +310,7 @@ exports.assignShopStaffRole = functions.https.onCall(async (data, context) => {
       !SHOP_STAFF_ROLES.includes(role)) {
     throw new functions.https.HttpsError("invalid-argument", "ဝန်ထမ်း Gmail သို့မဟုတ် ရာထူး မမှန်ပါ။");
   }
-  const configuredAdmin = String(ADMIN_EMAIL.value() || "").trim().toLowerCase();
-  if (configuredAdmin && email === configuredAdmin) {
+  if (email === OWNER_EMAIL) {
     throw new functions.https.HttpsError("permission-denied", "CEO အကောင့်ကို ဆိုင်ဝန်ထမ်းအဖြစ် မသတ်မှတ်နိုင်ပါ။");
   }
   let staff;

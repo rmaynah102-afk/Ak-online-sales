@@ -5,30 +5,9 @@ concurrency:
   cancel-in-progress: false
 
 on:
+  # Build APK only when explicitly requested. Web-only updates must not
+  # silently create a new APK or replace the user's existing installation.
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - 'index.html'
-      - 'sw.js'
-      - 'manifest.webmanifest'
-      - 'ak-logo.svg'
-      - 'download.html'
-      - 'robots.txt'
-      - 'sitemap.xml'
-      - 'package.json'
-      - 'capacitor.config.json'
-      - '.github/workflows/build-android-apk.yml'
-      - 'firebase.json'
-      - 'firestore.rules'
-      - 'storage.rules'
-      - 'functions/**'
-      - 'scripts/**'
-      - 'USER-GUIDE-MY.md'
-      - 'USER-GUIDE-EN.md'
-      - 'BUSINESS-GUIDE-MY.md'
-      - 'BUSINESS-GUIDE-EN.md'
-      - 'README.md'
 
 permissions:
   contents: write

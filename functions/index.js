@@ -445,10 +445,21 @@ exports.removeShopStaff = functions.https.onCall(async (data, context) => {
 
 
 
+async function requireBackupShop(context) {
+  if (!context.auth) {
+    throw new functions.https.HttpsError("unauthenticated", "Login လိုအပ်သည်။");
+  }
+  const email = String(context.auth.token.email || "").trim().toLowerCase();
+  if (email === OWNER_EMAIL && context.auth.token.email_verified === true) {
+    return context.auth.uid;
+  }
+  return requireActiveShop(context);
+}
+
 // Owner-scoped cloud backups. Snapshots are created and restored only by trusted Functions.
 // Keep the latest 10 snapshots per shop; reject oversized records before Firestore's 1 MiB limit.
 exports.createCloudBackup = functions.https.onCall(async (data, context) => {
-  const uid = await requireActiveShop(context);
+  const uid = await requireBackupShop(context);
   const appRef = db.collection("users").doc(uid).collection("private").doc("appData");
   const centerRef = db.collection("users").doc(uid).collection("private").doc("centerManagement");
   const [appSnap, centerSnap] = await Promise.all([appRef.get(), centerRef.get()]);

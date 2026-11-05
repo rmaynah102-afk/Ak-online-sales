@@ -297,7 +297,7 @@ input:focus,select:focus,textarea:focus{border-color:#2878d7;box-shadow:0 0 0 3p
 <form id="marketForm"><div class="grid">
 <div><label>ပစ္စည်းအမည် *</label><input id="mTitle" maxlength="90" required placeholder="ဥပမာ - LED မီးလုံး 12W"></div>
 <div><label>ရောင်းဈေး (ကျပ်) *</label><input id="mPrice" type="number" min="1" step="1" required placeholder="8500"></div>
-<div><label>အမျိုးအစား</label><select id="mCategory"><option>ကုန်မာ</option><option>လျှပ်စစ်ပစ္စည်း</option><option>ဆောက်လုပ်ရေး</option><option>လက်工具 / Tools</option><option>အိမ်သုံးပစ္စည်း</option><option>အခြား</option></select></div>
+<div><label>အမျိုးအစား</label><select id="mCategory"><option>ကုန်မာ</option><option>လျှပ်စစ်ပစ္စည်း</option><option>ဆောက်လုပ်ရေး</option><option>လက်工具 / Tools</option><option>ရေပိုက်နှင့် ရေပစ္စည်း</option><option>မီးအလင်းရောင်</option><option>ဝါယာကြိုးနှင့် Cable</option><option>မော်တာနှင့် Pump</option><option>ဆိုလာနှင့် Battery</option><option>သော့နှင့် Lock</option><option>သံထည်နှင့် Fastener</option><option>ဆေးနှင့် အရောင်</option><option>အိမ်သုံးပစ္စည်း</option><option>စက်ပစ္စည်းနှင့် အပိုပစ္စည်း</option><option>ဖုန်းနှင့် အီလက်ထရွန်းနစ်</option><option>စိုက်ပျိုးရေးပစ္စည်း</option><option>ယာဉ်အပိုပစ္စည်း</option><option>အခြား</option></select></div>
 <div><label>မြို့</label><input id="mCity" maxlength="50" placeholder="မန္တလေး"></div>
 <div><label>မြို့နယ်</label><input id="mTownship" maxlength="60" placeholder="ချမ်းအေးသာစံ"></div>
 <div><label>ဆက်သွယ်ရန် ဖုန်း (ရွေးချယ်နိုင်)</label><input id="mPhone" type="tel" maxlength="25" placeholder="09..."></div>
@@ -317,7 +317,7 @@ input:focus,select:focus,textarea:focus{border-color:#2878d7;box-shadow:0 0 0 3p
 <p class="muted">မြန်မာ/English စကားလုံး၊ အမျိုးအစား၊ မြို့နယ်၊ ဈေးနှုန်းတို့နဲ့ ရှာနိုင်ပါတယ်။ အခမဲ့ Smart Matching ဖြစ်ပြီး AI API ကြေးမလိုပါ။</p>
 <label>ဘာပစ္စည်းရှာချင်ပါသလဲ</label><input id="marketQuery" placeholder="ဥပမာ - မီးလုံး၊ LED bulb၊ drill၊ သံ၊ ပိုက်..." oninput="renderMarket()">
 <div class="grid">
-<div><label>အမျိုးအစား</label><select id="marketCategoryFilter" onchange="renderMarket()"><option value="">အမျိုးအစားအားလုံး</option><option>ကုန်မာ</option><option>လျှပ်စစ်ပစ္စည်း</option><option>ဆောက်လုပ်ရေး</option><option>လက်工具 / Tools</option><option>အိမ်သုံးပစ္စည်း</option><option>အခြား</option></select></div>
+<div><label>အမျိုးအစား</label><select id="marketCategoryFilter" onchange="renderMarket()"><option value="">အမျိုးအစားအားလုံး</option><option>ကုန်မာ</option><option>လျှပ်စစ်ပစ္စည်း</option><option>ဆောက်လုပ်ရေး</option><option>လက်工具 / Tools</option><option>ရေပိုက်နှင့် ရေပစ္စည်း</option><option>မီးအလင်းရောင်</option><option>ဝါယာကြိုးနှင့် Cable</option><option>မော်တာနှင့် Pump</option><option>ဆိုလာနှင့် Battery</option><option>သော့နှင့် Lock</option><option>သံထည်နှင့် Fastener</option><option>ဆေးနှင့် အရောင်</option><option>အိမ်သုံးပစ္စည်း</option><option>စက်ပစ္စည်းနှင့် အပိုပစ္စည်း</option><option>ဖုန်းနှင့် အီလက်ထရွန်းနစ်</option><option>စိုက်ပျိုးရေးပစ္စည်း</option><option>ယာဉ်အပိုပစ္စည်း</option><option>အခြား</option></select></div>
 <div><label>မြို့ / မြို့နယ်</label><input id="marketPlaceFilter" placeholder="ဥပမာ - မန္တလေး၊ ချမ်းအေးသာစံ" oninput="renderMarket()"></div>
 <div><label>အနည်းဆုံးဈေး (ကျပ်)</label><input id="marketMinPrice" type="number" min="0" placeholder="0" oninput="renderMarket()"></div>
 <div><label>အများဆုံးဈေး (ကျပ်)</label><input id="marketMaxPrice" type="number" min="0" placeholder="ကန့်သတ်မထား" oninput="renderMarket()"></div>

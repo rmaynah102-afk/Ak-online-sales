@@ -307,7 +307,7 @@ exports.assignShopStaffRole = functions.https.onCall(async (data, context) => {
   const ownerUid = await requireActiveShop(context);
   const email = String(data.email || "").trim().toLowerCase();
   const role = String(data.role || "").trim().toLowerCase();
-  if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email) ||
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ||
       !SHOP_STAFF_ROLES.includes(role)) {
     throw new functions.https.HttpsError("invalid-argument", "ဝန်ထမ်း Gmail သို့မဟုတ် ရာထူး မမှန်ပါ။");
   }

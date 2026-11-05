@@ -1,5 +1,9 @@
 name: Build AK Sale Android APK
 
+concurrency:
+  group: ak-sale-build-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   workflow_dispatch:
   push:

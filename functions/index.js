@@ -37,6 +37,9 @@ function requireAdmin(context) {
 async function requireActiveShop(context) {
   if (!context.auth) throw new functions.https.HttpsError("unauthenticated", "Login လိုအပ်သည်။");
   const uid = context.auth.uid;
+  const email = String(context.auth.token.email || "").trim().toLowerCase();
+  // The sole verified Platform Owner may administer their own shop without a paid license.
+  if (email === OWNER_EMAIL && context.auth.token.email_verified === true) return uid;
   const snap = await db.collection("licenses").doc(uid).get();
   const license = snap.data() || {};
   if (!snap.exists || license.status !== "active" || !license.expiresAt ||
@@ -52,12 +55,6 @@ exports.claimShopDevice = functions.https.onCall(async (data, context) => {
   const label = String(data.label || "Device").slice(0, 110);
   if (!/^akd_[a-zA-Z0-9_-]{8,100}$/.test(deviceId)) {
     throw new functions.https.HttpsError("invalid-argument", "Device ID မမှန်ပါ။");
-  }
-  const licenseSnap = await db.collection("licenses").doc(uid).get();
-  const license = licenseSnap.data() || {};
-  if (!licenseSnap.exists || license.status !== "active" ||
-      !license.expiresAt || license.expiresAt.toMillis() <= Date.now()) {
-    throw new functions.https.HttpsError("permission-denied", "Subscription သက်တမ်းမရှိပါ။");
   }
   const devices = db.collection("users").doc(uid).collection("devices");
   const ref = devices.doc(deviceId);

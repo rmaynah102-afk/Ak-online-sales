@@ -192,6 +192,26 @@ exports.reviewSponsoredAd = functions.https.onCall(async (data, context) => {
   return { ok:true, status:decision };
 });
 
+// Owner-managed destination for manual bank and wallet transfer verification.
+exports.getPaymentAccountSettings = functions.https.onCall(async (data, context) => {
+  if (!context.auth) throw new functions.https.HttpsError("unauthenticated", "Login လိုအပ်သည်။");
+  const snap = await db.collection("platformSettings").doc("paymentAccount").get();
+  const x = snap.data() || {};
+  return { enabled: x.enabled === true, method: x.method || "", bankName: x.bankName || "", accountName: x.accountName || "", accountNumber: x.accountNumber || "", instructions: x.instructions || "" };
+});
+
+exports.setPaymentAccountSettings = functions.https.onCall(async (data, context) => {
+  const ownerEmail = requireAdmin(context);
+  const method = String(data.method || "").trim().slice(0, 40);
+  const bankName = String(data.bankName || "").trim().slice(0, 80);
+  const accountName = String(data.accountName || "").trim().slice(0, 100);
+  const accountNumber = String(data.accountNumber || "").trim().slice(0, 60);
+  const instructions = String(data.instructions || "").trim().slice(0, 300);
+  const enabled = data.enabled === true;
+  if (enabled && (!method || !bankName || !accountName || !accountNumber)) throw new functions.https.HttpsError("invalid-argument", "ငွေလက်ခံနည်းလမ်း၊ ဘဏ်အမည်၊ အကောင့်အမည်နှင့် အကောင့်နံပါတ် ဖြည့်ပါ။");
+  await db.collection("platformSettings").doc("paymentAccount").set({ enabled, method, bankName, accountName, accountNumber, instructions, updatedBy: ownerEmail, updatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+  return { ok: true };
+});
 exports.listPendingPayments = functions.https.onCall(async (data, context) => {
   requireAdmin(context);
   const snap = await db.collection("paymentRequests")
@@ -208,6 +228,10 @@ exports.listPendingPayments = functions.https.onCall(async (data, context) => {
         email: x.email || "",
         days: Number(x.days || 0),
         reference: String(x.reference || ""),
+        method: String(x.method || ""),
+        amount: Number(x.amount || 0),
+        screenshotUrl: String(x.screenshotUrl || ""),
+        bankName: String(x.bankName || ""),
         status: String(x.status || ""),
         createdAt: x.createdAt && x.createdAt.toDate
           ? x.createdAt.toDate().toISOString()
@@ -234,11 +258,12 @@ exports.approveSubscription = functions.https.onCall(async (data, context) => {
     const uid = String(payment.uid || "");
     const days = Number(payment.days);
     const reference = String(payment.reference || "").trim();
+    const expectedAmounts = { 30: 15000, 90: 40000, 180: 75000, 365: 140000 };
     if (payment.status !== "pending") {
       throw new functions.https.HttpsError("failed-precondition", "ဤတောင်းဆိုချက်ကို ယခင်က စီမံပြီးပါပြီ။");
     }
-    if (!uid || ![30, 90, 180, 365].includes(days) || reference.length < 3) {
-      throw new functions.https.HttpsError("failed-precondition", "Payment request data မမှန်ပါ။");
+    if (!uid || !Object.prototype.hasOwnProperty.call(expectedAmounts, days) || reference.length < 3 || Number(payment.amount) !== expectedAmounts[days] || !["KBZPay", "WavePay", "AYA Pay", "CB Pay", "Bank Transfer"].includes(String(payment.method || ""))) {
+      throw new functions.https.HttpsError("failed-precondition", "Payment request data / package amount မမှန်ပါ။");
     }
 
     const licenseRef = db.collection("licenses").doc(uid);

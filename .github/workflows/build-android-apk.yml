@@ -71,6 +71,8 @@ jobs:
           npm --prefix functions install --package-lock=false
           node --check functions/index.js
           node -e "JSON.parse(require('fs').readFileSync('functions/package.json','utf8')); console.log('Firebase Functions package.json valid')"
+      - name: Validate Firebase client/server contracts and security guards
+        run: node scripts/validate-firebase-contract.js
       - name: Generate Android project
         run: npx cap add android
       - name: Set Android app version

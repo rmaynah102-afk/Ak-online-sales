@@ -16,7 +16,7 @@ service firebase.storage {
         && request.resource.contentType.matches('image/(jpeg|png|webp)');
       allow read: if request.auth != null
         && (request.auth.uid == userId
-          || (request.auth.token.email == 'sannnlinpaing@gmail.com'
+          || (request.auth.token.email == 'painglin102@gmail.com'
             && request.auth.token.email_verified == true));
       allow update, delete: if false;
     }

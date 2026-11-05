@@ -528,7 +528,64 @@ function receipt(id,paper="80mm"){
  ${s.note?'<p class="muted">မှတ်ချက်: '+esc(s.note)+'</p>':""}
  <p class="thanks">အားပေးမှုအတွက် ကျေးဇူးတင်ပါသည်</p><p class="center muted">AK Sale Software</p>
  </main><div class="actions"><button onclick="window.print()">Print / PDF သိမ်းရန်</button><button onclick="window.close()">ပိတ်ရန်</button></div>
- <script>window.onload=()=>setTimeout(()=>window.print(),350);<\/script></body></html>`);
+ <script>window.onload=()=>setTimeout(()=>window.print(),350);<\/script>
+<script id="AK_BILINGUAL_PATCH_V1">
+(function(){
+  "use strict";
+  const KEY="ak_sale_language_v1";
+  const M={
+    "ပင်မ":"Home","ပစ္စည်း":"Products","အရောင်း":"Sales","အဝယ်":"Purchases","အသုံးစရိတ်":"Expenses","အစီရင်ခံစာ":"Reports","ကြော်ငြာ":"Ads","စင်တာထိန်းချုပ်မှု":"Center Management","အသုံးပြုသူလမ်းညွှန်":"User Guide","APK လမ်းညွှန်":"APK Guide","Backup / Settings":"Backup / Settings","Customer/Supplier":"Customers / Suppliers","AK Market":"AK Market",
+    "ယနေ့အရောင်း":"Today's Sales","ယနေ့အမြတ် (ခန့်မှန်း)":"Estimated Profit Today","ပစ္စည်းအမျိုးအစား":"Product Types","ရရန်အကြွေး":"Receivables","ပေးရန်အကြွေး":"Payables","အမြန်လုပ်ဆောင်ရန်":"Quick Actions","အရောင်းတင်ရန်":"New Sale","ပစ္စည်းထည့်ရန်":"Add Product","Backup သိမ်းရန်":"Save Backup","ဒေတာများကို ဒီ Browser ထဲတွင် အလိုအလျောက်သိမ်းသည်။ ဖုန်းပြောင်းခြင်း၊ Browser data ရှင်းခြင်းမပြုမီ Backup JSON ကို ထုတ်ထားပါ။":"Data is saved in this browser. Export a JSON backup before changing phones or clearing browser data.",
+    "ပစ္စည်းထည့် / ပြင်":"Add / Edit Product","ပစ္စည်းအမည် *":"Product Name *","ပစ္စည်းကုဒ် / Barcode":"Product Code / Barcode","အမျိုးအစား":"Category","ယူနစ်":"Unit","ဝယ်ဈေး":"Cost Price","လက်လီဈေး":"Retail Price","လက်ကားဈေး":"Wholesale Price","လက်ကျန်":"Stock","ပစ္စည်းဓာတ်ပုံ":"Product Photo","သိမ်းမည်":"Save","ပြင်":"Edit","ဖျက်":"Delete","ရှာဖွေရန်":"Search","အမည်":"Name","ဖုန်း":"Phone","လိပ်စာ":"Address","ရက်စွဲ":"Date","မှတ်ချက်":"Note","ငွေပမာဏ":"Amount","ပေးပြီးငွေ":"Amount Paid","ကျန်ငွေ":"Balance Due",
+    "အရောင်းမှတ်တမ်း":"Sales History","အဝယ်တင်ရန်":"New Purchase","အဝယ်မှတ်တမ်း":"Purchase History","Customer / Supplier စာရင်း":"Customer / Supplier List","အကြွေးဆပ် / ပေးချေမှု မှတ်တမ်း":"Debt Collection / Payment History","အစီရင်ခံစာ":"Reports","စတင်ရက်":"Start Date","ဆုံးရက်":"End Date","တွက်ချက်မည်":"Calculate","Print":"Print","အသုံးစရိတ်":"Expenses","အကြောင်းအရာ *":"Description *","Social Media ကြော်ငြာဖန်တီးရန်":"Create Social Media Ad","ကြော်ငြာပုံဖန်တီးမည်":"Create Ad Image","ပုံသိမ်းမည်":"Save Image","ဆိုင်အချက်အလက်":"Shop Details","ဆိုင်အမည်":"Shop Name","မြို့":"City","မြို့နယ်":"Township","ငွေကြေး":"Currency","ဆက်သွယ်ရန်":"Contact","သိမ်းဆည်းရန်":"Save Changes","Backup ထုတ်ရန်":"Export Backup","Backup ပြန်ယူရန်":"Restore Backup",
+    "ဆိုင်ခွဲ / ဆိုင်ခန်း":"Branch / Shop Unit","ကောင်တာ":"Counter","ဝန်ထမ်း":"Staff","မန်နေဂျာ":"Manager","ပိုင်ရှင်":"Owner","ကောင်တာဝန်ထမ်း":"Cashier","စာရင်းကိုင်":"Accountant","ဂိုဒေါင်ဝန်ထမ်း":"Warehouse Staff","ငွေဝင်":"Cash In","ငွေထွက်":"Cash Out","ငွေစာရင်းသိမ်းမည်":"Save Cash Record","ဆိုင်ခွဲသိမ်းမည်":"Save Branch","ကောင်တာထည့်မည်":"Add Counter","ဝန်ထမ်းထည့်မည်":"Add Staff","ရှင်းမည်":"Clear","စမ်းသပ် Print":"Test Print","Printer အမည်":"Printer Name","Printer အများအပြား စီမံရန်":"Manage Printers","Cloud အကောင့်ထဲ သိမ်းဆည်းရန် အသင့်":"Ready to save to cloud account","ဖုန်းထဲသိမ်းဆည်းမည်":"Save on this phone","Login ဝင်ပါ":"Sign in","အကောင့်":"Account","စကားဝှက်":"Password","ဝင်မည်":"Sign In","ထွက်မည်":"Sign Out","အီးမေးလ်":"Email","အတည်ပြုရန်":"Verify","အခမဲ့တင်မည်":"Submit for free","ဆိုင်စာရင်း ဖတ်နေသည်...":"Loading shops...","ဆိုင်အားလုံး":"All Shops","အမျိုးအစားအားလုံး":"All Categories"
+  };
+  const originals=new WeakMap();
+  function translateNode(node,english){
+    if(!node||node.nodeType!==Node.TEXT_NODE)return;
+    const p=node.parentElement;if(!p||p.closest("script,style,textarea,noscript"))return;
+    if(!originals.has(node))originals.set(node,node.nodeValue);
+    const original=originals.get(node),trim=original.trim();
+    const translated=english?(M[trim]||trim):trim;
+    if(node.nodeValue!==translated)node.nodeValue=translated;
+  }
+  function apply(){
+    const english=localStorage.getItem(KEY)==="en";
+    document.documentElement.lang=english?"en":"my";
+    const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
+    let n;while((n=walker.nextNode()))translateNode(n,english);
+    document.querySelectorAll("[placeholder],[title],[aria-label]").forEach(el=>{
+      for(const attr of ["placeholder","title","aria-label"]){
+        if(!el.hasAttribute(attr))continue;
+        const key="data-ak-my-"+attr;
+        if(!el.hasAttribute(key))el.setAttribute(key,el.getAttribute(attr));
+        const original=el.getAttribute(key),v=english?(M[original]||original):original;
+        if(el.getAttribute(attr)!==v)el.setAttribute(attr,v);
+      }
+    });
+    const b=document.getElementById("akLanguageBtn");
+    if(b){b.textContent=english?"မြန်မာ":"English";b.setAttribute("aria-label",english?"Switch to Myanmar":"Switch to English");}
+  }
+  const btn=document.getElementById("akLanguageBtn");
+  if(btn)btn.addEventListener("click",()=>{localStorage.setItem(KEY,localStorage.getItem(KEY)==="en"?"my":"en");apply();});
+  const observer=new MutationObserver(records=>{
+    const english=localStorage.getItem(KEY)==="en";
+    for(const record of records){
+      if(record.type==="characterData")translateNode(record.target,english);
+      for(const node of record.addedNodes||[]){
+        if(node.nodeType===Node.TEXT_NODE)translateNode(node,english);
+        else if(node.nodeType===Node.ELEMENT_NODE){
+          const walker=document.createTreeWalker(node,NodeFilter.SHOW_TEXT);let t;
+          while((t=walker.nextNode()))translateNode(t,english);
+        }
+      }
+    }
+  });
+  observer.observe(document.body,{subtree:true,childList:true,characterData:true});
+  apply();
+})();
+</script>
+</body></html>`);
  w.document.close();
 }
 function printSalesLedger(){

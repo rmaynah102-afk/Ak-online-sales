@@ -37,3 +37,17 @@ if (!/request\.auth\.uid == uid/.test(rules)) {
   process.exitCode = 1;
 }
 if (!process.exitCode) console.log('Firestore owner-only private data and trusted staff membership guards OK.');
+
+if (!functionsSource.includes('paymentReferences') || !functionsSource.includes('tx.create(referenceRef')) {
+  console.error('Subscription approval must prevent reuse of a KBZPay transaction reference.');
+  process.exitCode = 1;
+}
+const restoreStart = functionsSource.indexOf('exports.restoreCloudBackup =');
+const restoreEnd = functionsSource.indexOf('exports.publishGlobalAnnouncement =', restoreStart);
+const restoreSource = restoreStart >= 0 ? functionsSource.slice(restoreStart, restoreEnd > restoreStart ? restoreEnd : undefined) : '';
+if (!restoreSource.includes('db.runTransaction') ||
+    !restoreSource.includes('tx.set(appRef') ||
+    !restoreSource.includes('tx.delete(centerRef')) {
+  console.error('Cloud restore must atomically restore appData and remove stale center data when absent.');
+  process.exitCode = 1;
+}

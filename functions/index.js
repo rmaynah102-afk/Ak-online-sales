@@ -184,6 +184,10 @@ exports.reviewSponsoredAd = functions.https.onCall(async (data, context) => {
 });
 
 // Fixed single KBZPay receiving account. Destination changes require a code review.
+function normalizePaymentReference(value) {
+  return String(value || "").trim().replace(/\\s+/g, "").toUpperCase();
+}
+
 const AK_KPAY_ACCOUNT = Object.freeze({
   enabled: true,
   method: "KBZPay",
@@ -201,11 +205,12 @@ exports.createPaymentRequest = functions.https.onCall(async (data, context) => {
   const amount = Number(data.amount);
   const method = String(data.method || "");
   const reference = String(data.reference || "").trim();
+  const normalizedReference = normalizePaymentReference(reference);
   const screenshotUrl = String(data.screenshotUrl || "");
   const expectedAmounts = { 30: 15000, 90: 40000, 180: 75000, 365: 140000 };
   if (!Object.prototype.hasOwnProperty.call(expectedAmounts, days) ||
       amount !== expectedAmounts[days] || method !== "KBZPay" ||
-      reference.length < 3 || reference.length > 100 ||
+      normalizedReference.length < 3 || normalizedReference.length > 100 ||
       screenshotUrl.length > 2000) {
     throw new functions.https.HttpsError("invalid-argument", "Payment request အချက်အလက် မမှန်ပါ။");
   }
@@ -214,7 +219,7 @@ exports.createPaymentRequest = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError("invalid-argument", "Payment screenshot path မမှန်ပါ။");
   }
   const referenceKey = crypto.createHash("sha256")
-    .update("KBZPay:" + reference.toUpperCase())
+    .update("KBZPay:" + normalizedReference)
     .digest("hex");
   const referenceRef = db.collection("paymentReferences").doc(referenceKey);
   const requestRef = db.collection("paymentRequests").doc();
@@ -298,11 +303,12 @@ exports.approveSubscription = functions.https.onCall(async (data, context) => {
     const uid = String(payment.uid || "");
     const days = Number(payment.days);
     const reference = String(payment.reference || "").trim();
+    const normalizedReference = normalizePaymentReference(reference);
     const expectedAmounts = { 30: 15000, 90: 40000, 180: 75000, 365: 140000 };
     if (payment.status !== "pending") {
       throw new functions.https.HttpsError("failed-precondition", "ဤတောင်းဆိုချက်ကို ယခင်က စီမံပြီးပါပြီ။");
     }
-    if (!uid || !Object.prototype.hasOwnProperty.call(expectedAmounts, days) || reference.length < 3 || Number(payment.amount) !== expectedAmounts[days] || String(payment.method || "") !== "KBZPay" || String(payment.bankName || "") !== "KBZPay") {
+    if (!uid || !Object.prototype.hasOwnProperty.call(expectedAmounts, days) || normalizedReference.length < 3 || Number(payment.amount) !== expectedAmounts[days] || String(payment.method || "") !== "KBZPay" || String(payment.bankName || "") !== "KBZPay") {
       throw new functions.https.HttpsError("failed-precondition", "Payment request data / package amount မမှန်ပါ။");
     }
 

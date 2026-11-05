@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://rmaynah102-afk.github.io/Ak-online-sales/sitemap.xml

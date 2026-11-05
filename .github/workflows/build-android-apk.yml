@@ -10,6 +10,9 @@ on:
     branches: [main]
     paths:
       - 'index.html'
+      - 'sw.js'
+      - 'manifest.webmanifest'
+      - 'ak-logo.svg'
       - 'download.html'
       - 'robots.txt'
       - 'sitemap.xml'
@@ -23,14 +26,10 @@ on:
 
 permissions:
   contents: write
-  pages: write
-  id-token: write
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    outputs:
-      signed_release: ${{ steps.signing.outputs.ready }}
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
@@ -174,22 +173,6 @@ jobs:
           generate_release_notes: true
           make_latest: true
 
-      - name: Prepare GitHub Pages APK mirror
-        if: steps.signing.outputs.ready == 'true'
-        run: |
-          mkdir -p pages-site/downloads
-          git ls-files -z | tar --null -T - -cf - | tar -xf - -C pages-site
-          cp AK-Sale-Software.apk pages-site/downloads/AK-Sale-Software.apk
-          printf '{"version":"%s","file":"AK-Sale-Software.apk"}\n' "ak-v${GITHUB_RUN_NUMBER}" > pages-site/downloads/version.json
-      - name: Upload GitHub Pages site with APK
-        if: steps.signing.outputs.ready == 'true'
-        uses: actions/upload-artifact@v4
-        with:
-          name: ak-sale-pages-site
-          path: pages-site
-          if-no-files-found: error
-          retention-days: 1
-
       - name: Upload signed release APK
         if: steps.signing.outputs.ready == 'true'
         uses: actions/upload-artifact@v4
@@ -220,27 +203,3 @@ jobs:
           path: AK-Sale-Software-TEST-DEBUG.apk
           if-no-files-found: error
           retention-days: 30
-
-  deploy-pages:
-    if: success() && needs.build.outputs.signed_release == 'true'
-    needs: build
-    runs-on: ubuntu-latest
-    permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Download prepared site
-        uses: actions/download-artifact@v4
-        with:
-          name: ak-sale-pages-site
-          path: pages-site
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: pages-site
-      - name: Deploy website and APK mirror
-        id: deployment
-        uses: actions/deploy-pages@v4

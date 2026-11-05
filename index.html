@@ -448,7 +448,7 @@ function akApplyLanguage(){
   for(const attr of ["placeholder","title","aria-label"]){const value=el.getAttribute(attr);if(value&&dict[value])el.setAttribute(attr,dict[value]);}
  });
  document.documentElement.lang=akLanguage==="en"?"en":"my";
- const btn=$("akLanguageBtn");if(btn){btn.textContent=akLanguage==="en"?"မြန်မာ":"English";btn.setAttribute("aria-label",akLanguage==="en"?"Switch to Burmese":"Switch to English");}
+ const btn=$("akLanguageBtn");if(btn){const label=akLanguage==="en"?"မြန်မာ":"English";if(btn.textContent!==label)btn.textContent=label;btn.setAttribute("aria-label",akLanguage==="en"?"Switch to Burmese":"Switch to English");}
 }
 $("akLanguageBtn").addEventListener("click",()=>{akLanguage=akLanguage==="en"?"my":"en";try{localStorage.setItem("ak_sale_language",akLanguage)}catch(e){}akApplyLanguage()});
 const akLanguageObserver=new MutationObserver(()=>akApplyLanguage());

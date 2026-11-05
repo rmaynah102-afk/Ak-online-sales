@@ -143,11 +143,13 @@ jobs:
           AK_RELEASE_STORE_PASSWORD: ${{ secrets.AK_RELEASE_STORE_PASSWORD }}
           AK_RELEASE_KEY_ALIAS: ${{ secrets.AK_RELEASE_KEY_ALIAS }}
           AK_RELEASE_KEY_PASSWORD: ${{ secrets.AK_RELEASE_KEY_PASSWORD }}
-        run: ./gradlew assembleRelease --no-daemon
+        run: ./gradlew assembleRelease bundleRelease --no-daemon
 
       - name: Prepare browser download filename
         if: steps.signing.outputs.ready == 'true'
-        run: cp android/app/build/outputs/apk/release/app-release.apk AK-Sale-Software.apk
+        run: |
+          cp android/app/build/outputs/apk/release/app-release.apk AK-Sale-Software.apk
+          cp android/app/build/outputs/bundle/release/app-release.aab AK-Sale-Software-PlayStore.aab
 
       - name: Publish signed APK to GitHub Release
         if: steps.signing.outputs.ready == 'true'
@@ -155,7 +157,9 @@ jobs:
         with:
           tag_name: ak-v${{ github.run_number }}
           name: AK Sale Software v${{ github.run_number }}
-          files: AK-Sale-Software.apk
+          files: |
+            AK-Sale-Software.apk
+            AK-Sale-Software-PlayStore.aab
           generate_release_notes: true
           make_latest: true
 
@@ -164,7 +168,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: AK-Sale-Software-signed-release-APK
-          path: android/app/build/outputs/apk/release/app-release.apk
+          path: |
+            android/app/build/outputs/apk/release/app-release.apk
+            android/app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
           retention-days: 30
 

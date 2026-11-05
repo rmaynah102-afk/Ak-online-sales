@@ -445,6 +445,103 @@ exports.removeShopStaff = functions.https.onCall(async (data, context) => {
 
 
 
+// Owner-scoped cloud backups. Snapshots are created and restored only by trusted Functions.
+// Keep the latest 10 snapshots per shop; reject oversized records before Firestore's 1 MiB limit.
+exports.createCloudBackup = functions.https.onCall(async (data, context) => {
+  const uid = await requireActiveShop(context);
+  const appRef = db.collection("users").doc(uid).collection("private").doc("appData");
+  const centerRef = db.collection("users").doc(uid).collection("private").doc("centerManagement");
+  const [appSnap, centerSnap] = await Promise.all([appRef.get(), centerRef.get()]);
+  if (!appSnap.exists || !appSnap.data().data) {
+    throw new functions.https.HttpsError("failed-precondition", "Cloud အရောင်းဒေတာ မတွေ့ပါ။ အရင် Cloud သိမ်းပါ။");
+  }
+  const snapshot = {
+    data: appSnap.data().data,
+    centerManagement: centerSnap.exists ? (centerSnap.data().center || null) : null
+  };
+  const serialized = JSON.stringify(snapshot);
+  if (Buffer.byteLength(serialized, "utf8") > 700000) {
+    throw new functions.https.HttpsError("resource-exhausted", "Backup ဒေတာ 700KB ကျော်နေသည်။ ဓာတ်ပုံအရွယ်အစားလျှော့ပြီး JSON Backup ကို ဖုန်းထဲသိမ်းပါ။");
+  }
+  const backups = db.collection("users").doc(uid).collection("backups");
+  const ref = backups.doc();
+  await ref.set({
+    data: snapshot.data,
+    centerManagement: snapshot.centerManagement,
+    sizeBytes: Buffer.byteLength(serialized, "utf8"),
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    createdBy: uid
+  });
+  const old = await backups.orderBy("createdAt", "desc").offset(10).limit(100).get();
+  if (!old.empty) {
+    const batch = db.batch();
+    old.docs.forEach(doc => batch.delete(doc.ref));
+    await batch.commit();
+  }
+  return { ok: true, backupId: ref.id, sizeBytes: Buffer.byteLength(serialized, "utf8") };
+});
+
+exports.listCloudBackups = functions.https.onCall(async (data, context) => {
+  const uid = await requireActiveShop(context);
+  const snap = await db.collection("users").doc(uid).collection("backups")
+    .orderBy("createdAt", "desc").limit(10).get();
+  return { backups: snap.docs.map(doc => {
+    const x = doc.data();
+    return {
+      id: doc.id,
+      sizeBytes: Number(x.sizeBytes || 0),
+      createdAt: x.createdAt && x.createdAt.toDate ? x.createdAt.toDate().toISOString() : ""
+    };
+  }) };
+});
+
+exports.restoreCloudBackup = functions.https.onCall(async (data, context) => {
+  const uid = await requireActiveShop(context);
+  const backupId = String(data.backupId || "").trim();
+  if (!/^[A-Za-z0-9]{10,40}$/.test(backupId)) {
+    throw new functions.https.HttpsError("invalid-argument", "Backup ID မမှန်ပါ။");
+  }
+  const backupRef = db.collection("users").doc(uid).collection("backups").doc(backupId);
+  const snap = await backupRef.get();
+  if (!snap.exists) throw new functions.https.HttpsError("not-found", "Cloud Backup မတွေ့ပါ။");
+  const saved = snap.data();
+  if (!saved.data || !Array.isArray(saved.data.products) || !Array.isArray(saved.data.sales)) {
+    throw new functions.https.HttpsError("failed-precondition", "Backup ဒေတာပုံစံ မမှန်ပါ။");
+  }
+  const appRef = db.collection("users").doc(uid).collection("private").doc("appData");
+  const centerRef = db.collection("users").doc(uid).collection("private").doc("centerManagement");
+  const current = await appRef.get();
+  if (current.exists && current.data().data) {
+    const currentData = current.data().data;
+    const serialized = JSON.stringify({
+      data: currentData,
+      centerManagement: (await centerRef.get()).data()?.center || null
+    });
+    if (Buffer.byteLength(serialized, "utf8") <= 700000) {
+      await db.collection("users").doc(uid).collection("backups").add({
+        data: currentData,
+        centerManagement: (await centerRef.get()).data()?.center || null,
+        sizeBytes: Buffer.byteLength(serialized, "utf8"),
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        createdBy: uid,
+        label: "Automatic pre-restore backup"
+      });
+    }
+  }
+  await appRef.set({
+    data: saved.data,
+    updatedByDevice: "cloud-restore",
+    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+  });
+  if (saved.centerManagement) {
+    await centerRef.set({
+      center: saved.centerManagement,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+  }
+  return { ok: true };
+});
+
 // Platform owner announcements for all signed-in AK Sale customers.
 exports.publishGlobalAnnouncement = functions.https.onCall(async (data, context) => {
   const ownerEmail = requireAdmin(context);

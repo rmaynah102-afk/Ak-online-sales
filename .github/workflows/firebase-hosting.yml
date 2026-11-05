@@ -1,4 +1,4 @@
-name: Deploy AK Sale to Firebase Hosting
+name: Deploy AK Sale to Firebase Hosting and Firestore Rules
 
 on:
   push:
@@ -16,10 +16,33 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Deploy to Firebase Hosting
-        uses: FirebaseExtended/action-hosting-deploy@v0
+      - name: Check Firebase service account secret
+        id: auth
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_AK_ONLIN_SALES }}
+        run: |
+          if [ -n "$FIREBASE_SERVICE_ACCOUNT" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Firebase deploy skipped: add FIREBASE_SERVICE_ACCOUNT_AK_ONLIN_SALES in GitHub Actions secrets."
+          fi
+
+      - name: Set up Node.js
+        if: steps.auth.outputs.available == 'true'
+        uses: actions/setup-node@v4
         with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_AK_ONLIN_SALES }}
-          projectId: ak-onlin-sales
-          channelId: live
+          node-version: 20
+
+      - name: Install Firebase CLI
+        if: steps.auth.outputs.available == 'true'
+        run: npm install --global firebase-tools
+
+      - name: Deploy Hosting and Firestore Rules
+        if: steps.auth.outputs.available == 'true'
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_AK_ONLIN_SALES }}
+        run: |
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/firebase-service-account.json"
+          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/firebase-service-account.json"
+          firebase deploy --only hosting,firestore:rules --project ak-onlin-sales --non-interactive

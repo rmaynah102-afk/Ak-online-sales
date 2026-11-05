@@ -1,1 +1,21 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="#123b2a"/><path d="M90 225h332l-24-82H114z" fill="#e7b85b"/><path d="M110 225v180h292V225" fill="#f5f7f4"/><path d="M90 225h332v45c0 26-22 42-48 42-20 0-37-9-45-25-8 16-25 25-45 25s-37-9-45-25c-8 16-25 25-45 25-26 0-48-16-48-42z" fill="#d6a448"/><path d="M176 333h160v72H176z" fill="#123b2a"/><text x="256" y="380" font-family="Arial,sans-serif" font-size="48" font-weight="700" text-anchor="middle" fill="#fff">AK</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="AK Sale Software">
+<defs>
+ <linearGradient id="bg" x2="1" y2="1"><stop stop-color="#07183f"/><stop offset=".55" stop-color="#0649b8"/><stop offset="1" stop-color="#07183f"/></linearGradient>
+ <linearGradient id="gold" x2=".8" y2="1"><stop stop-color="#fff2a6"/><stop offset=".38" stop-color="#ffc52e"/><stop offset="1" stop-color="#c87908"/></linearGradient>
+ <linearGradient id="silver" x2="0" y2="1"><stop stop-color="#fff"/><stop offset="1" stop-color="#a9d9ff"/></linearGradient>
+ <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="8"/></filter>
+</defs>
+<rect width="512" height="512" rx="112" fill="url(#bg)"/>
+<rect x="12" y="12" width="488" height="488" rx="100" fill="none" stroke="url(#gold)" stroke-width="12"/>
+<path d="M54 370 C142 430 350 423 453 320" fill="none" stroke="#00cfff" stroke-width="12" opacity=".32" filter="url(#shadow)"/>
+<path d="M54 370 C142 430 350 423 453 320" fill="none" stroke="url(#gold)" stroke-width="13" stroke-linecap="round"/>
+<path d="M366 104 L430 82 L412 146" fill="none" stroke="url(#gold)" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M386 125 L430 82" stroke="url(#gold)" stroke-width="15" stroke-linecap="round"/>
+<path d="M77 143h34l27 113h150l35-93H124" fill="none" stroke="url(#silver)" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M145 276h134" stroke="url(#silver)" stroke-width="14" stroke-linecap="round"/>
+<circle cx="159" cy="302" r="15" fill="url(#gold)"/><circle cx="263" cy="302" r="15" fill="url(#gold)"/>
+<path d="M164 348 L213 207 L260 348 M181 302 H246" fill="none" stroke="url(#gold)" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M292 207 V348 M294 283 L371 207 M294 283 L379 348" fill="none" stroke="url(#silver)" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M100 398h312" stroke="#fff" stroke-opacity=".24" stroke-width="2"/>
+<text x="256" y="454" text-anchor="middle" font-family="Arial,sans-serif" font-size="43" font-weight="800" fill="#fff">SALE</text>
+</svg>

@@ -1,0 +1,35 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /productPhotos/{userId}/{productId}/{fileName} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow create, update: if request.auth != null
+        && request.auth.uid == userId
+        && request.resource.size < 2 * 1024 * 1024
+        && request.resource.contentType.matches('image/(jpeg|png|webp)');
+      allow delete: if request.auth != null && request.auth.uid == userId;
+    }
+    match /paymentProofs/{userId}/{fileName} {
+      allow create: if request.auth != null
+        && request.auth.uid == userId
+        && request.resource.size < 4 * 1024 * 1024
+        && request.resource.contentType.matches('image/(jpeg|png|webp)');
+      allow read: if request.auth != null
+        && (request.auth.uid == userId
+          || (request.auth.token.email == 'sannnlinpaing@gmail.com'
+            && request.auth.token.email_verified == true));
+      allow update, delete: if false;
+    }
+    match /market/{userId}/{listingId}/{fileName} {
+      function listing() {
+        return firestore.get(/databases/(default)/documents/marketListings/$(listingId));
+      }
+      allow read: if listing().data.status == 'published';
+      allow create, update: if request.auth != null
+        && request.auth.uid == userId
+        && request.resource.size < 2 * 1024 * 1024
+        && request.resource.contentType.matches('image/(jpeg|png|webp)');
+      allow delete: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}

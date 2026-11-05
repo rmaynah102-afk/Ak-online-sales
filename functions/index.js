@@ -185,7 +185,7 @@ exports.reviewSponsoredAd = functions.https.onCall(async (data, context) => {
 
 // Fixed single KBZPay receiving account. Destination changes require a code review.
 function normalizePaymentReference(value) {
-  return String(value || "").trim().replace(/\\s+/g, "").toUpperCase();
+  return String(value || "").trim().replace(/\s+/g, "").toUpperCase();
 }
 
 const AK_KPAY_ACCOUNT = Object.freeze({

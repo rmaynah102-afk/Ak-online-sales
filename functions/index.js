@@ -419,3 +419,30 @@ exports.removeShopStaff = functions.https.onCall(async (data, context) => {
   return { ok: true };
 });
 
+
+
+// Platform owner announcements for all signed-in AK Sale customers.
+exports.publishGlobalAnnouncement = functions.https.onCall(async (data, context) => {
+  const ownerEmail = requireAdmin(context);
+  const title = String(data.title || "").trim().slice(0, 120);
+  const message = String(data.message || "").trim().slice(0, 800);
+  if (title.length < 2 || message.length < 2) {
+    throw new functions.https.HttpsError("invalid-argument", "ကြေညာချက်ခေါင်းစဉ်နှင့် စာသားထည့်ပါ။");
+  }
+  const ref = await db.collection("globalAnnouncements").add({
+    title, message, ownerEmail, active: true,
+    createdAt: admin.firestore.FieldValue.serverTimestamp()
+  });
+  return { ok: true, id: ref.id };
+});
+
+exports.listGlobalAnnouncements = functions.https.onCall(async (data, context) => {
+  if (!context.auth) throw new functions.https.HttpsError("unauthenticated", "Login လိုအပ်သည်။");
+  const snap = await db.collection("globalAnnouncements").where("active", "==", true)
+    .orderBy("createdAt", "desc").limit(15).get();
+  return { announcements: snap.docs.map(doc => {
+    const x = doc.data();
+    return { id: doc.id, title: x.title || "", message: x.message || "",
+      createdAt: x.createdAt && x.createdAt.toDate ? x.createdAt.toDate().toISOString() : "" };
+  }) };
+});

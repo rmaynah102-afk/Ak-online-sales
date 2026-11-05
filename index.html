@@ -377,13 +377,21 @@ const $=id=>document.getElementById(id), DBKEY="ak_sale_complete_v2";
 const fresh=()=>({products:[],sales:[],purchases:[],people:[],payments:[],expenses:[],shop:{name:"Ak shopping markets",currency:"MMK"}});
 function readDB(storageKey=DBKEY){try{let x=JSON.parse(localStorage.getItem(storageKey));if(!x||typeof x!=="object")return fresh();let d=fresh();for(let k of ["products","sales","purchases","people","payments","expenses"])d[k]=Array.isArray(x[k])?x[k].filter(v=>v&&typeof v==="object").map(v=>({...v,id:/^[A-Za-z0-9_-]{1,80}$/.test(String(v.id||""))?String(v.id):uid()})):[];d.products=d.products.map(p=>({...p,photo:/^(data:image\/(png|jpeg|webp);base64,|https:\/\/)/i.test(String(p.photo||""))?String(p.photo):""}));d.shop={...d.shop,...(x.shop||{})};return d}catch(e){console.warn(e);return fresh()}}
 let db=readDB(), fbApp=null,fbAuth=null,fbStore=null,fbUser=null,fbAuthListenerReady=false,cloudReady=false,adImage=null,productImageData="";
-let currentLicense=null;
+let currentLicense=null,akUserClaims={};
 const userDBKey=uid=>DBKEY+"_user_"+uid;
 const uid=()=>("xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx").replace(/[xy]/g,c=>{let r=Math.random()*16|0;return(c==="x"?r:(r&3|8)).toString(16)});
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const money=n=>Number(n||0).toLocaleString("en-US")+" "+(db.shop.currency||"MMK");
 const dateNow=()=>new Date().toISOString();
 const dateKey=s=>String(s||"").slice(0,10);
+const AK_THEME_KEY="ak_sale_theme_v1";
+const AK_THEMES={green:{primary:"#176b5b",header:"#0b3d35",bg:"#f5f7f6",soft:"#e6f0eb"},blue:{primary:"#176b9a",header:"#103b60",bg:"#f2f6fb",soft:"#e5eff9"},purple:{primary:"#7053b8",header:"#38245f",bg:"#f6f3fb",soft:"#eee8f8"},orange:{primary:"#b65c24",header:"#713713",bg:"#fbf5ef",soft:"#f8eadc"}};
+function applyAkTheme(){const key=localStorage.getItem(AK_THEME_KEY)||"green",t=AK_THEMES[key]||AK_THEMES.green,root=document.documentElement;root.style.setProperty("--md-primary",t.primary);root.style.setProperty("--g",t.header);root.style.setProperty("--g2",t.primary);root.style.setProperty("--bg",t.bg);let style=document.getElementById("akThemeOverrides");if(!style){style=document.createElement("style");style.id="akThemeOverrides";document.head.appendChild(style)}style.textContent="header{background:"+t.header+"!important}body{background:"+t.bg+"!important}.stat{color:"+t.primary+"!important}nav button:hover{background:"+t.soft+"!important;border-color:"+t.primary+"55!important}";const select=document.getElementById("akThemeSelect");if(select)select.value=key}
+function akCanPrint(){if(!fbUser)return true;if(String(fbUser.email||"").toLowerCase()==="sannnlinpaing@gmail.com"&&fbUser.emailVerified)return true;if(akUserClaims.shopId)return akUserClaims.canPrint===true;return !!(currentLicense&&currentLicense.status==="active")}
+function akRequirePrint(){if(akCanPrint())return true;alert("Print ခွင့်မရှိပါ။ ဆိုင် Owner ထံမှ Print ခွင့်ပြုချက် ရယူပါ။");return false}
+function akIsPlatformOwner(){return !!(fbUser&&String(fbUser.email||"").toLowerCase()==="sannnlinpaing@gmail.com"&&fbUser.emailVerified)}
+function akApplyAnnouncementAdminVisibility(){const el=document.getElementById("globalAnnouncementAdmin");if(el)el.classList.toggle("hidden",!akIsPlatformOwner())}
+
 function persist(){try{localStorage.setItem(fbUser?userDBKey(fbUser.uid):DBKEY,JSON.stringify(db));$("saveState").textContent=fbUser?"Cloud အကောင့်ထဲ သိမ်းဆည်းရန် အသင့်":"ဖုန်းထဲ သိမ်းပြီး";renderAll();if(fbUser&&cloudReady)cloudSave()}catch(e){alert("ဖုန်းထဲသိမ်းမရပါ။ ဓာတ်ပုံအရွယ်အစားလျှော့ပြီး Backup စစ်ပါ။");console.error(e)}}
 const pages=[["home","ပင်မ"],["products","ပစ္စည်း"],["sales","အရောင်း"],["purchases","အဝယ်"],["people","Customer/Supplier"],["expenses","အသုံးစရိတ်"],["reports","အစီရင်ခံစာ"],["ads","ကြော်ငြာ"],["market","AK Market"],["centerManagement","စင်တာထိန်းချုပ်မှု"],["userGuide","အသုံးပြုသူလမ်းညွှန်"],["apkGuide","APK လမ်းညွှန်"],["backup","Backup / Settings"]];
 $("nav").innerHTML=pages.map(([id,n])=>`<button onclick="go('${id}')">${n}</button>`).join("");

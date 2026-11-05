@@ -14,6 +14,7 @@ const fs=require('fs'),path=require('path'),sharp=require('sharp');
  fs.writeFileSync(path.join(any,'ic_launcher.xml'),xml);fs.writeFileSync(path.join(any,'ic_launcher_round.xml'),xml);
  const values=path.join(res,'values');fs.mkdirSync(values,{recursive:true});const cp=path.join(values,'colors.xml');
  let colors=fs.existsSync(cp)?fs.readFileSync(cp,'utf8'):'<?xml version="1.0" encoding="utf-8"?>\n<resources>\n</resources>\n';
- if(!colors.includes('name="ic_launcher_background"'))colors=colors.replace('</resources>','  <color name="ic_launcher_background">#071B57</color>\n</resources>');
+ // Capacitor already creates ic_launcher_background.xml. Do not define the same resource twice.
+ colors=colors.replace(/<color\s+name="ic_launcher_background">[\s\S]*?<\/color>\s*/g,'');
  fs.writeFileSync(cp,colors);console.log('AK Sale Android launcher icons generated.');
 })().catch(e=>{console.error(e);process.exit(1)});

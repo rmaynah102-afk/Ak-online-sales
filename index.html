@@ -207,8 +207,8 @@ footer{text-align:center;padding:24px 12px;color:#60736a}
 body.ak-license-locked #nav{display:none!important}
 body.ak-license-locked main>.view{display:none!important}
 body.ak-license-locked main>#backup{display:block!important}
-body.ak-license-locked main>#backup .panel:not(:has(#licenseStatus)){display:none}
-body.ak-license-locked main>#backup .panel:has(#licenseStatus){display:block}
+body.ak-license-locked main>#backup .panel:not(:has(#licenseStatus)):not(:has(#firebaseConfig)){display:none}
+body.ak-license-locked main>#backup .panel:has(#licenseStatus),body.ak-license-locked main>#backup .panel:has(#firebaseConfig){display:block}
 </style>
 </head>
 <body class="ak-license-locked">

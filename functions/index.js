@@ -1,5 +1,6 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
+const crypto = require("crypto");
 // Sole platform owner; fixed allowlist, never client-configurable.
 const OWNER_EMAIL = "sannnlinpaing@gmail.com";
 
@@ -257,6 +258,17 @@ exports.approveSubscription = functions.https.onCall(async (data, context) => {
       throw new functions.https.HttpsError("failed-precondition", "Payment request data / package amount မမှန်ပါ။");
     }
 
+    // A KBZPay transaction reference can only be used once, even if a user
+    // submits multiple payment requests with the same reference.
+    const referenceKey = crypto.createHash("sha256")
+      .update("KBZPay:" + reference.toUpperCase())
+      .digest("hex");
+    const referenceRef = db.collection("paymentReferences").doc(referenceKey);
+    const referenceSnap = await tx.get(referenceRef);
+    if (referenceSnap.exists) {
+      throw new functions.https.HttpsError("already-exists", "ဤ KBZPay Transaction ID ကို ယခင်က အသုံးပြုပြီးပါပြီ။");
+    }
+
     const licenseRef = db.collection("licenses").doc(uid);
     const licenseSnap = await tx.get(licenseRef);
     const now = Date.now();
@@ -266,6 +278,16 @@ exports.approveSubscription = functions.https.onCall(async (data, context) => {
     const nextExpiry = admin.firestore.Timestamp.fromMillis(
       Math.max(now, currentExpiry) + days * 86400000
     );
+    tx.create(referenceRef, {
+      referenceHash: referenceKey,
+      paymentRequestId: requestId,
+      uid,
+      method: "KBZPay",
+      amount: Number(payment.amount),
+      days,
+      approvedBy: callerEmail,
+      createdAt: admin.firestore.FieldValue.serverTimestamp()
+    });
     tx.set(licenseRef, {
       uid,
       email: payment.email || "",
@@ -503,47 +525,74 @@ exports.restoreCloudBackup = functions.https.onCall(async (data, context) => {
   if (!/^[A-Za-z0-9]{10,40}$/.test(backupId)) {
     throw new functions.https.HttpsError("invalid-argument", "Backup ID မမှန်ပါ။");
   }
-  const backupRef = db.collection("users").doc(uid).collection("backups").doc(backupId);
-  const snap = await backupRef.get();
-  if (!snap.exists) throw new functions.https.HttpsError("not-found", "Cloud Backup မတွေ့ပါ။");
-  const saved = snap.data();
-  if (!saved.data || !Array.isArray(saved.data.products) || !Array.isArray(saved.data.sales)) {
-    throw new functions.https.HttpsError("failed-precondition", "Backup ဒေတာပုံစံ မမှန်ပါ။");
-  }
-  const appRef = db.collection("users").doc(uid).collection("private").doc("appData");
-  const centerRef = db.collection("users").doc(uid).collection("private").doc("centerManagement");
-  const current = await appRef.get();
-  if (current.exists && current.data().data) {
-    const currentData = current.data().data;
-    const serialized = JSON.stringify({
-      data: currentData,
-      centerManagement: (await centerRef.get()).data()?.center || null
-    });
-    if (Buffer.byteLength(serialized, "utf8") <= 700000) {
-      await db.collection("users").doc(uid).collection("backups").add({
-        data: currentData,
-        centerManagement: (await centerRef.get()).data()?.center || null,
-        sizeBytes: Buffer.byteLength(serialized, "utf8"),
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        createdBy: uid,
-        label: "Automatic pre-restore backup"
-      });
+
+  const userRef = db.collection("users").doc(uid);
+  const backupRef = userRef.collection("backups").doc(backupId);
+  const appRef = userRef.collection("private").doc("appData");
+  const centerRef = userRef.collection("private").doc("centerManagement");
+  const preRestoreRef = userRef.collection("backups").doc();
+
+  // Read and restore both private documents in one transaction. This prevents
+  // a partial restore if the process fails between appData and centerManagement.
+  await db.runTransaction(async tx => {
+    const [backupSnap, currentAppSnap, currentCenterSnap] = await Promise.all([
+      tx.get(backupRef), tx.get(appRef), tx.get(centerRef)
+    ]);
+    if (!backupSnap.exists) {
+      throw new functions.https.HttpsError("not-found", "Cloud Backup မတွေ့ပါ။");
     }
-  }
-  await appRef.set({
-    data: saved.data,
-    updatedByDevice: "cloud-restore",
-    updatedAt: admin.firestore.FieldValue.serverTimestamp()
-  });
-  if (saved.centerManagement) {
-    await centerRef.set({
-      center: saved.centerManagement,
+
+    const saved = backupSnap.data();
+    if (!saved.data || !Array.isArray(saved.data.products) ||
+        !Array.isArray(saved.data.sales)) {
+      throw new functions.https.HttpsError("failed-precondition", "Backup ဒေတာပုံစံ မမှန်ပါ။");
+    }
+    const restorePayload = JSON.stringify({
+      data: saved.data,
+      centerManagement: saved.centerManagement || null
+    });
+    if (Buffer.byteLength(restorePayload, "utf8") > 700000) {
+      throw new functions.https.HttpsError("resource-exhausted", "Backup ဒေတာအရွယ်အစား ကန့်သတ်ချက်ကျော်နေသည်။");
+    }
+
+    if (currentAppSnap.exists && currentAppSnap.data().data) {
+      const currentData = currentAppSnap.data().data;
+      const currentCenter = currentCenterSnap.exists
+        ? (currentCenterSnap.data().center || null) : null;
+      const currentSerialized = JSON.stringify({
+        data: currentData,
+        centerManagement: currentCenter
+      });
+      const currentSize = Buffer.byteLength(currentSerialized, "utf8");
+      if (currentSize <= 700000) {
+        tx.create(preRestoreRef, {
+          data: currentData,
+          centerManagement: currentCenter,
+          sizeBytes: currentSize,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          createdBy: uid,
+          label: "Automatic pre-restore backup"
+        });
+      }
+    }
+
+    tx.set(appRef, {
+      data: saved.data,
+      updatedByDevice: "cloud-restore",
+      restoredFromBackupId: backupId,
       updatedAt: admin.firestore.FieldValue.serverTimestamp()
-    }, { merge: true });
-  } else {
-    await centerRef.delete();
-  }
-  return { ok: true };
+    });
+    if (saved.centerManagement) {
+      tx.set(centerRef, {
+        center: saved.centerManagement,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+    } else {
+      tx.delete(centerRef);
+    }
+  });
+
+  return { ok: true, backupId };
 });
 
 // Platform owner announcements for all signed-in AK Sale customers.

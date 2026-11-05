@@ -55,6 +55,14 @@ if (!cloudSyncSource.includes('tx.set(ref') || !cloudSyncSource.includes('runTra
   console.error('Cloud saves must use a Firestore transaction with a revision check.');
   process.exitCode = 1;
 }
+if (!html.includes('const authGeneration=++akAuthGeneration')) {
+  console.error('Authentication callbacks must ignore stale async work after account switching.');
+  process.exitCode = 1;
+}
+if (!html.includes('akCloudRevision=snap.exists&&Number.isSafeInteger(snap.data().revision)')) {
+  console.error('Initial Cloud load must initialize the revision before enabling synchronization.');
+  process.exitCode = 1;
+}
 if (!html.includes('akCloudConflict=false;akLocalDirty=false;')) {
   console.error('Explicit Cloud Load must clear conflict state only after replacing local data.');
   process.exitCode = 1;

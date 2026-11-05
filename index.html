@@ -602,7 +602,7 @@ async function cloudLoad(){try{if(!fbAuth||!fbAuth.currentUser)throw Error("Fire
 async function akCreateCloudBackup(){
  const status=$("akCloudBackupStatus");status.textContent="Cloud Backup သိမ်းနေသည်...";
  try{
-  if(!fbAuth?.currentUser||!cloudReady)throw Error("Active Subscription ဖြင့် Login ဝင်ထားရန်လိုသည်။");
+  if(!fbAuth?.currentUser||!cloudReady)throw Error("Google Account ဖြင့် Login ဝင်ပြီး Cloud ချိတ်ဆက်ထားရန်လိုသည်။");
   const result=await firebase.functions().httpsCallable("createCloudBackup")({});
   status.textContent="Cloud Backup သိမ်းပြီးပါပြီ · "+Math.round((result.data.sizeBytes||0)/1024)+" KB";
   await akListCloudBackups();
@@ -611,7 +611,7 @@ async function akCreateCloudBackup(){
 async function akListCloudBackups(){
  const status=$("akCloudBackupStatus"),rows=$("akCloudBackupRows");status.textContent="Cloud Backup စာရင်း ဖတ်နေသည်...";
  try{
-  if(!fbAuth?.currentUser||!cloudReady)throw Error("Active Subscription ဖြင့် Login ဝင်ထားရန်လိုသည်။");
+  if(!fbAuth?.currentUser||!cloudReady)throw Error("Google Account ဖြင့် Login ဝင်ပြီး Cloud ချိတ်ဆက်ထားရန်လိုသည်။");
   const result=await firebase.functions().httpsCallable("listCloudBackups")({});
   const backups=result.data.backups||[];
   rows.innerHTML=backups.map(x=>'<tr><td>'+esc(x.createdAt?new Date(x.createdAt).toLocaleString():"")+'</td><td>'+Math.round((x.sizeBytes||0)/1024)+' KB</td><td><button class="alt" onclick="akRestoreCloudBackup(\''+esc(x.id)+'\')">ပြန်ယူမည်</button></td></tr>').join("")||'<tr><td colspan="3">Cloud Backup မရှိသေးပါ။</td></tr>';
@@ -622,7 +622,7 @@ async function akRestoreCloudBackup(id){
  if(!id||!confirm("ရွေးထားသော Cloud Backup ဖြင့် ဆိုင်ဒေတာကို အစားထိုးမည်။ Server က လက်ရှိဒေတာကို Pre-restore Backup အဖြစ် အရင်သိမ်းမည်။ ဆက်လုပ်မလား။"))return;
  const status=$("akCloudBackupStatus");status.textContent="Cloud Backup ပြန်ယူနေသည်...";
  try{
-  if(!fbAuth?.currentUser||!cloudReady)throw Error("Active Subscription ဖြင့် Login ဝင်ထားရန်လိုသည်။");
+  if(!fbAuth?.currentUser||!cloudReady)throw Error("Google Account ဖြင့် Login ဝင်ပြီး Cloud ချိတ်ဆက်ထားရန်လိုသည်။");
   await firebase.functions().httpsCallable("restoreCloudBackup")({backupId:id});
   const snap=await fbStore.collection("users").doc(fbAuth.currentUser.uid).collection("private").doc("appData").get();
   if(!snap.exists||!snap.data().data)throw Error("Restore ပြီးသော်လည်း Cloud ဒေတာ ပြန်မဖတ်နိုင်ပါ။");

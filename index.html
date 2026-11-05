@@ -225,7 +225,7 @@ input:focus,select:focus,textarea:focus{border-color:#2878d7;box-shadow:0 0 0 3p
 </style>
 </head>
 <body class="ak-license-locked">
-<header><div class="brand-lockup"><img src="./ak-logo.svg" alt="AK Sale logo" width="48" height="48"><div><h1 id="brandTitle">AK Sale Software</h1><small>Hardware & Electrical POS</small></div></div><div class="actions no-print"><a href="./" style="color:white">🌐 Market</a><a href="./download.html" style="color:white">⬇ App / APK</a><button id="akInstallBtn" class="alt" type="button" hidden>Install</button><button id="akShareBtn" class="alt" type="button">Share</button><span class="pill" id="saveState">ဖုန်းထဲသိမ်းဆည်းမည်</span></div></header>
+<header><div class="brand-lockup"><img src="./ak-logo.svg" alt="AK Sale logo" width="48" height="48"><div><h1 id="brandTitle">AK Sale Software</h1><small>Hardware & Electrical POS</small></div></div><div class="actions no-print"><a href="./" style="color:white">🌐 Market</a><a href="./download.html" style="color:white">⬇ App / APK</a><button id="akInstallBtn" class="alt" type="button" hidden>Install</button><button id="akShareBtn" class="alt" type="button">Share</button><button id="akLanguageBtn" class="alt" type="button" aria-label="Switch language">English</button><span class="pill" id="saveState">ဖုန်းထဲသိမ်းဆည်းမည်</span></div></header>
 <main>
 <nav id="nav" class="no-print"></nav>
 <section id="home" class="view active">
@@ -423,6 +423,37 @@ function akApplyAnnouncementAdminVisibility(){const el=document.getElementById("
 function persist(){if(document.body.classList.contains("ak-license-locked")){alert("အသုံးပြုခွင့်မရှိသေးပါ။ Gmail ဖြင့် Login ဝင်ပြီး ငွေပေးချေမှုအတည်ပြုချက် ရယူပါ။");return}try{localStorage.setItem(fbUser?userDBKey(fbUser.uid):DBKEY,JSON.stringify(db));$("saveState").textContent=fbUser?"Cloud အကောင့်ထဲ သိမ်းဆည်းရန် အသင့်":"ဖုန်းထဲ သိမ်းပြီး";renderAll();if(fbUser&&cloudReady){akLocalDirty=true;cloudSave()}}catch(e){alert("ဖုန်းထဲသိမ်းမရပါ။ ဓာတ်ပုံအရွယ်အစားလျှော့ပြီး Backup စစ်ပါ။");console.error(e)}}
 const pages=[["home","ပင်မ"],["products","ပစ္စည်း"],["sales","အရောင်း"],["purchases","အဝယ်"],["people","Customer/Supplier"],["expenses","အသုံးစရိတ်"],["reports","အစီရင်ခံစာ"],["ads","ကြော်ငြာ"],["market","AK Market"],["centerManagement","စင်တာထိန်းချုပ်မှု"],["userGuide","အသုံးပြုသူလမ်းညွှန်"],["apkGuide","APK လမ်းညွှန်"],["backup","Backup / Settings"]];
 $("nav").innerHTML=pages.map(([id,n])=>'<button type="button" data-view="'+id+'" aria-label="'+n+'" title="'+n+'" onclick="go(\''+id+'\')">'+n+'</button>').join("");
+const AK_I18N_MY_EN={
+"ပင်မ":"Home","ပစ္စည်း":"Products","အရောင်း":"Sales","အဝယ်":"Purchases","အသုံးစရိတ်":"Expenses","အစီရင်ခံစာ":"Reports","ကြော်ငြာ":"Ads","စင်တာထိန်းချုပ်မှု":"Center Management","အသုံးပြုသူလမ်းညွှန်":"User Guide","APK လမ်းညွှန်":"APK Guide","Backup / Settings":"Backup / Settings",
+"ယနေ့အရောင်း":"Today's Sales","ယနေ့အမြတ် (ခန့်မှန်း)":"Estimated Profit Today","ပစ္စည်းအမျိုးအစား":"Product Types","ရရန်အကြွေး":"Receivables","ပေးရန်အကြွေး":"Payables","အမြန်လုပ်ဆောင်ရန်":"Quick Actions","အရောင်းတင်ရန်":"New Sale","ပစ္စည်းထည့်ရန်":"Add Product","Backup သိမ်းရန်":"Save Backup",
+"ပစ္စည်းထည့် / ပြင်":"Add / Edit Product","ပစ္စည်းအမည် *":"Product Name *","ပစ္စည်းကုဒ် / Barcode":"Product Code / Barcode","အမျိုးအစား":"Category","ယူနစ်":"Unit","ဝယ်ဈေး":"Cost Price","လက်လီဈေး":"Retail Price","လက်ကားဈေး":"Wholesale Price","လက်ကျန်":"Stock","ပစ္စည်းဓာတ်ပုံ":"Product Photo","သိမ်းမည်":"Save","ပြင်":"Edit","ဖျက်":"Delete","ရှာဖွေရန်":"Search","အမည်":"Name","ဖုန်း":"Phone","လိပ်စာ":"Address","ရက်စွဲ":"Date","မှတ်ချက်":"Note","ငွေပမာဏ":"Amount","ပေးပြီးငွေ":"Amount Paid","ကျန်ငွေ":"Balance Due",
+"ဆိုင်အချက်အလက်":"Shop Details","ဆိုင်အမည်":"Shop Name","မြို့":"City","မြို့နယ်":"Township","ငွေကြေး":"Currency","ဆက်သွယ်ရန်":"Contact","သိမ်းဆည်းရန်":"Save Changes","Backup ထုတ်ရန်":"Export Backup","Backup ပြန်ယူရန်":"Restore Backup",
+"ဖုန်းထဲသိမ်းဆည်းမည်":"Saved on this device","ဖုန်းထဲသိမ်းပြီး":"Saved on this device","Cloud အကောင့်ထဲ သိမ်းဆည်းရန် အသင့်":"Ready to save to cloud",
+"Login ဝင်ရန်":"Sign In","Google Login":"Sign in with Google","Email Login":"Sign in with Email","အကောင့်ဖွင့်ရန်":"Create Account","ထွက်ရန်":"Sign Out","စစ်ဆေးရန်":"Check","ပိတ်ရန်":"Close","မရှိသေးပါ":"Not available yet",
+"ဈေးနှုန်း":"Price","အရေအတွက်":"Quantity","ဖောက်သည်":"Customer","ပေးသွင်းသူ":"Supplier","အရောင်းမှတ်တမ်း":"Sales History","ဝယ်ယူမှုမှတ်တမ်း":"Purchase History","အသုံးစရိတ်မှတ်တမ်း":"Expense Records","အမြတ်":"Profit","စုစုပေါင်း":"Total","ဘောင်ချာ":"Receipt","ငွေလက်ခံရန်":"Receive Payment","ငွေပေးချေရန်":"Make Payment"
+};
+const AK_I18N_EN_MY=Object.fromEntries(Object.entries(AK_I18N_MY_EN).map(([a,b])=>[b,a]));
+let akLanguage=localStorage.getItem("ak_sale_language")==="en"?"en":"my";
+function akApplyLanguage(){
+ const dict=akLanguage==="en"?AK_I18N_MY_EN:AK_I18N_EN_MY;
+ const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
+ let node;
+ while((node=walker.nextNode())){
+  const parent=node.parentElement;
+  if(!parent||/^(SCRIPT|STYLE|TEXTAREA|INPUT|SELECT|OPTION)$/i.test(parent.tagName))continue;
+  const raw=node.nodeValue,trim=raw.trim();
+  if(dict[trim])node.nodeValue=raw.replace(trim,dict[trim]);
+ }
+ document.querySelectorAll("[placeholder],[title],[aria-label]").forEach(el=>{
+  for(const attr of ["placeholder","title","aria-label"]){const value=el.getAttribute(attr);if(value&&dict[value])el.setAttribute(attr,dict[value]);}
+ });
+ document.documentElement.lang=akLanguage==="en"?"en":"my";
+ const btn=$("akLanguageBtn");if(btn){btn.textContent=akLanguage==="en"?"မြန်မာ":"English";btn.setAttribute("aria-label",akLanguage==="en"?"Switch to Burmese":"Switch to English");}
+}
+$("akLanguageBtn").addEventListener("click",()=>{akLanguage=akLanguage==="en"?"my":"en";try{localStorage.setItem("ak_sale_language",akLanguage)}catch(e){}akApplyLanguage()});
+const akLanguageObserver=new MutationObserver(()=>akApplyLanguage());
+akLanguageObserver.observe(document.body,{childList:true,subtree:true,characterData:true});
+akApplyLanguage();
 function go(id){if(document.body.classList.contains("ak-license-locked")&&id!=="backup"){alert("AK Sale အသုံးပြုရန် အရင် Login ဝင်ပြီး Package ငွေပေးချေကာ Owner အတည်ပြုချက် ရယူပါ။");id="backup"}document.querySelectorAll(".view").forEach(x=>x.classList.toggle("active",x.id===id));document.querySelectorAll("#nav button").forEach(b=>b.classList.toggle("active",b.dataset.view===id));const activeNav=document.querySelector('#nav button[data-view="'+id+'"]');if(activeNav&&window.matchMedia("(max-width: 650px)").matches)activeNav.scrollIntoView({block:"nearest",inline:"nearest",behavior:"smooth"});renderAll()}
 function resetProduct(){ $("productForm").reset();$("pId").value="";$("pUnit").value="ခု";$("pCost").value=0;$("pRetail").value=0;$("pWholesale").value=0;$("pStock").value=0;productImageData="";$("photoPreview").classList.add("hidden")}
 // Camera barcode scanner: uses the Android/Chrome camera sensor through BarcodeDetector when supported.

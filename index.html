@@ -242,7 +242,7 @@ input:focus,select:focus,textarea:focus{border-color:#2878d7;box-shadow:0 0 0 3p
 
 <section id="products" class="view">
 <div class="panel"><h2>ပစ္စည်းထည့် / ပြင်</h2><form id="productForm"><input type="hidden" id="pId"><div class="grid">
-<div><label>ပစ္စည်းအမည် *</label><input id="pName" required></div><div><label>ပစ္စည်းကုဒ်</label><input id="pCode"></div><div><label>အမျိုးအစား</label><input id="pCat" placeholder="ကုန်မာ / လျှပ်စစ်"></div><div><label>ယူနစ်</label><input id="pUnit" value="ခု"></div><div><label>ဝယ်ဈေး</label><input id="pCost" type="number" min="0" step="any" value="0"></div><div><label>လက်လီဈေး</label><input id="pRetail" type="number" min="0" step="any" value="0"></div><div><label>လက်ကားဈေး</label><input id="pWholesale" type="number" min="0" step="any" value="0"></div><div><label>လက်ကျန်</label><input id="pStock" type="number" min="0" step="any" value="0"></div><div><label>ပစ္စည်းဓာတ်ပုံ</label><input id="pPhoto" type="file" accept="image/*"></div>
+<div><label>ပစ္စည်းအမည် *</label><input id="pName" required></div><div><label>ပစ္စည်းကုဒ် / Barcode</label><div class="actions"><input id="pCode" autocomplete="off" style="flex:1;min-width:130px"><button type="button" class="alt" id="akScanBarcodeBtn">📷 Scan</button></div><small class="muted">Camera barcode scan သို့မဟုတ် Bluetooth/USB HID scanner ဖြင့် ဖတ်နိုင်သည်။</small></div><div><label>အမျိုးအစား</label><input id="pCat" placeholder="ကုန်မာ / လျှပ်စစ်"></div><div><label>ယူနစ်</label><input id="pUnit" value="ခု"></div><div><label>ဝယ်ဈေး</label><input id="pCost" type="number" min="0" step="any" value="0"></div><div><label>လက်လီဈေး</label><input id="pRetail" type="number" min="0" step="any" value="0"></div><div><label>လက်ကားဈေး</label><input id="pWholesale" type="number" min="0" step="any" value="0"></div><div><label>လက်ကျန်</label><input id="pStock" type="number" min="0" step="any" value="0"></div><div><label>ပစ္စည်းဓာတ်ပုံ</label><input id="pPhoto" type="file" accept="image/*"></div>
 </div><img id="photoPreview" class="thumb hidden" alt="preview"><div class="actions"><button>သိမ်းမည်</button><button type="button" class="alt" onclick="resetProduct()">ရှင်းမည်</button></div></form></div>
 <div class="panel"><div class="split"><h2>ပစ္စည်းစာရင်း</h2><input style="max-width:220px" id="productQuery" placeholder="ရှာရန်" oninput="renderProducts()"></div><div class="tablewrap"><table><thead><tr><th>ပုံ</th><th>ပစ္စည်း</th><th>ကုဒ်</th><th>လက်ကျန်</th><th>ဝယ်ဈေး</th><th>လက်လီ</th><th>လက်ကား</th><th>လုပ်ဆောင်ချက်</th></tr></thead><tbody id="productRows"></tbody></table></div></div>
 </section>
@@ -424,6 +424,32 @@ const pages=[["home","ပင်မ"],["products","ပစ္စည်း"],["sale
 $("nav").innerHTML=pages.map(([id,n])=>'<button type="button" data-view="'+id+'" aria-label="'+n+'" title="'+n+'" onclick="go(\''+id+'\')">'+n+'</button>').join("");
 function go(id){if(document.body.classList.contains("ak-license-locked")&&id!=="backup"){alert("AK Sale အသုံးပြုရန် အရင် Login ဝင်ပြီး Package ငွေပေးချေကာ Owner အတည်ပြုချက် ရယူပါ။");id="backup"}document.querySelectorAll(".view").forEach(x=>x.classList.toggle("active",x.id===id));document.querySelectorAll("#nav button").forEach(b=>b.classList.toggle("active",b.dataset.view===id));const activeNav=document.querySelector('#nav button[data-view="'+id+'"]');if(activeNav&&window.matchMedia("(max-width: 650px)").matches)activeNav.scrollIntoView({block:"nearest",inline:"nearest",behavior:"smooth"});renderAll()}
 function resetProduct(){ $("productForm").reset();$("pId").value="";$("pUnit").value="ခု";$("pCost").value=0;$("pRetail").value=0;$("pWholesale").value=0;$("pStock").value=0;productImageData="";$("photoPreview").classList.add("hidden")}
+// Camera barcode scanner: uses the Android/Chrome camera sensor through BarcodeDetector when supported.
+let akBarcodeStream=null,akBarcodeActive=false;
+async function akStopBarcodeScanner(){
+ akBarcodeActive=false;
+ if(akBarcodeStream){akBarcodeStream.getTracks().forEach(t=>t.stop());akBarcodeStream=null;}
+ const box=document.getElementById("akBarcodeScanner");if(box)box.remove();
+}
+async function akStartBarcodeScanner(){
+ if(!navigator.mediaDevices?.getUserMedia||typeof window.BarcodeDetector==="undefined"){
+  alert("ဤဖုန်း Browser တွင် Native BarcodeDetector မပါသေးပါ။ Chrome ကို Update လုပ်ပါ၊ သို့မဟုတ် Bluetooth/USB HID Scanner ကို ပစ္စည်းကုဒ်အကွက်တွင် ချိတ်ပြီးဖတ်ပါ။");
+  return;
+ }
+ await akStopBarcodeScanner();
+ const box=document.createElement("div");box.id="akBarcodeScanner";box.style.cssText="position:fixed;inset:0;background:#06152bee;z-index:99999;display:grid;place-items:center;padding:18px";
+ box.innerHTML='<div style="background:white;border-radius:16px;padding:14px;width:min(100%,520px);color:#172820"><h3>Barcode / QR Scanner</h3><video id="akBarcodeVideo" autoplay muted playsinline style="width:100%;border-radius:12px;background:#111;min-height:220px"></video><p id="akBarcodeStatus">ကင်မရာကို စတင်နေသည်…</p><button type="button" id="akBarcodeClose">ပိတ်မည်</button></div>';
+ document.body.appendChild(box);document.getElementById("akBarcodeClose").onclick=akStopBarcodeScanner;
+ try{
+  akBarcodeStream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:"environment"}}});
+  const video=document.getElementById("akBarcodeVideo");video.srcObject=akBarcodeStream;await video.play();
+  const detector=new BarcodeDetector({formats:["ean_13","ean_8","upc_a","upc_e","code_128","code_39","qr_code","itf","codabar"]});
+  akBarcodeActive=true;
+  const scan=async()=>{if(!akBarcodeActive)return;try{const codes=await detector.detect(video);if(codes.length&&codes[0].rawValue){document.getElementById("pCode").value=codes[0].rawValue;await akStopBarcodeScanner();document.getElementById("pName").focus();return;}}catch(e){}if(akBarcodeActive)requestAnimationFrame(scan);};
+  requestAnimationFrame(scan);
+ }catch(e){await akStopBarcodeScanner();alert("ကင်မရာဖွင့်မရပါ။ Permission ခွင့်ပြုပါ။ "+(e.message||""));}
+}
+document.getElementById("akScanBarcodeBtn")?.addEventListener("click",akStartBarcodeScanner);
 $("pPhoto").addEventListener("change",e=>{let f=e.target.files[0];if(!f)return;if(f.size>1.5*1024*1024)return alert("ဓာတ်ပုံ 1.5MB အောက်ရွေးပါ");let r=new FileReader();r.onload=()=>{productImageData=r.result;$("photoPreview").src=productImageData;$("photoPreview").classList.remove("hidden")};r.readAsDataURL(f)});
 // Product photos use Firebase Storage so the same shop account can view them in Web and Android.
 $("productForm").addEventListener("submit",async e=>{e.preventDefault();let id=$("pId").value||uid(),old=db.products.find(x=>x.id===id);let photo=productImageData||old?.photo||"";const file=$("pPhoto").files?.[0];if(file&&fbUser&&cloudReady&&window.firebase?.storage){try{$("saveState").textContent="ပစ္စည်းဓာတ်ပုံ Cloud သို့ တင်နေသည်...";const path="productPhotos/"+fbUser.uid+"/"+id+"/photo";const ref=firebase.storage().ref(path);await ref.put(file,{contentType:file.type,cacheControl:"public,max-age=3600"});photo=await ref.getDownloadURL()}catch(err){alert("ဓာတ်ပုံ Cloud သို့ မတင်နိုင်ပါ: "+err.message);return}}let p={id,name:$("pName").value.trim(),code:$("pCode").value.trim(),category:$("pCat").value.trim(),unit:$("pUnit").value.trim()||"ခု",cost:+$("pCost").value,retail:+$("pRetail").value,wholesale:+$("pWholesale").value,stock:+$("pStock").value,photo};if(!p.name)return alert("ပစ္စည်းအမည်ထည့်ပါ");if(old)Object.assign(old,p);else db.products.unshift(p);persist();resetProduct()});

@@ -325,7 +325,70 @@ exports.listShopStaff = functions.https.onCall(async (data, context) => {
   const snap = await db.collection("shopMembers").where("shopId", "==", ownerUid).limit(100).get();
   return { members: snap.docs.map(doc => {
     const x = doc.data();
-    return { uid: doc.id, email: x.email || "", role: x.role || "employee" };
+    return { uid: doc.id, email: x.email || "", role: x.role || "employee", canPrint: x.canPrint === true };
+  }) };
+});
+
+
+// Owner-controlled receipt and report printing permission for each staff account.
+exports.setShopStaffPrintPermission = functions.https.onCall(async (data, context) => {
+  const ownerUid = await requireActiveShop(context);
+  const memberUid = String(data.memberUid || "").trim();
+  const canPrint = data.canPrint === true;
+  if (!memberUid || memberUid === ownerUid || memberUid.length > 128) {
+    throw new functions.https.HttpsError("invalid-argument", "ဝန်ထမ်းအကောင့် ID မမှန်ပါ။");
+  }
+  const memberRef = db.collection("shopMembers").doc(memberUid);
+  const memberSnap = await memberRef.get();
+  if (!memberSnap.exists || memberSnap.data().shopId !== ownerUid) {
+    throw new functions.https.HttpsError("not-found", "ဤဆိုင်၏ ဝန်ထမ်းအကောင့် မတွေ့ပါ။");
+  }
+  const staff = await admin.auth().getUser(memberUid);
+  const claims = { ...(staff.customClaims || {}), shopId: ownerUid,
+    shopRole: memberSnap.data().role || "employee", canPrint };
+  await admin.auth().setCustomUserClaims(memberUid, claims);
+  await memberRef.set({ canPrint, permissionsUpdatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+  await db.collection("users").doc(ownerUid).collection("auditLogs").add({
+    action: "staff_print_permission_changed", targetUid: memberUid, canPrint,
+    actorUid: ownerUid, createdAt: admin.firestore.FieldValue.serverTimestamp()
+  });
+  return { ok: true, canPrint };
+});
+
+// Shop owner announcements are written/read through trusted callables so staff
+// do not need direct access to the owner's private appData document.
+exports.publishShopAnnouncement = functions.https.onCall(async (data, context) => {
+  const ownerUid = await requireActiveShop(context);
+  const title = String(data.title || "").trim().slice(0, 120);
+  const message = String(data.message || "").trim().slice(0, 600);
+  if (title.length < 2 || message.length < 2) {
+    throw new functions.https.HttpsError("invalid-argument", "ကြေညာချက်ခေါင်းစဉ်နှင့် စာသားထည့်ပါ။");
+  }
+  const ref = await db.collection("shopAnnouncements").doc(ownerUid).collection("items").add({
+    title, message, ownerUid, createdAt: admin.firestore.FieldValue.serverTimestamp()
+  });
+  return { ok: true, id: ref.id };
+});
+
+exports.listShopAnnouncements = functions.https.onCall(async (data, context) => {
+  if (!context.auth) throw new functions.https.HttpsError("unauthenticated", "Login လိုအပ်သည်။");
+  const claims = context.auth.token || {};
+  let ownerUid = "";
+  if (claims.shopId) {
+    ownerUid = String(claims.shopId);
+    const member = await db.collection("shopMembers").doc(context.auth.uid).get();
+    if (!member.exists || member.data().shopId !== ownerUid) {
+      throw new functions.https.HttpsError("permission-denied", "ဆိုင်ဝန်ထမ်းခွင့်ပြုချက် မရှိပါ။");
+    }
+  } else {
+    ownerUid = await requireActiveShop(context);
+  }
+  const snap = await db.collection("shopAnnouncements").doc(ownerUid).collection("items")
+    .orderBy("createdAt", "desc").limit(20).get();
+  return { announcements: snap.docs.map(doc => {
+    const x = doc.data();
+    return { id: doc.id, title: x.title || "", message: x.message || "",
+      createdAt: x.createdAt && x.createdAt.toDate ? x.createdAt.toDate().toISOString() : "" };
   }) };
 });
 
@@ -345,6 +408,7 @@ exports.removeShopStaff = functions.https.onCall(async (data, context) => {
   if (claims.shopId === ownerUid) {
     delete claims.shopId;
     delete claims.shopRole;
+    delete claims.canPrint;
     await admin.auth().setCustomUserClaims(memberUid, claims);
   }
   await ref.delete();

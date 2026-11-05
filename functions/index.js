@@ -211,10 +211,10 @@ exports.createPaymentRequest = functions.https.onCall(async (data, context) => {
   if (!Object.prototype.hasOwnProperty.call(expectedAmounts, days) ||
       amount !== expectedAmounts[days] || method !== "KBZPay" ||
       normalizedReference.length < 3 || normalizedReference.length > 100 ||
-      screenshotUrl.length > 2000) {
+      !screenshotUrl || screenshotUrl.length > 2000) {
     throw new functions.https.HttpsError("invalid-argument", "Payment request အချက်အလက် မမှန်ပါ။");
   }
-  if (screenshotUrl && (!screenshotUrl.startsWith("https://firebasestorage.googleapis.com/") ||
+  if (!screenshotUrl.startsWith("https://firebasestorage.googleapis.com/") ||
       !screenshotUrl.includes(encodeURIComponent("paymentProofs/" + uid + "/")))) {
     throw new functions.https.HttpsError("invalid-argument", "Payment screenshot path မမှန်ပါ။");
   }

@@ -114,7 +114,7 @@ service cloud.firestore {
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.status == 'pending'
         && request.resource.data.days in [30, 90, 180, 365]
-        && request.resource.data.method in ['KBZPay', 'WavePay', 'AYA Pay', 'CB Pay', 'Bank Transfer']
+        && request.resource.data.method == 'KBZPay' && request.resource.data.bankName == 'KBZPay'
         && request.resource.data.amount is number
         && ((request.resource.data.days == 30 && request.resource.data.amount == 15000)
           || (request.resource.data.days == 90 && request.resource.data.amount == 40000)

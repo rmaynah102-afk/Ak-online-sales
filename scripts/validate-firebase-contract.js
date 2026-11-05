@@ -36,6 +36,29 @@ if (!/request\.auth\.uid == uid/.test(rules)) {
   console.error('Private shop access must be bound to the authenticated UID.');
   process.exitCode = 1;
 }
+const cloudSyncStart = html.indexOf('function startAkCloudSync()');
+const cloudSyncEnd = html.indexOf('async function cloudLoad()', cloudSyncStart);
+const cloudSyncSource = cloudSyncStart >= 0 ? html.slice(cloudSyncStart, cloudSyncEnd) : '';
+for (const required of [
+  'revision:committedRevision',
+  'current!==expectedRevision',
+  'akCloudConflict',
+  'if(akLocalDirty)',
+  'akCloudSaveInFlight'
+]) {
+  if (!cloudSyncSource.includes(required)) {
+    console.error('Cloud sync must protect against silent concurrent-device overwrites; missing:', required);
+    process.exitCode = 1;
+  }
+}
+if (!cloudSyncSource.includes('tx.set(ref') || !cloudSyncSource.includes('runTransaction')) {
+  console.error('Cloud saves must use a Firestore transaction with a revision check.');
+  process.exitCode = 1;
+}
+if (!html.includes('akCloudConflict=false;akLocalDirty=false;')) {
+  console.error('Explicit Cloud Load must clear conflict state only after replacing local data.');
+  process.exitCode = 1;
+}
 if (!process.exitCode) console.log('Firestore owner-only private data and trusted staff membership guards OK.');
 
 if (!functionsSource.includes('paymentReferences') || !functionsSource.includes('tx.create(referenceRef')) {

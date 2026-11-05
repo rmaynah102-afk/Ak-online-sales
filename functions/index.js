@@ -493,7 +493,7 @@ exports.createCloudBackup = functions.https.onCall(async (data, context) => {
 });
 
 exports.listCloudBackups = functions.https.onCall(async (data, context) => {
-  const uid = await requireActiveShop(context);
+  const uid = await requireBackupShop(context);
   const snap = await db.collection("users").doc(uid).collection("backups")
     .orderBy("createdAt", "desc").limit(10).get();
   return { backups: snap.docs.map(doc => {
@@ -507,7 +507,7 @@ exports.listCloudBackups = functions.https.onCall(async (data, context) => {
 });
 
 exports.restoreCloudBackup = functions.https.onCall(async (data, context) => {
-  const uid = await requireActiveShop(context);
+  const uid = await requireBackupShop(context);
   const backupId = String(data.backupId || "").trim();
   if (!/^[A-Za-z0-9]{10,40}$/.test(backupId)) {
     throw new functions.https.HttpsError("invalid-argument", "Backup ID မမှန်ပါ။");

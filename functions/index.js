@@ -2,7 +2,7 @@ const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const crypto = require("crypto");
 // Sole platform owner; fixed allowlist, never client-configurable.
-const OWNER_EMAIL = "sannnlinpaing@gmail.com";
+const OWNER_EMAIL = "painglin102@gmail.com";
 
 admin.initializeApp();
 const db = admin.firestore();

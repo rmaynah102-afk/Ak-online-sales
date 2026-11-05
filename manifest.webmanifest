@@ -4,14 +4,17 @@
   "short_name": "AK Sale",
   "description": "AK Sale Software — Myanmar hardware and electrical shop sales, inventory and business management.",
   "lang": "my",
-  "categories": ["business", "productivity"],
+  "categories": [
+    "business",
+    "productivity"
+  ],
   "start_url": "./?app=1",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
   "prefer_related_applications": false,
-  "background_color": "#f5f7f6",
-  "theme_color": "#0b3d35",
+  "background_color": "#07183f",
+  "theme_color": "#0649b8",
   "icons": [
     {
       "src": "./ak-logo.svg",

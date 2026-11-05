@@ -6,6 +6,9 @@ on:
     branches: [main]
     paths:
       - 'index.html'
+      - 'download.html'
+      - 'robots.txt'
+      - 'sitemap.xml'
       - 'package.json'
       - 'capacitor.config.json'
       - '.github/workflows/build-android-apk.yml'

@@ -76,6 +76,37 @@ jobs:
         run: node scripts/validate-firebase-contract.js
       - name: Generate Android project
         run: npx cap add android
+      - name: Apply AK Sale branding and Android launcher icon
+        run: |
+          mkdir -p android/app/src/main/res/drawable
+          cat > android/app/src/main/res/drawable/ak_launcher.xml <<'XML'
+          <vector xmlns:android="http://schemas.android.com/apk/res/android"
+              android:width="108dp" android:height="108dp"
+              android:viewportWidth="108" android:viewportHeight="108">
+              <path android:fillColor="#07183F" android:pathData="M0,0h108v108h-108z"/>
+              <path android:strokeColor="#F6C453" android:strokeWidth="2.8" android:fillColor="#00000000" android:pathData="M54,5 C81,5 103,27 103,54 C103,81 81,103 54,103 C27,103 5,81 5,54 C5,27 27,5 54,5z"/>
+              <path android:strokeColor="#F6C453" android:strokeWidth="4.2" android:strokeLineCap="round" android:strokeLineJoin="round" android:fillColor="#00000000" android:pathData="M15,29h8l8,31h39l10,-25H28"/>
+              <path android:fillColor="#F6C453" android:pathData="M35,64a4,4 0,1 0,0.1 0 M67,64a4,4 0,1 0,0.1 0"/>
+              <path android:strokeColor="#F6C453" android:strokeWidth="6" android:strokeLineCap="round" android:strokeLineJoin="round" android:fillColor="#00000000" android:pathData="M30,83 L42,48 L54,83 M34,72h16"/>
+              <path android:strokeColor="#FFFFFF" android:strokeWidth="6" android:strokeLineCap="round" android:strokeLineJoin="round" android:fillColor="#00000000" android:pathData="M61,48v35 M62,66l18,-18 M62,66l19,17"/>
+              <path android:strokeColor="#00CFFF" android:strokeWidth="3.5" android:strokeLineCap="round" android:fillColor="#00000000" android:pathData="M19,91 C39,100 75,96 91,77"/>
+          </vector>
+          XML
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p = Path("android/app/src/main/AndroidManifest.xml")
+          s = p.read_text()
+          s, n1 = re.subn(r'android:icon="[^"]+"', 'android:icon="@drawable/ak_launcher"', s, count=1)
+          s, n2 = re.subn(r'android:roundIcon="[^"]+"', 'android:roundIcon="@drawable/ak_launcher"', s, count=1)
+          if n1 != 1:
+              raise SystemExit("Android launcher icon attribute was not found")
+          if n2 == 0:
+              s = s.replace('android:icon="@drawable/ak_launcher"', 'android:icon="@drawable/ak_launcher" android:roundIcon="@drawable/ak_launcher"', 1)
+          p.write_text(s)
+          print("AK Sale launcher branding applied")
+          PY
+
       - name: Set Android app version
         run: |
           node - <<'NODE'

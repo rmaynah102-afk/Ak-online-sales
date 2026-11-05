@@ -77,8 +77,8 @@ if (!functionsSource.includes('paymentReferences') ||
   console.error('Payment submission must atomically reserve a unique transaction reference.');
   process.exitCode = 1;
 }
-if ((functionsSource.match(/update\\("KBZPay:" \\+ normalizedReference\\)/g) || []).length < 2 ||
-    !functionsSource.includes('replace(/\\\\s+/g, "").toUpperCase()')) {
+if ((functionsSource.match(/update\("KBZPay:" \+ normalizedReference\)/g) || []).length < 2 ||
+    !functionsSource.includes('replace(/\\s+/g, "").toUpperCase()')) {
   console.error('KBZPay references must use the same whitespace/case normalization at submission and approval.');
   process.exitCode = 1;
 }

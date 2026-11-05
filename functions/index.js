@@ -549,6 +549,8 @@ exports.restoreCloudBackup = functions.https.onCall(async (data, context) => {
       center: saved.centerManagement,
       updatedAt: admin.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
+  } else {
+    await centerRef.delete();
   }
   return { ok: true };
 });

@@ -191,25 +191,26 @@ exports.reviewSponsoredAd = functions.https.onCall(async (data, context) => {
   return { ok:true, status:decision };
 });
 
-// Owner-managed destination for manual bank and wallet transfer verification.
-exports.getPaymentAccountSettings = functions.https.onCall(async (data, context) => {
-  if (!context.auth) throw new functions.https.HttpsError("unauthenticated", "Login လိုအပ်သည်။");
-  const snap = await db.collection("platformSettings").doc("paymentAccount").get();
-  const x = snap.data() || {};
-  return { enabled: x.enabled === true, method: x.method || "", bankName: x.bankName || "", accountName: x.accountName || "", accountNumber: x.accountNumber || "", instructions: x.instructions || "" };
+// Fixed single KBZPay receiving account. Destination changes require a code review.
+const AK_KPAY_ACCOUNT = Object.freeze({
+  enabled: true,
+  method: "KBZPay",
+  bankName: "KBZPay",
+  accountName: "NiNiWin",
+  accountNumber: "09774033661",
+  instructions: "KBZPay သို့ ငွေလွှဲပြီး Transaction ID ကို ထည့်ပါ။ Owner က KBZPay ထဲတွင် ငွေဝင်မှုကို စစ်ဆေးပြီးမှ အတည်ပြုမည်။ Screenshot တစ်ခုတည်းဖြင့် အတည်မပြုပါ။"
 });
 
+exports.getPaymentAccountSettings = functions.https.onCall(async (data, context) => {
+  if (!context.auth) throw new functions.https.HttpsError("unauthenticated", "Login လိုအပ်သည်။");
+  return AK_KPAY_ACCOUNT;
+});
+
+// Only the verified platform Owner may request settings refresh.
+// Client-supplied destination details are deliberately ignored.
 exports.setPaymentAccountSettings = functions.https.onCall(async (data, context) => {
-  const ownerEmail = requireAdmin(context);
-  const method = String(data.method || "").trim().slice(0, 40);
-  const bankName = String(data.bankName || "").trim().slice(0, 80);
-  const accountName = String(data.accountName || "").trim().slice(0, 100);
-  const accountNumber = String(data.accountNumber || "").trim().slice(0, 60);
-  const instructions = String(data.instructions || "").trim().slice(0, 300);
-  const enabled = data.enabled === true;
-  if (enabled && (!method || !bankName || !accountName || !accountNumber)) throw new functions.https.HttpsError("invalid-argument", "ငွေလက်ခံနည်းလမ်း၊ ဘဏ်အမည်၊ အကောင့်အမည်နှင့် အကောင့်နံပါတ် ဖြည့်ပါ။");
-  await db.collection("platformSettings").doc("paymentAccount").set({ enabled, method, bankName, accountName, accountNumber, instructions, updatedBy: ownerEmail, updatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
-  return { ok: true };
+  requireAdmin(context);
+  return { ok: true, ...AK_KPAY_ACCOUNT };
 });
 exports.listPendingPayments = functions.https.onCall(async (data, context) => {
   requireAdmin(context);

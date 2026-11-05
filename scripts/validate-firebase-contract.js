@@ -71,6 +71,10 @@ if (!serverCallables.has('createPaymentRequest') || !clientCallables.has('create
   console.error('Payment submissions must use the trusted createPaymentRequest callable.');
   process.exitCode = 1;
 }
+if (!functionsSource.includes('!screenshotUrl') || !html.includes('KPay ငွေလွှဲ Screenshot မဖြစ်မနေ တင်ပါ')) {
+  console.error('KPay payment requests must require a screenshot proof.');
+  process.exitCode = 1;
+}
 if (!functionsSource.includes('paymentReferences') ||
     !functionsSource.includes('status: "pending"') ||
     !functionsSource.includes('paymentRequestId: requestRef.id')) {

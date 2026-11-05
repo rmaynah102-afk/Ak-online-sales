@@ -8,12 +8,14 @@ service cloud.firestore {
     }
 
     function hasActiveLicense(uid) {
-      return isVerifiedOwner()
-        || (request.auth != null
-          && request.auth.uid == uid
-          && exists(/databases/$(database)/documents/licenses/$(uid))
-          && get(/databases/$(database)/documents/licenses/$(uid)).data.status == 'active'
-          && get(/databases/$(database)/documents/licenses/$(uid)).data.expiresAt > request.time);
+      // Every private shop document is strictly scoped to the signed-in UID.
+      // The verified platform owner bypasses subscription only for their own shop.
+      return request.auth != null
+        && request.auth.uid == uid
+        && (isVerifiedOwner()
+          || (exists(/databases/$(database)/documents/licenses/$(uid))
+            && get(/databases/$(database)/documents/licenses/$(uid)).data.status == 'active'
+            && get(/databases/$(database)/documents/licenses/$(uid)).data.expiresAt > request.time));
     }
 
     // Staff membership is written only by trusted Cloud Functions.

@@ -7,7 +7,7 @@ Myanmar-first shop POS, stock, wholesale/retail, customer/supplier, debts, expen
 - **Public Shopping Mall:** https://rmaynah102-afk.github.io/Ak-online-sales/
 - **Shop Web App:** https://rmaynah102-afk.github.io/Ak-online-sales/?app=1
 - **Source:** https://github.com/rmaynah102-afk/Ak-online-sales
-- **Android build:** GitHub Actions → **Build AK Sale Android APK** → latest successful run → Artifacts → `AK-Sale-Software-debug-APK`.
+- **Android download:** [Latest signed APK](https://github.com/rmaynah102-afk/Ak-online-sales/releases/latest/download/AK-Sale-Software.apk) · [All releases](https://github.com/rmaynah102-afk/Ak-online-sales/releases). The workflow publishes a signed APK and Play Store AAB when the private release-signing secrets are configured; otherwise it creates a debug-only test APK artifact.
 - Android APK is built from the same `index.html` as the web app using Capacitor. The web app also has an installable PWA manifest and offline app-shell cache.
 
 ## Advertising
@@ -24,6 +24,6 @@ GitHub Pages, GitHub Actions and Firebase have usage limits. Firebase free quota
 
 ## Release status and safety
 
-The Android workflow currently creates a **debug/testing APK**. A signed public release APK requires a private signing keystore stored only in GitHub Actions secrets. Do not commit keystore files or passwords. Google Play publication also requires a Play Console developer account, store listing, app signing, privacy disclosures and policy review.
+The Android workflow can create a **signed release APK and Play Store AAB** when all four private signing secrets are configured in GitHub Actions. If they are absent, it creates a debug-only test APK instead. Do not commit keystore files or passwords. A successful build does not prove real-device operation. Google Play publication also requires a Play Console developer account, store listing, app signing, privacy disclosures and policy review.
 
 Before selling: deploy and test Firebase rules/functions, account isolation, subscription expiry, device limits, backups, QR/payment workflow, printer behavior, real Android devices and a signed release build. KPay references are manually verified; never mark a payment as received from a QR screenshot alone.

@@ -1,6 +1,6 @@
 {
   "appId": "com.ak.hardware.sales",
-  "appName": "Ak shopping markets",
+  "appName": "AK Sale Software",
   "webDir": "www",
   "bundledWebRuntime": false,
   "server": {

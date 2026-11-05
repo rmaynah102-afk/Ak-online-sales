@@ -612,7 +612,7 @@ function startAkCloudSync(){
  const ref=fbStore.collection("users").doc(uid).collection("private").doc("appData");
  akCloudUnsubscribe=ref.onSnapshot(snap=>{
   if(!fbAuth?.currentUser||fbAuth.currentUser.uid!==uid)return;
-  if(!snap.exists){akCloudRevision=0;return}
+  if(!snap.exists){akCloudRevision=0;if(akLocalDirty){akCloudConflict=true;$("fbStatus").textContent="Cloud စာတမ်းကို အခြားလုပ်ဆောင်ချက်မှ ဖျက်ထားသည်။ Local ဒေတာကို အလိုအလျောက်မတင်ပါ။ Backup လုပ်ပြီး Owner စစ်ဆေးပါ။"}return}
   const data=snap.data()||{};
   akCloudRevision=Number.isSafeInteger(data.revision)&&data.revision>=0?data.revision:0;
   if(data.updatedByDevice===akDeviceId()||akApplyingRemote)return;

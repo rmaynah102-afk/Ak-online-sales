@@ -25,6 +25,8 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      signed_release: ${{ steps.signing.outputs.ready }}
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
@@ -216,7 +218,7 @@ jobs:
           retention-days: 30
 
   deploy-pages:
-    if: success()
+    if: success() && needs.build.outputs.signed_release == 'true'
     needs: build
     runs-on: ubuntu-latest
     permissions:

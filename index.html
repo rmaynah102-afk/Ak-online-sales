@@ -211,10 +211,21 @@ body.ak-license-locked main>#backup>.panel{display:none!important}
 body.ak-license-locked main>#backup>#akPaywallNotice,
 body.ak-license-locked main>#backup>#akLicensePanel,
 body.ak-license-locked main>#backup>#akFirebasePanel{display:block!important}
+
+/* AK Sale Software — blue & gold brand */
+header{background:linear-gradient(120deg,#07183f 0%,#0649b8 62%,#0876c9 100%);border-bottom:3px solid #f6c453;box-shadow:0 6px 22px #07183f30}
+header .brand-lockup{display:flex;align-items:center;gap:11px;min-width:0}
+header .brand-lockup img{width:48px;height:48px;flex:0 0 48px;border:1px solid #f6c453;border-radius:13px;box-shadow:0 3px 12px #0004}
+header .brand-lockup h1{color:#fff}
+header .brand-lockup small{color:#e5efff}
+button,.btn{background:linear-gradient(135deg,#1267d5,#0846a5);box-shadow:0 3px 9px #0649b82b}
+button.alt{background:#e9f1ff;color:#123b72;border:1px solid #c8d9f6;box-shadow:none}
+nav button{color:#17417a;border-color:#d5e2f4}
+input:focus,select:focus,textarea:focus{border-color:#2878d7;box-shadow:0 0 0 3px #2878d71b}
 </style>
 </head>
 <body class="ak-license-locked">
-<header><div><h1 id="brandTitle">AK Sale Software</h1><small>Hardware & Electrical Goods</small></div><div class="actions no-print"><a href="./" style="color:white">🌐 Market</a><a href="./download.html" style="color:white">⬇ App / APK</a><button id="akInstallBtn" class="alt" type="button" hidden>Install</button><button id="akShareBtn" class="alt" type="button">Share</button><span class="pill" id="saveState">ဖုန်းထဲသိမ်းဆည်းမည်</span></div></header>
+<header><div class="brand-lockup"><img src="./ak-logo.svg" alt="AK Sale logo" width="48" height="48"><div><h1 id="brandTitle">AK Sale Software</h1><small>Hardware & Electrical POS</small></div></div><div class="actions no-print"><a href="./" style="color:white">🌐 Market</a><a href="./download.html" style="color:white">⬇ App / APK</a><button id="akInstallBtn" class="alt" type="button" hidden>Install</button><button id="akShareBtn" class="alt" type="button">Share</button><span class="pill" id="saveState">ဖုန်းထဲသိမ်းဆည်းမည်</span></div></header>
 <main>
 <nav id="nav" class="no-print"></nav>
 <section id="home" class="view active">

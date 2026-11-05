@@ -262,7 +262,7 @@ exports.approveSubscription = functions.https.onCall(async (data, context) => {
     if (payment.status !== "pending") {
       throw new functions.https.HttpsError("failed-precondition", "ဤတောင်းဆိုချက်ကို ယခင်က စီမံပြီးပါပြီ။");
     }
-    if (!uid || !Object.prototype.hasOwnProperty.call(expectedAmounts, days) || reference.length < 3 || Number(payment.amount) !== expectedAmounts[days] || !["KBZPay", "WavePay", "AYA Pay", "CB Pay", "Bank Transfer"].includes(String(payment.method || ""))) {
+    if (!uid || !Object.prototype.hasOwnProperty.call(expectedAmounts, days) || reference.length < 3 || Number(payment.amount) !== expectedAmounts[days] || String(payment.method || "") !== "KBZPay" || String(payment.bankName || "") !== "KBZPay") {
       throw new functions.https.HttpsError("failed-precondition", "Payment request data / package amount မမှန်ပါ။");
     }
 

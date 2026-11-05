@@ -602,7 +602,7 @@ async function shareAdTo(platform){try{await saveAdAndCopyCaption();const captio
 let marketPhotoFile=null,marketListings=[];
 function resetMarketForm(){ $("marketForm").reset();marketPhotoFile=null;$("mPreview").src="";$("mPreview").classList.add("hidden");}
 $("mPhoto").addEventListener("change",e=>{const f=e.target.files[0];marketPhotoFile=f||null;if(!f){$("mPreview").classList.add("hidden");return}if(!/^image\/(jpeg|png|webp)$/.test(f.type)||f.size>2*1024*1024){marketPhotoFile=null;e.target.value="";return alert("JPG၊ PNG သို့မဟုတ် WebP ပုံ 2MB အောက်သာ ရွေးပါ။")}const r=new FileReader();r.onload=()=>{$("mPreview").src=r.result;$("mPreview").classList.remove("hidden")};r.readAsDataURL(f)});
-async function loadMarket(){try{if(!fbStore){renderMarket();return}const snap=await fbStore.collection("marketListings").where("status","==","published").orderBy("createdAt","desc").limit(60).get();marketListings=snap.docs.map(d=>({id:d.id,...d.data()}));renderMarket()}catch(e){$("marketStatus").textContent="Marketplace ဖတ်မရပါ။ Firebase ချိတ်ဆက်မှုနှင့် Index/Rules စစ်ဆေးပါ။ "+e.message;renderMarket()}}
+async function loadMarket(){try{if(!fbStore){renderMarket();return}const snap=await fbStore.collection("marketListings").where("status","==","published").limit(60).get();marketListings=snap.docs.map(d=>({id:d.id,...d.data()}));marketListings.sort((a,b)=>marketDate(b.createdAt)-marketDate(a.createdAt));renderMarket()}catch(e){$("marketStatus").textContent="Marketplace ဖတ်မရပါ။ Firebase ချိတ်ဆက်မှုနှင့် Rules စစ်ဆေးပါ။ "+e.message;renderMarket()}}
 const marketSynonyms={
  "မီးလုံး":["မီး","led","bulb","lamp","မီးသီး","မီးချောင်း"],
  "မီးသီး":["မီး","led","bulb","lamp","မီးလုံး"],

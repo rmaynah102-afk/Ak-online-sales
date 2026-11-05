@@ -5,6 +5,9 @@ Myanmar-first shop POS, stock, wholesale/retail, customer/supplier, debts, expen
 ## မြန်မာအသုံးပြုနည်းလမ်းညွှန်
 
 - [AK Sale Software အသုံးပြုနည်း (မြန်မာ)](./USER-GUIDE-MY.md)
+- [AK Sale Software User Guide (English)](./USER-GUIDE-EN.md)
+- [ဆိုင်လုပ်ငန်းလမ်းညွှန် (မြန်မာ)](./BUSINESS-GUIDE-MY.md)
+- [Business Operations Handbook (English)](./BUSINESS-GUIDE-EN.md)
 
 ## Web + Android APK
 

@@ -25,6 +25,9 @@ on:
       - 'functions/**'
       - 'scripts/**'
       - 'USER-GUIDE-MY.md'
+      - 'USER-GUIDE-EN.md'
+      - 'BUSINESS-GUIDE-MY.md'
+      - 'BUSINESS-GUIDE-EN.md'
       - 'README.md'
 
 permissions:

@@ -231,7 +231,7 @@ footer{text-align:center;padding:24px 12px;color:#60736a}
 <div class="panel"><h2>အရောင်းတင်ရန်</h2><form id="saleForm"><div class="grid">
 <div><label>ပစ္စည်း</label><select id="sProduct" required></select></div><div><label>ဈေးနှုန်းအမျိုးအစား</label><select id="sType"><option value="retail">လက်လီ</option><option value="wholesale">လက်ကား</option><option value="custom">ကိုယ်တိုင်သတ်မှတ်</option></select></div><div><label>အရေအတွက်</label><input id="sQty" type="number" min=".001" step="any" value="1" required></div><div><label>တစ်ခုဈေး</label><input id="sPrice" type="number" min="0" step="any" value="0" required></div><div><label>ဖောက်သည်</label><input id="sCustomer" placeholder="အမည် / ဖုန်း"></div><div><label>ပေးချေမှု</label><select id="sPayType"><option value="full">ငွေအပြည့်</option><option value="partial">တစ်စိတ်တစ်ပိုင်း</option><option value="credit">အကြွေး</option></select></div><div><label>ပေးငွေ</label><input id="sPaid" type="number" min="0" step="any" value="0"></div><div><label>မှတ်ချက်</label><input id="sNote"></div>
 </div><div class="actions"><button>အရောင်းသိမ်းမည်</button></div></form></div>
-<div class="panel"><h2>အရောင်းမှတ်တမ်း</h2><div class="tablewrap"><table><thead><tr><th>ရက်စွဲ</th><th>ဘောင်ချာ</th><th>ဖောက်သည်</th><th>စုစုပေါင်း</th><th>ပေးငွေ</th><th>အကြွေး</th><th></th></tr></thead><tbody id="saleRows"></tbody></table></div></div>
+<div class="panel"><div class="split"><h2>အရောင်းမှတ်တမ်း</h2><div class="actions no-print"><button type="button" class="alt" onclick="printSalesLedger()">အရောင်းစာရင်း Print</button></div></div><div class="tablewrap"><table><thead><tr><th>ရက်စွဲ</th><th>ဘောင်ချာ</th><th>ဖောက်သည်</th><th>စုစုပေါင်း</th><th>ပေးငွေ</th><th>အကြွေး</th><th></th></tr></thead><tbody id="saleRows"></tbody></table></div></div>
 </section>
 
 <section id="purchases" class="view">
@@ -400,7 +400,49 @@ function setSalePrice(){let p=db.products.find(x=>x.id===$("sProduct").value);if
 $("sPayType").addEventListener("change",()=>{let total=+$("sQty").value*+$("sPrice").value;$("sPaid").value=$("sPayType").value==="full"?total:0});
 $("saleForm").addEventListener("submit",e=>{e.preventDefault();let p=db.products.find(x=>x.id===$("sProduct").value),qty=+$("sQty").value,price=+$("sPrice").value;if(!p)return alert("ပစ္စည်းအရင်ထည့်ပါ");if(qty<=0||qty>p.stock)return alert("လက်ကျန်ပစ္စည်း မလုံလောက်ပါ");let total=qty*price,paid=$("sPayType").value==="full"?total:($("sPayType").value==="credit"?0:+$("sPaid").value);if(paid<0||paid>total)return alert("ပေးငွေမှန်ကန်စွာထည့်ပါ");db.sales.unshift({id:uid(),date:dateNow(),invoice:"AK-"+Date.now().toString().slice(-8),productId:p.id,productName:p.name,qty,price,total,cost:qty*p.cost,customer:$("sCustomer").value.trim(),paid,due:total-paid,note:$("sNote").value.trim()});p.stock-=qty;persist();$("saleForm").reset();$("sQty").value=1;$("sPaid").value=0;alert("အရောင်းသိမ်းပြီးပါပြီ")});
 function renderSales(){$("saleRows").innerHTML=db.sales.map(s=>`<tr><td>${new Date(s.date).toLocaleString()}</td><td>${esc(s.invoice)}</td><td>${esc(s.customer)}</td><td>${money(s.total)}</td><td>${money(s.paid)}</td><td>${money(s.due)}</td><td><button onclick="receipt('${s.id}')">ဘောင်ချာ</button></td></tr>`).join("")}
-function receipt(id){let s=db.sales.find(x=>x.id===id);if(!s)return;let w=window.open("","_blank");if(!w)return alert("Popup ခွင့်ပြုပါ");w.document.write(`<meta charset="utf-8"><title>Receipt</title><h2>${esc(db.shop.name)}</h2><p>${esc(s.invoice)} · ${new Date(s.date).toLocaleString()}</p><p>${esc(s.productName)} × ${s.qty} @ ${money(s.price)}</p><hr><p>Total: ${money(s.total)}</p><p>Paid: ${money(s.paid)}</p><p>Due: ${money(s.due)}</p>`);w.document.close();w.print()}
+function receipt(id,paper="80mm"){
+ const s=db.sales.find(x=>x.id===id);if(!s)return;
+ const w=window.open("","_blank");if(!w){alert("ဘောင်ချာ Print ထုတ်ရန် Popup ခွင့်ပြုပါ။ Browser Settings မှ Pop-ups ကို Allow လုပ်ပါ။");return}
+ const shop=db.shop||{},date=new Date(s.date);
+ const safeLogo=/^(https?:\/\/|data:image\/)/i.test(String(shop.logo||""))?String(shop.logo):"";
+ const width=paper==="A4"?"190mm":"72mm";
+ const line=(label,value)=>'<div class="sumrow"><span>'+label+'</span><b>'+value+'</b></div>';
+ w.document.open();w.document.write(`<!doctype html><html lang="my"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(s.invoice)} - Receipt</title>
+ <style>
+ *{box-sizing:border-box}body{font-family:Arial,"Noto Sans Myanmar",sans-serif;color:#111;margin:0;padding:5mm;font-size:12px}
+ .receipt{width:100%;max-width:${width};margin:auto}.center{text-align:center}.logo{max-width:35mm;max-height:20mm;object-fit:contain;margin:0 auto 5px;display:block}
+ h1{font-size:19px;margin:2px 0 5px;overflow-wrap:anywhere}.muted{color:#444;font-size:11px;margin:2px 0}
+ .rule{border:0;border-top:1px dashed #555;margin:9px 0}.meta{display:flex;justify-content:space-between;gap:8px;margin:4px 0}
+ table{width:100%;border-collapse:collapse;margin:8px 0}th,td{text-align:left;padding:5px 2px;border-bottom:1px solid #ddd;vertical-align:top}th:last-child,td:last-child{text-align:right}
+ .sumrow{display:flex;justify-content:space-between;gap:10px;margin:5px 0}.grand{font-size:16px;font-weight:bold;border-top:1px solid #222;padding-top:8px}
+ .thanks{text-align:center;margin:16px 0 4px;font-weight:bold}.actions{text-align:center;margin:12px}.actions button{padding:9px 15px;margin:3px}
+ @media print{body{padding:0}.receipt{max-width:none;width:100%}.actions{display:none}@page{size:${paper==="A4"?"A4":"80mm auto"};margin:${paper==="A4"?"10mm":"3mm"}}}
+ </style></head><body><main class="receipt">
+ ${safeLogo?'<img class="logo" src="'+esc(safeLogo)+'" alt="Shop logo">':""}
+ <header class="center"><h1>${esc(shop.name||"AK Sale")}</h1>
+ ${shop.city||shop.township?'<p class="muted">'+esc([shop.city,shop.township].filter(Boolean).join(" · "))+'</p>':""}
+ ${shop.address?'<p class="muted">'+esc(shop.address)+'</p>':""}
+ ${shop.phone?'<p class="muted">ဖုန်း: '+esc(shop.phone)+'</p>':""}</header>
+ <hr class="rule"><div class="meta"><b>အရောင်းဘောင်ချာ</b><b>${esc(s.invoice)}</b></div>
+ <div class="meta"><span>ရက်စွဲ</span><span>${esc(date.toLocaleString())}</span></div>
+ <div class="meta"><span>ဖောက်သည်</span><span>${esc(s.customer||"လက်ငင်း")}</span></div>
+ <hr class="rule"><table><thead><tr><th>ပစ္စည်း / အရေအတွက်</th><th>ဈေးနှုန်း</th><th>ကျသင့်ငွေ</th></tr></thead><tbody><tr>
+ <td>${esc(s.productName)}<br>${Number(s.qty||0).toLocaleString()} ×</td><td>${money(s.price)}</td><td>${money(s.total)}</td>
+ </tr></tbody></table><hr class="rule">
+ ${line("စုစုပေါင်း",money(s.total))}${line("ပေးချေပြီး",money(s.paid))}${line("ကျန်ငွေ / အကြွေး",money(s.due))}
+ ${s.note?'<p class="muted">မှတ်ချက်: '+esc(s.note)+'</p>':""}
+ <p class="thanks">အားပေးမှုအတွက် ကျေးဇူးတင်ပါသည်</p><p class="center muted">AK Sale Software</p>
+ </main><div class="actions"><button onclick="window.print()">Print / PDF သိမ်းရန်</button><button onclick="window.close()">ပိတ်ရန်</button></div>
+ <script>window.onload=()=>setTimeout(()=>window.print(),350);<\/script></body></html>`);
+ w.document.close();
+}
+function printSalesLedger(){
+ const rows=db.sales||[];if(!rows.length){alert("အရောင်းမှတ်တမ်း မရှိသေးပါ");return}
+ const w=window.open("","_blank");if(!w){alert("Popup ခွင့်ပြုပါ");return}
+ const shop=db.shop||{},total=rows.reduce((a,x)=>a+Number(x.total||0),0),paid=rows.reduce((a,x)=>a+Number(x.paid||0),0),due=rows.reduce((a,x)=>a+Number(x.due||0),0);
+ w.document.write('<!doctype html><html lang="my"><head><meta charset="utf-8"><title>အရောင်းစာရင်း</title><style>body{font-family:Arial,"Noto Sans Myanmar",sans-serif;padding:12px;color:#111}h2{text-align:center}table{width:100%;border-collapse:collapse;font-size:12px}th,td{border:1px solid #777;padding:6px;text-align:left}td.num,th.num{text-align:right}.tot{margin-top:12px;text-align:right;line-height:1.8}@media print{.actions{display:none}@page{size:A4 landscape;margin:10mm}}</style></head><body><h2>'+esc(shop.name||"AK Sale")+'</h2><p style="text-align:center">အရောင်းမှတ်တမ်း · '+new Date().toLocaleString()+'</p><table><thead><tr><th>စဉ်</th><th>ဘောင်ချာ</th><th>ရက်စွဲ</th><th>ဖောက်သည်</th><th>ပစ္စည်း</th><th class="num">အရေအတွက်</th><th class="num">စုစုပေါင်း</th><th class="num">ပေးငွေ</th><th class="num">အကြွေး</th></tr></thead><tbody>'+rows.map((x,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(x.invoice)+'</td><td>'+esc(new Date(x.date).toLocaleString())+'</td><td>'+esc(x.customer||"")+'</td><td>'+esc(x.productName||"")+'</td><td class="num">'+Number(x.qty||0).toLocaleString()+'</td><td class="num">'+money(x.total)+'</td><td class="num">'+money(x.paid)+'</td><td class="num">'+money(x.due)+'</td></tr>').join("")+'</tbody></table><div class="tot"><b>စုစုပေါင်း: '+money(total)+'<br>ပေးချေပြီး: '+money(paid)+'<br>ကျန်ငွေ: '+money(due)+'</b></div><p class="actions"><button onclick="window.print()">Print / PDF သိမ်းရန်</button></p></body></html>');
+ w.document.close();setTimeout(()=>w.print(),350);
+}
 $("purchaseForm").addEventListener("submit",e=>{e.preventDefault();let p=db.products.find(x=>x.id===$("bProduct").value),qty=+$("bQty").value,cost=+$("bCost").value,total=qty*cost,paid=+$("bPaid").value;if(!p||qty<=0||cost<0||paid<0||paid>total)return alert("အချက်အလက်စစ်ဆေးပါ");p.stock+=qty;p.cost=cost;db.purchases.unshift({id:uid(),date:dateNow(),productId:p.id,productName:p.name,qty,cost,total,paid,due:total-paid,supplier:$("bSupplier").value.trim()});persist();$("purchaseForm").reset();$("bQty").value=1;alert("အဝယ်သိမ်းပြီးပါပြီ")});
 function renderPurchases(){$("purchaseRows").innerHTML=db.purchases.map(x=>`<tr><td>${new Date(x.date).toLocaleDateString()}</td><td>${esc(x.productName)} × ${x.qty}</td><td>${esc(x.supplier)}</td><td>${money(x.total)}</td><td>${money(x.paid)}</td><td>${money(x.due)}</td></tr>`).join("")}
 $("personForm").addEventListener("submit",e=>{e.preventDefault();db.people.unshift({id:uid(),name:$("personName").value.trim(),phone:$("personPhone").value.trim(),type:$("personType").value,note:$("personNote").value.trim()});persist();$("personForm").reset()});

@@ -1,0 +1,126 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isVerifiedOwner() {
+      return request.auth != null
+        && request.auth.token.email == 'sannnlinpaing@gmail.com'
+        && request.auth.token.email_verified == true;
+    }
+
+    function hasActiveLicense(uid) {
+      // Every private shop document is strictly scoped to the signed-in UID.
+      // The verified platform owner bypasses subscription only for their own shop.
+      return request.auth != null
+        && request.auth.uid == uid
+        && (isVerifiedOwner()
+          || (exists(/databases/$(database)/documents/licenses/$(uid))
+            && get(/databases/$(database)/documents/licenses/$(uid)).data.status == 'active'
+            && get(/databases/$(database)/documents/licenses/$(uid)).data.expiresAt > request.time));
+    }
+
+    // Staff membership is written only by trusted Cloud Functions.
+    // Owners can list their staff; each staff member can read their own role.
+    match /shopMembers/{memberUid} {
+      allow read: if request.auth != null
+        && (request.auth.uid == memberUid
+          || resource.data.shopId == request.auth.uid);
+      allow write: if false;
+    }
+
+    match /licenses/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      // Only trusted Cloud Functions (Admin SDK) can create or extend licenses.
+      allow write: if false;
+    }
+
+    match /users/{userId}/private/{document=**} {
+      allow read, write: if hasActiveLicense(userId);
+    }
+
+    match /marketListings/{listingId} {
+      allow read: if resource.data.status == 'published'
+        || (request.auth != null && resource.data.ownerUid == request.auth.uid);
+      allow create: if hasActiveLicense(request.auth.uid)
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.status == 'published'
+        && request.resource.data.title is string
+        && request.resource.data.title.size() >= 2
+        && request.resource.data.title.size() <= 90
+        && request.resource.data.price is number
+        && request.resource.data.price > 0
+        && request.resource.data.currency == 'MMK'
+        && request.resource.data.imageUrl is string
+        && request.resource.data.imagePath == 'market/' + request.auth.uid + '/' + listingId + '/photo'
+        && request.resource.data.description is string
+        && request.resource.data.description.size() <= 700
+        && request.resource.data.city is string
+        && request.resource.data.city.size() <= 80
+        && request.resource.data.township is string
+        && request.resource.data.township.size() <= 80
+        && request.resource.data.phone is string
+        && request.resource.data.phone.size() <= 32;
+      allow update: if hasActiveLicense(request.auth.uid)
+        && resource.data.ownerUid == request.auth.uid
+        && request.resource.data.ownerUid == resource.data.ownerUid
+        && request.resource.data.status == 'published'
+        && request.resource.data.title is string
+        && request.resource.data.title.size() >= 2
+        && request.resource.data.title.size() <= 90
+        && request.resource.data.price is number
+        && request.resource.data.price > 0
+        && request.resource.data.currency == 'MMK'
+        && request.resource.data.description is string
+        && request.resource.data.description.size() <= 700;
+      allow delete: if request.auth != null && resource.data.ownerUid == request.auth.uid;
+    }
+
+    match /publicShopSubmissions/{ownerUid} {
+      allow read: if request.auth != null && request.auth.uid == ownerUid;
+      allow create, update: if hasActiveLicense(ownerUid)
+        && request.auth.uid == ownerUid
+        && request.resource.data.ownerUid == ownerUid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.shopName is string
+        && request.resource.data.shopName.size() >= 2
+        && request.resource.data.shopName.size() <= 90
+        && request.resource.data.about is string
+        && request.resource.data.about.size() <= 300;
+      allow delete: if false;
+    }
+    match /publicShops/{ownerUid} {
+      allow read: if resource.data.status == 'approved';
+      allow write: if false;
+    }
+
+    match /sponsoredAds/{adId} {
+      allow read: if resource.data.status == 'approved'
+        || (request.auth != null && resource.data.ownerUid == request.auth.uid);
+      allow create: if hasActiveLicense(request.auth.uid)
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.title is string
+        && request.resource.data.title.size() >= 3
+        && request.resource.data.title.size() <= 80
+        && request.resource.data.text is string
+        && request.resource.data.text.size() >= 8
+        && request.resource.data.text.size() <= 240
+        && request.resource.data.url is string
+        && request.resource.data.url.matches('https?://[^ ]+');
+      allow update, delete: if false;
+    }
+
+    match /paymentRequests/{requestId} {
+      // Payment submissions and reference reservations are created only by the
+      // trusted callable, which validates package amounts and prevents reuse.
+      allow read: if request.auth != null && resource.data.uid == request.auth.uid;
+      allow create, update, delete: if false;
+    }
+    match /paymentReferences/{referenceHash} {
+      allow read, write: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

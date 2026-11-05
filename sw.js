@@ -1,9 +1,10 @@
-
-const CACHE_NAME = "ak-sale-v5";
-
-const FILES_TO_CACHE = [
+/* AK Sale Software PWA cache.
+   The app shell can open offline; Firebase login and cloud data still require internet. */
+const CACHE_NAME = "ak-sale-v6";
+const APP_SHELL = [
   "./",
   "./index.html",
+  "./download.html",
   "./manifest.webmanifest",
   "./ak-logo.svg"
 ];
@@ -11,35 +12,59 @@ const FILES_TO_CACHE = [
 self.addEventListener("install", event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(FILES_TO_CACHE))
+      .then(cache => cache.addAll(APP_SHELL))
       .then(() => self.skipWaiting())
   );
 });
 
 self.addEventListener("activate", event => {
   event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(
-        keys
-          .filter(key => key !== CACHE_NAME)
+    caches.keys()
+      .then(keys => Promise.all(
+        keys.filter(key => key.startsWith("ak-sale-") && key !== CACHE_NAME)
           .map(key => caches.delete(key))
-      )
-    ).then(() => self.clients.claim())
+      ))
+      .then(() => self.clients.claim())
   );
 });
 
 self.addEventListener("fetch", event => {
-  if (event.request.method !== "GET") return;
+  const request = event.request;
+  if (request.method !== "GET") return;
+
+  const url = new URL(request.url);
+  if (url.origin !== self.location.origin) return;
+
+  if (request.mode === "navigate") {
+    event.respondWith(
+      fetch(request).then(response => {
+        if (response && response.ok) {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
+        }
+        return response;
+      }).catch(() =>
+        caches.match(request).then(cached => cached || caches.match("./index.html"))
+      )
+    );
+    return;
+  }
+
+  const isStaticAsset = ["script", "style", "image", "font"].includes(request.destination)
+    || /\.(?:js|css|svg|png|webp|jpg|jpeg|woff2?)$/i.test(url.pathname);
+
+  if (!isStaticAsset) return;
 
   event.respondWith(
-    fetch(event.request).catch(() =>
-      caches.match(event.request).then(response =>
-        response || (
-          event.request.mode === "navigate"
-            ? caches.match("./index.html")
-            : undefined
-        )
-      )
-    )
+    caches.match(request).then(cached => {
+      if (cached) return cached;
+      return fetch(request).then(response => {
+        if (response && response.ok) {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
+        }
+        return response;
+      });
+    })
   );
 });

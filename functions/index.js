@@ -315,7 +315,7 @@ exports.approveSubscription = functions.https.onCall(async (data, context) => {
     // A KBZPay transaction reference can only be used once, even if a user
     // submits multiple payment requests with the same reference.
     const referenceKey = crypto.createHash("sha256")
-      .update("KBZPay:" + reference.toUpperCase())
+      .update("KBZPay:" + normalizedReference)
       .digest("hex");
     const referenceRef = db.collection("paymentReferences").doc(referenceKey);
     const referenceSnap = await tx.get(referenceRef);

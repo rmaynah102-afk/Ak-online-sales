@@ -193,6 +193,54 @@ const AK_KPAY_ACCOUNT = Object.freeze({
   instructions: "KBZPay သို့ ငွေလွှဲပြီး Transaction ID ကို ထည့်ပါ။ Owner က KBZPay ထဲတွင် ငွေဝင်မှုကို စစ်ဆေးပြီးမှ အတည်ပြုမည်။ Screenshot တစ်ခုတည်းဖြင့် အတည်မပြုပါ။"
 });
 
+exports.createPaymentRequest = functions.https.onCall(async (data, context) => {
+  if (!context.auth) throw new functions.https.HttpsError("unauthenticated", "Login လိုအပ်သည်။");
+  const uid = context.auth.uid;
+  const email = String(context.auth.token.email || "").trim().toLowerCase();
+  const days = Number(data.days);
+  const amount = Number(data.amount);
+  const method = String(data.method || "");
+  const reference = String(data.reference || "").trim();
+  const screenshotUrl = String(data.screenshotUrl || "");
+  const expectedAmounts = { 30: 15000, 90: 40000, 180: 75000, 365: 140000 };
+  if (!Object.prototype.hasOwnProperty.call(expectedAmounts, days) ||
+      amount !== expectedAmounts[days] || method !== "KBZPay" ||
+      reference.length < 3 || reference.length > 100 ||
+      screenshotUrl.length > 2000) {
+    throw new functions.https.HttpsError("invalid-argument", "Payment request အချက်အလက် မမှန်ပါ။");
+  }
+  if (screenshotUrl && (!screenshotUrl.startsWith("https://firebasestorage.googleapis.com/") ||
+      !screenshotUrl.includes(encodeURIComponent("paymentProofs/" + uid + "/")))) {
+    throw new functions.https.HttpsError("invalid-argument", "Payment screenshot path မမှန်ပါ။");
+  }
+  const referenceKey = crypto.createHash("sha256")
+    .update("KBZPay:" + reference.toUpperCase())
+    .digest("hex");
+  const referenceRef = db.collection("paymentReferences").doc(referenceKey);
+  const requestRef = db.collection("paymentRequests").doc();
+  const settings = AK_KPAY_ACCOUNT;
+  if (!settings.enabled || settings.method !== method) {
+    throw new functions.https.HttpsError("failed-precondition", "KBZPay လက်ခံမှုကို ယာယီပိတ်ထားသည်။");
+  }
+  await db.runTransaction(async tx => {
+    const referenceSnap = await tx.get(referenceRef);
+    if (referenceSnap.exists) {
+      throw new functions.https.HttpsError("already-exists", "ဤ KBZPay Transaction ID ကို ယခင်က တင်ပြပြီးဖြစ်သည်။");
+    }
+    tx.create(referenceRef, {
+      referenceHash: referenceKey, paymentRequestId: requestRef.id, uid,
+      method: "KBZPay", amount, days, status: "pending",
+      createdAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+    tx.create(requestRef, {
+      uid, email, days, amount, method, bankName: settings.bankName,
+      reference, screenshotUrl, status: "pending",
+      createdAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+  });
+  return { ok: true, requestId: requestRef.id };
+});
+
 exports.getPaymentAccountSettings = functions.https.onCall(async (data, context) => {
   if (!context.auth) throw new functions.https.HttpsError("unauthenticated", "Login လိုအပ်သည်။");
   return AK_KPAY_ACCOUNT;
@@ -265,7 +313,8 @@ exports.approveSubscription = functions.https.onCall(async (data, context) => {
       .digest("hex");
     const referenceRef = db.collection("paymentReferences").doc(referenceKey);
     const referenceSnap = await tx.get(referenceRef);
-    if (referenceSnap.exists) {
+    if (referenceSnap.exists &&
+        (referenceSnap.data().paymentRequestId !== requestId || referenceSnap.data().status !== "pending")) {
       throw new functions.https.HttpsError("already-exists", "ဤ KBZPay Transaction ID ကို ယခင်က အသုံးပြုပြီးပါပြီ။");
     }
 
@@ -278,16 +327,24 @@ exports.approveSubscription = functions.https.onCall(async (data, context) => {
     const nextExpiry = admin.firestore.Timestamp.fromMillis(
       Math.max(now, currentExpiry) + days * 86400000
     );
-    tx.create(referenceRef, {
-      referenceHash: referenceKey,
-      paymentRequestId: requestId,
-      uid,
-      method: "KBZPay",
-      amount: Number(payment.amount),
-      days,
-      approvedBy: callerEmail,
-      createdAt: admin.firestore.FieldValue.serverTimestamp()
-    });
+    if (referenceSnap.exists) {
+      tx.update(referenceRef, {
+        status: "approved", approvedBy: callerEmail,
+        approvedAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+    } else {
+      tx.create(referenceRef, {
+        referenceHash: referenceKey,
+        paymentRequestId: requestId,
+        uid,
+        method: "KBZPay",
+        amount: Number(payment.amount),
+        days,
+        status: "approved",
+        approvedBy: callerEmail,
+        createdAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+    }
     tx.set(licenseRef, {
       uid,
       email: payment.email || "",

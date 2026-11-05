@@ -110,24 +110,13 @@ service cloud.firestore {
     }
 
     match /paymentRequests/{requestId} {
-      allow create: if request.auth != null
-        && request.resource.data.uid == request.auth.uid
-        && request.resource.data.email == request.auth.token.email
-        && request.resource.data.status == 'pending'
-        && request.resource.data.days in [30, 90, 180, 365]
-        && request.resource.data.method == 'KBZPay' && request.resource.data.bankName == 'KBZPay'
-        && request.resource.data.amount is number
-        && ((request.resource.data.days == 30 && request.resource.data.amount == 15000)
-          || (request.resource.data.days == 90 && request.resource.data.amount == 40000)
-          || (request.resource.data.days == 180 && request.resource.data.amount == 75000)
-          || (request.resource.data.days == 365 && request.resource.data.amount == 140000))
-        && request.resource.data.reference is string
-        && request.resource.data.reference.size() >= 3
-        && (!('bankName' in request.resource.data) || request.resource.data.bankName is string)
-        && (!('screenshotUrl' in request.resource.data) || (request.resource.data.screenshotUrl is string && request.resource.data.screenshotUrl.size() <= 2000));
-      allow read: if request.auth != null
-        && resource.data.uid == request.auth.uid;
-      allow update, delete: if false;
+      // Payment submissions and reference reservations are created only by the
+      // trusted callable, which validates package amounts and prevents reuse.
+      allow read: if request.auth != null && resource.data.uid == request.auth.uid;
+      allow create, update, delete: if false;
+    }
+    match /paymentReferences/{referenceHash} {
+      allow read, write: if false;
     }
 
     match /{document=**} {

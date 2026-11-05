@@ -2,6 +2,10 @@
 
 Myanmar-first shop POS, stock, wholesale/retail, customer/supplier, debts, expenses, reports, center management and public product market.
 
+## မြန်မာအသုံးပြုနည်းလမ်းညွှန်
+
+- [AK Sale Software အသုံးပြုနည်း (မြန်မာ)](./USER-GUIDE-MY.md)
+
 ## Web + Android APK
 
 - **Public Shopping Mall:** https://rmaynah102-afk.github.io/Ak-online-sales/

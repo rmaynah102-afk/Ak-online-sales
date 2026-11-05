@@ -215,7 +215,7 @@ exports.createPaymentRequest = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError("invalid-argument", "Payment request အချက်အလက် မမှန်ပါ။");
   }
   if (!screenshotUrl.startsWith("https://firebasestorage.googleapis.com/") ||
-      !screenshotUrl.includes(encodeURIComponent("paymentProofs/" + uid + "/")))) {
+      !screenshotUrl.includes(encodeURIComponent("paymentProofs/" + uid + "/"))) {
     throw new functions.https.HttpsError("invalid-argument", "Payment screenshot path မမှန်ပါ။");
   }
   const referenceKey = crypto.createHash("sha256")

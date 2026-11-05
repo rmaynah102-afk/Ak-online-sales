@@ -165,7 +165,7 @@ jobs:
           cp android/app/build/outputs/bundle/release/app-release.aab AK-Sale-Software-PlayStore.aab
 
       - name: Publish signed APK to GitHub Release
-        if: steps.signing.outputs.ready == 'true'
+        if: steps.signing.outputs.ready == 'true' && vars.AK_PUBLIC_APK_RELEASE_APPROVED == 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ak-v${{ github.run_number }}

@@ -1,37 +1,56 @@
 # AK Sale Software · AK Shopping Markets
 
-Myanmar-first shop POS, stock, wholesale/retail, customer/supplier, debts, expenses, reports, center management and public product market.
+Myanmar-first shop POS and public product market for hardware, electrical and general retail/wholesale shops.
 
-## မြန်မာအသုံးပြုနည်းလမ်းညွှန်
+## အသုံးပြုနည်းလမ်းညွှန်
 
 - [AK Sale Software အသုံးပြုနည်း (မြန်မာ)](./USER-GUIDE-MY.md)
 - [AK Sale Software User Guide (English)](./USER-GUIDE-EN.md)
 - [ဆိုင်လုပ်ငန်းလမ်းညွှန် (မြန်မာ)](./BUSINESS-GUIDE-MY.md)
 - [Business Operations Handbook (English)](./BUSINESS-GUIDE-EN.md)
 - [Device, Sensor & Digital Integration Roadmap](./SENSOR-DIGITAL-ROADMAP.md)
+- [Firebase Deploy Secret ထည့်သွင်းနည်း](./FIREBASE-DEPLOY-SETUP-MY.md)
 
-## Web + Android APK
+## Web + Android
 
-- **Public Shopping Mall:** https://rmaynah102-afk.github.io/Ak-online-sales/
+- **Public Market:** https://rmaynah102-afk.github.io/Ak-online-sales/
 - **Shop Web App:** https://rmaynah102-afk.github.io/Ak-online-sales/?app=1
 - **Source:** https://github.com/rmaynah102-afk/Ak-online-sales
-- **Android download:** [Latest signed APK](https://github.com/rmaynah102-afk/Ak-online-sales/releases/latest/download/AK-Sale-Software.apk) · [All releases](https://github.com/rmaynah102-afk/Ak-online-sales/releases). The workflow publishes a signed APK and Play Store AAB when the private release-signing secrets are configured; otherwise it creates a debug-only test APK artifact.
-- Android APK is built from the same `index.html` as the web app using Capacitor. The web app also has an installable PWA manifest and offline app-shell cache.
+- **Android package:** `com.ak.hardware.sales`
+- **APK/AAB:** Android workflow builds both signed release APK and Play Store AAB when the private release-signing secrets are configured. Current signed build artifacts are available in GitHub Actions run [42149325580](https://github.com/rmaynah102-afk/Ak-online-sales/actions/runs/42149325580). A public GitHub Release is only created after `AK_PUBLIC_APK_RELEASE_APPROVED=true` is explicitly set.
+- The Android app bundles the same `index.html` as the web app using Capacitor. Local shop data works on-device; Firebase login, cloud sync, public listings and remote features require internet access.
+- The PWA app shell is cached for offline opening. Offline cache is not a substitute for a cloud backup.
 
-## Advertising
+## Core features
 
-- Approved shop-sponsored ads are displayed in the public Market and app's sponsored-ad section.
-- Shops can submit an ad after Gmail login and an active trial/subscription; the admin reviews and approves it.
-- Ad duration and fee are controlled by the admin. An ad is not automatically paid or approved.
-- The share action creates a ready-to-share AK Sale promotional link for Facebook, Viber, Telegram and other supported share targets.
-- Google AdSense is **not active by default**. It requires the owner's approved AdSense account, publisher ID, ad-slot IDs, site review and policy compliance. Do not paste private account passwords or keys into source code.
+- Product catalogue, categories, SKU/barcode field, cost, retail/wholesale price, stock and product photos.
+- Sales, purchases, customer/supplier records, partial payments, debts, expenses and reports.
+- JSON backup/restore, Android system print service, product advertisement canvas and Android share-sheet fallback.
+- Public product listings, approved public shops, sponsored advertisements and Burmese/English business guides.
+- Firebase Authentication, Firestore and Storage integration with owner-scoped private shop data.
 
-## Free-first operating limits
+## Advertising and public listings
 
-GitHub Pages, GitHub Actions and Firebase have usage limits. Firebase free quotas and feature availability can change. Do not enable billing or paid services without the owner's explicit approval. Image uploads/Cloud Functions may require billing depending on Firebase's current plan and project configuration.
+- Public product listings are visible only when their Firestore status is `published`.
+- Public shop profiles and sponsored ads require admin approval.
+- Shop submissions require a signed-in, licensed shop account and the required Firebase rules/storage configuration.
+- Social sharing can prepare an image/caption and open supported apps. Automatic TikTok/Facebook/Viber posting is not implemented; the shop owner completes posting inside the target app.
+- Google AdSense is not active by default. It requires the owner's approved AdSense account, publisher ID, ad-slot IDs, site review and policy compliance. Never put private account passwords or service keys in source code.
 
-## Release status and safety
+## Cloud deployment requirement
 
-The Android workflow can create a **signed release APK and Play Store AAB** when all four private signing secrets are configured in GitHub Actions. If they are absent, it creates a debug-only test APK instead. Do not commit keystore files or passwords. A successful build does not prove real-device operation. Google Play publication also requires a Play Console developer account, store listing, app signing, privacy disclosures and policy review.
+The Firebase GitHub Actions workflow deploys Hosting, Firestore Rules, Storage Rules and Cloud Functions only when repository secret `FIREBASE_SERVICE_ACCOUNT_AK_ONLIN_SALES` is configured. Without it, the workflow reports that Firebase deployment was skipped; a green workflow alone does not mean the Firebase project was updated. Follow [Firebase Deploy Setup](./FIREBASE-DEPLOY-SETUP-MY.md).
 
-Before selling: deploy and test Firebase rules/functions, account isolation, subscription expiry, device limits, backups, QR/payment workflow, printer behavior, real Android devices and a signed release build. KPay references are manually verified; never mark a payment as received from a QR screenshot alone.
+## Known limits — not yet complete
+
+- Manager/cashier/employee accounts can be assigned roles, but secure role-based access to the current single-document Cloud POS data model is not implemented. Private POS data remains owner-only; staff cloud access is deliberately blocked rather than weakening Firestore rules.
+- Direct Bluetooth Classic ESC/POS thermal-printer integration is not included. Printing currently depends on Android Print Service or an installed printer app.
+- Social media auto-posting is not included; Android Share / manual posting is used.
+- The web Firebase SDK sign-in path is included. Native Google Sign-In still requires a registered Firebase Android app, matching signing-certificate SHA-1, and native configuration before it can be considered verified.
+- No real-device installation, printer, multi-device conflict or production payment test can be claimed from the build pipeline alone.
+
+## Release safety
+
+Before commercial sale, deploy Firebase resources and test account isolation, subscription expiry, device limits, backup/restore, payment approval, two-device cloud sync and printing on actual Android phones. KPay references are manually verified; never activate a subscription based on a QR/payment screenshot alone.
+
+Do not enable paid Google Cloud/Firebase billing without the owner's explicit approval. Keep service-account JSON, keystores, passwords and OTPs out of commits, chat and public files.

@@ -5,7 +5,7 @@ const path = require('path');
 const root = path.resolve(__dirname, '..');
 const config = JSON.parse(fs.readFileSync(path.join(root, 'capacitor.config.json'), 'utf8'));
 const packageName = config.appId;
-if (!/^[a-zA-Z][a-zA-Z0-9_]*(\\.[a-zA-Z][a-zA-Z0-9_]*)+$/.test(packageName)) {
+if (!/^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*)+$/.test(packageName)) {
   throw new Error('Invalid Capacitor appId: ' + packageName);
 }
 const packagePath = packageName.split('.').join(path.sep);
@@ -19,21 +19,21 @@ if (fs.existsSync(javaMain)) {
   let source = fs.readFileSync(javaMain, 'utf8');
   if (!source.includes('AkPrinterPlugin.class')) {
     if (!source.includes('import com.getcapacitor.BridgeActivity;')) {
-      source = source.replace(/(package [^;]+;)/, '$1\\n\\nimport com.getcapacitor.BridgeActivity;');
+      source = source.replace(/(package [^;]+;)/, '$1\n\nimport com.getcapacitor.BridgeActivity;');
     }
-    source = source.replace('import com.getcapacitor.BridgeActivity;', 'import com.getcapacitor.BridgeActivity;\\nimport ' + packageName + '.AkPrinterPlugin;');
-    const classStart = /public class MainActivity extends BridgeActivity\\s*\\{/;
+    source = source.replace('import com.getcapacitor.BridgeActivity;', 'import com.getcapacitor.BridgeActivity;\nimport ' + packageName + '.AkPrinterPlugin;');
+    const classStart = /public class MainActivity extends BridgeActivity\s*\{/;
     if (!classStart.test(source)) throw new Error('Unexpected MainActivity.java template; plugin was not registered.');
-    source = source.replace(classStart, '$&\\n    @Override\\n    public void onCreate(android.os.Bundle savedInstanceState) {\\n        registerPlugin(AkPrinterPlugin.class);\\n        super.onCreate(savedInstanceState);\\n    }\\n');
+    source = source.replace(classStart, '$&\n    @Override\n    public void onCreate(android.os.Bundle savedInstanceState) {\n        registerPlugin(AkPrinterPlugin.class);\n        super.onCreate(savedInstanceState);\n    }\n');
     fs.writeFileSync(javaMain, source);
   }
 } else if (fs.existsSync(kotlinMain)) {
   let source = fs.readFileSync(kotlinMain, 'utf8');
   if (!source.includes('AkPrinterPlugin::class.java')) {
-    source = source.replace(/import com.getcapacitor.BridgeActivity/, 'import com.getcapacitor.BridgeActivity\\nimport ' + packageName + '.AkPrinterPlugin');
-    const classStart = /class MainActivity : BridgeActivity\\(\\)\\s*\\{/;
+    source = source.replace(/import com.getcapacitor.BridgeActivity/, 'import com.getcapacitor.BridgeActivity\nimport ' + packageName + '.AkPrinterPlugin');
+    const classStart = /class MainActivity : BridgeActivity\(\)\s*\{/;
     if (!classStart.test(source)) throw new Error('Unexpected MainActivity.kt template; plugin was not registered.');
-    source = source.replace(classStart, '$&\\n    override fun onCreate(savedInstanceState: android.os.Bundle?) {\\n        registerPlugin(AkPrinterPlugin::class.java)\\n        super.onCreate(savedInstanceState)\\n    }\\n');
+    source = source.replace(classStart, '$&\n    override fun onCreate(savedInstanceState: android.os.Bundle?) {\n        registerPlugin(AkPrinterPlugin::class.java)\n        super.onCreate(savedInstanceState)\n    }\n');
     fs.writeFileSync(kotlinMain, source);
   }
 } else {
@@ -51,7 +51,7 @@ const permissions = [
 for (const item of permissions) {
   const key = item.match(/android:name="([^"]+)"/)[1];
   if (!manifest.includes('android:name="' + key + '"')) {
-    manifest = manifest.replace(/<application\\b/, item + '\\n    <application');
+    manifest = manifest.replace(/<application\b/, item + '\n    <application');
   }
 }
 fs.writeFileSync(manifestPath, manifest);

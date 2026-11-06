@@ -1,4 +1,4 @@
-name: Deploy AK Sale to Firebase Hosting and Firestore Rules
+name: Deploy AK Sale to Firebase Resources
 
 on:
   push:
@@ -47,7 +47,7 @@ jobs:
         if: steps.auth.outputs.available == 'true'
         run: npm install --global firebase-tools
 
-      - name: Deploy Hosting and Firestore Rules
+      - name: Validate config and deploy Hosting, Firestore, Storage and Functions
         if: steps.auth.outputs.available == 'true'
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_AK_ONLIN_SALES }}
@@ -55,6 +55,24 @@ jobs:
           set -euo pipefail
           umask 077
           KEY_FILE="$RUNNER_TEMP/firebase-service-account.json"
+          trap 'rm -f "$KEY_FILE"' EXIT
+          python3 - <<'PYCONFIG'
+          import json, pathlib
+          config = json.loads(pathlib.Path("firebase.json").read_text(encoding="utf-8"))
+          required = {
+              "firestore": "firestore.rules",
+              "storage": "storage.rules",
+          }
+          for section, key in required.items():
+              path = config.get(section, {}).get("rules")
+              if path != key or not pathlib.Path(path).is_file():
+                  raise SystemExit(f"Invalid {section} rules configuration: {path!r}")
+          if config.get("functions", {}).get("source") != "functions":
+              raise SystemExit("Firebase Functions source must be functions/")
+          if not pathlib.Path("functions/index.js").is_file():
+              raise SystemExit("Missing functions/index.js")
+          print("Firebase deployment configuration and rule files validated.")
+          PYCONFIG
           printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$KEY_FILE"
           python3 - "$KEY_FILE" <<'PY'
           import json, sys
@@ -74,4 +92,3 @@ jobs:
             echo "### Firebase deployment finished"
             echo "Firebase Hosting, Firestore Rules, Storage Rules and Cloud Functions deployment command completed successfully."
           } >> "$GITHUB_STEP_SUMMARY"
-          rm -f "$KEY_FILE"

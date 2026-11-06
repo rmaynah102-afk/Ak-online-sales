@@ -91,6 +91,23 @@ if (!paymentRule || !/allow create, update, delete: if false/.test(paymentRule[1
   console.error('Clients must not write payment requests directly.');
   process.exitCode = 1;
 }
+const invoiceChecks = [
+  ['multi-line sales invoice UI', 'id="saleLines"'],
+  ['multi-line sales payload', 'lines,productId:first.productId'],
+  ['aggregate stock validation', 'const quantities={}'],
+  ['multi-line receipt rendering', 'Array.isArray(s.lines)&&s.lines.length'],
+  ['invoice-linked debt payment', 'invoiceId:invoice?invoice.id:""'],
+  ['invoice balance reduction', 'invoice.due=Math.max(0,Number(invoice.total)-invoice.paid)'],
+  ['invoice party validation', 'Invoice အမည်နှင့် ငွေပေးသူအမည် မကိုက်ညီပါ']
+];
+for (const [label, marker] of invoiceChecks) {
+  if (!html.includes(marker)) {
+    console.error('Sales/debt regression check failed:', label);
+    process.exitCode = 1;
+  }
+}
+if (!process.exitCode) console.log('Multi-item invoice, stock, receipt and linked-payment checks OK.');
+
 if (!process.exitCode) console.log('Firestore owner-only private data and trusted staff membership guards OK.');
 
 if (!functionsSource.includes('paymentReferences') || !functionsSource.includes('tx.create(referenceRef')) {

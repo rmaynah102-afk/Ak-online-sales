@@ -204,9 +204,10 @@ footer{text-align:center;padding:24px 12px;color:#60736a}
 
 
 /* Subscription gate: only verified owner or server-approved active license can use shop screens. */
-body.ak-license-locked #nav{display:none!important}
+body.ak-license-locked #nav{display:flex!important}
+body.ak-license-locked #nav button:not([data-view=market]):not([data-view=backup]){display:none!important}
 body.ak-license-locked main>.view{display:none!important}
-body.ak-license-locked main>#backup{display:block!important}
+body.ak-license-locked main>#market.view.active,body.ak-license-locked main>#backup.view.active{display:block!important}
 body.ak-license-locked main>#backup>.panel{display:none!important}
 body.ak-license-locked main>#backup>#akPaywallNotice,
 body.ak-license-locked main>#backup>#akLicensePanel,

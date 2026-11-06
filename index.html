@@ -1019,7 +1019,9 @@ body.ak-public footer{display:block}
 <script>
 (function(){
  const KEY="ak_sale_printer_profiles_v1";
- function read(){try{const x=JSON.parse(localStorage.getItem(KEY)||"[]");return Array.isArray(x)?x:[]}catch(e){return[]}}\n window.akSetPrinterPaper=function(v){if(["58mm","80mm","A4"].includes(v))localStorage.setItem("ak_sale_printer_paper",v)};\n const paperSelect=document.getElementById("akPrinterPaper");if(paperSelect)paperSelect.value=localStorage.getItem("ak_sale_printer_paper")||"80mm";
+ function read(){try{const x=JSON.parse(localStorage.getItem(KEY)||"[]");return Array.isArray(x)?x:[]}catch(e){return[]}}
+ window.akSetPrinterPaper=function(v){if(["58mm","80mm","A4"].includes(v))localStorage.setItem("ak_sale_printer_paper",v)};
+ const paperSelect=document.getElementById("akPrinterPaper");if(paperSelect)paperSelect.value=localStorage.getItem("ak_sale_printer_paper")||"80mm";
  function write(x){localStorage.setItem(KEY,JSON.stringify(x));render()}
  function escP(x){return String(x||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
  function render(){const body=document.getElementById("akPrinterRows");if(!body)return;const rows=read();body.innerHTML=rows.length?rows.map((p,i)=>'<tr><td>'+escP(p.name)+'</td><td>'+escP(({system:"System Print",wifi:"Wi-Fi / Network",bluetooth:"Bluetooth",usb:"USB"})[p.type]||p.type)+'</td><td>'+(p.default?'အဓိက':'<button type="button" class="alt" onclick="akSetDefaultPrinter('+i+')">Default ထား</button>')+'</td><td><button type="button" class="red" onclick="akRemovePrinter('+i+')">ဖျက်မည်</button></td></tr>').join(""):'<tr><td colspan="4">Printer မထည့်ရသေးပါ</td></tr>'}

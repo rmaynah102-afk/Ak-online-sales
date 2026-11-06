@@ -23,9 +23,18 @@ jobs:
         run: |
           if [ -n "$FIREBASE_SERVICE_ACCOUNT" ]; then
             echo "available=true" >> "$GITHUB_OUTPUT"
+            {
+              echo "### Firebase deployment"
+              echo "Service-account secret detected. Hosting, Firestore Rules, Storage Rules and Cloud Functions deployment will run."
+            } >> "$GITHUB_STEP_SUMMARY"
           else
             echo "available=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::Firebase deploy skipped: add FIREBASE_SERVICE_ACCOUNT_AK_ONLIN_SALES in GitHub Actions secrets."
+            echo "::warning::Firebase deployment NOT performed. Add FIREBASE_SERVICE_ACCOUNT_AK_ONLIN_SALES in GitHub Actions secrets."
+            {
+              echo "### Firebase deployment not performed"
+              echo "The workflow itself completed, but no Firebase resources were deployed because the required secret is missing."
+              echo "Required secret: `FIREBASE_SERVICE_ACCOUNT_AK_ONLIN_SALES`."
+            } >> "$GITHUB_STEP_SUMMARY"
           fi
 
       - name: Set up Node.js
@@ -46,3 +55,7 @@ jobs:
           printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/firebase-service-account.json"
           export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/firebase-service-account.json"
           firebase deploy --only hosting,firestore:rules,storage,functions --project ak-onlin-sales --non-interactive
+          {
+            echo "### Firebase deployment finished"
+            echo "Firebase Hosting, Firestore Rules, Storage Rules and Cloud Functions deployment command completed successfully."
+          } >> "$GITHUB_STEP_SUMMARY"

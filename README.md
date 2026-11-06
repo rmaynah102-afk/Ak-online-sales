@@ -25,7 +25,7 @@ Myanmar-first shop POS and public product market for hardware, electrical and ge
 
 - Product catalogue, categories, SKU/barcode field, cost, retail/wholesale price, stock and product photos.
 - Sales, purchases, customer/supplier records, partial payments, debts, expenses and reports.
-- JSON backup/restore, Android system print service, product advertisement canvas and Android share-sheet fallback.
+- JSON backup/restore, Android system print service, native Bluetooth Classic ESC/POS and Wi-Fi RAW TCP 9100 printer bridge (APK), product advertisement canvas and Android share-sheet fallback.
 - Public product listings, approved public shops, sponsored advertisements and Burmese/English business guides.
 - Firebase Authentication, Firestore and Storage integration with owner-scoped private shop data.
 
@@ -39,15 +39,15 @@ Myanmar-first shop POS and public product market for hardware, electrical and ge
 
 ## Cloud deployment requirement
 
-The Firebase GitHub Actions workflow deploys Hosting, Firestore Rules, Storage Rules and Cloud Functions only when repository secret `FIREBASE_SERVICE_ACCOUNT_AK_ONLIN_SALES` is configured. Without it, the workflow reports that Firebase deployment was skipped; a green workflow alone does not mean the Firebase project was updated. Follow [Firebase Deploy Setup](./FIREBASE-DEPLOY-SETUP-MY.md).
+The current Firebase GitHub Actions workflow deploys **Firebase Hosting only** when repository secret `FIREBASE_SERVICE_ACCOUNT_AK_ONLIN_SALES` is configured. It does not deploy Firestore Rules, Storage Rules or Cloud Functions. The service account currently lacks Rules API permission, and Cloud Functions deployment requires an eligible billing plan. A green Hosting workflow does not mean these other Firebase resources were updated. Do not enable billing or change Firebase permissions without the owner's approval. Follow [Firebase Deploy Setup](./FIREBASE-DEPLOY-SETUP-MY.md).
 
 ## Known limits — not yet complete
 
 - Manager/cashier/employee accounts can be assigned roles, but secure role-based access to the current single-document Cloud POS data model is not implemented. Private POS data remains owner-only; staff cloud access is deliberately blocked rather than weakening Firestore rules.
-- Direct Bluetooth Classic ESC/POS thermal-printer integration is not included. Printing currently depends on Android Print Service or an installed printer app.
+- The Android APK now includes a native Bluetooth Classic SPP ESC/POS and Wi-Fi RAW TCP 9100 bridge. It requires a compatible paired Classic Bluetooth ESC/POS printer or a network printer that accepts RAW TCP on the configured port. This code has not yet been verified on real printer hardware. BLE-only printers, vendor-specific protocols and unsupported paper widths may not work. Website printing continues to use Android/System Print.
 - Social media auto-posting is not included; Android Share / manual posting is used.
 - The web Firebase SDK sign-in path is included. Native Google Sign-In still requires a registered Firebase Android app, matching signing-certificate SHA-1, and native configuration before it can be considered verified.
-- No real-device installation, printer, multi-device conflict or production payment test can be claimed from the build pipeline alone.
+- No real-device installation, Bluetooth/Wi-Fi printer, multi-device conflict or production payment test can be claimed from the build pipeline alone.
 
 ## Release safety
 

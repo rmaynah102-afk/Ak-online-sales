@@ -52,10 +52,26 @@ jobs:
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_AK_ONLIN_SALES }}
         run: |
-          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/firebase-service-account.json"
-          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/firebase-service-account.json"
+          set -euo pipefail
+          umask 077
+          KEY_FILE="$RUNNER_TEMP/firebase-service-account.json"
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$KEY_FILE"
+          python3 - "$KEY_FILE" <<'PY'
+          import json, sys
+          with open(sys.argv[1], encoding="utf-8") as handle:
+              key = json.load(handle)
+          required = ("type", "project_id", "private_key", "client_email")
+          missing = [name for name in required if not key.get(name)]
+          if missing:
+              raise SystemExit("Service-account JSON is missing required fields: " + ", ".join(missing))
+          if key["project_id"] != "ak-onlin-sales":
+              raise SystemExit("Service-account project_id does not match ak-onlin-sales")
+          print("Service-account JSON structure and project ID validated.")
+          PY
+          export GOOGLE_APPLICATION_CREDENTIALS="$KEY_FILE"
           firebase deploy --only hosting,firestore:rules,storage,functions --project ak-onlin-sales --non-interactive
           {
             echo "### Firebase deployment finished"
             echo "Firebase Hosting, Firestore Rules, Storage Rules and Cloud Functions deployment command completed successfully."
           } >> "$GITHUB_STEP_SUMMARY"
+          rm -f "$KEY_FILE"

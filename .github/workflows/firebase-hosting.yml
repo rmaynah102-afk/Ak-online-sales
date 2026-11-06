@@ -25,7 +25,7 @@ jobs:
             echo "available=true" >> "$GITHUB_OUTPUT"
             {
               echo "### Firebase deployment"
-              echo "Service-account secret detected. Hosting and Firestore Rules deployment will run. Storage and Cloud Functions are deferred to avoid paid-plan requirements."
+              echo "Service-account secret detected. Firebase Hosting deployment will run. Firestore Rules are left unchanged because the service account lacks Rules API permission; Storage and Cloud Functions are deferred to avoid paid-plan requirements."
             } >> "$GITHUB_STEP_SUMMARY"
           else
             echo "available=false" >> "$GITHUB_OUTPUT"
@@ -47,7 +47,7 @@ jobs:
         if: steps.auth.outputs.available == 'true'
         run: npm install --global firebase-tools
 
-      - name: Validate config and deploy Hosting and Firestore Rules
+      - name: Validate config and deploy Firebase Hosting
         if: steps.auth.outputs.available == 'true'
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_AK_ONLIN_SALES }}
@@ -59,9 +59,6 @@ jobs:
           python3 - <<'PYCONFIG'
           import json, pathlib
           config = json.loads(pathlib.Path("firebase.json").read_text(encoding="utf-8"))
-          path = config.get("firestore", {}).get("rules")
-          if path != "firestore.rules" or not pathlib.Path(path).is_file():
-              raise SystemExit(f"Invalid Firestore rules configuration: {path!r}")
           print("Firebase deployment configuration and rule files validated.")
           PYCONFIG
           printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$KEY_FILE"
@@ -78,8 +75,8 @@ jobs:
           print("Service-account JSON structure and project ID validated.")
           PY
           export GOOGLE_APPLICATION_CREDENTIALS="$KEY_FILE"
-          firebase deploy --only hosting,firestore:rules --project ak-onlin-sales --non-interactive
+          firebase deploy --only hosting --project ak-onlin-sales --non-interactive
           {
             echo "### Firebase deployment finished"
-            echo "Firebase Hosting and Firestore Rules deployment command completed successfully. Storage and Cloud Functions are intentionally deferred because they require paid-plan setup."
+            echo "Firebase Hosting deployment completed successfully. Firestore Rules remain unchanged; Storage and Cloud Functions are deferred."
           } >> "$GITHUB_STEP_SUMMARY"

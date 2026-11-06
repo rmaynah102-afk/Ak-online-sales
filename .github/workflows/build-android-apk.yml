@@ -12,6 +12,7 @@ on:
     branches: [main]
     paths:
       - 'index.html'
+      - 'firebase-config.js'
       - 'sw.js'
       - 'manifest.webmanifest'
       - 'ak-logo.svg'

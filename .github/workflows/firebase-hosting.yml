@@ -25,7 +25,7 @@ jobs:
             echo "available=true" >> "$GITHUB_OUTPUT"
             {
               echo "### Firebase deployment"
-              echo "Service-account secret detected. Hosting, Firestore Rules, Storage Rules and Cloud Functions deployment will run."
+              echo "Service-account secret detected. Hosting and Firestore Rules deployment will run. Storage and Cloud Functions are deferred to avoid paid-plan requirements."
             } >> "$GITHUB_STEP_SUMMARY"
           else
             echo "available=false" >> "$GITHUB_OUTPUT"
@@ -47,7 +47,7 @@ jobs:
         if: steps.auth.outputs.available == 'true'
         run: npm install --global firebase-tools
 
-      - name: Validate config and deploy Hosting, Firestore, Storage and Functions
+      - name: Validate config and deploy Hosting and Firestore Rules
         if: steps.auth.outputs.available == 'true'
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_AK_ONLIN_SALES }}
@@ -59,18 +59,9 @@ jobs:
           python3 - <<'PYCONFIG'
           import json, pathlib
           config = json.loads(pathlib.Path("firebase.json").read_text(encoding="utf-8"))
-          required = {
-              "firestore": "firestore.rules",
-              "storage": "storage.rules",
-          }
-          for section, key in required.items():
-              path = config.get(section, {}).get("rules")
-              if path != key or not pathlib.Path(path).is_file():
-                  raise SystemExit(f"Invalid {section} rules configuration: {path!r}")
-          if config.get("functions", {}).get("source") != "functions":
-              raise SystemExit("Firebase Functions source must be functions/")
-          if not pathlib.Path("functions/index.js").is_file():
-              raise SystemExit("Missing functions/index.js")
+          path = config.get("firestore", {}).get("rules")
+          if path != "firestore.rules" or not pathlib.Path(path).is_file():
+              raise SystemExit(f"Invalid Firestore rules configuration: {path!r}")
           print("Firebase deployment configuration and rule files validated.")
           PYCONFIG
           printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$KEY_FILE"
@@ -87,8 +78,8 @@ jobs:
           print("Service-account JSON structure and project ID validated.")
           PY
           export GOOGLE_APPLICATION_CREDENTIALS="$KEY_FILE"
-          firebase deploy --only hosting,firestore:rules,storage,functions --project ak-onlin-sales --non-interactive
+          firebase deploy --only hosting,firestore:rules --project ak-onlin-sales --non-interactive
           {
             echo "### Firebase deployment finished"
-            echo "Firebase Hosting, Firestore Rules, Storage Rules and Cloud Functions deployment command completed successfully."
+            echo "Firebase Hosting and Firestore Rules deployment command completed successfully. Storage and Cloud Functions are intentionally deferred because they require paid-plan setup."
           } >> "$GITHUB_STEP_SUMMARY"

@@ -14,6 +14,8 @@ Myanmar-first shop POS and public product market for hardware, electrical and ge
 
 ## Web + Android
 
+- Firebase Web App client config is bundled from `firebase-config.js` for automatic sign-in setup. This config is public client data; private service-account keys are never bundled.
+
 - **Public Market:** https://rmaynah102-afk.github.io/Ak-online-sales/
 - **Shop Web App:** https://rmaynah102-afk.github.io/Ak-online-sales/?app=1
 - **Source:** https://github.com/rmaynah102-afk/Ak-online-sales

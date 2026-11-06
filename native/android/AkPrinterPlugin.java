@@ -119,7 +119,6 @@ public class AkPrinterPlugin extends Plugin {
                 BluetoothManager manager = (BluetoothManager) getContext().getSystemService(Context.BLUETOOTH_SERVICE);
                 BluetoothAdapter adapter = manager == null ? null : manager.getAdapter();
                 if (adapter == null || !adapter.isEnabled()) throw new IOException("Bluetooth ပိတ်ထားသည်။");
-                if (adapter.isDiscovering()) adapter.cancelDiscovery();
                 BluetoothDevice device = adapter.getRemoteDevice(address);
                 try {
                     socket = device.createRfcommSocketToServiceRecord(SPP_UUID);

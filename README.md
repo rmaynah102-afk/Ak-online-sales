@@ -10,6 +10,7 @@ Myanmar-first shop POS and public product market for hardware, electrical and ge
 - [Business Operations Handbook (English)](./BUSINESS-GUIDE-EN.md)
 - [Device, Sensor & Digital Integration Roadmap](./SENSOR-DIGITAL-ROADMAP.md)
 - [Firebase Deploy Secret ထည့်သွင်းနည်း](./FIREBASE-DEPLOY-SETUP-MY.md)
+- [Bluetooth / Wi-Fi Printer Setup (မြန်မာ)](./PRINTER-SETUP-MY.md)
 
 ## Web + Android
 

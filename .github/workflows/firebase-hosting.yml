@@ -1,4 +1,4 @@
-name: Deploy AK Sale to Firebase Resources
+name: Deploy AK Sale Firebase Hosting Only
 
 on:
   push:

@@ -2,6 +2,8 @@
 
 ဤစာတမ်းသည် GitHub Actions မှ Firebase Hosting, Firestore Rules, Storage Rules နှင့် Cloud Functions ကို deploy လုပ်ရန်အတွက်သာ ဖြစ်သည်။
 
+> **အရေးကြီး — Billing:** AK Sale ၏ Payment Approval, Device Control, Cloud Backup နှင့် အခြား callable backend များသည် Cloud Functions ကို အသုံးပြုသည်။ Firebase Cloud Functions deploy လုပ်ရန် project ကို Blaze (pay-as-you-go) plan သို့ ပြောင်းပြီး Cloud Billing account ချိတ်ရန် လိုအပ်သည်။ Free quota ရှိသော်လည်း quota ကျော်လွန်ခြင်းနှင့် deploy အတွက် အခကြေးငွေ ဖြစ်နိုင်သည်။ ပိုင်ရှင်၏ ခွင့်ပြုချက်မရှိဘဲ Billing မဖွင့်ပါနှင့်။ Budget alert နှင့် usage limit များကို အရင်စီစဉ်ပါ။
+
 ## လိုအပ်သော Secret
 
 GitHub repository `rmaynah102-afk/Ak-online-sales` ထဲတွင် အောက်ပါ Repository Secret တစ်ခုကို ထည့်ရမည်။
@@ -29,8 +31,8 @@ GitHub repository `rmaynah102-afk/Ak-online-sales` ထဲတွင် အော�
 ## Deploy အခြေအနေ စစ်ဆေးခြင်း
 
 - Repository ၏ **Actions** tab ကိုဖွင့်ပါ။
-- **Deploy AK Sale to Firebase Hosting and Firestore Rules** workflow ကိုရွေးပါ။
-- နောက်ဆုံး run ၏ **Check Firebase service account secret** နှင့် **Deploy Hosting and Firestore Rules** အဆင့်များကိုကြည့်ပါ။
+- **Deploy AK Sale to Firebase Resources** workflow ကိုရွေးပါ။
+- နောက်ဆုံး run ၏ **Check Firebase service account secret** နှင့် **Validate config and deploy Hosting, Firestore, Storage and Functions** အဆင့်များကိုကြည့်ပါ။
 - Secret မရှိပါက workflow summary တွင် **Firebase deployment not performed** ဟုပြမည်။ Workflow အစိမ်းရောင်ဖြစ်ခြင်းတစ်ခုတည်းကို deploy အောင်မြင်သည်ဟု မယူဆပါနှင့်။
 - Deploy step အမှန်တကယ် run ပြီး success ဖြစ်မှသာ Firebase resources တင်ပြီးဖြစ်သည်။
 
@@ -45,7 +47,7 @@ GitHub repository `rmaynah102-afk/Ak-online-sales` ထဲတွင် အော�
 
 # AK Sale Software — Firebase Deployment Setup (English)
 
-The GitHub Actions workflow deploys Firebase Hosting, Firestore Rules, Storage Rules and Cloud Functions for project `ak-onlin-sales`.
+The GitHub Actions workflow deploys Firebase Hosting, Firestore Rules, Storage Rules and Cloud Functions for project `ak-onlin-sales`. Cloud Functions deployment requires the Firebase Blaze pay-as-you-go plan with a linked Cloud Billing account. Free usage quotas exist, but charges may apply above them and deployment can incur resource costs. Do not enable billing without the owner's approval; configure budget alerts first.
 
 Create a repository Actions secret named exactly `FIREBASE_SERVICE_ACCOUNT_AK_ONLIN_SALES`. Its value must be the complete JSON key of a Google Cloud service account authorized to deploy these resources.
 

@@ -475,7 +475,23 @@ $("akLanguageBtn").addEventListener("click",()=>{akLanguage=akLanguage==="en"?"m
 const akLanguageObserver=new MutationObserver(()=>akApplyLanguage());
 akLanguageObserver.observe(document.body,{childList:true,subtree:true,characterData:true});
 akApplyLanguage();
-function go(id){if(document.body.classList.contains("ak-license-locked")&&id!=="backup"){alert("AK Sale အသုံးပြုရန် အရင် Login ဝင်ပြီး Package ငွေပေးချေကာ Owner အတည်ပြုချက် ရယူပါ။");id="backup"}document.querySelectorAll(".view").forEach(x=>x.classList.toggle("active",x.id===id));document.querySelectorAll("#nav button").forEach(b=>b.classList.toggle("active",b.dataset.view===id));const activeNav=document.querySelector('#nav button[data-view="'+id+'"]');if(activeNav&&window.matchMedia("(max-width: 650px)").matches)activeNav.scrollIntoView({block:"nearest",inline:"nearest",behavior:"smooth"});renderAll()}
+function go(id){
+ const publicViews=["backup","market"];
+ if(document.body.classList.contains("ak-license-locked")&&!publicViews.includes(id)){
+  alert("ဆိုင်သုံး POS ကို အသုံးပြုရန် Login နှင့် အသုံးပြုခွင့်လိုအပ်သည်။ AK Market၊ အတည်ပြုဆိုင်စာရင်းနှင့် ကြော်ငြာများကို အများပြည်သူ ကြည့်ရှုနိုင်သည်။");
+  id="market";
+ }
+ const canPublish=!!(fbUser&&cloudReady);
+ ["marketForm","akShopProfileForm","akAdForm"].forEach(fid=>{
+  const form=document.getElementById(fid);
+  if(form)form.classList.toggle("hidden",!canPublish);
+ });
+ document.querySelectorAll(".view").forEach(x=>x.classList.toggle("active",x.id===id));
+ document.querySelectorAll("#nav button").forEach(b=>b.classList.toggle("active",b.dataset.view===id));
+ const activeNav=document.querySelector('#nav button[data-view="'+id+'"]');
+ if(activeNav&&window.matchMedia("(max-width: 650px)").matches)activeNav.scrollIntoView({block:"nearest",inline:"nearest",behavior:"smooth"});
+ renderAll();
+}
 function resetProduct(){ $("productForm").reset();$("pId").value="";$("pUnit").value="ခု";$("pCost").value=0;$("pRetail").value=0;$("pWholesale").value=0;$("pStock").value=0;productImageData="";$("photoPreview").classList.add("hidden")}
 // Camera barcode scanner: uses the Android/Chrome camera sensor through BarcodeDetector when supported.
 let akBarcodeStream=null,akBarcodeActive=false;

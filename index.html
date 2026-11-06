@@ -226,7 +226,7 @@ input:focus,select:focus,textarea:focus{border-color:#2878d7;box-shadow:0 0 0 3p
 </style>
 </head>
 <body class="ak-license-locked">
-<header><div class="brand-lockup"><img src="./ak-logo.svg" alt="AK Sale logo" width="48" height="48"><div><h1 id="brandTitle">AK Sale Software</h1><small>Hardware & Electrical POS</small></div></div><div class="actions no-print"><a href="./" style="color:white">🌐 Market</a><a href="./download.html" style="color:white">⬇ App / APK</a><button id="akInstallBtn" class="alt" type="button" hidden>Install</button><button id="akShareBtn" class="alt" type="button">Share</button><button id="akLanguageBtn" class="alt" type="button" aria-label="Switch language">English</button><span class="pill" id="saveState">ဖုန်းထဲသိမ်းဆည်းမည်</span></div></header>
+<header><div class="brand-lockup"><img src="./ak-logo.svg" alt="AK Sale logo" width="48" height="48"><div><h1 id="brandTitle">AK Sale Software</h1><small>Hardware & Electrical POS</small></div></div><div class="actions no-print"><a href="./?market=1" style="color:white">🌐 Market</a><a href="./download.html" style="color:white">⬇ App / APK</a><button id="akInstallBtn" class="alt" type="button" hidden>Install</button><button id="akShareBtn" class="alt" type="button">Share</button><button id="akLanguageBtn" class="alt" type="button" aria-label="Switch language">English</button><span class="pill" id="saveState">ဖုန်းထဲသိမ်းဆည်းမည်</span></div></header>
 <main>
 <nav id="nav" class="no-print"></nav>
 <section id="home" class="view">
@@ -971,7 +971,7 @@ body.ak-public footer{display:block}
  "use strict";
  const params=new URLSearchParams(location.search);
  const isHosted=location.hostname.endsWith("github.io");
- const publicMode=params.get("market")==="1" || (isHosted && params.get("app")!=="1");
+ const publicMode=params.get("market")==="1" && params.get("app")!=="1";
  if(!publicMode)return;
  document.body.classList.add("ak-public");
  document.title="Ak shopping markets · မြန်မာ့အွန်လိုင်းဈေး";

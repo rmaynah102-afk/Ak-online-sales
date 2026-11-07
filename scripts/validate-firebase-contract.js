@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
 
-const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+const html = fs.readFileSync(path.join(__dirname, '..', 'app.html'), 'utf8');
 const functionsSource = fs.readFileSync(path.join(__dirname, '..', 'functions', 'index.js'), 'utf8');
 const rules = fs.readFileSync(path.join(__dirname, '..', 'firestore.rules'), 'utf8');
 const printerSource = fs.readFileSync(path.join(__dirname, '..', 'native', 'android', 'AkPrinterPlugin.java'), 'utf8');
@@ -110,7 +110,7 @@ if (!serverCallables.has('createPaymentRequest') || !clientCallables.has('create
   console.error('Payment submissions must use the trusted createPaymentRequest callable.');
   process.exitCode = 1;
 }
-if (!functionsSource.includes('!screenshotUrl') || !html.includes('KPay ငွေလွှဲ Screenshot မဖြစ်မနေ တင်ပါ')) {
+if (!functionsSource.includes('!screenshotUrl') || !html.includes('function validateAndSubmitKPay(paymentData,screenshotFile)') || !html.includes('id="payScreenshot" type="file"')) {
   console.error('KPay payment requests must require a screenshot proof.');
   process.exitCode = 1;
 }

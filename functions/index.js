@@ -287,6 +287,111 @@ exports.listPendingPayments = functions.https.onCall(async (data, context) => {
   };
 });
 
+
+
+// Owner-only customer account controls. Every Gmail other than the fixed verified
+// platform owner is a customer; client role labels never grant platform privileges.
+exports.listPlatformUsers = functions.https.onCall(async (data, context) => {
+  requireAdmin(context);
+  const pageToken = String(data.pageToken || "").trim() || undefined;
+  const page = await admin.auth().listUsers(100, pageToken);
+  const refs = page.users.map(u => db.collection("licenses").doc(u.uid));
+  const licenseSnaps = refs.length ? await db.getAll(...refs) : [];
+  const byUid = new Map(licenseSnaps.map(s => [s.id, s.exists ? s.data() : {}]));
+  return {
+    users: page.users.map(u => {
+      const license = byUid.get(u.uid) || {};
+      return {
+        uid: u.uid, email: u.email || "", emailVerified: !!u.emailVerified,
+        disabled: !!u.disabled, status: String(license.status || "pending_payment"),
+        plan: String(license.plan || ""), expiresAt: license.expiresAt && license.expiresAt.toDate
+          ? license.expiresAt.toDate().toISOString() : ""
+      };
+    }).filter(u => u.email.toLowerCase() !== OWNER_EMAIL),
+    nextPageToken: page.pageToken || ""
+  };
+});
+
+exports.setPlatformUserAccess = functions.https.onCall(async (data, context) => {
+  const actor = requireAdmin(context);
+  const uid = String(data.uid || "").trim();
+  const action = String(data.action || "").trim();
+  if (!uid || uid.length > 128 || !["suspend", "reactivate"].includes(action)) {
+    throw new functions.https.HttpsError("invalid-argument", "အသုံးပြုသူ သို့မဟုတ် လုပ်ဆောင်ချက် မမှန်ပါ။");
+  }
+  if (uid === context.auth.uid) {
+    throw new functions.https.HttpsError("permission-denied", "Owner အကောင့်ကို ဒီနေရာမှ ပိတ်၍မရပါ။");
+  }
+  const target = await admin.auth().getUser(uid);
+  if (String(target.email || "").trim().toLowerCase() === OWNER_EMAIL ||
+      target.customClaims?.platformAdmin === true) {
+    throw new functions.https.HttpsError("permission-denied", "ဤအကောင့်ကို Customer အဖြစ် မစီမံနိုင်ပါ။");
+  }
+  const licenseRef = db.collection("licenses").doc(uid);
+  await db.runTransaction(async tx => {
+    const snap = await tx.get(licenseRef);
+    if (action === "suspend") {
+      tx.set(licenseRef, {
+        uid, email: target.email || "", status: "suspended",
+        suspendedAt: admin.firestore.FieldValue.serverTimestamp(),
+        suspendedBy: actor, updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+    } else {
+      const license = snap.data() || {};
+      const expiry = license.expiresAt;
+      if (!snap.exists || !expiry || typeof expiry.toMillis !== "function" || expiry.toMillis() <= Date.now()) {
+        throw new functions.https.HttpsError("failed-precondition", "Subscription သက်တမ်းကုန်နေသည်။ သက်တမ်းတိုးပြီးမှ ပြန်ဖွင့်ပါ။");
+      }
+      tx.update(licenseRef, {
+        status: "active", reactivatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        reactivatedBy: actor, updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+    }
+  });
+  await db.collection("platformAuditLogs").add({
+    action: action === "suspend" ? "customer_suspended" : "customer_reactivated",
+    targetUid: uid, targetEmail: target.email || "", actor,
+    createdAt: admin.firestore.FieldValue.serverTimestamp()
+  });
+  return { ok: true, uid, action };
+});
+
+exports.rejectPaymentRequest = functions.https.onCall(async (data, context) => {
+  const actor = requireAdmin(context);
+  const requestId = String(data.requestId || "").trim();
+  const reason = String(data.reason || "").trim().slice(0, 240);
+  if (!requestId || requestId.length > 150) {
+    throw new functions.https.HttpsError("invalid-argument", "Payment request ID မမှန်ပါ။");
+  }
+  const requestRef = db.collection("paymentRequests").doc(requestId);
+  await db.runTransaction(async tx => {
+    const snap = await tx.get(requestRef);
+    if (!snap.exists || snap.data().status !== "pending") {
+      throw new functions.https.HttpsError("failed-precondition", "Pending တောင်းဆိုချက် မတွေ့ပါ။");
+    }
+    const payment = snap.data();
+    const referenceKey = crypto.createHash("sha256")
+      .update("KBZPay:" + normalizePaymentReference(payment.reference))
+      .digest("hex");
+    const referenceRef = db.collection("paymentReferences").doc(referenceKey);
+    const referenceSnap = await tx.get(referenceRef);
+    tx.update(requestRef, {
+      status: "rejected", rejectionReason: reason, reviewedBy: actor,
+      reviewedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+    if (referenceSnap.exists && referenceSnap.data().paymentRequestId === requestId &&
+        referenceSnap.data().status === "pending") {
+      tx.update(referenceRef, { status: "rejected", reviewedBy: actor,
+        reviewedAt: admin.firestore.FieldValue.serverTimestamp() });
+    }
+  });
+  await db.collection("platformAuditLogs").add({
+    action: "payment_rejected", requestId, reason, actor,
+    createdAt: admin.firestore.FieldValue.serverTimestamp()
+  });
+  return { ok: true, status: "rejected" };
+});
+
 exports.approveSubscription = functions.https.onCall(async (data, context) => {
   const callerEmail = requireAdmin(context);
   const requestId = String(data.requestId || "").trim();

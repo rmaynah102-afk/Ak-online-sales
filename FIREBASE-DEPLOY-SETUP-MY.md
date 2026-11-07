@@ -38,6 +38,6 @@ Firestore and Storage Rules are present in the repository but are not deployed b
 
 Callable Cloud Functions in `functions/index.js` are not deployed by the current workflow. Deployment may require Firebase Blaze and a linked Google Cloud Billing account. Do not enable billing without the owner's explicit approval.
 
-The workflow uses the GitHub Actions secret `FIREBASE_SERVICE_ACCOUNT_AK_ONLIN_SALES`. Never commit or share service-account JSON, private keys, keystores, passwords or OTPs.
+The workflow uses the GitHub Actions secret `FIREBASE_SERVICE_ACCOUNT_AK_ONLIN_SALES`. For Rules deployment, that service account needs the minimum Firebase Rules and Storage permissions. If it fails, inspect the workflow summary and grant only the required IAM roles.\n\nCloud Functions deployment remains OFF by default. Only after the owner links a billing account and accepts possible charges, set GitHub repository Settings → Secrets and variables → Actions → Variables → `AK_ENABLE_FUNCTIONS_DEPLOY` to `true`, then rerun the Firebase workflow. This variable does not create or link billing; it only allows the deployment step to run. Never commit or share service-account JSON, private keys, keystores, passwords or OTPs.
 
-A green workflow confirms Hosting only. Verify Firestore Rules, Storage Rules and Functions separately in Firebase Console before relying on cloud payments, backups or device management.
+A green overall workflow does not by itself prove every Firebase component deployed: check the Rules and Functions step summaries individually. Cloud payment approval, license activation, cloud backup and device management remain unavailable until the Cloud Functions deployment succeeds and is verified in Firebase Console.

@@ -114,11 +114,11 @@ jobs:
               "androidxCredentialsVersion": "'1.3.0'",
           }
           for key, value in required.items():
-              if not re.search(r"\\b" + re.escape(key) + r"\\s*=", vs):
-                  match = re.search(r"(ext\\s*\\{)", vs)
+              if not re.search(r"\b" + re.escape(key) + r"\s*=", vs):
+                  match = re.search(r"(ext\s*\{)", vs)
                   if not match:
                       raise SystemExit("variables.gradle ext block not found")
-                  vs = vs[:match.end()] + "\\n    " + key + " = " + value + vs[match.end():]
+                  vs = vs[:match.end()] + "\n    " + key + " = " + value + vs[match.end():]
           variables.write_text(vs)
           print("Capacitor Firebase Google Sign-In Android dependencies enabled")
           PY

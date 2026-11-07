@@ -82,6 +82,30 @@ jobs:
         run: node --check scripts/install-native-printer.js
       - name: Generate Android project
         run: npx cap add android
+      - name: Configure Firebase Android and Google Sign-In
+        run: |
+          mkdir -p android/app
+          cp google-services.json android/app/google-services.json
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          root = Path("android/build.gradle")
+          app = Path("android/app/build.gradle")
+          if not root.exists() or not app.exists():
+              raise SystemExit("Generated Android Gradle files are missing")
+          rs = root.read_text()
+          if "com.google.gms:google-services" not in rs:
+              match = re.search(r'(dependencies\\s*\\{)', rs)
+              if not match:
+                  raise SystemExit("Root Gradle dependencies block not found")
+              rs = rs[:match.end()] + "\\n        classpath 'com.google.gms:google-services:4.4.4'" + rs[match.end():]
+              root.write_text(rs)
+          aps = app.read_text()
+          if "com.google.gms.google-services" not in aps:
+              aps += "\\n\\napply plugin: 'com.google.gms.google-services'\\n"
+              app.write_text(aps)
+          print("Firebase Android config and Google Services Gradle plugin configured")
+          PY
       - name: Install AK native Bluetooth and Wi-Fi printer bridge
         run: node scripts/install-native-printer.js
       - name: Apply AK Sale branding and Android launcher icon

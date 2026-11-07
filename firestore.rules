@@ -40,7 +40,7 @@ service cloud.firestore {
     match /marketListings/{listingId} {
       allow read: if resource.data.status == 'published'
         || (request.auth != null && resource.data.ownerUid == request.auth.uid);
-      allow create: if hasActiveLicense(request.auth.uid)
+      allow create: if request.auth != null
         && request.resource.data.ownerUid == request.auth.uid
         && request.resource.data.status == 'published'
         && request.resource.data.title is string
@@ -59,8 +59,8 @@ service cloud.firestore {
         && request.resource.data.township.size() <= 80
         && request.resource.data.phone is string
         && request.resource.data.phone.size() <= 32;
-      allow update: if hasActiveLicense(request.auth.uid)
-        && resource.data.ownerUid == request.auth.uid
+      allow update: if request.auth != null
+        && request.auth.uid == resource.data.ownerUid
         && request.resource.data.ownerUid == resource.data.ownerUid
         && request.resource.data.status == 'published'
         && request.resource.data.title is string
@@ -76,7 +76,7 @@ service cloud.firestore {
 
     match /publicShopSubmissions/{ownerUid} {
       allow read: if request.auth != null && request.auth.uid == ownerUid;
-      allow create, update: if hasActiveLicense(ownerUid)
+      allow create, update: if request.auth != null
         && request.auth.uid == ownerUid
         && request.resource.data.ownerUid == ownerUid
         && request.resource.data.status == 'pending'

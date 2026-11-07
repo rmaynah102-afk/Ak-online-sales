@@ -54,5 +54,28 @@ for (const item of permissions) {
     manifest = manifest.replace(/<application\b/, item + '\n    <application');
   }
 }
+const xmlDir = path.join(root, 'android', 'app', 'src', 'main', 'res', 'xml');
+fs.mkdirSync(xmlDir, { recursive: true });
+fs.writeFileSync(path.join(xmlDir, 'ak_file_paths.xml'),
+  '<?xml version="1.0" encoding="utf-8"?>\\n' +
+  '<paths xmlns:android="http://schemas.android.com/apk/res/android">\\n' +
+  '    <cache-path name="ak_receipt_share" path="ak-receipt-share/" />\\n' +
+  '</paths>\\n'
+);
+
+if (!manifest.includes('androidx.core.content.FileProvider')) {
+  const provider = '    <provider\\n' +
+    '        android:name="androidx.core.content.FileProvider"\\n' +
+    '        android:authorities="' + packageName + '.fileprovider"\\n' +
+    '        android:exported="false"\\n' +
+    '        android:grantUriPermissions="true">\\n' +
+    '        <meta-data\\n' +
+    '            android:name="android.support.FILE_PROVIDER_PATHS"\\n' +
+    '            android:resource="@xml/ak_file_paths" />\\n' +
+    '    </provider>\\n';
+  if (!manifest.includes('</application>')) throw new Error('Android application closing tag not found');
+  manifest = manifest.replace('</application>', provider + '</application>');
+}
+
 fs.writeFileSync(manifestPath, manifest);
-console.log('AK Printer native bridge installed: Bluetooth Classic SPP + Wi-Fi RAW TCP 9100.');
+console.log('AK Printer bridge installed: Bluetooth Classic SPP + Wi-Fi RAW TCP 9100 + receipt image sharing.');

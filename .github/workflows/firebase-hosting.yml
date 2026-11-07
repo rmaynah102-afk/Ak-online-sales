@@ -27,6 +27,7 @@ jobs:
           import json, os
           key=json.loads(os.environ["FIREBASE_SERVICE_ACCOUNT"])
           email=key.get("client_email","")
+          print("Deployment service account: "+email)
           if not email or not email.endswith(".iam.gserviceaccount.com"):
               raise SystemExit("Service-account client_email is missing or invalid")
           with open(os.environ["GITHUB_OUTPUT"],"a",encoding="utf-8") as f:
@@ -109,7 +110,7 @@ jobs:
       - name: Record Rules deployment limitation
         if: steps.auth.outputs.available == 'true' && steps.rules.outcome == 'failure'
         run: |
-          echo "Firestore Rules were not deployed. Grant the deployment service account Firebase Rules API permissions, then rerun." >> "$GITHUB_STEP_SUMMARY"
+          echo "Firestore Rules were not deployed. Grant Firebase Rules Admin (roles/firebaserules.admin) to the deployment service account, then rerun." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Attempt Storage Rules deployment
         id: storage_rules
@@ -130,7 +131,7 @@ jobs:
       - name: Record Storage deployment limitation
         if: steps.auth.outputs.available == 'true' && steps.storage_rules.outcome == 'failure'
         run: |
-          echo "Storage Rules were not deployed. Initialize the Firebase Storage bucket and grant the deployment service account the minimum Storage permissions, then rerun." >> "$GITHUB_STEP_SUMMARY"
+          echo "Storage Rules were not deployed. Grant Cloud Storage for Firebase Admin (roles/firebasestorage.admin) to the deployment service account. Initialize the default Firebase Storage bucket in Firebase Console if it does not exist, then rerun." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Deploy Cloud Functions (owner confirmed Firebase Blaze)
         id: functions

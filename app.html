@@ -234,7 +234,7 @@ input:focus,select:focus,textarea:focus{border-color:#2878d7;box-shadow:0 0 0 3p
 </style>
 </head>
 <body class="ak-license-locked">
-<header><div class="brand-lockup"><img src="./ak-logo.svg" alt="AK Sale logo" width="48" height="48"><div><h1 id="brandTitle">AK Sale Software</h1><small>Hardware & Electrical POS</small></div></div><div class="actions no-print"><a href="./app.html?market=1" style="color:white">🌐 Market</a><a href="./download.html" style="color:white">⬇ App / APK</a><button id="akInstallBtn" class="alt" type="button" hidden>Install</button><button id="akShareBtn" class="alt" type="button">Share</button><button id="akLanguageBtn" class="alt" type="button" aria-label="Switch language">English</button><span class="pill" id="saveState">ဖုန်းထဲသိမ်းဆည်းမည်</span></div></header>
+<header><div class="brand-lockup"><img src="./ak-logo.svg" alt="AK Sale logo" width="48" height="48"><div><h1 id="brandTitle">AK Sale Software</h1><small>Hardware & Electrical POS</small></div></div><div class="actions no-print"><button id="akInstallBtn" class="alt" type="button" hidden>Install</button><button id="akShareBtn" class="alt" type="button">Share</button><button id="akLanguageBtn" class="alt" type="button" aria-label="Switch language">English</button><span class="pill" id="saveState">ဖုန်းထဲသိမ်းဆည်းမည်</span></div></header>
 <main>
 <nav id="nav" class="no-print"></nav>
 <section id="home" class="view">
@@ -310,7 +310,7 @@ input:focus,select:focus,textarea:focus{border-color:#2878d7;box-shadow:0 0 0 3p
 <form id="marketForm"><div class="grid">
 <div><label>ပစ္စည်းအမည် *</label><input id="mTitle" maxlength="90" required placeholder="ဥပမာ - LED မီးလုံး 12W"></div>
 <div><label>ရောင်းဈေး (ကျပ်) *</label><input id="mPrice" type="number" min="1" step="1" required placeholder="8500"></div>
-<div><label>အမျိုးအစား</label><select id="mCategory"><option>ကုန်မာ</option><option>လျှပ်စစ်ပစ္စည်း</option><option>ဆောက်လုပ်ရေး</option><option>လက်工具 / Tools</option><option>ရေပိုက်နှင့် ရေပစ္စည်း</option><option>မီးအလင်းရောင်</option><option>ဝါယာကြိုးနှင့် Cable</option><option>မော်တာနှင့် Pump</option><option>ဆိုလာနှင့် Battery</option><option>သော့နှင့် Lock</option><option>သံထည်နှင့် Fastener</option><option>ဆေးနှင့် အရောင်</option><option>အိမ်သုံးပစ္စည်း</option><option>စက်ပစ္စည်းနှင့် အပိုပစ္စည်း</option><option>ဖုန်းနှင့် အီလက်ထရွန်းနစ်</option><option>စိုက်ပျိုးရေးပစ္စည်း</option><option>ယာဉ်အပိုပစ္စည်း</option><option>အခြား</option></select></div>
+<div><label>အမျိုးအစား</label><select id="mCategory"><option>ကုန်မာ</option><option>လျှပ်စစ်ပစ္စည်း</option><option>ဆောက်လုပ်ရေး</option><option>လက်ကိရိယာ / Tools</option><option>ရေပိုက်နှင့် ရေပစ္စည်း</option><option>မီးအလင်းရောင်</option><option>ဝါယာကြိုးနှင့် Cable</option><option>မော်တာနှင့် Pump</option><option>ဆိုလာနှင့် Battery</option><option>သော့နှင့် Lock</option><option>သံထည်နှင့် Fastener</option><option>ဆေးနှင့် အရောင်</option><option>အိမ်သုံးပစ္စည်း</option><option>စက်ပစ္စည်းနှင့် အပိုပစ္စည်း</option><option>ဖုန်းနှင့် အီလက်ထရွန်းနစ်</option><option>စိုက်ပျိုးရေးပစ္စည်း</option><option>ယာဉ်အပိုပစ္စည်း</option><option>အခြား</option></select></div>
 <div><label>မြို့</label><input id="mCity" maxlength="50" placeholder="မန္တလေး"></div>
 <div><label>မြို့နယ်</label><input id="mTownship" maxlength="60" placeholder="ချမ်းအေးသာစံ"></div>
 <div><label>ဆက်သွယ်ရန် ဖုန်း / Viber နံပါတ် *</label><input id="mPhone" type="tel" maxlength="25" required placeholder="09..."><span class="muted">ဝယ်သူက ဖုန်းခေါ်ရန်နှင့် Viber ဆက်သွယ်ရန် အသုံးပြုမည်။</span></div>
@@ -859,7 +859,7 @@ const marketSynonyms={
  "ပိုက်":["pipe","pvc","ရေပိုက်","ပလတ်စတစ်ပိုက်"],
  "သံ":["steel","iron","metal","သံချောင်း"],
  "ဆေး":["paint","အရောင်","ဆေးသုတ်"],
- "drill":["စက်","ဖောက်စက်","လက်工具","tools"],
+ "drill":["စက်","ဖောက်စက်","လက်ကိရိယာ","tools"],
  "ဖောက်စက်":["drill","စက်","tools"],
  "ပန်ကာ":["fan","လေထိုးစက်"],
  "ဘက်ထရီ":["battery","အားသွင်း","ဓာတ်ခဲ"],

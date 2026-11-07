@@ -445,7 +445,7 @@ function applyAkTheme(){const key=localStorage.getItem(AK_THEME_KEY)||"green",t=
 function akCanPrint(){if(!fbUser)return true;if(String(fbUser.email||"").toLowerCase()==="painglin102@gmail.com"&&fbUser.emailVerified)return true;if(akUserClaims.shopId)return akUserClaims.canPrint===true;return !!(currentLicense&&currentLicense.status==="active")}
 function akRequirePrint(){if(akCanPrint())return true;alert("Print ခွင့်မရှိပါ။ ဆိုင် Owner ထံမှ Print ခွင့်ပြုချက် ရယူပါ။");return false}
 function akIsPlatformOwner(){return !!(fbUser&&String(fbUser.email||"").toLowerCase()==="painglin102@gmail.com"&&fbUser.emailVerified)}
-function akSetLicenseGate(allowed,message){const locked=!allowed;document.body.classList.toggle("ak-license-locked",locked);const notice=document.getElementById("akPaywallNotice");if(notice){notice.classList.toggle("hidden",!locked);const detail=document.getElementById("akPaywallDetail");if(detail&&message)detail.textContent=message}if(locked){document.querySelectorAll(".view").forEach(x=>x.classList.toggle("active",x.id==="backup"))}else if(document.getElementById("backup")?.classList.contains("active")){document.querySelectorAll(".view").forEach(x=>x.classList.toggle("active",x.id==="home"));document.querySelectorAll("#nav button").forEach(b=>b.classList.toggle("active",b.dataset.view==="home"))}}
+function akSetLicenseGate(allowed,message){const locked=!allowed;document.body.classList.toggle("ak-license-locked",locked);const notice=document.getElementById("akPaywallNotice");if(notice){notice.classList.toggle("hidden",!locked);const detail=document.getElementById("akPaywallDetail");if(detail&&message)detail.textContent=message}if(document.body.classList.contains("ak-public")){document.querySelectorAll(".view").forEach(x=>x.classList.toggle("active",x.id==="market"));return}if(locked){document.querySelectorAll(".view").forEach(x=>x.classList.toggle("active",x.id==="backup"))}else if(document.getElementById("backup")?.classList.contains("active")){document.querySelectorAll(".view").forEach(x=>x.classList.toggle("active",x.id==="home"));document.querySelectorAll("#nav button").forEach(b=>b.classList.toggle("active",b.dataset.view==="home"))}}
 function akApplyAnnouncementAdminVisibility(){const el=document.getElementById("globalAnnouncementAdmin");if(el)el.classList.toggle("hidden",!akIsPlatformOwner())}
 
 function persist(){try{localStorage.setItem(fbUser?userDBKey(fbUser.uid):DBKEY,JSON.stringify(db));$("saveState").textContent=fbUser?"Cloud အကောင့်ထဲ သိမ်းဆည်းရန် အသင့်":"ဖုန်းထဲ သိမ်းပြီး";renderAll();if(fbUser&&cloudReady){akLocalDirty=true;cloudSave()}}catch(e){alert("ဖုန်းထဲသိမ်းမရပါ။ ဓာတ်ပုံအရွယ်အစားလျှော့ပြီး Backup စစ်ပါ။");console.error(e)}}
@@ -992,7 +992,7 @@ cmRender();
 
 <style>
 /* Public storefront mode: only published products are shown. */
-body.ak-public{background:#f3f7fb}
+body.ak-public{background:#f3f7fb}\nbody.ak-public main>.view{display:none!important}\nbody.ak-public main>#market.view{display:block!important}\nbody.ak-public #market.view.active{display:block!important}
 body.ak-public header{position:sticky;top:0;z-index:20;box-shadow:0 5px 22px #102b4618}
 body.ak-public header small{display:block}
 body.ak-public #saveState,body.ak-public #nav{display:none!important}

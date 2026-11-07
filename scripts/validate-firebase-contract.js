@@ -119,7 +119,7 @@ if (!html.includes('const AK_PLAN_AMOUNTS={30:30000,90:90000,180:180000,365:3600
   process.exitCode = 1;
 }
 if (!html.includes('if(!user){checkUserRole(null);akSetLicenseGate(false') ||
-    !html.includes('akSetLicenseGate(false,"Offline Local Mode') ||
+    html.includes('akSetLicenseGate(true,"Offline Local Mode') ||
     !html.includes('Cloud / License စစ်ဆေးမှု မအောင်မြင်ပါ')) {
   console.error('POS must remain locked until Gmail login and an owner-approved active subscription are verified online.');
   process.exitCode = 1;

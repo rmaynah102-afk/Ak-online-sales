@@ -710,51 +710,6 @@ function renderMarket(){
  host.innerHTML=items.length?items.map(x=>'<article class="panel" style="margin:0"><img class="preview" style="width:100%;aspect-ratio:4/3;object-fit:cover" src="'+esc(/^https:\/\//i.test(x.imageUrl||"")?x.imageUrl:"")+'" alt="'+esc(x.title)+'"><h3>'+esc(x.title)+'</h3><div class="stat">'+money(x.price)+'</div><p class="muted">'+esc(x.shopName||"ဆိုင်အမည်မသိ")+' · '+esc(x.category||"အခြား")+'</p><p class="muted">'+esc([x.township,x.city].filter(Boolean).join(", "))+' · '+esc(marketFreshLabel(x.createdAt))+'</p><p>'+esc(x.description||"")+'</p><div class="actions"><button type="button" data-market-contact="'+esc(x.phone||"")+'">ဖုန်းခေါ်မှာယူရန်</button><button type="button" class="alt" data-market-viber="'+esc(x.phone||"")+'">Viber မှာယူရန်</button><button type="button" class="alt" data-market-share="'+esc(x.id)+'">Share</button></div></article>').join(""):'<div class="notice">ပစ္စည်းမတွေ့သေးပါ။ ဆိုင်များက ကြော်ငြာတင်လာသောအခါ ဤနေရာတွင် ပြသမည်။</div>';
  host.onclick=e=>{const contact=e.target.closest("[data-market-contact]");const viber=e.target.closest("[data-market-viber]");const share=e.target.closest("[data-market-share]");if(contact)contactMarketSeller(contact.dataset.marketContact);if(viber)viberMarketSeller(viber.dataset.marketViber);if(share)shareMarketListing(share.dataset.marketShare)};
 }
-function renderMarket(){
- const host=$("marketFeed");if(!host)return;
- const query=$("marketQuery").value||"",place=($("marketPlaceFilter").value||"").toLowerCase().trim(),category=$("marketCategoryFilter").value||"",min=Number($("marketMinPrice").value||0),max=Number($("marketMaxPrice").value||0),sort=$("marketSort").value||"relevance";
- const words=marketWords(query);
- let items=marketListings.filter(x=>{
-  const hay=[x.title,x.description,x.category,x.city,x.township,x.shopName].join(" ").toLowerCase();
-  const textMatch=!words.length||words.some(w=>hay.includes(w));
-  const placeMatch=!place||[x.city,x.township].join(" ").toLowerCase().includes(place);
-  return textMatch&&placeMatch&&(!category||x.category===category)&&Number(x.price)>=(min||0)&&(!max||Number(x.price)<=max);
- });
- if(sort==="low")items.sort((a,b)=>Number(a.price)-Number(b.price));
- else if(sort==="high")items.sort((a,b)=>Number(b.price)-Number(a.price));
- else if(sort==="new")items.sort((a,b)=>marketDate(b.createdAt)-marketDate(a.createdAt));
- else if(words.length)items.sort((a,b)=>Number(b.title.toLowerCase().includes(query.toLowerCase()))-Number(a.title.toLowerCase().includes(query.toLowerCase())));
- $("marketResultCount").textContent=items.length+" ခု";
- $("marketSearchHint").textContent=items.length?"ဈေးနှုန်းများသည် ရောင်းသူတင်ထားသော အချက်အလက်များဖြစ်သည်။ ဝယ်ယူမီ ဖုန်းဆက်အတည်ပြုပါ။":"ကိုက်ညီသောပစ္စည်း မတွေ့ပါ။ စာလုံးပေါင်း၊ မြို့နယ် သို့မဟုတ် ဈေးကန့်သတ်ချက် ပြောင်းရှာပါ။";
- const groups={};for(const x of items){const k=marketProductKey(x.title);if(k)(groups[k]||(groups[k]=[])).push(x)}
- const comparisons=Object.values(groups).filter(g=>g.length>1).sort((a,b)=>a[0].title.localeCompare(b[0].title));
- $("marketCompare").innerHTML=comparisons.length?comparisons.map(g=>{const ordered=[...g].sort((a,b)=>Number(a.price)-Number(b.price));return '<div class="tablewrap" style="margin:10px 0"><table><thead><tr><th colspan="4">'+esc(g[0].title)+' · '+g.length+' ဆိုင်</th></tr><tr><th>ဆိုင်</th><th>ဈေးနှုန်း</th><th>တည်နေရာ</th><th>တင်သည့်ရက်</th></tr></thead><tbody>'+ordered.map(x=>'<tr><td>'+esc(x.shopName||"အမည်မဖော်ပြသောဆိုင်")+'</td><td><b>'+money(x.price)+'</b></td><td>'+esc([x.township,x.city].filter(Boolean).join(", "))+'</td><td>'+esc(marketFreshLabel(x.createdAt))+'</td></tr>').join("")+'</tbody></table></div>'}).join(""):'<p class="muted">ရှာဖွေထားသောပစ္စည်းအမည်တူ ဆိုင် ၂ ဆိုင်ထက်မပိုသေးပါ။ ဆိုင်များ ပိုမိုစာရင်းတင်လာသောအခါ နှိုင်းယှဉ်ဇယား ပေါ်လာပါမည်။</p>';
- host.innerHTML=items.length?items.map(x=>'<article class="panel" style="margin:0"><img class="preview" style="width:100%;aspect-ratio:4/3;object-fit:cover" src="'+esc(/^https:\/\//i.test(x.imageUrl||"")?x.imageUrl:"")+'" alt="'+esc(x.title)+'"><h3>'+esc(x.title)+'</h3><div class="stat">'+money(x.price)+'</div><p class="muted">'+esc(x.shopName||"ဆိုင်အမည်မသိ")+' · '+esc(x.category||"အခြား")+'</p><p class="muted">'+esc([x.township,x.city].filter(Boolean).join(", "))+' · '+esc(marketFreshLabel(x.createdAt))+'</p><p>'+esc(x.description||"")+'</p><div class="actions"><button type="button" data-market-contact="'+esc(x.phone||"")+'">ဖုန်းခေါ်မှာယူရန်</button><button type="button" class="alt" data-market-viber="'+esc(x.phone||"")+'">Viber မှာယူရန်</button><button type="button" class="alt" data-market-share="'+esc(x.id)+'">Share</button></div></article>').join(""):'<div class="notice">ပစ္စည်းမတွေ့သေးပါ။ ရှာဖွေမှုစကားလုံး သို့မဟုတ် စစ်ထုတ်မှု ပြောင်းကြည့်ပါ။</div>';
- host.onclick=e=>{const contact=e.target.closest("[data-market-contact]");const viber=e.target.closest("[data-market-viber]");const share=e.target.closest("[data-market-share]");if(contact)contactMarketSeller(contact.dataset.marketContact);if(viber)viberMarketSeller(viber.dataset.marketViber);if(share)shareMarketListing(share.dataset.marketShare)};
-}
-async function publishMarketListing(e){
- e.preventDefault();
- try{
-  if(!fbAuth?.currentUser)throw Error("ပစ္စည်းတင်ရန် Gmail Login ဝင်ပါ။ အခမဲ့တင်နိုင်ပါသည်။");
-  const title=$("mTitle").value.trim(),price=Number($("mPrice").value),phone=$("mPhone").value.trim();
-  if(title.length<2||!Number.isFinite(price)||price<=0||phone.replace(/[^0-9]/g,"").length<7)throw Error("ပစ္စည်းအမည်၊ ဈေးနှုန်းနှင့် ဆက်သွယ်ရန်ဖုန်း မှန်ကန်စွာထည့်ပါ။");
-  $("marketStatus").textContent="ကြော်ငြာတင်နေသည်...";
-  const id=marketEditId||uid(),path="market/"+fbAuth.currentUser.uid+"/"+id+"/photo";
-  const oldItem=marketListings.find(x=>x.id===id)||{};
-  let imageUrl=oldItem.imageUrl||"",photoNote="";
-  if(marketPhotoFile&&window.firebase?.storage&&firebase.storage().app.options.storageBucket){
-   try{const ref=firebase.storage().ref(path);await ref.put(marketPhotoFile,{contentType:marketPhotoFile.type,cacheControl:"public,max-age=3600"});imageUrl=await ref.getDownloadURL();}
-   catch(photoErr){photoNote=" (ဓာတ်ပုံမတင်နိုင်သေးသဖြင့် စာသားကြော်ငြာအဖြစ် တင်ထားသည်။)"}
-  }else if(marketPhotoFile){photoNote=" (Storage မဖွင့်ရသေးသဖြင့် ဓာတ်ပုံမပါဘဲ တင်ထားသည်။)"}
-  const data={ownerUid:fbAuth.currentUser.uid,shopName:db.shop.name||oldItem.shopName||"AK Shop",title,price,currency:"MMK",category:$("mCategory").value,city:$("mCity").value.trim(),township:$("mTownship").value.trim(),phone,description:$("mDescription").value.trim(),imageUrl,imagePath:path,status:"published",createdAt:oldItem.createdAt||firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
-  await fbStore.collection("marketListings").doc(id).set(data,{merge:true});
-  $("marketStatus").textContent=(marketEditId?"ကြော်ငြာပြင်ဆင်ပြီးပါပြီ။":"AK Market သို့ အခမဲ့တင်ပြီးပါပြီ။")+photoNote;
-  resetMarketForm();await loadMarket();await loadMyMarketListings();
- }catch(err){$("marketStatus").textContent="ပို့စ်တင်မရပါ: "+err.message;}
-}
-$("marketForm").addEventListener("submit",publishMarketListing);
-async function loadMyMarketListings(){const host=$("myMarketFeed");if(!host)return;if(!fbAuth?.currentUser){$("myMarketStatus").textContent="မိမိကြော်ငြာများကြည့်ရန် Gmail Login ဝင်ပါ။";host.innerHTML="";return;}try{const snap=await fbStore.collection("marketListings").where("ownerUid","==",fbAuth.currentUser.uid).limit(100).get();const rows=snap.docs.map(d=>({id:d.id,...d.data()}));host.innerHTML=rows.length?rows.map(x=>'<article class="panel"><h3>'+esc(x.title)+'</h3><p>'+money(x.price)+' · '+esc(x.status||"")+'</p><div class="actions"><button type="button" data-market-edit="'+esc(x.id)+'">ပြင်ဆင်မည်</button><button type="button" class="red" data-market-delete="'+esc(x.id)+'">ဖျက်မည်</button></div></article>').join(""):'<p class="muted">မိမိတင်ထားသော ကြော်ငြာ မရှိသေးပါ။</p>';$("myMarketStatus").textContent="မိမိကြော်ငြာ "+rows.length+" ခု";host.onclick=async e=>{const edit=e.target.closest("[data-market-edit]"),del=e.target.closest("[data-market-delete]");if(edit){const x=rows.find(v=>v.id===edit.dataset.marketEdit);if(!x)return;marketEditId=x.id;$("mTitle").value=x.title||"";$("mPrice").value=x.price||"";$("mCategory").value=x.category||"ကုန်မာ";$("mCity").value=x.city||"";$("mTownship").value=x.township||"";$("mPhone").value=x.phone||"";$("mDescription").value=x.description||"";$("mPreview").src=x.imageUrl||"";$("mPreview").classList.toggle("hidden",!x.imageUrl);$("marketForm").querySelector('button[type="submit"]').textContent="ပြင်ဆင်ချက် သိမ်းမည်";$("marketForm").scrollIntoView({behavior:"smooth"});}if(del){const id=del.dataset.marketDelete;if(!confirm("ဒီပစ္စည်းကြော်ငြာကို ဖျက်မလား။"))return;try{await fbStore.collection("marketListings").doc(id).delete();await loadMarket();await loadMyMarketListings();}catch(err){$("myMarketStatus").textContent="ဖျက်မရပါ: "+err.message;}}};}catch(e){$("myMarketStatus").textContent="မိမိကြော်ငြာစာရင်း မဖတ်နိုင်ပါ: "+e.message;}}
-
 function marketNormalizePhone(phone){let n=String(phone||"").replace(/[^0-9+]/g,"");if(n.startsWith("09"))n="+959"+n.slice(2);else if(n.startsWith("959"))n="+"+n;else if(n.startsWith("9")&&n.length>=8)n="+95"+n;return n}
 function contactMarketSeller(phone){const n=marketNormalizePhone(phone);if(!n)return alert("ရောင်းသူက ဖုန်းနံပါတ် မဖော်ပြထားပါ။");location.href="tel:"+n}
 function viberMarketSeller(phone){const n=marketNormalizePhone(phone);if(!n)return alert("ရောင်းသူက Viber နံပါတ် မဖော်ပြထားပါ။");location.href="viber://chat?number="+encodeURIComponent(n)}

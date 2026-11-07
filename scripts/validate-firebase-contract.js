@@ -110,6 +110,25 @@ if (!serverCallables.has('createPaymentRequest') || !clientCallables.has('create
   console.error('Payment submissions must use the trusted createPaymentRequest callable.');
   process.exitCode = 1;
 }
+
+// Client and server must enforce the same owner-approved subscription prices.
+const expectedPlanMap = '{ 30: 30000, 90: 90000, 180: 180000, 365: 360000 }';
+if (!html.includes('const AK_PLAN_AMOUNTS={30:30000,90:90000,180:180000,365:360000};') ||
+    (functionsSource.match(/const expectedAmounts = \{ 30: 30000, 90: 90000, 180: 180000, 365: 360000 \};/g) || []).length !== 2) {
+  console.error('Subscription pricing must match: 1 month 30000, 3 months 90000, 6 months 180000, 1 year 360000 MMK.');
+  process.exitCode = 1;
+}
+if (!html.includes('if(!user){checkUserRole(null);akSetLicenseGate(false') ||
+    !html.includes('akSetLicenseGate(false,"Offline Local Mode') ||
+    !html.includes('Cloud / License စစ်ဆေးမှု မအောင်မြင်ပါ')) {
+  console.error('POS must remain locked until Gmail login and an owner-approved active subscription are verified online.');
+  process.exitCode = 1;
+}
+if (!html.includes('#akFirebasePanel{order:1}') || !html.includes('#akLicensePanel{order:2}')) {
+  console.error('The subscription gate must show Gmail sign-in before package payment.');
+  process.exitCode = 1;
+}
+
 if (!functionsSource.includes('!screenshotUrl') || !html.includes('function validateAndSubmitKPay(paymentData,screenshotFile)') || !html.includes('id="payScreenshot" type="file"')) {
   console.error('KPay payment requests must require a screenshot proof.');
   process.exitCode = 1;

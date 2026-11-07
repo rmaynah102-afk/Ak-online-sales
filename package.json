@@ -4,7 +4,7 @@
   "private": true,
   "description": "Myanmar retail, wholesale, inventory and shopping center management app",
   "scripts": {
-    "copy-web": "node -e \"const fs=require('fs');const path=require('path');fs.mkdirSync('www',{recursive:true});for(const f of ['app.html','firebase-config.js','ak-logo.svg','manifest.webmanifest','sw.js','download.html','USER-GUIDE-MY.md','USER-GUIDE-EN.md','BUSINESS-GUIDE-MY.md','BUSINESS-GUIDE-EN.md','PRINTER-SETUP-MY.md']){if(fs.existsSync(f))fs.copyFileSync(f,path.join('www',f==='app.html'?'index.html':f));else if(f==='app.html')throw new Error('Missing app.html');}\"",
+    "copy-web": "node -e \"const fs=require('fs');const path=require('path');fs.mkdirSync('www',{recursive:true});for(const f of ['app.html','firebase-config.js','ak-logo.svg','manifest.webmanifest','sw.js','download.html','USER-GUIDE-MY.md','USER-GUIDE-EN.md','BUSINESS-GUIDE-MY.md','BUSINESS-GUIDE-EN.md','PRINTER-SETUP-MY.md']){if(fs.existsSync(f))fs.copyFileSync(f,path.join('www',f==='app.html'?'index.html':f));else if(f==='app.html')throw new Error('Missing app.html');}fs.copyFileSync('app.html',path.join('www','app.html'));\"",
     "android:sync": "npm run copy-web && cap sync android"
   },
   "dependencies": {

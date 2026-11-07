@@ -53,7 +53,7 @@ service cloud.firestore {
     match /marketListings/{listingId} {
       allow read: if resource.data.status == 'published'
         || (request.auth != null && resource.data.ownerUid == request.auth.uid);
-      allow create: if request.auth != null
+      allow create: if hasActiveLicense(request.auth.uid)
         && request.resource.data.ownerUid == request.auth.uid
         && request.resource.data.status == 'published'
         && request.resource.data.title is string
@@ -72,7 +72,7 @@ service cloud.firestore {
         && request.resource.data.township.size() <= 80
         && request.resource.data.phone is string
         && request.resource.data.phone.size() <= 32;
-      allow update: if request.auth != null
+      allow update: if hasActiveLicense(request.auth.uid)
         && request.auth.uid == resource.data.ownerUid
         && request.resource.data.ownerUid == resource.data.ownerUid
         && request.resource.data.status == 'published'
@@ -84,12 +84,12 @@ service cloud.firestore {
         && request.resource.data.currency == 'MMK'
         && request.resource.data.description is string
         && request.resource.data.description.size() <= 700;
-      allow delete: if request.auth != null && resource.data.ownerUid == request.auth.uid;
+      allow delete: if hasActiveLicense(request.auth.uid) && resource.data.ownerUid == request.auth.uid;
     }
 
     match /publicShopSubmissions/{ownerUid} {
       allow read: if request.auth != null && request.auth.uid == ownerUid;
-      allow create, update: if request.auth != null
+      allow create, update: if hasActiveLicense(ownerUid)
         && request.auth.uid == ownerUid
         && request.resource.data.ownerUid == ownerUid
         && request.resource.data.status == 'pending'

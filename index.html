@@ -879,15 +879,6 @@ async function akRestoreCloudBackup(id){
 // Public Firebase Web App config. Access is protected by Firestore and Storage Security Rules.
 window.AK_FIREBASE_PUBLIC_CONFIG={apiKey:"AIzaSyDz7_oxLjumHVBus8eiVWM6kqXYjChK2z8",authDomain:"ak-onlin-sales.firebaseapp.com",projectId:"ak-onlin-sales",storageBucket:"ak-onlin-sales.firebasestorage.app",messagingSenderId:"1046694954841",appId:"1:1046694954841:web:6ce468cba9dd884833ae48",measurementId:"G-TR2R1454Y0"};
 try{firebaseConnect();}catch(e){console.error("Firebase startup failed",e);}
-function akUpdateWebBusinessTools(){
- const cost=Number(document.getElementById("akCalcCost")?.value||0),sell=Number(document.getElementById("akCalcSell")?.value||0),extra=Number(document.getElementById("akCalcExtra")?.value||0);
- const profit=sell-cost-extra,margin=sell>0?profit/sell*100:0;
- const cr=document.getElementById("akCalcResult");if(cr)cr.textContent="တစ်ခုအသားတင်အမြတ်/အရှုံး: "+profit.toLocaleString("en-US")+" ကျပ် · ရောင်းဈေးအပေါ် Margin: "+margin.toFixed(1)+"%";
- const daily=Number(document.getElementById("akDailySales")?.value||0),lead=Number(document.getElementById("akLeadDays")?.value||0),safety=Number(document.getElementById("akSafetyStock")?.value||0);
- const rr=document.getElementById("akReorderResult");if(rr)rr.textContent="ပြန်မှာရန် သတိပေးလက်ကျန်: "+Math.ceil(daily*lead+safety).toLocaleString("en-US")+" ခု (ပျမ်းမျှရောင်းအား × ပို့ချိန် + Safety Stock)";
-}
-["akCalcCost","akCalcSell","akCalcExtra","akDailySales","akLeadDays","akSafetyStock"].forEach(id=>document.getElementById(id)?.addEventListener("input",akUpdateWebBusinessTools));
-akUpdateWebBusinessTools();
 applyAkTheme();renderAll();loadMarket();
 </script>
 

@@ -758,7 +758,7 @@ async function deleteMyMarketListing(id){
  }catch(e){alert("ကြော်ငြာဖျက်မရပါ: "+e.message)}
 }
 $("marketForm").addEventListener("submit",async e=>{
- e.preventDefault();const status=$("marketStatus"),button=$("marketForm").querySelector('button[type="submit']");
+ e.preventDefault();const status=$("marketStatus"),button=$("marketForm").querySelector('button[type="submit"]");
  let uploadedPath="";
  try{
   if(!fbAuth?.currentUser||!fbStore)throw Error("ကြော်ငြာတင်ရန် Gmail Login ဝင်ပါ");

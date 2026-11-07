@@ -487,11 +487,14 @@ function go(id){
   alert("ဆိုင်သုံး POS ကို အသုံးပြုရန် Login နှင့် အသုံးပြုခွင့်လိုအပ်သည်။ AK Market၊ အတည်ပြုဆိုင်စာရင်းနှင့် ကြော်ငြာများကို အများပြည်သူ ကြည့်ရှုနိုင်သည်။");
   id="market";
  }
- const canPublish=!!(fbUser&&cloudReady);
- ["marketForm","akShopProfileForm","akAdForm"].forEach(fid=>{
+ const canPostFree=!!(fbUser&&fbStore);
+ const paidAdAccess=!!(fbUser&&cloudReady);
+ ["marketForm","akShopProfileForm"].forEach(fid=>{
   const form=document.getElementById(fid);
-  if(form)form.classList.toggle("hidden",!canPublish);
+  if(form)form.classList.toggle("hidden",!canPostFree);
  });
+ const sponsoredForm=document.getElementById("akAdForm");
+ if(sponsoredForm)sponsoredForm.classList.toggle("hidden",!paidAdAccess);
  document.querySelectorAll(".view").forEach(x=>x.classList.toggle("active",x.id===id));
  document.querySelectorAll("#nav button").forEach(b=>b.classList.toggle("active",b.dataset.view===id));
  const activeNav=document.querySelector('#nav button[data-view="'+id+'"]');

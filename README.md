@@ -42,7 +42,7 @@ Myanmar-first shop POS and public product market for hardware, electrical and ge
 
 ## Cloud deployment requirement
 
-The current Firebase GitHub Actions workflow deploys **Firebase Hosting only** when repository secret `FIREBASE_SERVICE_ACCOUNT_AK_ONLIN_SALES` is configured. It does not deploy Firestore Rules, Storage Rules or Cloud Functions. The service account currently lacks Rules API permission, and Cloud Functions deployment requires an eligible billing plan. A green Hosting workflow does not mean these other Firebase resources were updated. Do not enable billing or change Firebase permissions without the owner's approval. Follow [Firebase Deploy Setup](./FIREBASE-DEPLOY-SETUP-MY.md).
+The current Firebase GitHub Actions workflow deploys **Firebase Hosting and Firestore Rules**, and separately attempts to deploy **Storage Rules** when repository secret `FIREBASE_SERVICE_ACCOUNT_AK_ONLIN_SALES` is configured. Storage Rules deployment can fail if the bucket or required IAM permissions are unavailable. **Cloud Functions are not deployed**; trusted payment approval, account suspension, device management and cloud-backup callables therefore remain unavailable until an eligible Firebase billing plan and explicit owner approval are in place. A green workflow does not mean Cloud Functions are live. Do not enable billing or change Firebase permissions without the owner's approval. Follow [Firebase Deploy Setup](./FIREBASE-DEPLOY-SETUP-MY.md).
 
 ## Known limits — not yet complete
 

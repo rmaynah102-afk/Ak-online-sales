@@ -684,3 +684,137 @@ exports.listGlobalAnnouncements = functions.https.onCall(async (data, context) =
       createdAt: x.createdAt && x.createdAt.toDate ? x.createdAt.toDate().toISOString() : "" };
   }) };
 });
+
+
+// Scalable shop workspace API. All shop POS data is partitioned by shopId,
+// not by the staff member's personal UID. Client SDKs never write these paths.
+const WORKSPACE_ARRAYS = ["products","sales","purchases","people","payments","expenses"];
+const WORKSPACE_READ_ROLES = ["manager","cashier","employee"];
+function workspaceIdentity(context) {
+  if (!context.auth) throw new functions.https.HttpsError("unauthenticated","Login လိုအပ်သည်။");
+  const claims=context.auth.token||{};
+  const email=String(context.auth.token.email||"").trim().toLowerCase();
+  const isPlatformOwner=email===OWNER_EMAIL && context.auth.token.email_verified===true;
+  if (isPlatformOwner) return {shopId:context.auth.uid,role:"owner",isOwner:true};
+  if (claims.shopId && WORKSPACE_READ_ROLES.includes(String(claims.shopRole||""))) {
+    return {shopId:String(claims.shopId),role:String(claims.shopRole),isOwner:false};
+  }
+  throw new functions.https.HttpsError("permission-denied","ဆိုင် Owner သို့မဟုတ် ခွင့်ပြုထားသော ဝန်ထမ်းအကောင့် လိုအပ်သည်။");
+}
+async function verifyWorkspaceMember(context, identity) {
+  if (identity.isOwner) return;
+  const member=await db.collection("shopMembers").doc(context.auth.uid).get();
+  if (!member.exists || member.data().shopId!==identity.shopId ||
+      member.data().role!==identity.role) {
+    throw new functions.https.HttpsError("permission-denied","ဆိုင်ဝန်ထမ်းအဖွဲ့ဝင်ခွင့် မမှန်ပါ။");
+  }
+  const license=await db.collection("licenses").doc(identity.shopId).get();
+  const l=license.data()||{};
+  if (!license.exists || l.status!=="active" || !l.expiresAt ||
+      l.expiresAt.toMillis()<=Date.now()) {
+    throw new functions.https.HttpsError("permission-denied","ဆိုင် Subscription သက်တမ်း မရှိပါ။");
+  }
+}
+function workspaceCanWrite(role,key) {
+  if (role==="owner" || role==="manager") return true;
+  if (role==="cashier") return ["sales","payments"].includes(key);
+  if (role==="employee") return ["sales"].includes(key);
+  return false;
+}
+function workspaceCanRead(role,key) {
+  if (role==="owner" || role==="manager") return true;
+  if (role==="cashier" || role==="employee") return ["products","sales","people","payments"].includes(key);
+  return false;
+}
+function workspaceDocId(value,index) {
+  const raw=String(value && value.id || ("row_"+index));
+  return raw.replace(/[^A-Za-z0-9_-]/g,"_").slice(0,120) || ("row_"+index);
+}
+exports.loadShopWorkspace = functions.https.onCall(async (data,context)=>{
+  const identity=workspaceIdentity(context);
+  await verifyWorkspaceMember(context,identity);
+  const root=db.collection("shops").doc(identity.shopId).collection("workspace").doc("current");
+  const metaSnap=await root.get();
+  const meta=metaSnap.exists?metaSnap.data():{};
+  const pointers=meta.collections||{};
+  const result={shop:{},centerManagement:null};
+  for (const key of WORKSPACE_ARRAYS) {
+    if (!workspaceCanRead(identity.role,key)) continue;
+    const version=pointers[key];
+    if (!version) { result[key]=[]; continue; }
+    const snap=await db.collection("shops").doc(identity.shopId)
+      .collection("workspaceVersions").doc(version).collection(key).get();
+    result[key]=snap.docs.map(d=>d.data().record);
+  }
+  if (identity.role==="owner"||identity.role==="manager") {
+    result.shop=meta.shop||{};
+    result.centerManagement=meta.centerManagement||null;
+  }
+  return {ok:true,shopId:identity.shopId,role:identity.role,revision:Number(meta.revision||0),data:result};
+});
+
+exports.saveShopWorkspace = functions.https.onCall(async (data,context)=>{
+  const identity=workspaceIdentity(context);
+  await verifyWorkspaceMember(context,identity);
+  const input=data && data.data;
+  if (!input || typeof input!=="object" || Array.isArray(input)) {
+    throw new functions.https.HttpsError("invalid-argument","Workspace ဒေတာပုံစံ မမှန်ပါ။");
+  }
+  const root=db.collection("shops").doc(identity.shopId).collection("workspace").doc("current");
+  const before=await root.get();
+  const oldMeta=before.exists?before.data():{};
+  const expected=Number(data.expectedRevision||0);
+  const actual=Number(oldMeta.revision||0);
+  if (expected!==actual) throw new functions.https.HttpsError("aborted","ဆိုင်ဒေတာကို အခြားဖုန်းမှ ပြင်ထားသည်။ Cloud ပြန်ဖတ်ပြီးမှ ထပ်သိမ်းပါ။");
+  const pointers={...(oldMeta.collections||{})};
+  const changed={};
+  for (const key of WORKSPACE_ARRAYS) {
+    if (!workspaceCanWrite(identity.role,key) || !Object.prototype.hasOwnProperty.call(input,key)) continue;
+    if (!Array.isArray(input[key])) throw new functions.https.HttpsError("invalid-argument",key+" စာရင်းပုံစံ မမှန်ပါ။");
+    if (input[key].length>100000) throw new functions.https.HttpsError("resource-exhausted",key+" စာရင်းသည် လက်ရှိ request အရွယ်အစားထက် ကျော်နေသည်။");
+    changed[key]=input[key];
+  }
+  if (identity.role==="owner"||identity.role==="manager") {
+    if (input.shop && typeof input.shop==="object") changed.shop=input.shop;
+    if (input.centerManagement && typeof input.centerManagement==="object") changed.centerManagement=input.centerManagement;
+  }
+  if (!Object.keys(changed).length) throw new functions.https.HttpsError("permission-denied","ဤရာထူးတွင် ပြင်ဆင်သိမ်းဆည်းခွင့် မရှိပါ။");
+  const version=Date.now().toString(36)+"_"+crypto.randomBytes(5).toString("hex");
+  for (const key of WORKSPACE_ARRAYS) {
+    if (!Object.prototype.hasOwnProperty.call(changed,key)) continue;
+    const rows=changed[key];
+    const versionRef=db.collection("shops").doc(identity.shopId).collection("workspaceVersions").doc(version);
+    for (let start=0;start<rows.length;start+=400) {
+      const batch=db.batch();
+      rows.slice(start,start+400).forEach((record,index)=>{
+        const absolute=start+index;
+        if (!record || typeof record!=="object" || Array.isArray(record)) {
+          throw new functions.https.HttpsError("invalid-argument",key+" ထဲတွင် မှတ်တမ်းပုံစံမမှန်ပါ။");
+        }
+        const serialized=JSON.stringify(record);
+        if (Buffer.byteLength(serialized,"utf8")>850000) {
+          throw new functions.https.HttpsError("resource-exhausted",key+" ထဲရှိ မှတ်တမ်းတစ်ခု အရွယ်အစားကြီးလွန်းသည်။ ဓာတ်ပုံကို Cloud Storage သို့ သီးခြားသိမ်းရန်လိုသည်။");
+        }
+        const id=workspaceDocId(record,absolute);
+        batch.set(versionRef.collection(key).doc(id),{record,recordId:id});
+      });
+      await batch.commit();
+    }
+    pointers[key]=version;
+  }
+  const nextRevision=actual+1;
+  await db.runTransaction(async tx=>{
+    const latest=await tx.get(root);
+    const latestRevision=latest.exists?Number(latest.data().revision||0):0;
+    if (latestRevision!==actual) throw new functions.https.HttpsError("aborted","တစ်ချိန်တည်းတွင် အခြားစက်မှ ဒေတာသိမ်းနေသည်။ ထပ်ဖတ်ပြီး ပြန်လုပ်ပါ။");
+    const patch={revision:nextRevision,collections:pointers,updatedAt:admin.firestore.FieldValue.serverTimestamp(),updatedBy:context.auth.uid};
+    if (changed.shop) patch.shop=changed.shop;
+    if (changed.centerManagement) patch.centerManagement=changed.centerManagement;
+    tx.set(root,patch,{merge:true});
+  });
+  await db.collection("shops").doc(identity.shopId).collection("auditLogs").add({
+    action:"workspace_saved",revision:nextRevision,role:identity.role,actorUid:context.auth.uid,
+    changedCollections:Object.keys(changed),createdAt:admin.firestore.FieldValue.serverTimestamp()
+  });
+  return {ok:true,revision:nextRevision,changedCollections:Object.keys(changed)};
+});

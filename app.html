@@ -924,12 +924,14 @@ async function cloudSave(){
   if(payloadBytes>700000)throw Error("Cloud ဒေတာ 700KB ကျော်နေပါသည်။ ယခင် Cloud မှတ်တမ်းကို မအစားထိုးဘဲ ထိန်းထားပါသည်။ ဓာတ်ပုံများကို လျှော့ပြီး Backup သိမ်းပါ။ အချက်အလက်များစွာအတွက် Database အပိုင်းခွဲစနစ် အဆင့်မြှင့်ရန်လိုသည်။");
   const expectedRevision=akCloudRevision;
   const ref=fbStore.collection("users").doc(uid).collection("private").doc("appData");
+  const centerRef=fbStore.collection("users").doc(uid).collection("private").doc("centerManagement");
   const backups=fbStore.collection("users").doc(uid).collection("backups");
   const backupRef=backups.doc();
   akCloudSaveInFlight=true;
   let committedRevision=expectedRevision,createdBackup=false;
   await fbStore.runTransaction(async tx=>{
    const snap=await tx.get(ref);
+   const centerSnap=await tx.get(centerRef);
    const currentData=snap.exists?(snap.data()||{}):{};
    const current=Number.isSafeInteger(currentData.revision)?currentData.revision:0;
    if(current!==expectedRevision){
@@ -938,7 +940,7 @@ async function cloudSave(){
     throw conflict;
    }
    if(snap.exists&&currentData.data){
-    const previous={data:currentData.data,centerManagement:null};
+    const previous={data:currentData.data,centerManagement:centerSnap.exists?(centerSnap.data().center||null):null};
     const previousBytes=new TextEncoder().encode(JSON.stringify(previous)).length;
     if(previousBytes>700000)throw Error("Cloud မှတ်တမ်းဟောင်း 700KB ကျော်နေသောကြောင့် အလိုအလျောက် Backup မလုပ်နိုင်ပါ။ Cloud ဒေတာကို မပြောင်းဘဲ ထိန်းထားပါသည်။ JSON Backup ထုတ်ယူပါ။");
     tx.set(backupRef,{data:currentData.data,centerManagement:null,sizeBytes:previousBytes,backupType:"automatic-before-save",sourceRevision:current,createdAt:firebase.firestore.FieldValue.serverTimestamp(),createdBy:uid});

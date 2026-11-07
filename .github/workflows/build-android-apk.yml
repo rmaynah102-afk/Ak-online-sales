@@ -105,6 +105,22 @@ jobs:
               aps += "\n\napply plugin: 'com.google.gms.google-services'\n"
               app.write_text(aps)
           print("Firebase Android config and Google Services Gradle plugin configured")
+          variables = Path("android/variables.gradle")
+          if not variables.exists():
+              raise SystemExit("Capacitor variables.gradle is missing")
+          vs = variables.read_text()
+          required = {
+              "rgcfaIncludeGoogle": "true",
+              "androidxCredentialsVersion": "'1.3.0'",
+          }
+          for key, value in required.items():
+              if not re.search(r"\\b" + re.escape(key) + r"\\s*=", vs):
+                  match = re.search(r"(ext\\s*\\{)", vs)
+                  if not match:
+                      raise SystemExit("variables.gradle ext block not found")
+                  vs = vs[:match.end()] + "\\n    " + key + " = " + value + vs[match.end():]
+          variables.write_text(vs)
+          print("Capacitor Firebase Google Sign-In Android dependencies enabled")
           PY
       - name: Install AK native Bluetooth and Wi-Fi printer bridge
         run: node scripts/install-native-printer.js

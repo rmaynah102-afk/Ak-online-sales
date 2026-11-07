@@ -2,10 +2,49 @@
 
 const fs = require('fs');
 const path = require('path');
+const vm = require('vm');
 
 const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 const functionsSource = fs.readFileSync(path.join(__dirname, '..', 'functions', 'index.js'), 'utf8');
 const rules = fs.readFileSync(path.join(__dirname, '..', 'firestore.rules'), 'utf8');
+const printerSource = fs.readFileSync(path.join(__dirname, '..', 'native', 'android', 'AkPrinterPlugin.java'), 'utf8');
+const firebaseConfigSource = fs.readFileSync(path.join(__dirname, '..', 'firebase-config.js'), 'utf8');
+if (!html.includes('<script src="./firebase-config.js"></script>')) {
+  console.error('Firebase public client config must be loaded before the app starts.');
+  process.exitCode = 1;
+}
+try {
+  const sandbox = { window: {} };
+  new vm.Script(firebaseConfigSource, { filename: 'firebase-config.js' }).runInNewContext(sandbox);
+  const config = sandbox.window.AK_FIREBASE_PUBLIC_CONFIG || {};
+  for (const key of ['apiKey', 'authDomain', 'projectId', 'storageBucket', 'messagingSenderId', 'appId']) {
+    if (typeof config[key] !== 'string' || !config[key].trim()) {
+      console.error('Firebase Web App config is missing:', key);
+      process.exitCode = 1;
+    }
+  }
+  if (config.projectId !== 'ak-onlin-sales') {
+    console.error('Firebase Web App config projectId does not match ak-onlin-sales.');
+    process.exitCode = 1;
+  }
+} catch (error) {
+  console.error('Firebase Web App config JavaScript is invalid:', error.message);
+  process.exitCode = 1;
+}
+for (const [label, marker] of [
+  ['Bluetooth Classic SPP socket', 'createRfcommSocketToServiceRecord'],
+  ['Wi-Fi RAW TCP printer', 'printWifi(PluginCall call)'],
+  ['Local network printer address restriction', 'isSiteLocalAddress'],
+  ['ESC/POS raster receipt renderer', 'function akBuildReceiptEscPos'],
+  ['Direct printer send bridge', 'window.akPrintRawToDefault']
+]) {
+  const source = label.includes('Bluetooth') || label.includes('Wi-Fi') || label.includes('network') ? printerSource : html;
+  if (!source.includes(marker)) {
+    console.error('Native printer integration check failed:', label);
+    process.exitCode = 1;
+  }
+}
+
 
 const clientCallables = new Set(
   [...html.matchAll(/httpsCallable\(\s*['"]([A-Za-z0-9_]+)['"]\s*\)/g)].map(match => match[1])

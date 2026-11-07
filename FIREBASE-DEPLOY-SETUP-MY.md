@@ -1,58 +1,43 @@
-# AK Sale Software — Firebase Deployment Setup (မြန်မာ)
+# AK Sale Software — Firebase Setup & Deployment (မြန်မာ)
 
-ဤစာတမ်းသည် GitHub Actions မှ Firebase Hosting, Firestore Rules, Storage Rules နှင့် Cloud Functions ကို deploy လုပ်ရန်အတွက်သာ ဖြစ်သည်။
+## လက်ရှိအခြေအနေ
 
-> **အရေးကြီး — Billing:** AK Sale ၏ Payment Approval, Device Control, Cloud Backup နှင့် အခြား callable backend များသည် Cloud Functions ကို အသုံးပြုသည်။ Firebase Cloud Functions deploy လုပ်ရန် project ကို Blaze (pay-as-you-go) plan သို့ ပြောင်းပြီး Cloud Billing account ချိတ်ရန် လိုအပ်သည်။ Free quota ရှိသော်လည်း quota ကျော်လွန်ခြင်းနှင့် deploy အတွက် အခကြေးငွေ ဖြစ်နိုင်သည်။ ပိုင်ရှင်၏ ခွင့်ပြုချက်မရှိဘဲ Billing မဖွင့်ပါနှင့်။ Budget alert နှင့် usage limit များကို အရင်စီစဉ်ပါ။
+- AK Sale ၏ Web App Firebase client config ကို `firebase-config.js` မှ အလိုအလျောက်ဖတ်မည်။ ဤ config သည် Web App အတွက် public client config ဖြစ်ပြီး Service Account private key မဟုတ်ပါ။
+- GitHub Actions ၏ `Deploy AK Sale to Firebase Resources` workflow သည် လက်ရှိတွင် **Firebase Hosting ကိုသာ** deploy လုပ်သည်။
+- `firestore.rules` နှင့် `storage.rules` ကို Repository ထဲတွင် ထားရှိသော်လည်း လက်ရှိ workflow က Live Firebase သို့ deploy မလုပ်ပါ။
+- `functions/index.js` ထဲရှိ callable Cloud Functions များကိုလည်း လက်ရှိ workflow က deploy မလုပ်ပါ။
 
-## လိုအပ်သော Secret
+## Firebase အပြည့်အစုံ ချိတ်ရန် လိုအပ်နေသောအရာများ
 
-GitHub repository `rmaynah102-afk/Ak-online-sales` ထဲတွင် အောက်ပါ Repository Secret တစ်ခုကို ထည့်ရမည်။
+1. **Firestore / Storage Rules:** GitHub Actions Service Account တွင် Firebase Rules API deploy permission မရှိသေးပါ။ Rules Admin ဆိုင်ရာ IAM permission ကို Project Owner က စစ်ဆေးပြီးမှ deploy လုပ်နိုင်မည်။
+2. **Cloud Functions:** AK Sale ၏ Payment Approval, Device Control, Cloud Backup စသည့် Server Functions များ deploy လုပ်ရန် Firebase Blaze plan နှင့် Google Cloud Billing လိုအပ်နိုင်သည်။ Billing ကို ပိုင်ရှင်၏ ခွင့်ပြုချက်မရှိဘဲ မဖွင့်ရ။
+3. **Service Account Secret:** GitHub Repository Settings → Secrets and variables → Actions ထဲရှိ `FIREBASE_SERVICE_ACCOUNT_AK_ONLIN_SALES` ကို အသုံးပြုသည်။ Secret value ကို ChatGPT၊ commit သို့မဟုတ် public file ထဲ မထည့်ရ။
 
-- **Name:** `FIREBASE_SERVICE_ACCOUNT_AK_ONLIN_SALES`
-- **Value:** Firebase project `ak-onlin-sales` အတွက် ခွင့်ပြုချက်ရှိသော Google Cloud Service Account key JSON ဖိုင်၏ အကြောင်းအရာ အပြည့်အစုံ။
+## Deploy အခြေအနေကို စစ်ဆေးရန်
 
-## Service Account key ဖန်တီးခြင်း
-
-1. Google Cloud Console ကိုဖွင့်ပြီး project **ak-onlin-sales** ကိုရွေးပါ။
-2. **IAM & Admin → Service Accounts** သို့ဝင်ပါ။
-3. Deployment အတွက် သီးသန့် Service Account တစ်ခုဖန်တီးခြင်းကို ဦးစားပေးပါ။ ရှိပြီးသား account ကို သုံးမည်ဆိုလျှင် project နှင့် deployment ခွင့်ပြုချက်များကို အရင်စစ်ပါ။
-4. Hosting, Firestore/Storage Rules နှင့် Cloud Functions deploy လုပ်ရန် လိုအပ်သည့် IAM roles ကို အနည်းဆုံးလိုအပ်သည့်အတိုင်းသာ ပေးပါ။ ပုံမှန်အားဖြင့် Firebase Admin, Cloud Functions Admin, Service Account User, Cloud Build ဆိုင်ရာ deploy permission နှင့် Service Usage ဆိုင်ရာ permission များ လိုနိုင်သည်။ Project ပေါ်မူတည်၍ Cloud Run/Artifact Registry permission များလည်း လိုနိုင်သည်။
-5. Service Account → **Keys → Add key → Create new key → JSON** ကိုရွေးပြီး key ကို ကိုယ်ပိုင်ဖုန်း/ကွန်ပျူတာထဲသို့သာ သိမ်းပါ။
-
-## GitHub ထဲ Secret ထည့်ခြင်း (ဖုန်း Browser မှ)
-
-1. GitHub တွင် `rmaynah102-afk/Ak-online-sales` repository ကိုဖွင့်ပါ။
-2. **Settings → Secrets and variables → Actions** ကိုဖွင့်ပါ။
-3. **New repository secret** ကိုနှိပ်ပါ။
-4. Name ကို အတိအကျ `FIREBASE_SERVICE_ACCOUNT_AK_ONLIN_SALES` ဟုထည့်ပါ။
-5. Value ထဲတွင် JSON ဖိုင်ကို text editor ဖြင့်ဖွင့်ပြီး အကြောင်းအရာအားလုံးကို paste လုပ်ပါ။ JSON ၏ အစနှင့်အဆုံး braces များပါဝင်ရမည်။
-6. **Add secret** ကိုနှိပ်ပါ။
-
-## Deploy အခြေအနေ စစ်ဆေးခြင်း
-
-- Repository ၏ **Actions** tab ကိုဖွင့်ပါ။
-- **Deploy AK Sale to Firebase Resources** workflow ကိုရွေးပါ။
-- နောက်ဆုံး run ၏ **Check Firebase service account secret** နှင့် **Validate config and deploy Hosting, Firestore, Storage and Functions** အဆင့်များကိုကြည့်ပါ။
-- Secret မရှိပါက workflow summary တွင် **Firebase deployment not performed** ဟုပြမည်။ Workflow အစိမ်းရောင်ဖြစ်ခြင်းတစ်ခုတည်းကို deploy အောင်မြင်သည်ဟု မယူဆပါနှင့်။
-- Deploy step အမှန်တကယ် run ပြီး success ဖြစ်မှသာ Firebase resources တင်ပြီးဖြစ်သည်။
+- GitHub → Actions → Deploy AK Sale to Firebase Resources ကိုဖွင့်ပါ။
+- Workflow summary ထဲတွင် Hosting deploy step အောင်မြင်ကြောင်းကိုသာ အတည်ပြုပါ။
+- Workflow အစိမ်းရောင်ဖြစ်ရုံဖြင့် Firestore Rules၊ Storage Rules သို့မဟုတ် Cloud Functions deploy ပြီးပြီဟု မယူဆပါနှင့်။
+- Live Firebase Rules နှင့် Functions အခြေအနေကို Firebase Console မှ Project Owner က သီးခြားစစ်ဆေးရန် လိုအပ်သည်။
 
 ## လုံခြုံရေး
 
-- Service Account JSON, private key, password, OTP တို့ကို ChatGPT chat, GitHub repository file, issue, commit, README သို့ မတင်ပါနှင့်။
-- JSON ကို **Repository Secret** ထဲတွင်သာ ထည့်ပါ။
-- Key ပေါက်ကြားပါက Google Cloud Console တွင် ချက်ချင်း revoke/delete လုပ်ပြီး key အသစ်ထုတ်ပါ။
-- Service Account ကို မလိုအပ်သော Owner/Editor အခွင့်အရေး မပေးပါနှင့်။
+- Firebase Web App config သည် browser/app ထဲတွင် အသုံးပြုရန် public client configuration ဖြစ်သည်။ လုံခြုံရေးကို Firestore/Storage Rules၊ Authentication နှင့် API key restrictions တို့ဖြင့် ကာကွယ်ရမည်။
+- Service Account JSON၊ private key၊ keystore၊ password နှင့် OTP တို့ကို Repository ထဲ မတင်ရ။
+- Billing plan၊ IAM permissions သို့မဟုတ် Firebase Console settings များကို Project Owner ခွင့်ပြုချက်မရှိဘဲ မပြောင်းရ။
 
 ---
 
-# AK Sale Software — Firebase Deployment Setup (English)
+# AK Sale Software — Firebase Setup & Deployment (English)
 
-The GitHub Actions workflow deploys Firebase Hosting, Firestore Rules, Storage Rules and Cloud Functions for project `ak-onlin-sales`. Cloud Functions deployment requires the Firebase Blaze pay-as-you-go plan with a linked Cloud Billing account. Free usage quotas exist, but charges may apply above them and deployment can incur resource costs. Do not enable billing without the owner's approval; configure budget alerts first.
+The Firebase Web App client configuration is loaded from `firebase-config.js`. This is public browser configuration, not a service-account private key.
 
-Create a repository Actions secret named exactly `FIREBASE_SERVICE_ACCOUNT_AK_ONLIN_SALES`. Its value must be the complete JSON key of a Google Cloud service account authorized to deploy these resources.
+The current GitHub Actions workflow deploys **Firebase Hosting only**. It does not deploy Firestore Rules, Storage Rules or Cloud Functions.
 
-Prefer a dedicated deployment service account with least-privilege IAM roles. Depending on enabled Firebase/Google Cloud services, deployment may require Firebase Admin, Cloud Functions Admin, Service Account User, Cloud Build, Service Usage, and Cloud Run/Artifact Registry permissions.
+Firestore and Storage Rules are present in the repository but are not deployed by the current workflow because the deployment service account lacks Firebase Rules API permission. The project owner must review and grant the minimum required IAM permission before deploying rules.
 
-In GitHub, open **Settings → Secrets and variables → Actions → New repository secret**, enter the exact name above, paste the complete JSON file contents as the value, and save.
+Callable Cloud Functions in `functions/index.js` are not deployed by the current workflow. Deployment may require Firebase Blaze and a linked Google Cloud Billing account. Do not enable billing without the owner's explicit approval.
 
-Never commit or share the JSON key in chat, repository files, issues, or logs. Verify that the Actions run actually executes the deploy step; a successful workflow with skipped deployment steps does not mean Firebase was deployed.
+The workflow uses the GitHub Actions secret `FIREBASE_SERVICE_ACCOUNT_AK_ONLIN_SALES`. Never commit or share service-account JSON, private keys, keystores, passwords or OTPs.
+
+A green workflow confirms Hosting only. Verify Firestore Rules, Storage Rules and Functions separately in Firebase Console before relying on cloud payments, backups or device management.

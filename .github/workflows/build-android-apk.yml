@@ -12,6 +12,7 @@ on:
     branches: [main]
     paths:
       - 'index.html'
+      - 'app.html'
       - 'firebase-config.js'
       - 'sw.js'
       - 'manifest.webmanifest'

@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "1046694954841-cl7m7o3d1euqgug4t16pac6btrpo7ks3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.ak.hardware.sales",
+            "certificate_hash": "381682d46f6d6f5a9e0d3ead9159f363c03c2b3b"
+          }
+        },
+        {
           "client_id": "1046694954841-qb0v8hgnmuo44sapj3o1dvjf6h11b6bv.apps.googleusercontent.com",
           "client_type": 3
         }

@@ -30,11 +30,11 @@ jobs:
           if not email or not email.endswith(".iam.gserviceaccount.com"):
               raise SystemExit("Service-account client_email is missing or invalid")
           with open(os.environ["GITHUB_OUTPUT"],"a",encoding="utf-8") as f:
-              f.write("service_account_email="+email+"\\n")
+              f.write("service_account_email="+email+"\n")
           with open(os.environ["GITHUB_STEP_SUMMARY"],"a",encoding="utf-8") as f:
-              f.write("### Firebase deployment\\n")
-              f.write("Deployment service account: "+email+"\\n\\n")
-              f.write("Owner confirmed Firebase Blaze billing. Private key is never printed.\\n")
+              f.write("### Firebase deployment\n")
+              f.write("Deployment service account: "+email+"\n\n")
+              f.write("Owner confirmed Firebase Blaze billing. Private key is never printed.\n")
           PY
           else
             echo "available=false" >> "$GITHUB_OUTPUT"

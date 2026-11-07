@@ -541,7 +541,7 @@ $("sPayType").addEventListener("change",()=>{let total=+$("sQty").value*+$("sPri
 function addSaleLine(){const root=$("saleLines"),first=root.querySelector(".sale-line"),row=first.cloneNode(true);row.querySelectorAll("[id]").forEach(x=>x.removeAttribute("id"));row.querySelectorAll("input").forEach(x=>x.value=x.classList.contains("sale-qty")?"1":"0");row.querySelectorAll("select").forEach(x=>x.selectedIndex=0);root.appendChild(row)}
 function removeSaleLine(btn){const root=$("saleLines"),rows=root.querySelectorAll(".sale-line");if(rows.length<=1){alert("အနည်းဆုံး ပစ္စည်းတစ်မျိုး လိုအပ်သည်။");return}btn.closest(".sale-line").remove();const first=root.querySelector(".sale-line");if(!$("sProduct")){first.querySelector(".sale-product").id="sProduct";first.querySelector(".sale-type").id="sType";first.querySelector(".sale-qty").id="sQty";first.querySelector(".sale-price").id="sPrice"}}
 $("saleForm").addEventListener("submit",e=>{e.preventDefault();const lines=[];for(const row of $("saleLines").querySelectorAll(".sale-line")){const productId=row.querySelector(".sale-product").value,p=db.products.find(x=>x.id===productId),qty=Number(row.querySelector(".sale-qty").value),price=Number(row.querySelector(".sale-price").value);if(!p)return alert("ပစ္စည်းအရင်ထည့်ပါ");if(!Number.isFinite(qty)||qty<=0||qty>Number(p.stock))return alert(p.name+" လက်ကျန်မလုံလောက်ပါ");if(!Number.isFinite(price)||price<0)return alert("ရောင်းဈေး မှန်ကန်စွာထည့်ပါ");lines.push({productId:p.id,productName:p.name,qty,price,total:qty*price,cost:qty*Number(p.cost||0)})}if(!lines.length)return alert("ပစ္စည်းထည့်ပါ");const quantities={};for(const line of lines)quantities[line.productId]=(quantities[line.productId]||0)+line.qty;for(const [id,qty] of Object.entries(quantities)){const p=db.products.find(x=>x.id===id);if(!p||qty>Number(p.stock))return alert((p?.name||"ပစ္စည်း")+" စုစုပေါင်းလက်ကျန် မလုံလောက်ပါ");}const total=lines.reduce((a,x)=>a+x.total,0),cost=lines.reduce((a,x)=>a+x.cost,0),paid=$("sPayType").value==="full"?total:($("sPayType").value==="credit"?0:Number($("sPaid").value));if(!Number.isFinite(paid)||paid<0||paid>total)return alert("ပေးငွေမှန်ကန်စွာထည့်ပါ");for(const line of lines){const p=db.products.find(x=>x.id===line.productId);p.stock-=line.qty}const first=lines[0];db.sales.unshift({id:uid(),date:dateNow(),invoice:"AK-"+Date.now().toString().slice(-8),lines,productId:first.productId,productName:lines.map(x=>x.productName).join(", "),qty:lines.reduce((a,x)=>a+x.qty,0),price:first.price,total,cost,customer:$("sCustomer").value.trim(),paid,due:total-paid,note:$("sNote").value.trim()});persist();$("saleForm").reset();$("sQty").value=1;$("sPaid").value=0;const root=$("saleLines");while(root.querySelectorAll(".sale-line").length>1)root.lastElementChild.remove();alert("အရောင်းဘောင်ချာ သိမ်းပြီးပါပြီ")});
-function renderSales(){$("saleRows").innerHTML=db.sales.map(s=>`<tr><td>${new Date(s.date).toLocaleString()}</td><td>${esc(s.invoice)}</td><td>${esc(s.customer)}</td><td>${money(s.total)}</td><td>${money(s.paid)}</td><td>${money(s.due)}</td><td><button onclick="receipt('${s.id}')">ဘောင်ချာ</button></td></tr>`).join("")}
+function renderSales(){$("saleRows").innerHTML=db.sales.map(s=>`<tr><td>${new Date(s.date).toLocaleString()}</td><td>${esc(s.invoice)}</td><td>${esc(s.customer)}</td><td>${money(s.total)}</td><td>${money(s.paid)}</td><td>${money(s.due)}</td><td><div class="actions"><button onclick="receipt('${s.id}')">ဘောင်ချာ Print</button><button type="button" class="alt" onclick="shareReceiptImage('${s.id}')">ဘောင်ချာပုံ Viber ပို့</button></div></td></tr>`).join("")}
 function akCreatePrintWindow(){try{const frame=document.createElement("iframe");frame.setAttribute("aria-hidden","true");frame.style.cssText="position:fixed;right:0;bottom:0;width:1px;height:1px;border:0;opacity:0";document.body.appendChild(frame);const win=frame.contentWindow;if(!win)return null;return {document:win.document,print:()=>{try{win.focus();win.print()}catch(e){alert("ဒီ Android WebView မှာ Print Service မရသေးပါ။ Chrome သို့မဟုတ် Android Print Service ကို သုံးပါ။")}}}}catch(e){return null}}
 function akBuildReceiptEscPos(s,paper="80mm"){
  const width=paper==="58mm"?384:576,pad=18,contentWidth=width-pad*2;
@@ -572,7 +572,7 @@ function akBuildReceiptEscPos(s,paper="80mm"){
  const image=ctx.getImageData(0,0,width,height),bytesPerRow=Math.ceil(width/8),raster=new Uint8Array(bytesPerRow*height);
  for(let y=0;y<height;y++)for(let x=0;x<width;x++){const at=(y*width+x)*4,gray=(image.data[at]*299+image.data[at+1]*587+image.data[at+2]*114)/1000;if(gray<175)raster[y*bytesPerRow+(x>>3)]|=0x80>>(x&7)}
  const header=Uint8Array.from([27,64,29,118,48,0,bytesPerRow&255,(bytesPerRow>>8)&255,height&255,(height>>8)&255]);
- const tail=Uint8Array.from([10,10,10,29,86,0]);const out=new Uint8Array(header.length+raster.length+tail.length);out.set(header);out.set(raster,header.length);out.set(tail,header.length+raster.length);return out;
+ const tail=Uint8Array.from([10,10,10,29,86,0]);const out=new Uint8Array(header.length+raster.length+tail.length);out.set(header);out.set(raster,header.length);out.set(tail,header.length+raster.length);window.akLastReceiptCanvas=canvas;return out;
 }
 async function akPrintReceiptDirect(s,paper){
  const printer=window.akGetDefaultPrinter?.();if(!printer)throw Error("Default Printer မရှိပါ။");
@@ -616,6 +616,33 @@ function receipt(id,paper="80mm"){
  <script>window.onload=()=>setTimeout(()=>window.print(),350);<\/script>
 </body></html>`);
  w.document.close();
+}
+async function shareReceiptImage(id){
+ if(!akRequirePrint())return;
+ const s=db.sales.find(x=>x.id===id);if(!s)return;
+ try{
+  const paper=(localStorage.getItem("ak_sale_printer_paper")||"80mm")==="58mm"?"58mm":"80mm";
+  akBuildReceiptEscPos(s,paper);
+  const canvas=window.akLastReceiptCanvas;if(!canvas)throw Error("ဘောင်ချာပုံ မဖန်တီးနိုင်ပါ");
+  const blob=await new Promise(resolve=>canvas.toBlob(resolve,"image/png"));
+  if(!blob)throw Error("PNG ပုံပြောင်းမရပါ");
+  const bytes=new Uint8Array(await blob.arrayBuffer());let binary="";
+  for(let i=0;i<bytes.length;i+=0x8000)binary+=String.fromCharCode(...bytes.subarray(i,Math.min(i+0x8000,bytes.length)));
+  const data=btoa(binary),fileName=(String(s.invoice||"AK-Receipt").replace(/[^A-Za-z0-9._-]/g,"_")+".png");
+  const api=window.Capacitor?.Plugins?.AkPrinter;
+  if(api?.shareReceiptImage&&window.Capacitor?.isNativePlatform?.()){
+   await api.shareReceiptImage({data,fileName});
+   return;
+  }
+  const file=new File([blob],fileName,{type:"image/png"});
+  if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
+   await navigator.share({files:[file]});
+   return;
+  }
+  const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=fileName;a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),2000);
+  alert("ဘောင်ချာ PNG ပုံကို သိမ်းပြီးပါပြီ။ Viber ထဲမှာ ပုံအဖြစ် ရွေးပြီး ပို့နိုင်ပါပြီ။");
+ }catch(e){if(e?.name!=="AbortError")alert("ဘောင်ချာပုံ မျှဝေနိုင်ပါ: "+(e?.message||e))}
 }
 function printSalesLedger(){
  if(!akRequirePrint())return;

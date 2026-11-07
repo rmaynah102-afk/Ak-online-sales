@@ -33,6 +33,19 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Automatic version snapshots are private to the owning shop account.
+    match /users/{userId}/backups/{backupId} {
+      allow read: if hasActiveLicense(userId);
+      allow create: if hasActiveLicense(userId)
+        && request.resource.data.createdBy == userId
+        && request.resource.data.data is map
+        && request.resource.data.sizeBytes is int
+        && request.resource.data.sizeBytes > 0
+        && request.resource.data.sizeBytes <= 700000;
+      allow delete: if hasActiveLicense(userId);
+      allow update: if false;
+    }
+
     match /users/{userId}/private/{document=**} {
       allow read, write: if hasActiveLicense(userId);
     }

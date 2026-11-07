@@ -208,7 +208,7 @@ exports.createPaymentRequest = functions.https.onCall(async (data, context) => {
   const reference = String(data.reference || "").trim();
   const normalizedReference = normalizePaymentReference(reference);
   const screenshotUrl = String(data.screenshotUrl || "");
-  const expectedAmounts = { 30: 15000, 90: 40000, 180: 75000, 365: 140000 };
+  const expectedAmounts = { 30: 30000, 90: 90000, 180: 180000, 365: 360000 };
   if (!Object.prototype.hasOwnProperty.call(expectedAmounts, days) ||
       amount !== expectedAmounts[days] || method !== "KBZPay" ||
       normalizedReference.length < 3 || normalizedReference.length > 100 ||
@@ -305,7 +305,7 @@ exports.approveSubscription = functions.https.onCall(async (data, context) => {
     const days = Number(payment.days);
     const reference = String(payment.reference || "").trim();
     const normalizedReference = normalizePaymentReference(reference);
-    const expectedAmounts = { 30: 15000, 90: 40000, 180: 75000, 365: 140000 };
+    const expectedAmounts = { 30: 30000, 90: 90000, 180: 180000, 365: 360000 };
     if (payment.status !== "pending") {
       throw new functions.https.HttpsError("failed-precondition", "ဤတောင်းဆိုချက်ကို ယခင်က စီမံပြီးပါပြီ။");
     }

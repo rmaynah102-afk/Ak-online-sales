@@ -78,7 +78,7 @@ if (!shopSubmissionRule || !/allow create, update: if hasActiveLicense\(ownerUid
 }
 
 const staffRule = rules.match(/match \/shopMembers\/\{memberUid\} \{([\s\S]*?)\n\s*\}/);
- || !/allow write: if false/.test(staffRule[1])) {
+if (!staffRule || !/allow write: if false/.test(staffRule[1])) {
   console.error('Staff membership documents must only be writable by trusted Cloud Functions.');
   process.exitCode = 1;
 }

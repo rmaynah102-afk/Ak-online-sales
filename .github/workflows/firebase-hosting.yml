@@ -81,7 +81,7 @@ jobs:
             echo "Hosting deployment completed successfully."
           } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Attempt Firestore and Storage Rules deployment
+      - name: Attempt Firestore Rules deployment
         id: rules
         if: steps.auth.outputs.available == 'true'
         continue-on-error: true
@@ -94,13 +94,34 @@ jobs:
           trap 'rm -f "$KEY_FILE"' EXIT
           printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$KEY_FILE"
           export GOOGLE_APPLICATION_CREDENTIALS="$KEY_FILE"
-          firebase deploy --only firestore:rules,storage --project ak-onlin-sales --non-interactive
-          echo "Firestore and Storage Rules deployment succeeded." >> "$GITHUB_STEP_SUMMARY"
+          firebase deploy --only firestore:rules --project ak-onlin-sales --non-interactive
+          echo "Firestore Rules deployment succeeded." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Record Rules deployment limitation
         if: steps.auth.outputs.available == 'true' && steps.rules.outcome == 'failure'
         run: |
-          echo "Firestore/Storage Rules were not deployed. Grant the deployment service account the minimum Firebase Rules and Storage permissions, then rerun." >> "$GITHUB_STEP_SUMMARY"
+          echo "Firestore Rules were not deployed. Grant the deployment service account Firebase Rules API permissions, then rerun." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Attempt Storage Rules deployment
+        id: storage_rules
+        if: steps.auth.outputs.available == 'true'
+        continue-on-error: true
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_AK_ONLIN_SALES }}
+        run: |
+          set -euo pipefail
+          umask 077
+          KEY_FILE="$RUNNER_TEMP/firebase-service-account-storage.json"
+          trap 'rm -f "$KEY_FILE"' EXIT
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$KEY_FILE"
+          export GOOGLE_APPLICATION_CREDENTIALS="$KEY_FILE"
+          firebase deploy --only storage --project ak-onlin-sales --non-interactive
+          echo "Storage Rules deployment succeeded." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Record Storage deployment limitation
+        if: steps.auth.outputs.available == 'true' && steps.storage_rules.outcome == 'failure'
+        run: |
+          echo "Storage Rules were not deployed. Initialize the Firebase Storage bucket and grant the deployment service account the minimum Storage permissions, then rerun." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Deploy Cloud Functions only after owner billing opt-in
         if: steps.auth.outputs.available == 'true' && vars.AK_ENABLE_FUNCTIONS_DEPLOY == 'true'

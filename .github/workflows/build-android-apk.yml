@@ -95,14 +95,14 @@ jobs:
               raise SystemExit("Generated Android Gradle files are missing")
           rs = root.read_text()
           if "com.google.gms:google-services" not in rs:
-              match = re.search(r'(dependencies\\s*\\{)', rs)
+              match = re.search(r'(dependencies\s*\{)', rs)
               if not match:
                   raise SystemExit("Root Gradle dependencies block not found")
-              rs = rs[:match.end()] + "\\n        classpath 'com.google.gms:google-services:4.4.4'" + rs[match.end():]
+              rs = rs[:match.end()] + "\n        classpath 'com.google.gms:google-services:4.4.4'" + rs[match.end():]
               root.write_text(rs)
           aps = app.read_text()
           if "com.google.gms.google-services" not in aps:
-              aps += "\\n\\napply plugin: 'com.google.gms.google-services'\\n"
+              aps += "\n\napply plugin: 'com.google.gms.google-services'\n"
               app.write_text(aps)
           print("Firebase Android config and Google Services Gradle plugin configured")
           PY

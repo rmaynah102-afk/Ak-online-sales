@@ -6,8 +6,13 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
+import android.content.ClipData;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Build;
 import android.util.Base64;
+
+import androidx.core.content.FileProvider;
 
 import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
@@ -20,6 +25,8 @@ import com.getcapacitor.annotation.Permission;
 import com.getcapacitor.annotation.PermissionCallback;
 
 import java.io.IOException;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -179,6 +186,71 @@ public class AkPrinterPlugin extends Plugin {
                 call.reject("Wi-Fi Printer သို့ ပို့မရပါ: " + e.getMessage());
             }
         }).start();
+    }
+
+    @PluginMethod
+    public void shareReceiptImage(PluginCall call) {
+        String encoded = call.getString("data", "");
+        String requestedName = call.getString("fileName", "AK-Receipt.png");
+        if (encoded.isEmpty()) {
+            call.reject("ဘောင်ချာပုံ Data မရှိပါ။");
+            return;
+        }
+        final byte[] image;
+        try {
+            image = Base64.decode(encoded, Base64.DEFAULT);
+            if (image.length == 0 || image.length > 5 * 1024 * 1024) {
+                call.reject("ဘောင်ချာပုံ အရွယ်အစား မမှန်ပါ။ 5MB အောက်ထားပါ။");
+                return;
+            }
+        } catch (IllegalArgumentException e) {
+            call.reject("ဘောင်ချာပုံ Base64 မမှန်ပါ။");
+            return;
+        }
+
+        String safeName = requestedName.replaceAll("[^A-Za-z0-9._-]", "_");
+        if (!safeName.toLowerCase().endsWith(".png")) safeName += ".png";
+        final String finalName = safeName;
+        try {
+            File directory = new File(getContext().getCacheDir(), "ak-receipt-share");
+            if (!directory.exists() && !directory.mkdirs()) {
+                throw new IOException("ယာယီပုံသိမ်းရန် Folder မဖန်တီးနိုင်ပါ။");
+            }
+            File imageFile = new File(directory, finalName);
+            try (FileOutputStream output = new FileOutputStream(imageFile)) {
+                output.write(image);
+                output.flush();
+            }
+            Uri imageUri = FileProvider.getUriForFile(
+                getContext(),
+                getContext().getPackageName() + ".fileprovider",
+                imageFile
+            );
+            Intent sendIntent = new Intent(Intent.ACTION_SEND);
+            sendIntent.setType("image/png");
+            sendIntent.putExtra(Intent.EXTRA_STREAM, imageUri);
+            sendIntent.setClipData(ClipData.newUri(
+                getContext().getContentResolver(),
+                "AK Sale receipt image",
+                imageUri
+            ));
+            sendIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            getActivity().runOnUiThread(() -> {
+                try {
+                    Intent chooser = Intent.createChooser(sendIntent, "Viber သို့ ဘောင်ချာပုံပို့ရန်");
+                    chooser.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    getActivity().startActivity(chooser);
+                    JSObject result = new JSObject();
+                    result.put("ok", true);
+                    result.put("fileName", finalName);
+                    call.resolve(result);
+                } catch (Exception e) {
+                    call.reject("Share Menu ဖွင့်မရပါ: " + e.getMessage());
+                }
+            });
+        } catch (Exception e) {
+            call.reject("ဘောင်ချာပုံ ပြင်ဆင်မရပါ: " + e.getMessage());
+        }
     }
 
     private byte[] decodePayload(PluginCall call) {

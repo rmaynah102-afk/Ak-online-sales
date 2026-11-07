@@ -188,13 +188,15 @@ function normalizePaymentReference(value) {
   return String(value || "").trim().replace(/\s+/g, "").toUpperCase();
 }
 
+// Payments stay disabled until the platform owner supplies and verifies
+// their own receiving account. Never direct customers to an unconfirmed account.
 const AK_KPAY_ACCOUNT = Object.freeze({
-  enabled: true,
+  enabled: false,
   method: "KBZPay",
   bankName: "KBZPay",
-  accountName: "NiNiWin",
-  accountNumber: "09774033661",
-  instructions: "KBZPay သို့ ငွေလွှဲပြီး Transaction ID ကို ထည့်ပါ။ Owner က KBZPay ထဲတွင် ငွေဝင်မှုကို စစ်ဆေးပြီးမှ အတည်ပြုမည်။ Screenshot တစ်ခုတည်းဖြင့် အတည်မပြုပါ။"
+  accountName: "",
+  accountNumber: "",
+  instructions: "ငွေလက်ခံအကောင့်ကို Owner အတည်ပြုပြီးမှ Subscription ဝယ်ယူမှု ဖွင့်ပေးမည်။"
 });
 
 exports.createPaymentRequest = functions.https.onCall(async (data, context) => {

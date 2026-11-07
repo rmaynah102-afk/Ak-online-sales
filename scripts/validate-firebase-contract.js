@@ -66,7 +66,7 @@ if (!privateRule || !/allow read, write: if hasActiveLicense\(userId\)/.test(pri
   console.error('Private shop data must remain protected by the owner UID/license rule.');
   process.exitCode = 1;
 }
-const staffRule = rules.match(/match \/shopMembers\/\{memberUid\} \{([\s\S]*?)\n\s*\}/);
+const marketRule = rules.match(/match \/marketListings\/\{listingId\} \{([\s\S]*?)\n\s*\}/);\nif (!marketRule || !/allow create: if hasActiveLicense\\(request\\.auth\\.uid\\)/.test(marketRule[1]) || !/allow update: if hasActiveLicense\\(request\\.auth\\.uid\\)/.test(marketRule[1]) || !/allow delete: if hasActiveLicense\\(request\\.auth\\.uid\\)/.test(marketRule[1])) {\n  console.error('Public market listings must require an active license for create, update and delete.');\n  process.exitCode = 1;\n}\nconst shopSubmissionRule = rules.match(/match \/publicShopSubmissions\/\{ownerUid\} \{([\s\S]*?)\n\s*\}/);\nif (!shopSubmissionRule || !/allow create, update: if hasActiveLicense\\(ownerUid\\)/.test(shopSubmissionRule[1])) {\n  console.error('Public shop submissions must require an active license.');\n  process.exitCode = 1;\n}\n\nconst staffRule = rules.match(/match \/shopMembers\/\{memberUid\} \{([\s\S]*?)\n\s*\}/);
 if (!staffRule || !/allow write: if false/.test(staffRule[1])) {
   console.error('Staff membership documents must only be writable by trusted Cloud Functions.');
   process.exitCode = 1;

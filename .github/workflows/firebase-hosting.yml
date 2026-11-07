@@ -1,4 +1,4 @@
-name: Deploy AK Sale Firebase Hosting Only
+name: Deploy AK Sale Firebase Resources
 
 on:
   push:
@@ -25,7 +25,7 @@ jobs:
             echo "available=true" >> "$GITHUB_OUTPUT"
             {
               echo "### Firebase deployment"
-              echo "Service-account secret detected. Firebase Hosting deployment will run. Firestore Rules are left unchanged because the service account lacks Rules API permission; Storage and Cloud Functions are deferred to avoid paid-plan requirements."
+              echo "Service-account secret detected. Firebase Hosting will deploy. Firestore and Storage Rules will be attempted separately. Cloud Functions require explicit owner opt-in and a Firebase Blaze billing project."
             } >> "$GITHUB_STEP_SUMMARY"
           else
             echo "available=false" >> "$GITHUB_OUTPUT"
@@ -77,6 +77,46 @@ jobs:
           export GOOGLE_APPLICATION_CREDENTIALS="$KEY_FILE"
           firebase deploy --only hosting --project ak-onlin-sales --non-interactive
           {
-            echo "### Firebase deployment finished"
-            echo "Firebase Hosting deployment completed successfully. Firestore Rules remain unchanged; Storage and Cloud Functions are deferred."
+            echo "### Firebase Hosting"
+            echo "Hosting deployment completed successfully."
           } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Attempt Firestore and Storage Rules deployment
+        id: rules
+        if: steps.auth.outputs.available == 'true'
+        continue-on-error: true
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_AK_ONLIN_SALES }}
+        run: |
+          set -euo pipefail
+          umask 077
+          KEY_FILE="$RUNNER_TEMP/firebase-service-account-rules.json"
+          trap 'rm -f "$KEY_FILE"' EXIT
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$KEY_FILE"
+          export GOOGLE_APPLICATION_CREDENTIALS="$KEY_FILE"
+          firebase deploy --only firestore:rules,storage --project ak-onlin-sales --non-interactive
+          echo "Firestore and Storage Rules deployment succeeded." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Record Rules deployment limitation
+        if: steps.auth.outputs.available == 'true' && steps.rules.outcome == 'failure'
+        run: |
+          echo "Firestore/Storage Rules were not deployed. Grant the deployment service account the minimum Firebase Rules and Storage permissions, then rerun." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Deploy Cloud Functions only after owner billing opt-in
+        if: steps.auth.outputs.available == 'true' && vars.AK_ENABLE_FUNCTIONS_DEPLOY == 'true'
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_AK_ONLIN_SALES }}
+        run: |
+          set -euo pipefail
+          umask 077
+          KEY_FILE="$RUNNER_TEMP/firebase-service-account-functions.json"
+          trap 'rm -f "$KEY_FILE"' EXIT
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$KEY_FILE"
+          export GOOGLE_APPLICATION_CREDENTIALS="$KEY_FILE"
+          firebase deploy --only functions --project ak-onlin-sales --non-interactive
+          echo "Cloud Functions deployment succeeded." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Record Cloud Functions billing gate
+        if: steps.auth.outputs.available == 'true' && vars.AK_ENABLE_FUNCTIONS_DEPLOY != 'true'
+        run: |
+          echo "Cloud Functions were not deployed. Owner must link billing / enable Firebase Blaze and explicitly set repository variable AK_ENABLE_FUNCTIONS_DEPLOY=true first." >> "$GITHUB_STEP_SUMMARY"

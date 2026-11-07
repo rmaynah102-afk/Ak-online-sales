@@ -1088,7 +1088,10 @@ body.ak-public footer{display:block}
    const raw=window.AK_FIREBASE_PUBLIC_CONFIG || localStorage.getItem("ak_firebase_config");
    if(!raw){const status=document.getElementById("marketStatus");if(status)status.textContent="ဈေးစာရင်းဖတ်ရန် Firebase Web App Config မချိတ်ရသေးပါ။ ဆိုင်သုံး App ထဲတွင်လည်း အများကြည့်ရန် Config ကို သတ်မှတ်ရပါမည်။";return;}
    const cfg=typeof raw==="string"?JSON.parse(raw):raw;
-   if(!window.firebase)throw Error("Firebase SDK မရပါ။ Internet စစ်ပါ။");
+   // Wait for the shared SDK loader; otherwise public-market mode can race
+   // the main app startup and fail before Firebase is available.
+   if(typeof akLoadFirebaseSDK==="function")await akLoadFirebaseSDK();
+   if(!window.firebase||!firebase.firestore)throw Error("Firebase SDK မရပါ။ Internet စစ်ပါ။");
    if(!firebase.apps.length)firebase.initializeApp(cfg);
    fbApp=firebase.app();fbStore=firebase.firestore();
    if(typeof loadMarket==="function")await loadMarket();if(typeof loadSponsoredAds==="function")await loadSponsoredAds();

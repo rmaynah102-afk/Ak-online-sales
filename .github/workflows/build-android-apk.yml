@@ -190,6 +190,15 @@ jobs:
           p.write_text(s)
           PY
 
+      - name: Print Android signing certificate SHA-1 for Firebase registration
+        if: steps.signing.outputs.ready == 'true'
+        working-directory: android
+        env:
+          AK_RELEASE_STORE_PASSWORD: ${{ secrets.AK_RELEASE_STORE_PASSWORD }}
+          AK_RELEASE_KEY_ALIAS: ${{ secrets.AK_RELEASE_KEY_ALIAS }}
+        run: |
+          keytool -list -v -keystore app/ak-release.keystore -storepass "$AK_RELEASE_STORE_PASSWORD" -alias "$AK_RELEASE_KEY_ALIAS" | grep -E 'Alias name:|SHA1:|SHA-1:'
+
       - name: Build signed release APK
         if: steps.signing.outputs.ready == 'true'
         working-directory: android

@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "1046694954841",
+    "project_id": "ak-onlin-sales",
+    "storage_bucket": "ak-onlin-sales.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1046694954841:android:f1c9d2daeaa9358c33ae48",
+        "android_client_info": {
+          "package_name": "com.ak.hardware.sales"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1046694954841-qb0v8hgnmuo44sapj3o1dvjf6h11b6bv.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDGhZyvZUZgCWeE05G5Gy2OWfA3cMQPm_Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1046694954841-qb0v8hgnmuo44sapj3o1dvjf6h11b6bv.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

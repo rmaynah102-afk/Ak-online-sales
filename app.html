@@ -943,7 +943,7 @@ async function cloudSave(){
     const previous={data:currentData.data,centerManagement:centerSnap.exists?(centerSnap.data().center||null):null};
     const previousBytes=new TextEncoder().encode(JSON.stringify(previous)).length;
     if(previousBytes>700000)throw Error("Cloud မှတ်တမ်းဟောင်း 700KB ကျော်နေသောကြောင့် အလိုအလျောက် Backup မလုပ်နိုင်ပါ။ Cloud ဒေတာကို မပြောင်းဘဲ ထိန်းထားပါသည်။ JSON Backup ထုတ်ယူပါ။");
-    tx.set(backupRef,{data:currentData.data,centerManagement:null,sizeBytes:previousBytes,backupType:"automatic-before-save",sourceRevision:current,createdAt:firebase.firestore.FieldValue.serverTimestamp(),createdBy:uid});
+    tx.set(backupRef,{data:currentData.data,centerManagement:centerSnap.exists?(centerSnap.data().center||null):null,sizeBytes:previousBytes,backupType:"automatic-before-save",sourceRevision:current,createdAt:firebase.firestore.FieldValue.serverTimestamp(),createdBy:uid});
     createdBackup=true;
    }
    committedRevision=current+1;
@@ -980,6 +980,9 @@ async function cloudSave(){
   }
  }
 }
+// Retry queued local changes automatically when connectivity returns or the app becomes active.
+window.addEventListener("online",()=>{if(fbUser&&cloudReady&&akLocalDirty&&!akCloudConflict)cloudSave()});
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&fbUser&&cloudReady&&akLocalDirty&&!akCloudConflict)cloudSave()});
 async function cloudLoad(){try{if(!fbAuth||!fbAuth.currentUser)throw Error("Firebase Login အရင်ဝင်ပါ");const user=fbAuth.currentUser;const isOwner=String(user.email||"").trim().toLowerCase()==="painglin102@gmail.com"&&user.emailVerified===true;if(!isOwner&&!await refreshLicense())throw Error("Subscription သက်တမ်းမရှိပါ။ သက်တမ်းတိုးပါ။");const uid=user.uid;const d=await fbStore.collection("users").doc(uid).collection("private").doc("appData").get();if(!d.exists)throw Error("Cloud မှာ ဒေတာမရှိသေးပါ");if(!confirm("Cloud ဒေတာဖြင့် ဒီဖုန်းဒေတာကို အစားထိုးမည်။ မသိမ်းရသေးသော ပြင်ဆင်ချက်များကို အရင် JSON Backup သိမ်းထားပါ။ ဆက်လုပ်မလား။"))return;const remote=d.data()||{},x=remote.data;if(!x||!Array.isArray(x.products)||!Array.isArray(x.sales))throw Error("Cloud data format မမှန်ပါ");db={...fresh(),...x};localStorage.setItem(userDBKey(uid),JSON.stringify(db));akCloudRevision=Number.isSafeInteger(remote.revision)&&remote.revision>=0?remote.revision:0;akCloudConflict=false;akLocalDirty=false;renderAll();$("fbStatus").textContent="Cloud မှ ပြန်ယူပြီးပါပြီ · Revision "+akCloudRevision}catch(e){$("fbStatus").textContent="Cloud Load မအောင်မြင်: "+e.message}}
 async function akCreateCloudBackup(){
  const status=$("akCloudBackupStatus");status.textContent="Cloud Backup သိမ်းနေသည်...";

@@ -112,52 +112,11 @@ jobs:
         run: |
           echo "Firestore Rules were not deployed. Grant Firebase Rules Admin (roles/firebaserules.admin) to the deployment service account, then rerun." >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Attempt Storage Rules deployment
-        id: storage_rules
+      - name: Record optional paid services as intentionally skipped
         if: steps.auth.outputs.available == 'true'
-        continue-on-error: true
-        env:
-          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_AK_ONLIN_SALES }}
-        run: |
-          set -euo pipefail
-          umask 077
-          KEY_FILE="$RUNNER_TEMP/firebase-service-account-storage.json"
-          trap 'rm -f "$KEY_FILE"' EXIT
-          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$KEY_FILE"
-          export GOOGLE_APPLICATION_CREDENTIALS="$KEY_FILE"
-          firebase deploy --only storage --project ak-onlin-sales --non-interactive
-          echo "Storage Rules deployment succeeded." >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Record Storage deployment limitation
-        if: steps.auth.outputs.available == 'true' && steps.storage_rules.outcome == 'failure'
-        run: |
-          echo "Storage Rules were not deployed. Grant Cloud Storage for Firebase Admin (roles/firebasestorage.admin) to the deployment service account. Initialize the default Firebase Storage bucket in Firebase Console if it does not exist, then rerun." >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Deploy Cloud Functions (owner confirmed Firebase Blaze)
-        id: functions
-        if: steps.auth.outputs.available == 'true'
-        continue-on-error: true
-        env:
-          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_AK_ONLIN_SALES }}
-        run: |
-          set -euo pipefail
-          umask 077
-          KEY_FILE="$RUNNER_TEMP/firebase-service-account-functions.json"
-          trap 'rm -f "$KEY_FILE"' EXIT
-          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$KEY_FILE"
-          export GOOGLE_APPLICATION_CREDENTIALS="$KEY_FILE"
-          firebase deploy --only functions --project ak-onlin-sales --non-interactive
-          echo "Cloud Functions deployment succeeded." >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Record Cloud Functions deployment limitation
-        if: steps.auth.outputs.available == 'true' && steps.functions.outcome == 'failure'
         run: |
           {
-            echo "### Cloud Functions deployment blocked by Google Cloud IAM"
-            echo "Grant the deployment service account Cloud Functions Admin (roles/cloudfunctions.admin), Service Account User (roles/iam.serviceAccountUser), and Service Usage Admin (roles/serviceusage.serviceUsageAdmin) to enable required APIs."
-            echo "Enable Artifact Registry, Cloud Build, Cloud Functions, Cloud Run and Cloud Logging APIs."
-            echo "Verify the Cloud Build service account has its required build role."
-            echo "After IAM/API access is corrected, rerun this workflow."
+            echo "### Optional Firebase services"
+            echo "Storage Rules and Cloud Functions were not deployed. This project is being kept on the free-first Hosting + Firestore configuration; public text listings and the web app do not require these optional paid-plan services."
+            echo "Product photo upload and trusted server-side subscription/payment actions remain unavailable until Storage/Functions are deliberately enabled."
           } >> "$GITHUB_STEP_SUMMARY"
-          exit 1
-

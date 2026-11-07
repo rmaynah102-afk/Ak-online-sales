@@ -25,7 +25,7 @@ jobs:
             echo "available=true" >> "$GITHUB_OUTPUT"
             {
               echo "### Firebase deployment"
-              echo "Service-account secret detected. Firebase Hosting will deploy. Firestore and Storage Rules will be attempted separately. Cloud Functions require explicit owner opt-in and a Firebase Blaze billing project."
+              echo "Service-account secret detected. Firebase Hosting, Firestore Rules, Storage Rules, and Cloud Functions will be deployed. Owner confirmed Firebase Blaze billing for this project."
             } >> "$GITHUB_STEP_SUMMARY"
           else
             echo "available=false" >> "$GITHUB_OUTPUT"
@@ -123,7 +123,7 @@ jobs:
         run: |
           echo "Storage Rules were not deployed. Initialize the Firebase Storage bucket and grant the deployment service account the minimum Storage permissions, then rerun." >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Deploy Cloud Functions only after owner billing opt-in
+      - name: Deploy Cloud Functions (owner confirmed Firebase Blaze)
         if: steps.auth.outputs.available == 'true'
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_AK_ONLIN_SALES }}
@@ -137,7 +137,3 @@ jobs:
           firebase deploy --only functions --project ak-onlin-sales --non-interactive
           echo "Cloud Functions deployment succeeded." >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Record Cloud Functions billing gate
-        if: false
-        run: |
-          echo "Cloud Functions were not deployed. Owner must link billing / enable Firebase Blaze and explicitly set repository variable AK_ENABLE_FUNCTIONS_DEPLOY=true first." >> "$GITHUB_STEP_SUMMARY"

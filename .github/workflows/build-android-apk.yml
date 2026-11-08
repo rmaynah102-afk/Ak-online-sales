@@ -5,7 +5,16 @@ concurrency:
   cancel-in-progress: false
 
 on:
-  # APK builds are manual only. Do not build or publish an APK until the owner approves.
+  # Build a fresh test APK whenever the Android app source changes.
+  push:
+    branches: [main]
+    paths:
+      - 'app.html'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'capacitor.config.*'
+      - 'scripts/**'
+      - '.github/workflows/build-android-apk.yml'
   workflow_dispatch:
 
 permissions:

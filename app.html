@@ -395,7 +395,7 @@ body.ak-owner-user-preview .owner-only{display:none!important} body.ak-owner-use
 <div class="tablewrap"><table><thead><tr><th>Gmail</th><th>Subscription</th><th>သက်တမ်းကုန်ရက်</th><th>လုပ်ဆောင်ချက်</th></tr></thead><tbody id="akPlatformUserRows"><tr><td colspan="4">စာရင်းမဖတ်ရသေးပါ</td></tr></tbody></table></div>
 <hr><h3>Online Shopping Center · ဆိုင်စာမျက်နှာ အတည်ပြုရန်</h3><div class="actions"><button onclick="loadPendingShopProfiles()">Pending ဆိုင်များ ဖတ်မည်</button></div><p id="akAdminShopStatus" class="muted">CEO Admin သာ အသုံးပြုနိုင်သည်။</p><div class="tablewrap"><table><thead><tr><th>ဆိုင်အမည်</th><th>Account UID</th><th>တည်နေရာ</th><th>လုပ်ဆောင်ချက်</th></tr></thead><tbody id="akAdminShopRows"><tr><td colspan="4">မဖတ်ရသေးပါ</td></tr></tbody></table></div>
 <hr><h3>ကြော်ငြာအတည်ပြုရန် · CEO Admin</h3><div class="actions"><button onclick="loadPendingAds()">Pending ကြော်ငြာများ ဖတ်မည်</button></div><p id="akAdminAdStatus" class="muted">CEO Admin Login ဖြင့်သာ ခွင့်ပြုမည်။</p><div class="tablewrap"><table><thead><tr><th>ခေါင်းစဉ်</th><th>ကြော်ငြာရှင်</th><th>စာသား</th><th>Link</th><th>လုပ်ဆောင်ချက်</th></tr></thead><tbody id="akAdminAdRows"><tr><td colspan="5">မဖတ်ရသေးပါ</td></tr></tbody></table></div>
-</div></div><div class="panel" id="akFirebasePanel"><h2>Firebase Cloud Sync ချိတ်ဆက်ရန်</h2><div class="notice">Firebase Project Config ထည့်ပြီး Email/Password Authentication နှင့် Firestore ဖွင့်ထားမှ အလုပ်လုပ်မည်။ Firestore Security Rules ကို မိမိ UID အလိုက် ကန့်သတ်ရမည်။</div><div class="grid"><div><label>အကောင့် Gmail / Email</label><input id="fbEmail" type="email" value="painglin102@gmail.com" autocomplete="username" inputmode="email" onkeydown="if(event.key==='Enter')firebaseLogin()"></div><div><label>Password</label><div class="actions" style="gap:6px;flex-wrap:nowrap"><input id="fbPassword" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')firebaseLogin()" style="min-width:0;flex:1"><button type="button" class="alt" aria-label="Password ပြရန်/ဖျောက်ရန်" onclick="const p=document.getElementById('fbPassword');p.type=p.type==='password'?'text':'password';this.textContent=p.type==='password'?'ပြရန်':'ဖျောက်ရန်'">ပြရန်</button></div></div></div><div class="actions"><button type="button" onclick="firebaseLogin()">Login ဝင်မည်</button><button type="button" onclick="firebaseGoogleLogin()">Google ဖြင့် ဝင်မည်</button><button class="alt" type="button" onclick="firebaseResetPassword()">Password မေ့နေပါက</button><button class="alt" type="button" onclick="firebaseLogout()">Logout ထွက်မည်</button></div><details style="margin-top:10px"><summary>အဆင့်မြင့် Firebase ချိတ်ဆက်မှု (ပုံမှန် Login အတွက် မလိုပါ)</summary><label>Firebase Config JSON</label><textarea id="firebaseConfig" placeholder='{"apiKey":"...","authDomain":"...","projectId":"...","appId":"..."}'></textarea><div class="actions"><button type="button" onclick="firebaseConnect()">Firebase ချိတ်မည်</button><button type="button" onclick="firebaseRegister()">Email အကောင့်အသစ်ဖွင့်မည်</button><button type="button" onclick="cloudSave()">Cloud သိမ်းမည်</button><button type="button" class="alt" onclick="cloudLoad()">Cloud ပြန်ယူမည်</button></div></details><p class="muted">Owner Account: painglin102@gmail.com · အထက်ပါ Gmail ကိုရွေးပြီး Google Sign in လုပ်ပါ။ Google Provider ဖွင့်ထားပြီး Authorized Domains ထဲတွင် rmaynah102-afk.github.io ပါရမည်။ Password / OTP ကို မည်သူ့ကိုမျှ မပေးပါနှင့်။</p><p class="muted" id="fbStatus">Firebase မချိတ်ရသေးပါ။</p></div>
+</div></div><div class="panel" id="akFirebasePanel"><h2>Firebase Cloud Sync ချိတ်ဆက်ရန်</h2><div class="notice">Firebase Project Config ထည့်ပြီး Email/Password Authentication နှင့် Firestore ဖွင့်ထားမှ အလုပ်လုပ်မည်။ Firestore Security Rules ကို မိမိ UID အလိုက် ကန့်သတ်ရမည်။</div><div class="grid"><div><label>အကောင့် Gmail / Email</label><input id="fbEmail" type="email" value="" autocomplete="username" inputmode="email" onkeydown="if(event.key==='Enter')firebaseLogin()"></div><div><label>Password</label><div class="actions" style="gap:6px;flex-wrap:nowrap"><input id="fbPassword" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')firebaseLogin()" style="min-width:0;flex:1"><button type="button" class="alt" aria-label="Password ပြရန်/ဖျောက်ရန်" onclick="const p=document.getElementById('fbPassword');p.type=p.type==='password'?'text':'password';this.textContent=p.type==='password'?'ပြရန်':'ဖျောက်ရန်'">ပြရန်</button></div></div></div><div class="actions"><button type="button" onclick="firebaseLogin()">Login ဝင်မည်</button><button type="button" id="akRegisterButton" class="alt" onclick="firebaseRegister()">User အကောင့်အသစ်ဖွင့်ရန်</button><button type="button" onclick="firebaseGoogleLogin()">Google ဖြင့် ဝင်မည်</button><button class="alt" type="button" onclick="firebaseResetPassword()">Password မေ့နေပါက</button><button class="alt" type="button" onclick="firebaseLogout()">Logout ထွက်မည်</button></div><details style="margin-top:10px"><summary>အဆင့်မြင့် Firebase ချိတ်ဆက်မှု (ပုံမှန် Login အတွက် မလိုပါ)</summary><label>Firebase Config JSON</label><textarea id="firebaseConfig" placeholder='{"apiKey":"...","authDomain":"...","projectId":"...","appId":"..."}'></textarea><div class="actions"><button type="button" onclick="firebaseConnect()">Firebase ချိတ်မည်</button><button type="button" onclick="cloudSave()">Cloud သိမ်းမည်</button><button type="button" class="alt" onclick="cloudLoad()">Cloud ပြန်ယူမည်</button></div></details><p class="muted">Owner Account: painglin102@gmail.com · အထက်ပါ Gmail ကိုရွေးပြီး Google Sign in လုပ်ပါ။ Google Provider ဖွင့်ထားပြီး Authorized Domains ထဲတွင် rmaynah102-afk.github.io ပါရမည်။ Password / OTP ကို မည်သူ့ကိုမျှ မပေးပါနှင့်။</p><p class="muted" id="fbStatus">Firebase မချိတ်ရသေးပါ။</p></div>
 <div class="panel"><h2>ဒီဆိုင်၏ ချိတ်ထားသော ဖုန်းများ</h2><p class="muted">ဆိုင်အကောင့်တစ်ခုလျှင် ဖုန်း / Browser ၅ ခုအထိ ခွင့်ပြုသည်။ မသိသောစက်ကို Owner က ဖြုတ်နိုင်သည်။</p><div class="actions"><button onclick="refreshShopDevices()">ဖုန်းစာရင်း ပြန်ဖတ်မည်</button></div><p id="deviceStatus" class="muted">Login ဝင်ပြီးမှ စက်စာရင်းကို ပြမည်။</p><div class="tablewrap"><table><thead><tr><th>စက်အမည်</th><th>နောက်ဆုံးအသုံးပြု</th><th>ဤစက်</th><th>လုပ်ဆောင်ချက်</th></tr></thead><tbody id="shopDeviceRows"><tr><td colspan="4">မဖတ်ရသေးပါ</td></tr></tbody></table></div></div>
 <div class="panel"><h2>ဆိုင်ဝန်ထမ်း Login နှင့် ရာထူးခွဲခြားမှု</h2>
 <p class="muted">Owner သည် Firebase Gmail Account ရှိပြီးသား ဝန်ထမ်း၏ Gmail ကို ရာထူးသတ်မှတ်နိုင်သည်။ Role ကို Server ပေါ်တွင် မှတ်ပုံတင်ပြီး Login ဝင်ချိန်တွင် Membership ကို စစ်ဆေးမည်။ လက်ရှိ Cloud appData သည် Owner-only ဖြစ်သောကြောင့် Manager / Cashier / Employee POS Cloud ဝင်ခွင့်ကို Role-based ဒေတာခွဲခြားမှု မပြီးမချင်း ပိတ်ထားသည်။</p>
@@ -669,6 +669,41 @@ function receipt(id,paper="80mm"){
  <p class="thanks">အားပေးမှုအတွက် ကျေးဇူးတင်ပါသည်</p><p class="center muted">AK Sale Software</p>
  </main><div class="actions"><button onclick="window.print()">Print / PDF သိမ်းရန်</button><button onclick="window.close()">ပိတ်ရန်</button></div>
  <script>window.onload=()=>setTimeout(()=>window.print(),350);<\/script>
+<script>
+(function(){
+  function applyEntryMode(){
+    const params=new URLSearchParams(location.search);
+    const mode=params.get("entry")==="owner"?"owner":"user";
+    const panel=document.getElementById("akFirebasePanel");
+    const email=document.getElementById("fbEmail");
+    const register=document.getElementById("akRegisterButton");
+    if(!panel||!email)return;
+    let banner=document.getElementById("akEntryModeNotice");
+    if(!banner){
+      banner=document.createElement("div");
+      banner.id="akEntryModeNotice";
+      banner.className="notice";
+      panel.insertBefore(banner,panel.firstChild);
+    }
+    if(mode==="owner"){
+      email.value="painglin102@gmail.com";
+      email.readOnly=true;
+      banner.textContent="OWNER LOGIN — သတ်မှတ်ထားသော Platform Owner Gmail ဖြင့်သာ ဝင်ပါ။ Server က Verified Owner အဖြစ် ထပ်မံစစ်ဆေးမည်။";
+      if(register)register.hidden=true;
+    }else{
+      if(email.value==="painglin102@gmail.com")email.value="";
+      email.readOnly=false;
+      banner.textContent="USER LOGIN — ကိုယ့် Gmail ဖြင့် ဝင်ပါ။ အကောင့်အသစ်ဖွင့်ပြီးနောက် Package ငွေပေးချေမှုတင်နိုင်သည်။ Owner အတည်ပြုပြီးမှ POS အသုံးပြုခွင့်ရမည်။";
+      if(register)register.hidden=false;
+    }
+    if(location.hash==="#akFirebasePanel"){
+      setTimeout(()=>panel.scrollIntoView({behavior:"smooth",block:"start"}),250);
+    }
+  }
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",applyEntryMode);
+  else applyEntryMode();
+})();
+</script>
 </body></html>`);
  w.document.close();
 }

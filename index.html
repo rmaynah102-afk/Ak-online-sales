@@ -1,59 +1,31 @@
 <!doctype html>
-<html lang="my">
-<head>
+<html lang="my"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#07183f">
-<meta name="description" content="AK Sale Software APK — ကုန်မာနှင့် လျှပ်စစ်ပစ္စည်းဆိုင်များအတွက် အရောင်း၊ ကုန်ပစ္စည်း၊ အကြွေးနှင့် စာရင်းစီမံခန့်ခွဲမှု။">
-<meta property="og:title" content="AK Sale Software APK">
-<meta property="og:description" content="ဆိုင်အရောင်းစနစ်ကို တစ်ခုချင်းလေ့လာပြီး APK ရယူပါ။ AK Shopping Markets ကြော်ငြာများကိုလည်း ကြည့်ရှုနိုင်ပါသည်။">
-<title>AK Sale Software APK | AK Shopping Markets</title>
-<link rel="icon" href="./ak-logo.svg" type="image/svg+xml">
+<meta name="description" content="AK Sale Software — ကုန်မာနှင့် လျှပ်စစ်ပစ္စည်းဆိုင်များအတွက် POS နှင့် ဆိုင်စာရင်းစနစ်။">
+<title>AK Sale Software</title><link rel="icon" href="./ak-logo.svg" type="image/svg+xml">
 <style>
-:root{--navy:#07183f;--blue:#0756bd;--gold:#f6c453;--ink:#182a43;--muted:#66778d;--line:#dce5f0;--bg:#f4f7fc;--white:#fff}
-*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,"Noto Sans Myanmar",sans-serif;line-height:1.65}
+:root{--navy:#07183f;--blue:#0756bd;--gold:#f6c453;--ink:#182a43;--muted:#66778d;--line:#dce5f0;--bg:#f4f7fc}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,"Noto Sans Myanmar",sans-serif;line-height:1.65}
 header{background:linear-gradient(120deg,#07183f,#0649b8 70%,#0876c9);color:#fff;padding:14px 18px;border-bottom:3px solid var(--gold)}
-.head{max-width:1040px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:12px}.brand{display:flex;align-items:center;gap:10px}.brand img{width:43px;height:43px}.brand b{display:block;font-size:17px}.brand small{font-size:11px;color:#dce9ff}
-nav{display:flex;gap:7px;flex-wrap:wrap}nav a{color:#fff;text-decoration:none;font-size:12px;padding:6px 9px;border:1px solid #ffffff42;border-radius:20px}
-main{max-width:1040px;margin:auto;padding:14px}.hero{margin:14px 0;background:linear-gradient(130deg,#07183f,#0756bd);color:white;border-radius:22px;padding:25px 22px;box-shadow:0 10px 28px #07183f20}.eyebrow{font-size:11px;letter-spacing:1.4px;color:#f8d77f;font-weight:800}.hero h1{font-size:clamp(25px,6vw,39px);line-height:1.3;margin:8px 0}.hero p{font-size:13px;color:#e2ecff;max-width:680px}.actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:17px}.btn{display:inline-block;text-decoration:none;border-radius:10px;padding:10px 15px;font-size:13px;font-weight:750;background:var(--gold);color:#172b4a}.btn.alt{background:#ffffff18;border:1px solid #ffffff60;color:#fff}
-.section{background:#fff;border:1px solid var(--line);border-radius:17px;padding:17px;margin:12px 0}.section h2{font-size:18px;margin:0 0 5px;color:#123b72}.hint{font-size:11px;color:var(--muted);margin:0 0 12px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:9px}.item{border:1px solid var(--line);background:#fbfdff;border-radius:12px;padding:11px}.item b{display:block;font-size:13px;color:#17477d}.item p{font-size:11px;color:var(--muted);margin:4px 0 0;line-height:1.55}.num{display:inline-grid;place-items:center;width:23px;height:23px;border-radius:50%;background:#e7f0ff;color:#0756bd;font-size:11px;font-weight:800;margin-bottom:5px}
-.steps{display:grid;gap:8px}.step{display:flex;gap:10px;align-items:flex-start;border-bottom:1px solid #edf1f6;padding:7px 0}.step:last-child{border:0}.step strong{font-size:12px}.step p{font-size:11px;color:var(--muted);margin:2px 0}
-.banner{background:#fff7e3;border:1px solid #f0dfb5;border-radius:12px;padding:12px;font-size:12px;color:#644c19}.ad{background:linear-gradient(120deg,#e9f5ff,#e9f8f2);border:1px solid #d2e7e8;border-radius:14px;padding:14px}.ad h3{font-size:15px;margin:0 0 4px}.ad p{font-size:11px;color:#5c7184;margin:0 0 9px}
+.head,main{max-width:960px;margin:auto}.head{display:flex;align-items:center;gap:12px}.brand{display:flex;align-items:center;gap:10px}.brand img{width:44px;height:44px}.brand b{display:block}.brand small{font-size:11px;color:#dce9ff}
+main{padding:16px}.hero{margin:14px 0;background:linear-gradient(130deg,#07183f,#0756bd);color:white;border-radius:22px;padding:25px 22px;box-shadow:0 10px 28px #07183f20}.hero h1{font-size:clamp(25px,6vw,39px);line-height:1.35;margin:8px 0}.hero p{font-size:13px;color:#e2ecff;max-width:680px}
+.actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:17px}.btn{display:inline-block;text-decoration:none;border:0;border-radius:10px;padding:11px 16px;font-size:13px;font-weight:750;background:var(--gold);color:#172b4a}.btn.alt{background:#ffffff18;border:1px solid #ffffff60;color:#fff}
+.section{background:#fff;border:1px solid var(--line);border-radius:17px;padding:17px;margin:12px 0}.section h2{font-size:18px;margin:0 0 8px;color:#123b72}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}.item{border:1px solid var(--line);background:#fbfdff;border-radius:12px;padding:12px}.item b{display:block;font-size:13px;color:#17477d}.item p{font-size:12px;color:var(--muted);margin:4px 0 0}
 footer{text-align:center;padding:20px;color:#75849a;font-size:11px}
-@media(max-width:560px){.head{align-items:flex-start;flex-direction:column}.hero{padding:19px 16px}.section{padding:13px}.btn{flex:1;text-align:center}nav a{font-size:11px}}
-</style></head>
-<body>
-<header><div class="head"><div class="brand"><img src="./ak-logo.svg" alt="AK"><div><b>AK Sale Software</b><small>AK Hardware & Electrical · Shop Management</small></div></div><nav><a href="#features">လုပ်ဆောင်ချက်</a><a href="#how">အသုံးပြုပုံ</a><a href="#ads">ကြော်ငြာများ</a></nav></div></header>
+@media(max-width:560px){.hero{padding:19px 16px}.section{padding:13px}.btn{flex:1;text-align:center}}
+</style></head><body>
+<header><div class="head"><div class="brand"><img src="./ak-logo.svg" alt="AK Sale"><div><b>AK Sale Software</b><small>AK Hardware & Electrical · Shop Management</small></div></div></div></header>
 <main>
-<section class="hero"><div class="eyebrow">AK SALE SOFTWARE · ANDROID APK</div><h1>ဆိုင်စာရင်းကို စနစ်တကျ၊<br>အလွယ်တကူ စီမံခန့်ခွဲပါ</h1><p>ကုန်မာနှင့် လျှပ်စစ်ပစ္စည်းဆိုင်များအတွက် အရောင်း၊ ဝယ်ယူမှု၊ ကုန်ပစ္စည်းလက်ကျန်၊ အကြွေးနှင့် အမြတ်စာရင်းများကို တစ်နေရာတည်းတွင် စီမံနိုင်ရန် ရည်ရွယ်ထားသော ဆိုင်သုံးစနစ်။</p><div class="actions"><a class="btn" href="./app.html?entry=user#akFirebasePanel">User အကောင့်ဝင်ရန်</a><a class="btn alt" href="./app.html?entry=owner#akFirebasePanel">Owner ဝင်ရန်</a><a class="btn alt" href="./app.html?market=1">အများကြည့် ကြော်ငြာများ</a><a class="btn alt" href="https://github.com/rmaynah102-afk/Ak-online-sales/releases/latest">APK ရယူရန်</a></div></section>
-<section class="section" id="login"><h2>AK Sale Software သို့ ဝင်ရောက်ရန်</h2><p class="hint">အသုံးပြုသူနှင့် Platform Owner အတွက် ဝင်ပေါက်သီးခြားထားသည်။</p><div class="grid">
-<div class="item"><b>User / ဆိုင်ပိုင်ရှင်</b><p>ကိုယ့် Gmail ဖြင့် ဝင်ပါ။ ငွေပေးချေမှုတင်ပြီး Owner အတည်ပြုချက်ရမှ ဆိုင်စာရင်းစနစ်ကို အသုံးပြုနိုင်မည်။</p><a class="btn" href="./app.html?entry=user#akFirebasePanel">User Login သို့သွားရန်</a></div>
-<div class="item"><b>Platform Owner</b><p>သတ်မှတ်ထားသော Owner Gmail ဖြင့်သာ ဝင်ပါ။ ငွေလွှဲအတည်ပြုခြင်း၊ User ခွင့်ပြုခြင်းနှင့် စနစ်စီမံခန့်ခွဲမှု။</p><a class="btn" href="./app.html?entry=owner#akFirebasePanel">Owner Login သို့သွားရန်</a></div>
-</div><p class="hint">မှတ်ချက် — Owner ခွင့်ကို Gmail အမည်ဖြင့်သာ မယုံကြည်ဘဲ Server က အတည်ပြုစစ်ဆေးရမည်။ Password ကို Website ပေါ်တွင် မသိမ်းပါ။</p></section>
-<section class="section" id="features"><h2>APK ပုံစံနှင့် အပြင်ပိုင်း</h2><p class="hint">ဖုန်းပေါ်မှာ ဘယ်လိုမြင်ရမလဲ — အတိုချုံး</p><div class="grid">
-<div class="item"><span class="num">1</span><b>ပင်မစာမျက်နှာ</b><p>ယနေ့အရောင်း၊ အမြတ်ခန့်မှန်း၊ ပစ္စည်းအရေအတွက်နှင့် အကြွေးအကျဉ်းချုပ်။</p></div>
-<div class="item"><span class="num">2</span><b>အောက်/အပေါ် မီနူး</b><p>အရောင်း၊ ပစ္စည်း၊ ဝယ်ယူမှု၊ ဖောက်သည်၊ ကုန်ကျစရိတ်နှင့် အစီရင်ခံစာများကို ခွဲထားမည်။</p></div>
-<div class="item"><span class="num">3</span><b>ဆိုင်အမည်ပါ ဘောင်ချာ</b><p>ဆိုင်အမည်နှင့် အရောင်းအသေးစိတ်ပါသော ဘောင်ချာကို Print ထုတ်နိုင်ရန်။</p></div>
-<div class="item"><span class="num">4</span><b>ဖုန်းသုံးရလွယ်သောပုံစံ</b><p>စာရင်းဇယားများ၊ ခလုတ်များနှင့် ဖြည့်စွက်ရန်နေရာများကို ဖုန်းမျက်နှာပြင်နှင့် ကိုက်ညီစေမည်။</p></div>
+<section class="hero"><div style="font-size:11px;letter-spacing:1.2px;color:#f8d77f;font-weight:800">AK SALE · POS SOFTWARE</div><h1>ဆိုင်စာရင်းကို စနစ်တကျ၊<br>အလွယ်တကူ စီမံခန့်ခွဲပါ</h1><p>ကုန်မာနှင့် လျှပ်စစ်ပစ္စည်းဆိုင်များအတွက် အရောင်း၊ ဝယ်ယူမှု၊ ကုန်ပစ္စည်းလက်ကျန်၊ အကြွေး၊ အသုံးစရိတ်နှင့် အမြတ်စာရင်းများကို တစ်နေရာတည်းတွင် စီမံနိုင်သည်။</p><div class="actions"><a class="btn" href="./app.html#akFirebasePanel">Gmail ဖြင့် စတင်ဝင်ရောက်ရန်</a><a class="btn alt" href="./app.html?market=1">အများကြည့် ကြော်ငြာများ</a></div></section>
+<section class="section"><h2>အဓိကလုပ်ဆောင်ချက်များ</h2><div class="grid">
+<div class="item"><b>ကုန်ပစ္စည်းနှင့် လက်ကျန်</b><p>ကုန်မာ/လျှပ်စစ်ပစ္စည်း၊ SKU၊ Barcode၊ ဝယ်ဈေး၊ လက်လီ/လက်ကားဈေးနှင့် Stock။</p></div>
+<div class="item"><b>အရောင်းနှင့် ဘောင်ချာ</b><p>ငွေသား၊ အကြွေး၊ တစ်စိတ်တစ်ပိုင်းပေးချေမှု၊ Print နှင့် Viber သို့ ဘောင်ချာပုံမျှဝေခြင်း။</p></div>
+<div class="item"><b>ဝယ်ယူမှုနှင့် လူစာရင်း</b><p>Supplier၊ Customer၊ ရရန်/ပေးရန်အကြွေးနှင့် ပေးချေမှုမှတ်တမ်း။</p></div>
+<div class="item"><b>Cloud နှင့် ဖုန်း Backup</b><p>ဆိုင်အကောင့်အလိုက် Cloud စာရင်းချိတ်ဆက်မှု၊ ဖုန်းထဲသိမ်းဆည်းမှုနှင့် JSON Backup/Restore။</p></div>
+<div class="item"><b>Owner ထိန်းချုပ်မှု</b><p>အတည်ပြုထားသော Owner အကောင့်မှ User အကောင့်များကို စီမံနိုင်သည်။</p></div>
+<div class="item"><b>Printer ချိတ်ဆက်မှု</b><p>Android Print Service၊ Bluetooth Classic ESC/POS နှင့် Wi-Fi RAW Printer များ။</p></div>
 </div></section>
-<section class="section"><h2>အတွင်းပိုင်း လုပ်ဆောင်ချက်များ</h2><p class="hint">ဆိုင်တစ်ဆိုင်ရဲ့ နေ့စဉ်အလုပ်စဉ်ကို အပိုင်းလိုက်စီထားသည်။</p><div class="grid">
-<div class="item"><b>ကုန်ပစ္စည်းစာရင်း</b><p>ပစ္စည်းအမည်၊ ကုဒ်၊ အမျိုးအစား၊ ဝယ်ဈေး၊ လက်လီ/လက်ကားဈေး၊ လက်ကျန်နှင့် ဓာတ်ပုံ။</p></div>
-<div class="item"><b>ဝယ်ယူမှု</b><p>ပေးသွင်းသူ၊ ဝယ်ယူအရေအတွက်၊ ကျသင့်ငွေနှင့် ပေးချေမှုကို မှတ်တမ်းတင်ရန်။</p></div>
-<div class="item"><b>အရောင်း</b><p>ပစ္စည်းရွေး၊ အရေအတွက်ထည့်၊ ဈေးနှုန်းတွက်ပြီး ငွေသား/အကြွေး/တစ်စိတ်တစ်ပိုင်း မှတ်ရန်။</p></div>
-<div class="item"><b>ဖောက်သည်နှင့် အကြွေး</b><p>ဖောက်သည်စာရင်း၊ ရရန်/ပေးရန်နှင့် ပေးချေမှုမှတ်တမ်း။</p></div>
-<div class="item"><b>အသုံးစရိတ်</b><p>နေ့စဉ်ဆိုင်စရိတ်များကို မှတ်တမ်းတင်ရန်။</p></div>
-<div class="item"><b>အစီရင်ခံစာ</b><p>အရောင်း၊ အမြတ်/အရှုံး၊ လက်ကျန်နှင့် စာရင်းချုပ်များ။</p></div>
-<div class="item"><b>Backup နှင့် Print</b><p>ဒေတာအရန်သိမ်းခြင်း၊ ပြန်ယူခြင်းနှင့် Android Print Service အသုံးပြုခြင်း။</p></div>
-<div class="item"><b>အကောင့်နှင့် ခွင့်ပြုချက်</b><p>Owner နှင့် ဝန်ထမ်းအခန်းကဏ္ဍအလိုက် ဝင်ရောက်အသုံးပြုမှု။</p></div>
-</div></section>
-<section class="section" id="how"><h2>အသုံးပြုပုံ — တစ်ဆင့်ချင်း</h2><div class="steps">
-<div class="step"><span class="num">1</span><div><strong>APK ကို ဖုန်းထဲထည့်ပါ</strong><p>ယုံကြည်စိတ်ချရသော တရားဝင် Release မှ APK ကို ရယူပြီး Install လုပ်ပါ။</p></div></div>
-<div class="step"><span class="num">2</span><div><strong>ဆိုင်အကောင့် ဝင်ပါ</strong><p>သတ်မှတ်ထားသော Gmail ဖြင့် Login ဝင်ပြီး ဆိုင်အချက်အလက်ကို စတင်ပြင်ဆင်ပါ။</p></div></div>
-<div class="step"><span class="num">3</span><div><strong>ကုန်ပစ္စည်းထည့်ပါ</strong><p>ကုန်ပစ္စည်းအမည်၊ ဝယ်ဈေး၊ ရောင်းဈေးနှင့် စတင်လက်ကျန်ကို ဖြည့်ပါ။</p></div></div>
-<div class="step"><span class="num">4</span><div><strong>ဝယ်ယူမှုနှင့် အရောင်းတင်ပါ</strong><p>ပစ္စည်းဝယ်တိုင်း Purchase၊ ရောင်းတိုင်း Sale ထဲတွင် မှတ်တမ်းတင်ပါ။</p></div></div>
-<div class="step"><span class="num">5</span><div><strong>စာရင်းနှင့် အကြွေးစစ်ပါ</strong><p>နေ့စဉ်အရောင်း၊ ကုန်ကျစရိတ်၊ ရရန်/ပေးရန်နှင့် အမြတ်စာရင်းကို စစ်ဆေးပါ။</p></div></div>
-<div class="step"><span class="num">6</span><div><strong>Backup ပုံမှန်သိမ်းပါ</strong><p>ဖုန်းပြောင်းမည် သို့မဟုတ် Browser/App ဒေတာရှင်းမည်ဆိုပါက အရင် Backup ထုတ်ပါ။</p></div></div>
-</div></section>
-<section class="section" id="ads"><h2>လူတိုင်းကြည့်နိုင်သော ကြော်ငြာကဏ္ဍ</h2><div class="ad"><h3>AK Shopping Markets</h3><p>ဆိုင်ပိုင်ရှင်များနှင့် ဝယ်သူ/အသုံးပြုသူများ တင်ထားသော ကုန်ပစ္စည်း၊ ဆိုင်နှင့် အထွေထွေကြော်ငြာများကို အများပြည်သူ ကြည့်ရှုနိုင်မည့်နေရာ။ တင်သွင်းသောကြော်ငြာများကို စည်းမျဉ်းအတိုင်း စစ်ဆေးပြီးမှ အများမြင်အောင် ပြသမည်။</p><a class="btn" href="./app.html?market=1">ကြော်ငြာများ ကြည့်ရန် / တင်ရန်</a></div></section>
-<section class="section"><h2>သတိပြုရန်</h2><div class="banner">ဤစာမျက်နှာသည် AK Sale Software ၏ အများမြင်မိတ်ဆက်စာမျက်နှာနှင့် User / Owner Login ဝင်ပေါက်ဖြစ်သည်။ Cloud ငွေပေးချေမှု၊ ဓာတ်ပုံတင်ခြင်းနှင့် ရာထူးခွဲခြားမှုတို့ကို Server ပေါ်တွင် အတည်ပြုပြီးမှသာ အပြည့်အဝအသုံးပြုနိုင်မည်။</div></section>
-<footer>AK Sale Software · AK Shopping Markets · Myanmar</footer>
+<section class="section"><h2>အများကြည့် AK Market</h2><p style="font-size:13px;color:var(--muted)">ဆိုင်များနှင့် ကုန်ပစ္စည်းကြော်ငြာများကို အများပြည်သူ ကြည့်ရှုနိုင်သည်။ ဆိုင်အကောင့်ဖြင့် ဝင်ပြီး ကြော်ငြာတင်နိုင်သည်။</p><a class="btn" href="./app.html?market=1">AK Market ဖွင့်ရန်</a></section>
+<footer>AK Sale Software · AK Hardware & Electrical</footer>
 </main></body></html>

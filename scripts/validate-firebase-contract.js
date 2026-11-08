@@ -135,8 +135,9 @@ if (!html.includes('if(!user){checkUserRole(null);akSetLicenseGate(false') ||
   console.error('POS must remain locked until Gmail login and an owner-approved active subscription are verified online.');
   process.exitCode = 1;
 }
-if (!html.includes('id="akPlanButtons"') || !html.includes('function selectAkPlan(days)')) {
-  console.error('Subscription packages must be selectable with one-tap buttons.');
+// Payment/package UI is intentionally hidden in the current Free Beta build.
+if (html.includes('id="akPlanButtons"') && !html.includes('function selectAkPlan(days)')) {
+  console.error('If package buttons are exposed, their plan-selection handler must exist.');
   process.exitCode = 1;
 }
 if (!html.includes('#akFirebasePanel{order:1}') || !html.includes('#akLicensePanel{order:2}')) {
@@ -144,8 +145,10 @@ if (!html.includes('#akFirebasePanel{order:1}') || !html.includes('#akLicensePan
   process.exitCode = 1;
 }
 
-if (!functionsSource.includes('!screenshotUrl') || !html.includes('function validateAndSubmitKPay(paymentData,screenshotFile)') || !html.includes('id="payScreenshot" type="file"')) {
-  console.error('KPay payment requests must require a screenshot proof.');
+// The current Free Beta UI does not expose payment submission. If the callable is used,
+// the trusted server still rejects requests without screenshot proof.
+if (!functionsSource.includes('!screenshotUrl') || !html.includes('function validateAndSubmitKPay(paymentData,screenshotFile)')) {
+  console.error('Payment proof validation must remain present in client and trusted server.');
   process.exitCode = 1;
 }
 if (!functionsSource.includes('paymentReferences') ||

@@ -330,6 +330,196 @@ body.ak-owner-user-preview .owner-only{display:none!important} body.ak-owner-use
 
 
 <div class="panel"><h2>မိမိတင်ထားသော ပစ္စည်းကြော်ငြာများ</h2><p class="muted">ကိုယ့် Gmail အကောင့်နဲ့ တင်ထားသော ပစ္စည်းများကို ပြင်ဆင်၊ ဖျက်နိုင်သည်။</p><div class="actions"><button type="button" class="alt" onclick="loadMyMarketListings()">မိမိကြော်ငြာများ ပြန်ဖတ်မည်</button></div><p id="myMarketStatus" class="muted">ဆိုင်အကောင့် Login ဝင်ပြီး ကြည့်ပါ။</p><div id="myMarketFeed" class="grid"></div></div><div class="panel"><h2>ရှာတွေ့သော ဆိုင်များနှင့် ပစ္စည်းများ</h2><div id="marketFeed" class="grid"></div></div>
+
+
+</section>
+
+<section id="userGuide" class="view">
+<div class="panel"><h2>AK Sale Software · အသုံးပြုသူလမ်းညွှန်</h2>
+<p class="muted">ဆိုင်ပိုင်ရှင်နှင့် ဝန်ထမ်းများအတွက် စတင်အသုံးပြုနည်း</p>
+<div class="actions"><a class="btn" href="./USER-GUIDE-EN.md" target="_blank" rel="noopener">English User Guide</a><a class="btn" href="./BUSINESS-GUIDE-MY.md" target="_blank" rel="noopener">စီးပွားရေးလမ်းညွှန် (မြန်မာ)</a><a class="btn" href="./BUSINESS-GUIDE-EN.md" target="_blank" rel="noopener">Business Guide (English)</a></div>
+<div class="notice"><b>အရေးကြီး လုံခြုံရေးသတိပေးချက်:</b> လက်ရှိဝန်ထမ်းစာရင်းရှိ Role အမည်များသည် တာဝန်မှတ်တမ်းသာဖြစ်ပြီး Gmail Login အလိုက် အမှန်တကယ်ခွင့်ပြုချက်ကန့်သတ်မှု မဟုတ်သေးပါ။ အဲဒီအပိုင်းကို Server-side Authentication နှင့် Firestore Rules ဖြင့် အကောင်အထည်ဖော်ပြီး စမ်းသပ်မပြီးမချင်း အရေးကြီးငွေစာရင်းအတွက် မသုံးပါနှင့်။</div>
+<h3>၁။ ပထမဆုံးစတင်အသုံးပြုခြင်း</h3><ol><li>Web App ကိုဖွင့်ပြီး Gmail ဖြင့် Login ဝင်ပါ။</li><li>ဆိုင်အမည်၊ ဖုန်း၊ လိပ်စာနှင့် ဆိုင်အချက်အလက်များကို ဖြည့်ပါ။</li><li>ပစ္စည်းအမည်၊ ကုဒ်၊ အရင်းဈေး၊ ရောင်းဈေးနှင့် လက်ကျန်ကို ထည့်ပါ။ Barcode အတွက် 📷 Scan ကိုနှိပ်ပြီး ကင်မရာခွင့်ပြုပါ။</li><li>အရောင်းစာမျက်နှာတွင် ပစ္စည်းရွေးပြီး အရေအတွက်နှင့် ငွေပေးချေမှုကို မှတ်တမ်းတင်ပါ။</li></ol>
+<h3>၂။ နေ့စဉ်လုပ်ငန်းစဉ်</h3><ul><li><b>ပစ္စည်း:</b> ပစ္စည်းအသစ်ထည့်၊ ဈေးနှုန်းနှင့် လက်ကျန်ပြင်ဆင်ပါ။</li><li><b>အဝယ်:</b> Supplier ထံမှ ဝယ်ယူမှုကို မှတ်တမ်းတင်ပါ။</li><li><b>အရောင်း:</b> ငွေအပြည့်၊ တစ်စိတ်တစ်ပိုင်း သို့မဟုတ် အကြွေးအဖြစ် မှတ်တမ်းတင်ပါ။</li><li><b>Customer/Supplier:</b> ဖောက်သည်၊ ပေးရန်/ရရန်စာရင်းကို စစ်ဆေးပါ။</li><li><b>အစီရင်ခံစာ:</b> အရောင်း၊ အသုံးစရိတ်နှင့် အမြတ်စာရင်းကို ပြန်စစ်ပါ။</li></ul>
+<h3>၃။ Backup နှင့် ဖုန်းပြောင်းခြင်း</h3><ol><li>Backup / Settings စာမျက်နှာကို ဖွင့်ပါ။</li><li>Backup JSON ကို Export လုပ်ပြီး ဖုန်းပြင်ပ လုံခြုံသောနေရာတွင် သိမ်းပါ။</li><li>ဖုန်းအသစ်တွင် Login ဝင်ပြီး လိုအပ်ပါက Backup ကို Restore လုပ်ပါ။</li><li>Restore မလုပ်မီ လက်ရှိဒေတာကိုလည်း Backup ထပ်ယူပါ။</li></ol>
+<h3>၄။ ရာထူးတာဝန်များ (ရည်ရွယ်ထားသော စနစ်)</h3><ul><li><b>CEO / Owner:</b> ဆိုင်အားလုံး၊ ဝန်ထမ်း၊ ငွေစာရင်း၊ ကြော်ငြာ၊ Subscription နှင့် ခွင့်ပြုချက်အားလုံး။</li><li><b>Manager:</b> ဆိုင်လုပ်ငန်း၊ ပစ္စည်း၊ အရောင်း၊ အဝယ်၊ ဝန်ထမ်းနှင့် အစီရင်ခံစာ။</li><li><b>Cashier:</b> အရောင်း၊ ငွေလက်ခံမှုနှင့် ဘောက်ချာ။</li><li><b>Employee:</b> ခွင့်ပြုထားသော လုပ်ငန်းတာဝန်များသာ။</li></ul>
+<p class="muted">အထက်ပါ Role စာရင်းသည် ရည်ရွယ်ထားသော ခွင့်ပြုချက်ပုံစံဖြစ်သည်။ လက်ရှိ App တွင် Role-based cloud security အပြည့်အဝ မတပ်ဆင်ရသေးပါ။</p>
+<h3>၅။ ကြော်ငြာနှင့် AK Market</h3><ul><li>ကြော်ငြာပုံနှင့် စာသားကို ပြင်ဆင်ပြီး Facebook၊ Telegram၊ Viber၊ TikTok စသည်တို့တွင် ကိုယ်တိုင်တင်ပါ။</li><li>Share ခလုတ်သည် လူမှုကွန်ရက်ကို ဖွင့်ပေးခြင်းသာဖြစ်ပြီး အလိုအလျောက်တင်ခြင်း မဟုတ်ပါ။</li><li>AK Market တွင် အများမြင်ရန် ခွင့်ပြုထားသော ဆိုင်/ပစ္စည်းအချက်အလက်များသာ တင်ပါ။</li></ul>
+<h3>၆။ အကူအညီနှင့် ပြဿနာဖြေရှင်းခြင်း</h3><ul><li>App မဖွင့်ပါက Internet ချိတ်ဆက်မှုနှင့် Browser ကို စစ်ပါ။</li><li>ဒေတာမတွေ့ပါက Account မှန်/မမှန်နှင့် Backup ရှိ/မရှိ စစ်ပါ။</li><li>APK Update မလုပ်မီ Backup ယူပါ။ Signing Key မတူပါက ရှိပြီးသား App ကို Update မလုပ်နိုင်ပါ။</li></ul>
+</div></section>
+
+
+<section id="products" class="view">
+<div class="panel"><h2>ပစ္စည်းထည့် / ပြင်</h2><form id="productForm"><input type="hidden" id="pId"><div class="grid">
+<div><label>ပစ္စည်းအမည် *</label><input id="pName" required></div><div><label>ပစ္စည်းကုဒ် / Barcode</label><div class="actions"><input id="pCode" autocomplete="off" style="flex:1;min-width:130px"><button type="button" class="alt" id="akScanBarcodeBtn">📷 Scan</button></div><small class="muted">Camera barcode scan သို့မဟုတ် Bluetooth/USB HID scanner ဖြင့် ဖတ်နိုင်သည်။</small></div><div><label>အမျိုးအစား</label><input id="pCat" placeholder="ကုန်မာ / လျှပ်စစ်"></div><div><label>ယူနစ်</label><input id="pUnit" value="ခု"></div><div><label>ဝယ်ဈေး</label><input id="pCost" type="number" min="0" step="any" value="0"></div><div><label>လက်လီဈေး</label><input id="pRetail" type="number" min="0" step="any" value="0"></div><div><label>လက်ကားဈေး</label><input id="pWholesale" type="number" min="0" step="any" value="0"></div><div><label>လက်ကျန်</label><input id="pStock" type="number" min="0" step="any" value="0"></div><div><label>အနည်းဆုံးထားရမည့်လက်ကျန် (Alert)</label><input id="pMinStock" type="number" min="0" step="any" value="0"><small class="muted">ဒီပမာဏအောက်ရောက်ရင် ပြန်မှာရန် သတိပေးမည်။</small></div><div><label>ပစ္စည်းဓာတ်ပုံ</label><input id="pPhoto" type="file" accept="image/*"></div>
+</div><img id="photoPreview" class="thumb hidden" alt="preview"><div class="actions"><button>သိမ်းမည်</button><button type="button" class="alt" onclick="resetProduct()">ရှင်းမည်</button></div></form></div>
+<div class="panel"><div class="split"><h2>ပစ္စည်းစာရင်း</h2><div class="actions"><button type="button" class="alt" onclick="exportProductsCsv()">CSV ထုတ်ရန်</button><input style="max-width:220px" id="productQuery" placeholder="ရှာရန်" oninput="renderProducts()"></div></div><div class="tablewrap"><table><thead><tr><th>ပုံ</th><th>ပစ္စည်း</th><th>ကုဒ်</th><th>လက်ကျန်</th><th>ဝယ်ဈေး</th><th>လက်လီ</th><th>လက်ကား</th><th>လုပ်ဆောင်ချက်</th></tr></thead><tbody id="productRows"></tbody></table></div></div>
+</section>
+
+<section id="sales" class="view">
+<div class="panel"><h2>အရောင်းတင်ရန်</h2><form id="saleForm"><div class="grid">
+<div class="sale-scan-tools"><label>Barcode / SKU Scan ဖြင့် အရောင်းထည့်ရန်</label><div class="actions"><input id="saleBarcodeInput" autocomplete="off" inputmode="none" placeholder="Scanner ဖတ်ပါ သို့မဟုတ် ကုဒ်ရိုက်ပြီး Enter နှိပ်ပါ" style="flex:1;min-width:180px"><button type="button" class="alt" id="akSaleScanBtn">📷 Camera Scan</button></div><small class="muted">Barcode Scanner စက်ကိုလည်း Bluetooth / USB HID ဖြင့် ချိတ်ပြီး ဒီအကွက်ထဲ Scan ဖတ်နိုင်သည်။</small></div><div id="saleLines"><div class="sale-line grid"><div><label>ပစ္စည်း</label><select id="sProduct" class="sale-product" required></select></div><div><label>ဈေးနှုန်းအမျိုးအစား</label><select id="sType" class="sale-type"><option value="retail">လက်လီ</option><option value="wholesale">လက်ကား</option><option value="custom">ကိုယ်တိုင်သတ်မှတ်</option></select></div><div><label>အရေအတွက်</label><input id="sQty" class="sale-qty" type="number" min=".001" step="any" value="1" required></div><div><label>တစ်ခုဈေး</label><input id="sPrice" class="sale-price" type="number" min="0" step="any" value="0" required></div><div><button type="button" class="red" onclick="removeSaleLine(this)">ဖယ်ရှား</button></div></div></div><div class="actions"><button type="button" class="alt" onclick="addSaleLine()">+ ပစ္စည်းတစ်မျိုး ထပ်ထည့်</button></div><div><label>ဖောက်သည်</label><input id="sCustomer" placeholder="အမည် / ဖုန်း"></div><div><label>ပေးချေမှု</label><select id="sPayType"><option value="full">ငွေအပြည့်</option><option value="partial">တစ်စိတ်တစ်ပိုင်း</option><option value="credit">အကြွေး</option></select></div><div><label>ပေးငွေ</label><input id="sPaid" type="number" min="0" step="any" value="0"></div><div><label>မှတ်ချက်</label><input id="sNote"></div>
+</div><div class="actions"><button>အရောင်းသိမ်းမည်</button></div></form></div>
+<div class="panel"><div class="split"><h2>အရောင်းမှတ်တမ်း</h2><div class="actions no-print"><button type="button" class="alt" onclick="printSalesLedger()">အရောင်းစာရင်း Print</button></div></div><div class="tablewrap"><table><thead><tr><th>ရက်စွဲ</th><th>ဘောင်ချာ</th><th>ဖောက်သည်</th><th>စုစုပေါင်း</th><th>ပေးငွေ</th><th>အကြွေး</th><th></th></tr></thead><tbody id="saleRows"></tbody></table></div></div>
+<div class="panel" id="akPrinterManager"><h2>Printer အများအပြား စီမံရန်</h2><p class="muted">Printer တစ်လုံးချင်းစီ၏ အမည်နှင့် ချိတ်ဆက်မှုကို မှတ်သားထားနိုင်သည်။ Print နှိပ်လျှင် ဖုန်း/ကွန်ပျူတာ၏ Print Service မှ Printer ကို ရွေးပါ။</p><div class="grid"><div><label>Printer အမည်</label><input id="akPrinterName" maxlength="60" placeholder="ဥပမာ - ကောင်တာ ၁ Printer"></div><div><label>Printer ရာထူး / အသုံးပြုမည့်နေရာ</label><select id="akPrinterPurpose"><option value="receipt">ဘောင်ချာ Printer</option><option value="general">အထွေထွေ Print</option></select></div><div><label>ချိတ်ဆက်မှုအမျိုးအစား</label><select id="akPrinterType" onchange="akPrinterTypeChanged()"><option value="system">Android / System Print</option><option value="wifi">Wi-Fi Direct (TCP 9100)</option><option value="bluetooth">Bluetooth Classic ESC/POS</option><option value="usb">USB (Android Print Service)</option></select></div><div id="akPrinterBluetoothControls"><label>Pair လုပ်ထားသော Bluetooth Printer</label><div class="actions"><select id="akPrinterBluetoothDevice" style="flex:1"><option value="">Printer စက်ရှာရန် နှိပ်ပါ</option></select><button type="button" class="alt" onclick="akLoadBluetoothPrinters()">Paired စက်ရှာရန်</button></div></div><div id="akPrinterWifiControls"><label>Wi-Fi Printer IP / Host နှင့် Port</label><div class="actions"><input id="akPrinterHost" placeholder="ဥပမာ 192.168.1.100" style="flex:1"><input id="akPrinterPort" type="number" min="1" max="65535" value="9100" style="max-width:100px"></div></div><div><label>ဘောင်ချာ စာရွက်အကျယ်</label><select id="akPrinterPaper" onchange="akSetPrinterPaper(this.value)"><option value="58mm">58mm Thermal</option><option value="80mm" selected>80mm Thermal</option><option value="A4">A4 စာရွက်</option></select></div></div><p class="muted">Bluetooth Printer ကို Android Settings မှာ အရင် Pair လုပ်ပါ။ Wi-Fi Printer ကို ဖုန်းနှင့် တူညီသော Wi-Fi Network ချိတ်ပြီး Printer IP နှင့် RAW TCP Port (ပုံမှန် 9100) ထည့်ပါ။ Direct Print သည် APK ထဲတွင်သာ အလုပ်လုပ်ပြီး Website သည် System Print ကို သုံးမည်။</p><div class="actions"><button type="button" onclick="akSavePrinter()">Printer ထည့်မည်</button><button type="button" class="alt" onclick="akPrintTest()">စမ်းသပ် Print</button></div><div class="tablewrap"><table><thead><tr><th>Printer</th><th>ရာထူး</th><th>ချိတ်ဆက်မှု</th><th>Default</th><th>လုပ်ဆောင်ချက်</th></tr></thead><tbody id="akPrinterRows"><tr><td colspan="5">Printer မထည့်ရသေးပါ</td></tr></tbody></table></div><p class="muted" id="akPrinterStatus">Printer Profile ကို ဒီဖုန်းထဲတွင် သိမ်းထားသည်။ APK မှ Bluetooth Classic ESC/POS နှင့် Wi-Fi RAW TCP 9100 တိုက်ရိုက်ပို့နိုင်သည်။ Website မှာ Android/System Print ကို သုံးပါ။</p>
+<p class="muted"><a href="./PRINTER-SETUP-MY.md" target="_blank" rel="noopener">Bluetooth / Wi-Fi Printer ချိတ်ဆက်နည်း ဖတ်ရန်</a></p></div>
+</section>
+
+<section id="purchases" class="view">
+<div class="panel"><h2>အဝယ်တင်ရန်</h2><form id="purchaseForm"><div class="grid"><div><label>ပစ္စည်း</label><select id="bProduct" required></select></div><div><label>အရေအတွက်</label><input id="bQty" type="number" min=".001" step="any" value="1"></div><div><label>တစ်ခုဝယ်ဈေး</label><input id="bCost" type="number" min="0" step="any" value="0"></div><div><label>Supplier</label><input id="bSupplier"></div><div><label>ပေးငွေ</label><input id="bPaid" type="number" min="0" step="any" value="0"></div></div><div class="actions"><button>အဝယ်သိမ်းမည်</button></div></form></div>
+<div class="panel"><h2>အဝယ်မှတ်တမ်း</h2><div class="tablewrap"><table><thead><tr><th>ရက်စွဲ</th><th>ပစ္စည်း</th><th>Supplier</th><th>စုစုပေါင်း</th><th>ပေးငွေ</th><th>အကြွေး</th></tr></thead><tbody id="purchaseRows"></tbody></table></div></div>
+</section>
+
+<section id="people" class="view">
+<div class="panel"><h2>Customer / Supplier စာရင်း</h2><form id="personForm"><div class="grid"><div><label>အမည် *</label><input id="personName" required></div><div><label>ဖုန်း</label><input id="personPhone"></div><div><label>အမျိုးအစား</label><select id="personType"><option value="customer">Customer</option><option value="supplier">Supplier</option></select></div><div><label>မှတ်ချက်</label><input id="personNote"></div></div><div class="actions"><button>စာရင်းသိမ်းမည်</button></div></form><div class="tablewrap"><table><thead><tr><th>အမည်</th><th>အမျိုးအစား</th><th>ဖုန်း</th><th>မှတ်ချက်</th><th></th></tr></thead><tbody id="peopleRows"></tbody></table></div></div>
+<div class="panel"><h2>အကြွေးဆပ် / ပေးချေမှု မှတ်တမ်း</h2><form id="paymentForm"><div class="grid"><div><label>အကြွေးအမျိုးအစား</label><select id="payDirection"><option value="in">Customer ဆီမှ ရရန်</option><option value="out">Supplier ကို ပေးရန်</option></select></div><div><label>အမည်</label><input id="payPerson" required></div><div><label>သက်ဆိုင်ရာ Invoice (ရွေးချယ်နိုင်)</label><select id="payInvoice"><option value="">သီးခြားမှတ်တမ်းသာ သိမ်းမည်</option></select></div><div><label>ငွေပမာဏ</label><input id="payAmount" type="number" min=".01" step="any" required></div><div><label>မှတ်ချက်</label><input id="payNote"></div></div><div class="actions"><button>ငွေပေးချေမှုသိမ်းမည်</button></div></form><div class="tablewrap"><table><thead><tr><th>ရက်စွဲ</th><th>အမျိုးအစား</th><th>အမည်</th><th>ငွေ</th><th>မှတ်ချက်</th></tr></thead><tbody id="paymentRows"></tbody></table></div></div>
+</section>
+
+<section id="expenses" class="view">
+<div class="panel"><h2>အသုံးစရိတ်</h2><form id="expenseForm"><div class="grid"><div><label>အကြောင်းအရာ *</label><input id="eName" required></div><div><label>ငွေပမာဏ</label><input id="eAmount" type="number" min="0" step="any" required></div><div><label>မှတ်ချက်</label><input id="eNote"></div></div><div class="actions"><button>သိမ်းမည်</button></div></form><div class="tablewrap"><table><thead><tr><th>ရက်စွဲ</th><th>အကြောင်းအရာ</th><th>ငွေ</th><th>မှတ်ချက်</th></tr></thead><tbody id="expenseRows"></tbody></table></div></div>
+</section>
+
+<section id="reports" class="view">
+<div class="panel"><h2>အစီရင်ခံစာ</h2><div class="grid"><div><label>စတင်ရက်</label><input id="fromDate" type="date"></div><div><label>ဆုံးရက်</label><input id="toDate" type="date"></div></div><div class="actions"><button onclick="renderReport()">တွက်ချက်မည်</button><button class="alt" onclick="if(akRequirePrint())window.print()">Print</button></div><div id="reportOutput"></div></div>
+</section>
+
+<section id="ads" class="view">
+ <div class="panel"><h2>Social Media ကြော်ငြာဖန်တီးရန်</h2>
+ <div class="notice">ချိတ်ဆက်ထားသော TikTok အကောင့်: <b>@sannnlinpaing</b><br><a href="https://www.tiktok.com/@sannnlinpaing?_r=1&amp;_t=ZS-9B8ER2Rjvl7" target="_blank" rel="noopener">TikTok Profile ဖွင့်ရန်</a> · <button type="button" class="alt" onclick="openAkTikTok()">TikTok သို့သွားရန်</button></div>
+ <div class="notice">ပစ္စည်းစာရင်းမှ ရွေးလိုက်ရုံဖြင့် အမည်၊ ဈေးနှုန်းနှင့် ဓာတ်ပုံကို ဖြည့်ပေးမည်။ Share ခလုတ်မှ Android Share Menu ကိုဖွင့်ပြီး Facebook၊ TikTok၊ Viber၊ Telegram သို့မဟုတ် အခြား App ကိုရွေးနိုင်သည်။</div>
+ <div class="grid">
+ <div><label>ရှိပြီးသားပစ္စည်းရွေးရန်</label><select id="adProduct" onchange="selectAdProduct()"><option value="">-- ပစ္စည်းရွေးပါ --</option></select></div>
+ <div><label>ပစ္စည်းအမည်</label><input id="adName" placeholder="ပစ္စည်းအမည်"></div>
+ <div><label>ဈေးနှုန်း</label><input id="adPrice" placeholder="ဈေးနှုန်း"></div>
+ <div><label>ဆက်သွယ်ရန်</label><input id="adContact" placeholder="ဖုန်း / ဆိုင်လိပ်စာ"></div>
+ <div><label>ဓာတ်ပုံ</label><input id="adPhoto" type="file" accept="image/*"></div>
+ </div>
+ <div class="actions"><button onclick="makeAd()">ကြော်ငြာပုံဖန်တီးမည်</button><button onclick="shareAd()">Social အားလုံးသို့ ပုံ+စာ Share</button><button class="alt" onclick="shareAdTo('facebook')">Facebook</button><button class="alt" onclick="shareAdTo('telegram')">Telegram</button><button class="alt" onclick="shareAdTo('viber')">Viber</button><button class="alt" onclick="shareAdTo('tiktok')">TikTok</button><button class="alt" onclick="shareAdTo('whatsapp')">WhatsApp</button><button class="alt" onclick="shareAdTo('messenger')">Messenger</button><button class="alt" onclick="shareAdTo('instagram')">Instagram</button><button class="alt" onclick="shareAdTo('copy')">Caption/Link Copy</button><button class="alt" onclick="downloadAd()">ပုံသိမ်းမည်</button></div>
+ <canvas id="adCanvas" width="1080" height="1080" class="preview" style="width:min(100%,420px);margin-top:12px;background:white"></canvas>
+ <p class="muted">အကောင်းဆုံးနည်းမှာ ပုံနှင့် Caption ကို Android Share Menu မှ တစ်ခါတည်းရွေးပို့ခြင်းဖြစ်သည်။ Platform တစ်ခုချင်းစီ Shortcut သည် ပုံကိုသိမ်း၊ Caption ကို Copy လုပ်ပြီး သက်ဆိုင်ရာ App ဖွင့်ပေးမည်။ App ထဲတွင် ပုံကိုရွေးပြီး Post တင်ပါ။ Auto-post အတွက် သက်ဆိုင်ရာ Platform API/OAuth ခွင့်ပြုချက်လိုအပ်သည်။</p>
+ </div>
+ </section>
+
+
+<section id="market" class="view">
+<div class="panel" style="background:linear-gradient(120deg,#0b2f24,#176b4b);color:white"><span class="pill">AK Sale Software</span><h2 style="color:white;font-size:24px">သင့်ဆိုင်ကို စနစ်တကျ ထိန်းချုပ်ပါ</h2><p>အရောင်း POS · ကုန်ပစ္စည်းစာရင်း · အကြွေးစာရင်း · ဆိုင်ခွဲနှင့် ကောင်တာ · ဖုန်း ၅ လုံးအထိ ချိတ်ဆက်အသုံးပြုနိုင်မည့် ဆိုင်စီမံခန့်ခွဲမှုစနစ်</p><div class="actions"><button onclick="if(navigator.share){navigator.share({title:'AK Sale Software',text:'AK Sale Software · ဆိုင်အရောင်းနှင့် စာရင်းစီမံခန့်ခွဲမှု',url:location.origin+location.pathname+'?app=1'}).catch(()=>{})}else if(navigator.clipboard){navigator.clipboard.writeText(location.origin+location.pathname+'?app=1').then(()=>alert('AK Software Link Copy လုပ်ပြီးပါပြီ'))}">AK Software ကို မျှဝေကြော်ငြာမည်</button><a class="btn" href="?app=1#backup">ဆိုင်သုံးစနစ် ဝင်ရန်</a></div></div>
+<div class="panel"><div class="split"><div><h2>AK Market · မြန်မာ့အရောင်းအဝယ်</h2><p class="muted">ပစ္စည်းပုံ၊ ဈေးနှုန်းနှင့် ဆိုင်အချက်အလက်ကို အများပြည်သူထံ မျှဝေပါ။</p></div><span class="pill">အခြေခံအသုံးပြုမှု အခမဲ့</span></div>
+<div class="notice">အများပြည်သူသည် Login မလိုဘဲ ပစ္စည်းများကို ကြည့်ရှုနိုင်သည်။ ဆိုင်ပိုင်ရှင်နှင့် ဝယ်သူ/အသုံးပြုသူများသည် Gmail Login ဖြင့် အခမဲ့ကြော်ငြာတင်နိုင်သည်။ POS Subscription ဝယ်ထားရန် မလိုပါ။ ဆိုင်အတွင်း POS စာရင်းများကို Public မပြပါ။ ပုံတင်ရန် Firebase Storage ဖွင့်ထားရမည်။</div>
+<form id="marketForm"><div class="grid">
+<div><label>ပစ္စည်းအမည် *</label><input id="mTitle" maxlength="90" required placeholder="ဥပမာ - LED မီးလုံး 12W"></div>
+<div><label>ရောင်းဈေး (ကျပ်) *</label><input id="mPrice" type="number" min="1" step="1" required placeholder="8500"></div>
+<div><label>အမျိုးအစား</label><select id="mCategory"><option>ကုန်မာ</option><option>လျှပ်စစ်ပစ္စည်း</option><option>ဆောက်လုပ်ရေး</option><option>လက်ကိရိယာ / Tools</option><option>ရေပိုက်နှင့် ရေပစ္စည်း</option><option>မီးအလင်းရောင်</option><option>ဝါယာကြိုးနှင့် Cable</option><option>မော်တာနှင့် Pump</option><option>ဆိုလာနှင့် Battery</option><option>သော့နှင့် Lock</option><option>သံထည်နှင့် Fastener</option><option>ဆေးနှင့် အရောင်</option><option>အိမ်သုံးပစ္စည်း</option><option>စက်ပစ္စည်းနှင့် အပိုပစ္စည်း</option><option>ဖုန်းနှင့် အီလက်ထရွန်းနစ်</option><option>စိုက်ပျိုးရေးပစ္စည်း</option><option>ယာဉ်အပိုပစ္စည်း</option><option>အခြား</option></select></div>
+<div><label>မြို့</label><input id="mCity" maxlength="50" placeholder="မန္တလေး"></div>
+<div><label>မြို့နယ်</label><input id="mTownship" maxlength="60" placeholder="ချမ်းအေးသာစံ"></div>
+<div><label>ဆက်သွယ်ရန် ဖုန်း / Viber နံပါတ် *</label><input id="mPhone" type="tel" maxlength="25" required placeholder="09..."><span class="muted">ဝယ်သူက ဖုန်းခေါ်ရန်နှင့် Viber ဆက်သွယ်ရန် အသုံးပြုမည်။</span></div>
+<div><label>ပစ္စည်းဓာတ်ပုံ (မဖြစ်မနေမဟုတ်ပါ)</label><input id="mPhoto" type="file" accept="image/jpeg,image/png,image/webp"><span class="muted">JPG / PNG / WebP · 2MB အောက် · Storage မဖွင့်ရသေးလည်း ပုံမပါဘဲ ကြော်ငြာတင်နိုင်သည်။</span></div>
+</div>
+<label>ပစ္စည်းအကြောင်းအရာ</label><textarea id="mDescription" maxlength="700" placeholder="အခြေအနေ၊ အရည်အသွေး၊ ပို့ဆောင်မှု စသည်"></textarea>
+<img id="mPreview" class="preview hidden" alt="ပစ္စည်းပုံနမူနာ" style="width:min(100%,360px);margin-top:8px">
+<div class="actions"><button type="submit">AK Market သို့ အခမဲ့တင်မည်</button><button type="button" class="alt" onclick="resetMarketForm()">ရှင်းမည်</button></div>
+<p id="marketStatus" class="muted">Public ပို့စ်များကို အောက်တွင်ကြည့်နိုင်သည်။</p>
+</form></div>
+<div class="panel"><div class="split"><div><h2>မြန်မာ့ Online Shopping Center · ဆိုင်အားလုံး</h2><p class="muted">AK Sale Software အသုံးပြုသော ဆိုင်များ၏ အများပြည်သူမြင်နိုင်သည့် ဆိုင်စာမျက်နှာများကို တစ်နေရာတည်းတွင် စုစည်းပြသမည်။</p></div></div><div class="grid"><div><label>ဆိုင်ရှာရန်</label><input id="akShopSearch" placeholder="ဆိုင်အမည်၊ မြို့၊ မြို့နယ်..." oninput="renderPublicShops()"></div><div><label>အမျိုးအစား</label><select id="akShopCategory" onchange="renderPublicShops()"><option value="">ဆိုင်အားလုံး</option><option>ကုန်မာ</option><option>လျှပ်စစ်ပစ္စည်း</option><option>အထွေထွေ</option><option>အခြား</option></select></div></div><p id="akShopCount" class="muted">ဆိုင်စာရင်း ဖတ်နေသည်...</p><div id="akPublicShops" class="grid"><p class="muted">အတည်ပြုထားသော ဆိုင်စာမျက်နှာများ ပေါ်လာမည်။</p></div></div>
+<div class="panel"><h2>မိမိဆိုင်ကို Shopping Center ထဲ ထည့်ရန်</h2><p class="muted">ဆိုင်ပိုင်ရှင် Login ဝင်ပြီး ဆိုင်အချက်အလက် တင်ပါ။ CEO Admin စစ်ဆေးအတည်ပြုပြီးမှ အများမြင်မည်။</p><form id="akShopProfileForm"><div class="grid"><div><label>ဆိုင်အမည် *</label><input id="akShopName" maxlength="90" required></div><div><label>ဆိုင်အမျိုးအစား</label><select id="akShopType"><option>ကုန်မာ</option><option>လျှပ်စစ်ပစ္စည်း</option><option>အထွေထွေ</option><option>အခြား</option></select></div><div><label>မြို့</label><input id="akShopCity" maxlength="60"></div><div><label>မြို့နယ်</label><input id="akShopTownship" maxlength="60"></div><div><label>ဆိုင်လိပ်စာ / လမ်းအမည်</label><input id="akShopAddress" maxlength="180" placeholder="ဥပမာ - ၈၄ လမ်း၊ ၃၂x၃၃ လမ်းကြား"></div><div><label>ဖုန်း / Viber ဆက်သွယ်ရန်</label><input id="akShopPhone" maxlength="30"></div><div><label>Facebook / Website Link (ရွေးချယ်နိုင်)</label><input id="akShopLink" type="url" maxlength="500" placeholder="https://..."></div></div><label>ဆိုင်အကြောင်း</label><textarea id="akShopAbout" maxlength="300"></textarea><button type="submit">ဆိုင်စာမျက်နှာ အတည်ပြုရန်ပို့မည်</button><p id="akShopProfileStatus" class="muted">အတည်ပြုပြီးမှ Public Web နှင့် APK တွင် ပြသမည်။</p></form></div>
+<div class="panel"><h2>စပွန်ဆာ ကြော်ငြာ / Sponsor Ads</h2><p class="muted">အတည်ပြုပြီး ကြော်ငြာများကို Web Market နှင့် APK နှစ်ခုလုံးတွင် ပြသမည်။ ကြော်ငြာကိုနှိပ်ပါက ကြော်ငြာရှင်၏ Website သို့ သွားမည်။</p><div id="akSponsoredAds" class="grid"><p class="muted">ကြော်ငြာများ ဖတ်နေသည်...</p></div><p id="akAdStatus" class="muted">ကြော်ငြာအခြေအနေ</p></div>
+<div class="panel"><h2>ကိုယ့်ဆိုင် / လုပ်ငန်းကို ကြော်ငြာတင်ရန်</h2><p class="muted">ဆိုင်အကောင့် Login ဝင်ပြီး ကြော်ငြာတင်ပါ။ စစ်ဆေးအတည်ပြုပြီးမှ Web Market နှင့် APK တွင် ပေါ်မည်။ ကြော်ငြာခနှင့် ပြသမည့်ကာလကို Admin က အတည်ပြုမည်။</p><form id="akAdForm"><div class="grid"><div><label>ကြော်ငြာတွင် ပြမည့် ဆိုင် / လုပ်ငန်းအမည် *</label><input id="akAdShopName" maxlength="100" required placeholder="ဥပမာ - AK Hardware & Electrical"></div><div><label>ကြော်ငြာခေါင်းစဉ် *</label><input id="akAdTitle" maxlength="80" required></div><div><label>Website / ဆက်သွယ်ရန် Link *</label><input id="akAdUrl" type="url" maxlength="500" placeholder="https://example.com" required></div></div><label>ကြော်ငြာစာသား *</label><textarea id="akAdText" maxlength="240" required></textarea><div class="actions"><button type="submit">ကြော်ငြာစစ်ဆေးရန် ပို့မည်</button></div><p id="akAdSubmitStatus" class="muted">တင်သွင်းထားသော ကြော်ငြာကို Admin စစ်ဆေးမည်။</p></form></div>
+
+
+<div class="panel"><h2>မိမိတင်ထားသော ပစ္စည်းကြော်ငြာများ</h2><p class="muted">ကိုယ့် Gmail အကောင့်နဲ့ တင်ထားသော ပစ္စည်းများကို ပြင်ဆင်၊ ဖျက်နိုင်သည်။</p><div class="actions"><button type="button" class="alt" onclick="loadMyMarketListings()">မိမိကြော်ငြာများ ပြန်ဖတ်မည်</button></div><p id="myMarketStatus" class="muted">ဆိုင်အကောင့် Login ဝင်ပြီး ကြည့်ပါ။</p><div id="myMarketFeed" class="grid"></div></div><div class="panel"><h2>ရှာတွေ့သော ဆိုင်များနှင့် ပစ္စည်းများ</h2><div id="marketFeed" class="grid"></div></div>
+<div class="panel" id="akFreeBusinessAcademy">
+<div class="split"><div><h2>အခမဲ့ စီးပွားရေးလမ်းညွှန် · AK Business Academy</h2><p class="muted">ဆိုင်ငယ်၊ လက်ကား/လက်လီကုန်သည်၊ Online Seller များအတွက် အခမဲ့လေ့လာနိုင်သော လက်တွေ့လမ်းညွှန်</p></div><span class="pill">FREE · အခမဲ့</span></div>
+<div class="grid">
+<article class="panel"><h3>၁။ အရင်းအနှီးနှင့် ငွေစီးဆင်းမှု</h3><p>နေ့စဉ် ဝင်ငွေ၊ ထွက်ငွေ၊ အကြွေးရရန်/ပေးရန်ကို သီးခြားမှတ်တမ်းတင်ပါ။ ရောင်းရငွေတစ်ခုလုံးကို အမြတ်ဟု မယူဆပါနှင့်။</p></article>
+<article class="panel"><h3>၂။ ကုန်ပစ္စည်းဝယ်ယူမှု</h3><p>Supplier အနည်းဆုံး ၂–၃ ဦးထံမှ ဈေး၊ ပို့ခ၊ အာမခံ၊ အရည်အသွေးနှင့် ပြန်လဲခွင့်ကို နှိုင်းယှဉ်ပါ။ ဘောင်ချာနှင့် ဝယ်ယူရက်စွဲ သိမ်းပါ။</p></article>
+<article class="panel"><h3>၃။ Stock စီမံခန့်ခွဲမှု</h3><p>အရောင်းမြန်၊ အရောင်းနှေး၊ မလှုပ်သောပစ္စည်း ခွဲပါ။ အနည်းဆုံးလက်ကျန်သတ်မှတ်ပြီး မကုန်ခင် ပြန်မှာပါ။ ပျက်စီး/ပျောက်ဆုံးမှုကို သီးခြားစာရင်းသွင်းပါ။</p></article>
+<article class="panel"><h3>၄။ ဈေးနှုန်းသတ်မှတ်ခြင်း</h3><p>ဝယ်ဈေးအပြင် သယ်ယူခ၊ အလုပ်သမားခ၊ အငှားနှင့် အခြားကုန်ကျစရိတ်များ ထည့်တွက်ပါ။ ပြိုင်ဘက်ဈေးကို နှိုင်းယှဉ်သော်လည်း အရှုံးခံရောင်းခြင်း မလုပ်ပါနှင့်။</p></article>
+<article class="panel"><h3>၅။ Online Shopping နှင့် ရောင်းအား</h3><p>ပစ္စည်းပုံအစစ်၊ အရွယ်အစား၊ အမှတ်တံဆိပ်၊ အာမခံ၊ ဈေးနှုန်းနှင့် ပို့ဆောင်ခကို တိတိကျကျရေးပါ။ ဝယ်သူ၏ ငွေလွှဲ Screenshot တစ်ခုတည်းကို အတည်မယူဘဲ မိမိအကောင့်ထဲ ငွေဝင်မှု စစ်ပါ။</p></article>
+<article class="panel"><h3>၆။ လုံခြုံရေးနှင့် လိမ်လည်မှုကာကွယ်ရေး</h3><p>OTP၊ Password၊ Recovery Code မမျှဝေပါနှင့်။ Supplier အသစ်ကို အရင်စစ်ဆေးပါ။ အကြွေးပေးရာတွင် အမည်၊ ဖုန်း၊ ပမာဏ၊ သတ်မှတ်ရက်နှင့် သဘောတူညီချက် မှတ်တမ်းထားပါ။</p></article>
+</div>
+<div class="actions"><a class="btn" href="./BUSINESS-GUIDE-MY.md" target="_blank" rel="noopener">မြန်မာ စီးပွားရေးစာအုပ်ဖတ်ရန်</a><a class="btn alt" href="./BUSINESS-GUIDE-EN.md" target="_blank" rel="noopener">Read English Business Guide</a></div>
+</div>
+
+</section>
+
+
+
+<section id="products" class="view">
+<div class="panel"><h2>ပစ္စည်းထည့် / ပြင်</h2><form id="productForm"><input type="hidden" id="pId"><div class="grid">
+<div><label>ပစ္စည်းအမည် *</label><input id="pName" required></div><div><label>ပစ္စည်းကုဒ် / Barcode</label><div class="actions"><input id="pCode" autocomplete="off" style="flex:1;min-width:130px"><button type="button" class="alt" id="akScanBarcodeBtn">📷 Scan</button></div><small class="muted">Camera barcode scan သို့မဟုတ် Bluetooth/USB HID scanner ဖြင့် ဖတ်နိုင်သည်။</small></div><div><label>အမျိုးအစား</label><input id="pCat" placeholder="ကုန်မာ / လျှပ်စစ်"></div><div><label>ယူနစ်</label><input id="pUnit" value="ခု"></div><div><label>ဝယ်ဈေး</label><input id="pCost" type="number" min="0" step="any" value="0"></div><div><label>လက်လီဈေး</label><input id="pRetail" type="number" min="0" step="any" value="0"></div><div><label>လက်ကားဈေး</label><input id="pWholesale" type="number" min="0" step="any" value="0"></div><div><label>လက်ကျန်</label><input id="pStock" type="number" min="0" step="any" value="0"></div><div><label>အနည်းဆုံးထားရမည့်လက်ကျန် (Alert)</label><input id="pMinStock" type="number" min="0" step="any" value="0"><small class="muted">ဒီပမာဏအောက်ရောက်ရင် ပြန်မှာရန် သတိပေးမည်။</small></div><div><label>ပစ္စည်းဓာတ်ပုံ</label><input id="pPhoto" type="file" accept="image/*"></div>
+</div><img id="photoPreview" class="thumb hidden" alt="preview"><div class="actions"><button>သိမ်းမည်</button><button type="button" class="alt" onclick="resetProduct()">ရှင်းမည်</button></div></form></div>
+<div class="panel"><div class="split"><h2>ပစ္စည်းစာရင်း</h2><div class="actions"><button type="button" class="alt" onclick="exportProductsCsv()">CSV ထုတ်ရန်</button><input style="max-width:220px" id="productQuery" placeholder="ရှာရန်" oninput="renderProducts()"></div></div><div class="tablewrap"><table><thead><tr><th>ပုံ</th><th>ပစ္စည်း</th><th>ကုဒ်</th><th>လက်ကျန်</th><th>ဝယ်ဈေး</th><th>လက်လီ</th><th>လက်ကား</th><th>လုပ်ဆောင်ချက်</th></tr></thead><tbody id="productRows"></tbody></table></div></div>
+</section>
+
+<section id="sales" class="view">
+<div class="panel"><h2>အရောင်းတင်ရန်</h2><form id="saleForm"><div class="grid">
+<div class="sale-scan-tools"><label>Barcode / SKU Scan ဖြင့် အရောင်းထည့်ရန်</label><div class="actions"><input id="saleBarcodeInput" autocomplete="off" inputmode="none" placeholder="Scanner ဖတ်ပါ သို့မဟုတ် ကုဒ်ရိုက်ပြီး Enter နှိပ်ပါ" style="flex:1;min-width:180px"><button type="button" class="alt" id="akSaleScanBtn">📷 Camera Scan</button></div><small class="muted">Barcode Scanner စက်ကိုလည်း Bluetooth / USB HID ဖြင့် ချိတ်ပြီး ဒီအကွက်ထဲ Scan ဖတ်နိုင်သည်။</small></div><div id="saleLines"><div class="sale-line grid"><div><label>ပစ္စည်း</label><select id="sProduct" class="sale-product" required></select></div><div><label>ဈေးနှုန်းအမျိုးအစား</label><select id="sType" class="sale-type"><option value="retail">လက်လီ</option><option value="wholesale">လက်ကား</option><option value="custom">ကိုယ်တိုင်သတ်မှတ်</option></select></div><div><label>အရေအတွက်</label><input id="sQty" class="sale-qty" type="number" min=".001" step="any" value="1" required></div><div><label>တစ်ခုဈေး</label><input id="sPrice" class="sale-price" type="number" min="0" step="any" value="0" required></div><div><button type="button" class="red" onclick="removeSaleLine(this)">ဖယ်ရှား</button></div></div></div><div class="actions"><button type="button" class="alt" onclick="addSaleLine()">+ ပစ္စည်းတစ်မျိုး ထပ်ထည့်</button></div><div><label>ဖောက်သည်</label><input id="sCustomer" placeholder="အမည် / ဖုန်း"></div><div><label>ပေးချေမှု</label><select id="sPayType"><option value="full">ငွေအပြည့်</option><option value="partial">တစ်စိတ်တစ်ပိုင်း</option><option value="credit">အကြွေး</option></select></div><div><label>ပေးငွေ</label><input id="sPaid" type="number" min="0" step="any" value="0"></div><div><label>မှတ်ချက်</label><input id="sNote"></div>
+</div><div class="actions"><button>အရောင်းသိမ်းမည်</button></div></form></div>
+<div class="panel"><div class="split"><h2>အရောင်းမှတ်တမ်း</h2><div class="actions no-print"><button type="button" class="alt" onclick="printSalesLedger()">အရောင်းစာရင်း Print</button></div></div><div class="tablewrap"><table><thead><tr><th>ရက်စွဲ</th><th>ဘောင်ချာ</th><th>ဖောက်သည်</th><th>စုစုပေါင်း</th><th>ပေးငွေ</th><th>အကြွေး</th><th></th></tr></thead><tbody id="saleRows"></tbody></table></div></div>
+<div class="panel" id="akPrinterManager"><h2>Printer အများအပြား စီမံရန်</h2><p class="muted">Printer တစ်လုံးချင်းစီ၏ အမည်နှင့် ချိတ်ဆက်မှုကို မှတ်သားထားနိုင်သည်။ Print နှိပ်လျှင် ဖုန်း/ကွန်ပျူတာ၏ Print Service မှ Printer ကို ရွေးပါ။</p><div class="grid"><div><label>Printer အမည်</label><input id="akPrinterName" maxlength="60" placeholder="ဥပမာ - ကောင်တာ ၁ Printer"></div><div><label>Printer ရာထူး / အသုံးပြုမည့်နေရာ</label><select id="akPrinterPurpose"><option value="receipt">ဘောင်ချာ Printer</option><option value="general">အထွေထွေ Print</option></select></div><div><label>ချိတ်ဆက်မှုအမျိုးအစား</label><select id="akPrinterType" onchange="akPrinterTypeChanged()"><option value="system">Android / System Print</option><option value="wifi">Wi-Fi Direct (TCP 9100)</option><option value="bluetooth">Bluetooth Classic ESC/POS</option><option value="usb">USB (Android Print Service)</option></select></div><div id="akPrinterBluetoothControls"><label>Pair လုပ်ထားသော Bluetooth Printer</label><div class="actions"><select id="akPrinterBluetoothDevice" style="flex:1"><option value="">Printer စက်ရှာရန် နှိပ်ပါ</option></select><button type="button" class="alt" onclick="akLoadBluetoothPrinters()">Paired စက်ရှာရန်</button></div></div><div id="akPrinterWifiControls"><label>Wi-Fi Printer IP / Host နှင့် Port</label><div class="actions"><input id="akPrinterHost" placeholder="ဥပမာ 192.168.1.100" style="flex:1"><input id="akPrinterPort" type="number" min="1" max="65535" value="9100" style="max-width:100px"></div></div><div><label>ဘောင်ချာ စာရွက်အကျယ်</label><select id="akPrinterPaper" onchange="akSetPrinterPaper(this.value)"><option value="58mm">58mm Thermal</option><option value="80mm" selected>80mm Thermal</option><option value="A4">A4 စာရွက်</option></select></div></div><p class="muted">Bluetooth Printer ကို Android Settings မှာ အရင် Pair လုပ်ပါ။ Wi-Fi Printer ကို ဖုန်းနှင့် တူညီသော Wi-Fi Network ချိတ်ပြီး Printer IP နှင့် RAW TCP Port (ပုံမှန် 9100) ထည့်ပါ။ Direct Print သည် APK ထဲတွင်သာ အလုပ်လုပ်ပြီး Website သည် System Print ကို သုံးမည်။</p><div class="actions"><button type="button" onclick="akSavePrinter()">Printer ထည့်မည်</button><button type="button" class="alt" onclick="akPrintTest()">စမ်းသပ် Print</button></div><div class="tablewrap"><table><thead><tr><th>Printer</th><th>ရာထူး</th><th>ချိတ်ဆက်မှု</th><th>Default</th><th>လုပ်ဆောင်ချက်</th></tr></thead><tbody id="akPrinterRows"><tr><td colspan="5">Printer မထည့်ရသေးပါ</td></tr></tbody></table></div><p class="muted" id="akPrinterStatus">Printer Profile ကို ဒီဖုန်းထဲတွင် သိမ်းထားသည်။ APK မှ Bluetooth Classic ESC/POS နှင့် Wi-Fi RAW TCP 9100 တိုက်ရိုက်ပို့နိုင်သည်။ Website မှာ Android/System Print ကို သုံးပါ။</p>
+<p class="muted"><a href="./PRINTER-SETUP-MY.md" target="_blank" rel="noopener">Bluetooth / Wi-Fi Printer ချိတ်ဆက်နည်း ဖတ်ရန်</a></p></div>
+</section>
+
+<section id="purchases" class="view">
+<div class="panel"><h2>အဝယ်တင်ရန်</h2><form id="purchaseForm"><div class="grid"><div><label>ပစ္စည်း</label><select id="bProduct" required></select></div><div><label>အရေအတွက်</label><input id="bQty" type="number" min=".001" step="any" value="1"></div><div><label>တစ်ခုဝယ်ဈေး</label><input id="bCost" type="number" min="0" step="any" value="0"></div><div><label>Supplier</label><input id="bSupplier"></div><div><label>ပေးငွေ</label><input id="bPaid" type="number" min="0" step="any" value="0"></div></div><div class="actions"><button>အဝယ်သိမ်းမည်</button></div></form></div>
+<div class="panel"><h2>အဝယ်မှတ်တမ်း</h2><div class="tablewrap"><table><thead><tr><th>ရက်စွဲ</th><th>ပစ္စည်း</th><th>Supplier</th><th>စုစုပေါင်း</th><th>ပေးငွေ</th><th>အကြွေး</th></tr></thead><tbody id="purchaseRows"></tbody></table></div></div>
+</section>
+
+<section id="people" class="view">
+<div class="panel"><h2>Customer / Supplier စာရင်း</h2><form id="personForm"><div class="grid"><div><label>အမည် *</label><input id="personName" required></div><div><label>ဖုန်း</label><input id="personPhone"></div><div><label>အမျိုးအစား</label><select id="personType"><option value="customer">Customer</option><option value="supplier">Supplier</option></select></div><div><label>မှတ်ချက်</label><input id="personNote"></div></div><div class="actions"><button>စာရင်းသိမ်းမည်</button></div></form><div class="tablewrap"><table><thead><tr><th>အမည်</th><th>အမျိုးအစား</th><th>ဖုန်း</th><th>မှတ်ချက်</th><th></th></tr></thead><tbody id="peopleRows"></tbody></table></div></div>
+<div class="panel"><h2>အကြွေးဆပ် / ပေးချေမှု မှတ်တမ်း</h2><form id="paymentForm"><div class="grid"><div><label>အကြွေးအမျိုးအစား</label><select id="payDirection"><option value="in">Customer ဆီမှ ရရန်</option><option value="out">Supplier ကို ပေးရန်</option></select></div><div><label>အမည်</label><input id="payPerson" required></div><div><label>သက်ဆိုင်ရာ Invoice (ရွေးချယ်နိုင်)</label><select id="payInvoice"><option value="">သီးခြားမှတ်တမ်းသာ သိမ်းမည်</option></select></div><div><label>ငွေပမာဏ</label><input id="payAmount" type="number" min=".01" step="any" required></div><div><label>မှတ်ချက်</label><input id="payNote"></div></div><div class="actions"><button>ငွေပေးချေမှုသိမ်းမည်</button></div></form><div class="tablewrap"><table><thead><tr><th>ရက်စွဲ</th><th>အမျိုးအစား</th><th>အမည်</th><th>ငွေ</th><th>မှတ်ချက်</th></tr></thead><tbody id="paymentRows"></tbody></table></div></div>
+</section>
+
+<section id="expenses" class="view">
+<div class="panel"><h2>အသုံးစရိတ်</h2><form id="expenseForm"><div class="grid"><div><label>အကြောင်းအရာ *</label><input id="eName" required></div><div><label>ငွေပမာဏ</label><input id="eAmount" type="number" min="0" step="any" required></div><div><label>မှတ်ချက်</label><input id="eNote"></div></div><div class="actions"><button>သိမ်းမည်</button></div></form><div class="tablewrap"><table><thead><tr><th>ရက်စွဲ</th><th>အကြောင်းအရာ</th><th>ငွေ</th><th>မှတ်ချက်</th></tr></thead><tbody id="expenseRows"></tbody></table></div></div>
+</section>
+
+<section id="reports" class="view">
+<div class="panel"><h2>အစီရင်ခံစာ</h2><div class="grid"><div><label>စတင်ရက်</label><input id="fromDate" type="date"></div><div><label>ဆုံးရက်</label><input id="toDate" type="date"></div></div><div class="actions"><button onclick="renderReport()">တွက်ချက်မည်</button><button class="alt" onclick="if(akRequirePrint())window.print()">Print</button></div><div id="reportOutput"></div></div>
+</section>
+
+<section id="ads" class="view">
+ <div class="panel"><h2>Social Media ကြော်ငြာဖန်တီးရန်</h2>
+ <div class="notice">ချိတ်ဆက်ထားသော TikTok အကောင့်: <b>@sannnlinpaing</b><br><a href="https://www.tiktok.com/@sannnlinpaing?_r=1&amp;_t=ZS-9B8ER2Rjvl7" target="_blank" rel="noopener">TikTok Profile ဖွင့်ရန်</a> · <button type="button" class="alt" onclick="openAkTikTok()">TikTok သို့သွားရန်</button></div>
+ <div class="notice">ပစ္စည်းစာရင်းမှ ရွေးလိုက်ရုံဖြင့် အမည်၊ ဈေးနှုန်းနှင့် ဓာတ်ပုံကို ဖြည့်ပေးမည်။ Share ခလုတ်မှ Android Share Menu ကိုဖွင့်ပြီး Facebook၊ TikTok၊ Viber၊ Telegram သို့မဟုတ် အခြား App ကိုရွေးနိုင်သည်။</div>
+ <div class="grid">
+ <div><label>ရှိပြီးသားပစ္စည်းရွေးရန်</label><select id="adProduct" onchange="selectAdProduct()"><option value="">-- ပစ္စည်းရွေးပါ --</option></select></div>
+ <div><label>ပစ္စည်းအမည်</label><input id="adName" placeholder="ပစ္စည်းအမည်"></div>
+ <div><label>ဈေးနှုန်း</label><input id="adPrice" placeholder="ဈေးနှုန်း"></div>
+ <div><label>ဆက်သွယ်ရန်</label><input id="adContact" placeholder="ဖုန်း / ဆိုင်လိပ်စာ"></div>
+ <div><label>ဓာတ်ပုံ</label><input id="adPhoto" type="file" accept="image/*"></div>
+ </div>
+ <div class="actions"><button onclick="makeAd()">ကြော်ငြာပုံဖန်တီးမည်</button><button onclick="shareAd()">Social အားလုံးသို့ ပုံ+စာ Share</button><button class="alt" onclick="shareAdTo('facebook')">Facebook</button><button class="alt" onclick="shareAdTo('telegram')">Telegram</button><button class="alt" onclick="shareAdTo('viber')">Viber</button><button class="alt" onclick="shareAdTo('tiktok')">TikTok</button><button class="alt" onclick="shareAdTo('whatsapp')">WhatsApp</button><button class="alt" onclick="shareAdTo('messenger')">Messenger</button><button class="alt" onclick="shareAdTo('instagram')">Instagram</button><button class="alt" onclick="shareAdTo('copy')">Caption/Link Copy</button><button class="alt" onclick="downloadAd()">ပုံသိမ်းမည်</button></div>
+ <canvas id="adCanvas" width="1080" height="1080" class="preview" style="width:min(100%,420px);margin-top:12px;background:white"></canvas>
+ <p class="muted">အကောင်းဆုံးနည်းမှာ ပုံနှင့် Caption ကို Android Share Menu မှ တစ်ခါတည်းရွေးပို့ခြင်းဖြစ်သည်။ Platform တစ်ခုချင်းစီ Shortcut သည် ပုံကိုသိမ်း၊ Caption ကို Copy လုပ်ပြီး သက်ဆိုင်ရာ App ဖွင့်ပေးမည်။ App ထဲတွင် ပုံကိုရွေးပြီး Post တင်ပါ။ Auto-post အတွက် သက်ဆိုင်ရာ Platform API/OAuth ခွင့်ပြုချက်လိုအပ်သည်။</p>
+ </div>
+ </section>
+
+
+<section id="market" class="view">
+<div class="panel" style="background:linear-gradient(120deg,#0b2f24,#176b4b);color:white"><span class="pill">AK Sale Software</span><h2 style="color:white;font-size:24px">သင့်ဆိုင်ကို စနစ်တကျ ထိန်းချုပ်ပါ</h2><p>အရောင်း POS · ကုန်ပစ္စည်းစာရင်း · အကြွေးစာရင်း · ဆိုင်ခွဲနှင့် ကောင်တာ · ဖုန်း ၅ လုံးအထိ ချိတ်ဆက်အသုံးပြုနိုင်မည့် ဆိုင်စီမံခန့်ခွဲမှုစနစ်</p><div class="actions"><button onclick="if(navigator.share){navigator.share({title:'AK Sale Software',text:'AK Sale Software · ဆိုင်အရောင်းနှင့် စာရင်းစီမံခန့်ခွဲမှု',url:location.origin+location.pathname+'?app=1'}).catch(()=>{})}else if(navigator.clipboard){navigator.clipboard.writeText(location.origin+location.pathname+'?app=1').then(()=>alert('AK Software Link Copy လုပ်ပြီးပါပြီ'))}">AK Software ကို မျှဝေကြော်ငြာမည်</button><a class="btn" href="?app=1#backup">ဆိုင်သုံးစနစ် ဝင်ရန်</a></div></div>
+<div class="panel"><div class="split"><div><h2>AK Market · မြန်မာ့အရောင်းအဝယ်</h2><p class="muted">ပစ္စည်းပုံ၊ ဈေးနှုန်းနှင့် ဆိုင်အချက်အလက်ကို အများပြည်သူထံ မျှဝေပါ။</p></div><span class="pill">အခြေခံအသုံးပြုမှု အခမဲ့</span></div>
+<div class="notice">အများပြည်သူသည် Login မလိုဘဲ ပစ္စည်းများကို ကြည့်ရှုနိုင်သည်။ ဆိုင်ပိုင်ရှင်နှင့် ဝယ်သူ/အသုံးပြုသူများသည် Gmail Login ဖြင့် အခမဲ့ကြော်ငြာတင်နိုင်သည်။ POS Subscription ဝယ်ထားရန် မလိုပါ။ ဆိုင်အတွင်း POS စာရင်းများကို Public မပြပါ။ ပုံတင်ရန် Firebase Storage ဖွင့်ထားရမည်။</div>
+<form id="marketForm"><div class="grid">
+<div><label>ပစ္စည်းအမည် *</label><input id="mTitle" maxlength="90" required placeholder="ဥပမာ - LED မီးလုံး 12W"></div>
+<div><label>ရောင်းဈေး (ကျပ်) *</label><input id="mPrice" type="number" min="1" step="1" required placeholder="8500"></div>
+<div><label>အမျိုးအစား</label><select id="mCategory"><option>ကုန်မာ</option><option>လျှပ်စစ်ပစ္စည်း</option><option>ဆောက်လုပ်ရေး</option><option>လက်ကိရိယာ / Tools</option><option>ရေပိုက်နှင့် ရေပစ္စည်း</option><option>မီးအလင်းရောင်</option><option>ဝါယာကြိုးနှင့် Cable</option><option>မော်တာနှင့် Pump</option><option>ဆိုလာနှင့် Battery</option><option>သော့နှင့် Lock</option><option>သံထည်နှင့် Fastener</option><option>ဆေးနှင့် အရောင်</option><option>အိမ်သုံးပစ္စည်း</option><option>စက်ပစ္စည်းနှင့် အပိုပစ္စည်း</option><option>ဖုန်းနှင့် အီလက်ထရွန်းနစ်</option><option>စိုက်ပျိုးရေးပစ္စည်း</option><option>ယာဉ်အပိုပစ္စည်း</option><option>အခြား</option></select></div>
+<div><label>မြို့</label><input id="mCity" maxlength="50" placeholder="မန္တလေး"></div>
+<div><label>မြို့နယ်</label><input id="mTownship" maxlength="60" placeholder="ချမ်းအေးသာစံ"></div>
+<div><label>ဆက်သွယ်ရန် ဖုန်း / Viber နံပါတ် *</label><input id="mPhone" type="tel" maxlength="25" required placeholder="09..."><span class="muted">ဝယ်သူက ဖုန်းခေါ်ရန်နှင့် Viber ဆက်သွယ်ရန် အသုံးပြုမည်။</span></div>
+<div><label>ပစ္စည်းဓာတ်ပုံ (မဖြစ်မနေမဟုတ်ပါ)</label><input id="mPhoto" type="file" accept="image/jpeg,image/png,image/webp"><span class="muted">JPG / PNG / WebP · 2MB အောက် · Storage မဖွင့်ရသေးလည်း ပုံမပါဘဲ ကြော်ငြာတင်နိုင်သည်။</span></div>
+</div>
+<label>ပစ္စည်းအကြောင်းအရာ</label><textarea id="mDescription" maxlength="700" placeholder="အခြေအနေ၊ အရည်အသွေး၊ ပို့ဆောင်မှု စသည်"></textarea>
+<img id="mPreview" class="preview hidden" alt="ပစ္စည်းပုံနမူနာ" style="width:min(100%,360px);margin-top:8px">
+<div class="actions"><button type="submit">AK Market သို့ အခမဲ့တင်မည်</button><button type="button" class="alt" onclick="resetMarketForm()">ရှင်းမည်</button></div>
+<p id="marketStatus" class="muted">Public ပို့စ်များကို အောက်တွင်ကြည့်နိုင်သည်။</p>
+</form></div>
+<div class="panel"><div class="split"><div><h2>မြန်မာ့ Online Shopping Center · ဆိုင်အားလုံး</h2><p class="muted">AK Sale Software အသုံးပြုသော ဆိုင်များ၏ အများပြည်သူမြင်နိုင်သည့် ဆိုင်စာမျက်နှာများကို တစ်နေရာတည်းတွင် စုစည်းပြသမည်။</p></div></div><div class="grid"><div><label>ဆိုင်ရှာရန်</label><input id="akShopSearch" placeholder="ဆိုင်အမည်၊ မြို့၊ မြို့နယ်..." oninput="renderPublicShops()"></div><div><label>အမျိုးအစား</label><select id="akShopCategory" onchange="renderPublicShops()"><option value="">ဆိုင်အားလုံး</option><option>ကုန်မာ</option><option>လျှပ်စစ်ပစ္စည်း</option><option>အထွေထွေ</option><option>အခြား</option></select></div></div><p id="akShopCount" class="muted">ဆိုင်စာရင်း ဖတ်နေသည်...</p><div id="akPublicShops" class="grid"><p class="muted">အတည်ပြုထားသော ဆိုင်စာမျက်နှာများ ပေါ်လာမည်။</p></div></div>
+<div class="panel"><h2>မိမိဆိုင်ကို Shopping Center ထဲ ထည့်ရန်</h2><p class="muted">ဆိုင်ပိုင်ရှင် Login ဝင်ပြီး ဆိုင်အချက်အလက် တင်ပါ။ CEO Admin စစ်ဆေးအတည်ပြုပြီးမှ အများမြင်မည်။</p><form id="akShopProfileForm"><div class="grid"><div><label>ဆိုင်အမည် *</label><input id="akShopName" maxlength="90" required></div><div><label>ဆိုင်အမျိုးအစား</label><select id="akShopType"><option>ကုန်မာ</option><option>လျှပ်စစ်ပစ္စည်း</option><option>အထွေထွေ</option><option>အခြား</option></select></div><div><label>မြို့</label><input id="akShopCity" maxlength="60"></div><div><label>မြို့နယ်</label><input id="akShopTownship" maxlength="60"></div><div><label>ဆိုင်လိပ်စာ / လမ်းအမည်</label><input id="akShopAddress" maxlength="180" placeholder="ဥပမာ - ၈၄ လမ်း၊ ၃၂x၃၃ လမ်းကြား"></div><div><label>ဖုန်း / Viber ဆက်သွယ်ရန်</label><input id="akShopPhone" maxlength="30"></div><div><label>Facebook / Website Link (ရွေးချယ်နိုင်)</label><input id="akShopLink" type="url" maxlength="500" placeholder="https://..."></div></div><label>ဆိုင်အကြောင်း</label><textarea id="akShopAbout" maxlength="300"></textarea><button type="submit">ဆိုင်စာမျက်နှာ အတည်ပြုရန်ပို့မည်</button><p id="akShopProfileStatus" class="muted">အတည်ပြုပြီးမှ Public Web နှင့် APK တွင် ပြသမည်။</p></form></div>
+<div class="panel"><h2>စပွန်ဆာ ကြော်ငြာ / Sponsor Ads</h2><p class="muted">အတည်ပြုပြီး ကြော်ငြာများကို Web Market နှင့် APK နှစ်ခုလုံးတွင် ပြသမည်။ ကြော်ငြာကိုနှိပ်ပါက ကြော်ငြာရှင်၏ Website သို့ သွားမည်။</p><div id="akSponsoredAds" class="grid"><p class="muted">ကြော်ငြာများ ဖတ်နေသည်...</p></div><p id="akAdStatus" class="muted">ကြော်ငြာအခြေအနေ</p></div>
+<div class="panel"><h2>ကိုယ့်ဆိုင် / လုပ်ငန်းကို ကြော်ငြာတင်ရန်</h2><p class="muted">ဆိုင်အကောင့် Login ဝင်ပြီး ကြော်ငြာတင်ပါ။ စစ်ဆေးအတည်ပြုပြီးမှ Web Market နှင့် APK တွင် ပေါ်မည်။ ကြော်ငြာခနှင့် ပြသမည့်ကာလကို Admin က အတည်ပြုမည်။</p><form id="akAdForm"><div class="grid"><div><label>ကြော်ငြာတွင် ပြမည့် ဆိုင် / လုပ်ငန်းအမည် *</label><input id="akAdShopName" maxlength="100" required placeholder="ဥပမာ - AK Hardware & Electrical"></div><div><label>ကြော်ငြာခေါင်းစဉ် *</label><input id="akAdTitle" maxlength="80" required></div><div><label>Website / ဆက်သွယ်ရန် Link *</label><input id="akAdUrl" type="url" maxlength="500" placeholder="https://example.com" required></div></div><label>ကြော်ငြာစာသား *</label><textarea id="akAdText" maxlength="240" required></textarea><div class="actions"><button type="submit">ကြော်ငြာစစ်ဆေးရန် ပို့မည်</button></div><p id="akAdSubmitStatus" class="muted">တင်သွင်းထားသော ကြော်ငြာကို Admin စစ်ဆေးမည်။</p></form></div>
+
+
+<div class="panel"><h2>မိမိတင်ထားသော ပစ္စည်းကြော်ငြာများ</h2><p class="muted">ကိုယ့် Gmail အကောင့်နဲ့ တင်ထားသော ပစ္စည်းများကို ပြင်ဆင်၊ ဖျက်နိုင်သည်။</p><div class="actions"><button type="button" class="alt" onclick="loadMyMarketListings()">မိမိကြော်ငြာများ ပြန်ဖတ်မည်</button></div><p id="myMarketStatus" class="muted">ဆိုင်အကောင့် Login ဝင်ပြီး ကြည့်ပါ။</p><div id="myMarketFeed" class="grid"></div></div><div class="panel"><h2>ရှာတွေ့သော ဆိုင်များနှင့် ပစ္စည်းများ</h2><div id="marketFeed" class="grid"></div></div>
 <div class="panel" id="akFreeBusinessAcademy">
 <div class="split"><div><h2>အခမဲ့ စီးပွားရေးလမ်းညွှန် · AK Business Academy</h2><p class="muted">ဆိုင်ငယ်၊ လက်ကား/လက်လီကုန်သည်၊ Online Seller များအတွက် အခမဲ့လေ့လာနိုင်သော လက်တွေ့လမ်းညွှန်</p></div><span class="pill">FREE · အခမဲ့</span></div>
 <div class="grid">
@@ -369,33 +559,15 @@ body.ak-owner-user-preview .owner-only{display:none!important} body.ak-owner-use
 <p class="muted">လက်ရှိ Build အခြေအနေနှင့် Artifact ရရှိမှုကို GitHub Actions ထဲတွင် အတည်ပြုပါ။ Build အောင်မြင်ခြင်းတစ်ခုတည်းသည် Release APK ကို လုံခြုံစိတ်ချစွာ ရောင်းချရန် အသင့်ဖြစ်ကြောင်း မဆိုလိုပါ။</p>
 </div></section>
 <section id="backup" class="view active">
-<div id="akPaywallNotice" class="panel notice"><h2>AK Sale Software အသုံးပြုခွင့်ဖွင့်ရန်</h2><ol><li>သင့်ဆိုင်အတွက် Gmail ဖြင့် Login ဝင်ပါ။</li><li>၁ လ၊ ၃ လ၊ ၆ လ သို့မဟုတ် ၁ နှစ် Package ရွေးပါ။</li><li>KBZPay သို့ ငွေလွှဲပြီး Transaction ID နှင့် Screenshot ပို့ပါ။</li><li>Owner က ငွေဝင်မှုကို စစ်ဆေးအတည်ပြုပြီးမှ ပင်မ POS ကို ဖွင့်ပေးမည်။</li></ol><p id="akPaywallDetail">အတည်ပြုချက် မရမချင်း ပစ္စည်း၊ အရောင်းနှင့် စာရင်းများကို အသုံးပြုခွင့်မပေးပါ။</p></div>
+<div id="akPaywallNotice" class="panel notice"><h2>AK Sale Free Beta</h2><p id="akPaywallDetail">Gmail ဖြင့် Login ဝင်ပြီး Email ကို အတည်ပြုပါ။ Free Beta ဆိုင်အကောင့် ၃၀ အထိသာ လက်ခံမည်။ Owner က အကောင့်အသုံးပြုခွင့်ကို စီမံနိုင်သည်။</p></div>
 <div class="panel"><h2>Backup / Restore</h2><p class="muted">ပစ္စည်း၊ အရောင်း၊ အဝယ်၊ လူစာရင်း၊ အကြွေးဆပ်မှတ်တမ်း၊ အသုံးစရိတ်နှင့် Shopping Center ဆိုင်ခွဲ/ကောင်တာ/Shift/ဝန်ထမ်းစာရင်းတို့ကို JSON ဖိုင်တစ်ခုတည်းဖြင့် Backup ထုတ်နိုင်သည်။ Restore မလုပ်မီ လက်ရှိဒေတာကိုလည်း Pre-restore snapshot အဖြစ် သိမ်းပေးမည်။</p><div class="actions"><button onclick="backup()">Backup JSON ထုတ်မည်</button><label class="btn">Restore JSON<input type="file" accept=".json,application/json" id="restoreInput" hidden onchange="restore(event)"></label><button class="alt" onclick="csvExport()">အရောင်း CSV ထုတ်မည်</button><button onclick="akCreateCloudBackup()">Cloud Backup သိမ်းမည်</button><button class="alt" onclick="akListCloudBackups()">Cloud Backup စာရင်း</button></div><p id="akCloudBackupStatus" class="muted">Cloud Backup ကို Login ဝင်ထားသော ဆိုင်အကောင့်၏ Server ပေါ်တွင် လုံခြုံစွာ သိမ်းနိုင်သည်။</p><div class="tablewrap"><table><thead><tr><th>သိမ်းသည့်ရက်</th><th>အရွယ်အစား</th><th>လုပ်ဆောင်ချက်</th></tr></thead><tbody id="akCloudBackupRows"><tr><td colspan="3">Cloud Backup စာရင်း မဖတ်ရသေးပါ။</td></tr></tbody></table></div></div>
-<div class="panel" id="akLicensePanel"><h2>အသုံးပြုခွင့် / လစဉ်ကြေး</h2>
-<div class="notice">Subscription သက်တမ်းကို Server မှ စစ်ဆေးသည်။ အခမဲ့ Trial မရှိပါ။ သက်တမ်းတိုးရန် KPay ငွေလွှဲပြီး အောက်ပါအချက်အလက်ဖြင့် တောင်းဆိုပါ။</div>
-<p><b>ဆိုင် Account UID:</b> <code id="shopUid">Login ဝင်ပြီးမှ ပြမည်</code></p>
-<p id="licenseStatus" class="muted">အသုံးပြုခွင့် မစစ်ရသေးပါ။</p>
-<div class="panel" id="licenseCalendarPanel"><h3>သက်တမ်း Calendar / ငွေချေရက်</h3><div class="grid"><div><label>သက်တမ်းကုန်မည့်ရက်</label><input id="licenseExpiryDate" type="date" readonly></div><div><label>ကျန်ရှိသည့်ရက်</label><p id="licenseRemainingDays" class="stat">—</p></div></div><p id="licenseCalendarState" class="notice">Login ဝင်ပြီး သက်တမ်းစစ်ဆေးပါ။</p><p class="muted">သက်တမ်းတိုးငွေကို Owner အတည်ပြုပြီးပါက လက်ရှိကျန်ရက်မဆုံးရှုံးဘဲ နောက်ဆုံးသက်တမ်းကုန်ရက်နောက်တွင် ရက်အသစ်ပေါင်းထည့်မည်။</p></div>
-<div class="notice"><b>KBZPay တစ်မျိုးတည်းဖြင့် ငွေပေးချေပါ</b><div id="paymentAccountInfo">KPay အကောင့်အချက်အလက် ဖတ်နေသည်...</div><div class="actions"><button type="button" class="alt" onclick="copyKpayNumber()">KPay ဖုန်းနံပါတ် ကူးယူမည်</button></div></div>
-<div class="panel"><h3>ငွေချေရာတွင် လိုက်နာရန်</h3><ol><li>အောက်တွင် Package ရွေးပြီး ကျသင့်ငွေကို စစ်ပါ။</li><li>KPay App ကို ကိုယ်တိုင်ဖွင့်ပြီး အထက်ပါအကောင့်သို့ ငွေလွှဲပါ။</li><li>ငွေလွှဲအောင်မြင်ကြောင်းပြသည့် စာမျက်နှာကို Screenshot ရိုက်ပါ။</li><li>Transaction ID နှင့် Screenshot ကို ဖြည့်ပြီး တင်ပါ။</li><li>Owner က KPay ထဲရှိ ငွေလက်ခံမှုကို စစ်ပြီးမှ သက်တမ်းဖွင့်ပေးပါမည်။</li></ol><p class="muted">ငွေမလွှဲရသေးပါက Submit မလုပ်ပါနှင့်။ Screenshot တစ်ခုတည်းဖြင့် အလိုအလျောက် Approve မလုပ်ပါ။</p></div>
-<div class="grid"><div><label>ငွေပေးချေမည့်နည်းလမ်း</label><select id="payMethod"><option value="">KPay အကောင့်ဖတ်နေသည်...</option></select></div><div><label>ငွေလွှဲ Transaction ID</label><input id="payReference" maxlength="120" placeholder="KPay Transaction ID ထည့်ပါ"></div><div><label>ရွေးချယ်မည့် Package</label><div class="grid" id="akPlanButtons"><button type="button" class="ak-plan-option active" data-days="30" onclick="selectAkPlan(30)">၁ လ<br>30,000 ကျပ်</button><button type="button" class="alt ak-plan-option" data-days="90" onclick="selectAkPlan(90)">၃ လ<br>90,000 ကျပ်</button><button type="button" class="alt ak-plan-option" data-days="180" onclick="selectAkPlan(180)">၆ လ<br>180,000 ကျပ်</button><button type="button" class="alt ak-plan-option" data-days="365" onclick="selectAkPlan(365)">၁ နှစ်<br>360,000 ကျပ်</button></div><select id="payPlan" onchange="updatePaymentAmount()" hidden><option value="30">၁ လ</option><option value="90">၃ လ</option><option value="180">၆ လ</option><option value="365">၁ နှစ်</option></select></div><div><label>ငွေလွှဲ Screenshot (မဖြစ်မနေ)</label><input id="payScreenshot" type="file" accept="image/jpeg,image/png,image/webp" required></div></div>
-<p id="paymentAmountLabel" class="notice">ပေးချေရမည့်ငွေ: 30,000 MMK</p>
-<div class="actions"><button onclick="submitPaymentRequest()">ငွေလွှဲအထောက်အထား ပို့မည်</button><button class="alt" onclick="refreshLicense()">သက်တမ်း ပြန်စစ်မည်</button></div>
-<p class="muted">Owner က ဘဏ် / Wallet မှ ငွေဝင်ကြောင်း ကိုယ်တိုင်စစ်ပြီးမှ Approve လုပ်မည်။ Screenshot တင်ရန် Firebase Storage ဖွင့်ထားရန် လိုအပ်သည်။</p>
-<div id="paymentOwnerSettings" class="panel hidden owner-only"><h3>Owner · သတ်မှတ်ထားသော KPay အကောင့်</h3><p class="muted">လက်ခံအကောင့်တစ်ခုတည်းသာ အသုံးပြုမည်။ အကောင့်ပြောင်းလဲမှုကို source code review မရှိဘဲ client မှ ပြင်၍မရပါ။</p><p><b>KBZPay</b><br>အကောင့်အမည်: <b>NiNiWin</b><br>အကောင့်နံပါတ်: <b>09774033661</b></p><button class="alt" onclick="loadPaymentAccountSettings()">အကောင့်အချက်အလက် ပြန်ဖတ်မည်</button><p id="ownerPaymentSettingsStatus" class="muted"></p></div>
-<div class="owner-only"><hr><h3>Admin Dashboard · ငွေပေးချေမှုစစ်ဆေးရန်</h3>
-<p class="muted">Admin Email ဖြင့် Login ဝင်ထားမှ Server က ခွင့်ပြုမည်။ ငွေလွှဲကို KPay ထဲတွင် ကိုယ်တိုင်စစ်ဆေးပြီးမှ အတည်ပြုပါ။</p>
-<div class="actions"><button onclick="loadAdminPaymentRequests()">Pending တောင်းဆိုချက်များ ပြန်ဖတ်မည်</button></div>
-<p id="adminStatus" class="muted">Admin အကောင့်ဖြင့် Login ဝင်ပြီး Pending စာရင်းကို ဖတ်ပါ။</p>
-<div class="tablewrap"><table><thead><tr><th>ရက်စွဲ</th><th>Customer</th><th>Package</th><th>နည်းလမ်း / ငွေလွှဲအထောက်အထား</th><th>အခြေအနေ</th><th>လုပ်ဆောင်ချက်</th></tr></thead><tbody id="adminPaymentRows"><tr><td colspan="6">စာရင်းမဖတ်ရသေးပါ</td></tr></tbody></table></div>
-<hr><h3>အသုံးပြုသူများ စီမံရန် · Owner သီးသန့်</h3>
-<p class="muted">painglin102@gmail.com မှသာ Customer စာရင်းဖတ်ခြင်း၊ Account ရပ်ဆိုင်းခြင်းနှင့် ပြန်ဖွင့်ခြင်း ပြုလုပ်နိုင်သည်။ အခြား Gmail အားလုံးသည် User ဖြစ်သည်။</p>
-<div class="actions"><button onclick="loadPlatformUsers()">User စာရင်းပြန်ဖတ်မည်</button></div>
+<div class="panel" id="akLicensePanel"><h2>Owner Dashboard · အကောင့်ထိန်းချုပ်မှု</h2>
+<div class="owner-only">
+<p class="muted">အတည်ပြုထားသော Owner Gmail တစ်ခုတည်းမှ Free Beta ဆိုင်အကောင့် ၃၀ အထိ စီမံနိုင်သည်။</p>
+<div class="actions"><button type="button" onclick="loadPlatformUsers()">User စာရင်းပြန်ဖတ်မည်</button></div>
 <p id="akPlatformUserStatus" class="muted">User စာရင်း မဖတ်ရသေးပါ။</p>
 <div class="tablewrap"><table><thead><tr><th>Gmail</th><th>အကောင့်အခြေအနေ</th><th>နောက်ဆုံးဝင်ချိန်</th><th>Owner လုပ်ဆောင်ချက်</th></tr></thead><tbody id="akPlatformUserRows"><tr><td colspan="4">စာရင်းမဖတ်ရသေးပါ</td></tr></tbody></table></div>
-<hr><h3>Online Shopping Center · ဆိုင်စာမျက်နှာ အတည်ပြုရန်</h3><div class="actions"><button onclick="loadPendingShopProfiles()">Pending ဆိုင်များ ဖတ်မည်</button></div><p id="akAdminShopStatus" class="muted">CEO Admin သာ အသုံးပြုနိုင်သည်။</p><div class="tablewrap"><table><thead><tr><th>ဆိုင်အမည်</th><th>Account UID</th><th>တည်နေရာ</th><th>လုပ်ဆောင်ချက်</th></tr></thead><tbody id="akAdminShopRows"><tr><td colspan="4">မဖတ်ရသေးပါ</td></tr></tbody></table></div>
-<hr><h3>ကြော်ငြာအတည်ပြုရန် · CEO Admin</h3><div class="actions"><button onclick="loadPendingAds()">Pending ကြော်ငြာများ ဖတ်မည်</button></div><p id="akAdminAdStatus" class="muted">CEO Admin Login ဖြင့်သာ ခွင့်ပြုမည်။</p><div class="tablewrap"><table><thead><tr><th>ခေါင်းစဉ်</th><th>ကြော်ငြာရှင်</th><th>စာသား</th><th>Link</th><th>လုပ်ဆောင်ချက်</th></tr></thead><tbody id="akAdminAdRows"><tr><td colspan="5">မဖတ်ရသေးပါ</td></tr></tbody></table></div>
-</div></div><div class="panel" id="akFirebasePanel"><h2>Firebase Cloud Sync ချိတ်ဆက်ရန်</h2><div class="notice">Firebase Project Config ထည့်ပြီး Email/Password Authentication နှင့် Firestore ဖွင့်ထားမှ အလုပ်လုပ်မည်။ Firestore Security Rules ကို မိမိ UID အလိုက် ကန့်သတ်ရမည်။</div><div class="grid"><div><label>အကောင့် Gmail / Email</label><input id="fbEmail" type="email" value="" autocomplete="username" inputmode="email" onkeydown="if(event.key==='Enter')firebaseLogin()"></div><div><label>Password</label><div class="actions" style="gap:6px;flex-wrap:nowrap"><input id="fbPassword" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')firebaseLogin()" style="min-width:0;flex:1"><button type="button" class="alt" aria-label="Password ပြရန်/ဖျောက်ရန်" onclick="const p=document.getElementById('fbPassword');p.type=p.type==='password'?'text':'password';this.textContent=p.type==='password'?'ပြရန်':'ဖျောက်ရန်'">ပြရန်</button></div></div></div><div class="actions"><button type="button" onclick="firebaseLogin()">Login ဝင်မည်</button><button type="button" id="akRegisterButton" class="alt" onclick="firebaseRegister()">User အကောင့်အသစ်ဖွင့်ရန်</button><button type="button" onclick="firebaseGoogleLogin()">Google ဖြင့် ဝင်မည်</button><button class="alt" type="button" onclick="firebaseResetPassword()">Password မေ့နေပါက</button><button class="alt" type="button" onclick="firebaseLogout()">Logout ထွက်မည်</button></div><details style="margin-top:10px"><summary>အဆင့်မြင့် Firebase ချိတ်ဆက်မှု (ပုံမှန် Login အတွက် မလိုပါ)</summary><label>Firebase Config JSON</label><textarea id="firebaseConfig" placeholder='{"apiKey":"...","authDomain":"...","projectId":"...","appId":"..."}'></textarea><div class="actions"><button type="button" onclick="firebaseConnect()">Firebase ချိတ်မည်</button><button type="button" onclick="cloudSave()">Cloud သိမ်းမည်</button><button type="button" class="alt" onclick="cloudLoad()">Cloud ပြန်ယူမည်</button></div></details><p class="muted">Owner Account: painglin102@gmail.com · အထက်ပါ Gmail ကိုရွေးပြီး Google Sign in လုပ်ပါ။ Google Provider ဖွင့်ထားပြီး Authorized Domains ထဲတွင် rmaynah102-afk.github.io ပါရမည်။ Password / OTP ကို မည်သူ့ကိုမျှ မပေးပါနှင့်။</p><p class="muted" id="fbStatus">Firebase မချိတ်ရသေးပါ။</p></div>
+</div></div><div class="panel" id="akFirebasePanel"><h2>Firebase Cloud Sync ချိတ်ဆက်ရန်</h2><div class="notice">Firebase Project Config ထည့်ပြီး Email/Password Authentication နှင့် Firestore ဖွင့်ထားမှ အလုပ်လုပ်မည်။ Firestore Security Rules ကို မိမိ UID အလိုက် ကန့်သတ်ရမည်။</div><div class="grid"><div><label>အကောင့် Gmail / Email</label><input id="fbEmail" type="email" value="" autocomplete="username" inputmode="email" onkeydown="if(event.key==='Enter')firebaseLogin()"></div><div><label>Password</label><div class="actions" style="gap:6px;flex-wrap:nowrap"><input id="fbPassword" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')firebaseLogin()" style="min-width:0;flex:1"><button type="button" class="alt" aria-label="Password ပြရန်/ဖျောက်ရန်" onclick="const p=document.getElementById('fbPassword');p.type=p.type==='password'?'text':'password';this.textContent=p.type==='password'?'ပြရန်':'ဖျောက်ရန်'">ပြရန်</button></div></div></div><div class="actions"><button type="button" onclick="firebaseLogin()">Login ဝင်မည်</button><button type="button" id="akRegisterButton" class="alt" onclick="firebaseRegister()">User အကောင့်အသစ်ဖွင့်ရန်</button><button type="button" onclick="firebaseGoogleLogin()">Google ဖြင့် ဝင်မည်</button><button class="alt" type="button" onclick="firebaseResetPassword()">Password မေ့နေပါက</button><button class="alt" type="button" onclick="firebaseLogout()">Logout ထွက်မည်</button></div><p class="muted">Owner Account: painglin102@gmail.com · အထက်ပါ Gmail ကိုရွေးပြီး Google Sign in လုပ်ပါ။ Google Provider ဖွင့်ထားပြီး Authorized Domains ထဲတွင် rmaynah102-afk.github.io ပါရမည်။ Password / OTP ကို မည်သူ့ကိုမျှ မပေးပါနှင့်။</p><p class="muted" id="fbStatus">Firebase မချိတ်ရသေးပါ။</p></div>
 <div class="panel"><h2>ဒီဆိုင်၏ ချိတ်ထားသော ဖုန်းများ</h2><p class="muted">ဆိုင်အကောင့်တစ်ခုလျှင် ဖုန်း / Browser ၅ ခုအထိ ခွင့်ပြုသည်။ မသိသောစက်ကို Owner က ဖြုတ်နိုင်သည်။</p><div class="actions"><button onclick="refreshShopDevices()">ဖုန်းစာရင်း ပြန်ဖတ်မည်</button></div><p id="deviceStatus" class="muted">Login ဝင်ပြီးမှ စက်စာရင်းကို ပြမည်။</p><div class="tablewrap"><table><thead><tr><th>စက်အမည်</th><th>နောက်ဆုံးအသုံးပြု</th><th>ဤစက်</th><th>လုပ်ဆောင်ချက်</th></tr></thead><tbody id="shopDeviceRows"><tr><td colspan="4">မဖတ်ရသေးပါ</td></tr></tbody></table></div></div>
 <div class="panel"><h2>ဆိုင်ဝန်ထမ်း Login နှင့် ရာထူးခွဲခြားမှု</h2>
 <p class="muted">Owner သည် Firebase Gmail Account ရှိပြီးသား ဝန်ထမ်း၏ Gmail ကို ရာထူးသတ်မှတ်နိုင်သည်။ Role ကို Server ပေါ်တွင် မှတ်ပုံတင်ပြီး Login ဝင်ချိန်တွင် Membership ကို စစ်ဆေးမည်။ လက်ရှိ Cloud appData သည် Owner-only ဖြစ်သောကြောင့် Manager / Cashier / Employee POS Cloud ဝင်ခွင့်ကို Role-based ဒေတာခွဲခြားမှု မပြီးမချင်း ပိတ်ထားသည်။</p>
@@ -490,8 +662,20 @@ function markLocalTransactionsSynced(ownerId,sales){
   localStorage.setItem(storageKey,JSON.stringify(localSales.filter(x=>!x||!savedIds.has(x.id))));
  }catch(e){console.warn("Could not clear synced offline sales",e)}
 }
-function persist(){try{localStorage.setItem(fbUser?userDBKey(fbUser.uid):DBKEY,JSON.stringify(db));$("saveState").textContent=fbUser?"Cloud အကောင့်ထဲ သိမ်းဆည်းရန် အသင့်":"ဖုန်းထဲ သိမ်းပြီး";renderAll();if(fbUser&&cloudReady){akLocalDirty=true;cloudSave()}}catch(e){alert("ဖုန်းထဲသိမ်းမရပါ။ ဓာတ်ပုံအရွယ်အစားလျှော့ပြီး Backup စစ်ပါ။");console.error(e)}}
-const pages=[["home","ပင်မ"],["products","ပစ္စည်း"],["sales","အရောင်း"],["purchases","အဝယ်"],["people","Customer/Supplier"],["expenses","အသုံးစရိတ်"],["reports","အစီရင်ခံစာ"],["ads","ကြော်ငြာ"],["market","AK Market"],["centerManagement","စင်တာထိန်းချုပ်မှု"],["userGuide","အသုံးပြုသူလမ်းညွှန်"],["apkGuide","APK လမ်းညွှန်"],["backup","Backup / Settings"]];
+let akCloudSaveTimer=null;
+function scheduleAkCloudSave(delay=900){
+ if(akCloudSaveTimer)clearTimeout(akCloudSaveTimer);
+ akCloudSaveTimer=setTimeout(()=>{akCloudSaveTimer=null;if(fbUser&&cloudReady&&akLocalDirty&&!akCloudConflict)cloudSave()},delay);
+}
+function persist(){
+ try{
+  localStorage.setItem(fbUser?userDBKey(fbUser.uid):DBKEY,JSON.stringify(db));
+  $("saveState").textContent=fbUser?"ဖုန်းထဲသိမ်းပြီး · Cloud Sync စောင့်နေသည်":"ဖုန်းထဲသိမ်းပြီး";
+  renderAll();
+  if(fbUser&&cloudReady){akLocalDirty=true;scheduleAkCloudSave()}
+ }catch(e){alert("ဖုန်းထဲသိမ်းမရပါ။ ဓာတ်ပုံအရွယ်အစားလျှော့ပါ သို့မဟုတ် Backup ထုတ်ပါ။");console.error(e)}
+}
+const pages=[["home","ပင်မ"],["products","ပစ္စည်း"],["sales","အရောင်း"],["purchases","အဝယ်"],["people","Customer/Supplier"],["expenses","အသုံးစရိတ်"],["reports","အစီရင်ခံစာ"],["ads","ကြော်ငြာ"],["market","AK Market"],["centerManagement","စင်တာထိန်းချုပ်မှု"],["backup","Backup / Settings"]];
 $("nav").innerHTML=pages.map(([id,n])=>'<button type="button" data-view="'+id+'" aria-label="'+n+'" title="'+n+'" onclick="go(\''+id+'\')">'+n+'</button>').join("");
 const AK_I18N_MY_EN={
 "ပင်မ":"Home","ပစ္စည်း":"Products","အရောင်း":"Sales","အဝယ်":"Purchases","အသုံးစရိတ်":"Expenses","အစီရင်ခံစာ":"Reports","ကြော်ငြာ":"Ads","စင်တာထိန်းချုပ်မှု":"Center Management","အသုံးပြုသူလမ်းညွှန်":"User Guide","APK လမ်းညွှန်":"APK Guide","Backup / Settings":"Backup / Settings",
@@ -580,7 +764,30 @@ document.getElementById("akScanBarcodeBtn")?.addEventListener("click",()=>akStar
 document.getElementById("akSaleScanBtn")?.addEventListener("click",()=>akStartBarcodeScanner("sale"));
 function akAddScannedSaleProduct(rawCode){const code=String(rawCode||"").trim().toLowerCase();if(!code)return;const p=db.products.find(x=>String(x.code||"").trim().toLowerCase()===code);if(!p){alert("ဒီ Barcode / SKU ကို ပစ္စည်းစာရင်းမှာ မတွေ့ပါ။ ပစ္စည်းအရင်ထည့်ပါ။\nကုဒ်: "+rawCode);const f=document.getElementById("saleBarcodeInput");if(f){f.value=rawCode;f.focus();}return;}if(Number(p.stock)<=0){alert(p.name+" လက်ကျန်မရှိပါ");return;}const rows=[...document.querySelectorAll("#saleLines .sale-line")];let row=rows.find(r=>r.querySelector(".sale-product")?.value===p.id);if(row){const qty=row.querySelector(".sale-qty");qty.value=Number(qty.value||0)+1;}else{row=rows.find(r=>!r.querySelector(".sale-product")?.value);if(!row){addSaleLine();row=document.querySelector("#saleLines .sale-line:last-child");}row.querySelector(".sale-product").value=p.id;const type=row.querySelector(".sale-type").value;row.querySelector(".sale-price").value=type==="wholesale"?(p.wholesale??p.price):(p.retail??p.price);row.querySelector(".sale-qty").value=1;}const f=document.getElementById("saleBarcodeInput");if(f){f.value="";f.focus();}} 
 document.getElementById("saleBarcodeInput")?.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();akAddScannedSaleProduct(e.currentTarget.value);}});
-$("pPhoto").addEventListener("change",e=>{let f=e.target.files[0];if(!f)return;if(f.size>1.5*1024*1024)return alert("ဓာတ်ပုံ 1.5MB အောက်ရွေးပါ");let r=new FileReader();r.onload=()=>{productImageData=r.result;$("photoPreview").src=productImageData;$("photoPreview").classList.remove("hidden")};r.readAsDataURL(f)});
+async function akCompressProductPhoto(file){
+ if(!file||!String(file.type||"").startsWith("image/"))throw Error("ပုံဖိုင်ကိုသာ ရွေးပါ။");
+ let source;
+ if(window.createImageBitmap){try{source=await createImageBitmap(file)}catch(e){}}
+ if(!source){
+  const url=URL.createObjectURL(file);
+  try{source=await new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=()=>reject(Error("ဓာတ်ပုံဖတ်မရပါ။"));img.src=url})}
+  finally{URL.revokeObjectURL(url)}
+ }
+ const scale=Math.min(1,480/Math.max(source.width,source.height));
+ const canvas=document.createElement("canvas");canvas.width=Math.max(1,Math.round(source.width*scale));canvas.height=Math.max(1,Math.round(source.height*scale));
+ const ctx=canvas.getContext("2d");if(!ctx)throw Error("ဓာတ်ပုံပြင်ဆင်မရပါ။");
+ ctx.fillStyle="#fff";ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(source,0,0,canvas.width,canvas.height);
+ if(source.close)source.close();
+ let blob=null;
+ for(const quality of [.68,.58,.48,.38]){blob=await new Promise(resolve=>canvas.toBlob(resolve,"image/jpeg",quality));if(blob&&blob.size<=80*1024)break}
+ if(!blob||blob.size>110*1024)throw Error("ဓာတ်ပုံအရွယ်အစား လျှော့မရပါ။ အခြားပုံရွေးပါ။");
+ return await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(Error("ဓာတ်ပုံသိမ်းမရပါ။"));reader.readAsDataURL(blob)});
+}
+$("pPhoto").addEventListener("change",async e=>{
+ const file=e.target.files?.[0];if(!file)return;
+ try{$("saveState").textContent="ဓာတ်ပုံကို ဖုန်းထဲသိမ်းရန် ပြင်ဆင်နေသည်...";productImageData=await akCompressProductPhoto(file);$("photoPreview").src=productImageData;$("photoPreview").classList.remove("hidden");$("saveState").textContent="ဓာတ်ပုံကို ဖုန်းထဲတွင် သိမ်းရန် အသင့်"}
+ catch(err){productImageData="";e.target.value="";alert(err.message||"ဓာတ်ပုံပြင်ဆင်မရပါ။")}
+});
 // Product photos use Firebase Storage so the same shop account can view them in Web and Android.
 $("productForm").addEventListener("submit",async e=>{
  e.preventDefault();
@@ -594,19 +801,7 @@ $("productForm").addEventListener("submit",async e=>{
  try{
   const id=$("pId").value||uid(),old=db.products.find(x=>x.id===id),file=$("pPhoto").files?.[0];
   let photo=productImageData||old?.photo||"";
-  if(file&&fbUser&&cloudReady&&window.firebase?.storage){
-   try{
-    $("saveState").textContent="ပစ္စည်းဓာတ်ပုံ Cloud သို့ တင်နေသည်...";
-    const path="productPhotos/"+fbUser.uid+"/"+id+"/photo",ref=firebase.storage().ref(path);
-    await ref.put(file,{contentType:file.type,cacheControl:"public,max-age=3600"});
-    photo=await ref.getDownloadURL();
-   }catch(err){
-    console.error("Product photo upload failed; saving product without cloud photo",err);
-    const continueWithoutPhoto=confirm("ဓာတ်ပုံကို Cloud သို့ မတင်နိုင်ပါ။ ပစ္စည်းအချက်အလက်ကို ဓာတ်ပုံမပါဘဲ ဆက်သိမ်းမလား?\n\n"+(err.message||"Storage setup / permission ကို စစ်ပါ။"));
-    if(!continueWithoutPhoto)return;
-    photo="";
-   }
-  }
+  // Product photos stay compressed in this phone's local app storage; no paid Storage bucket is needed.
   const p={id,name:$("pName").value.trim(),code:$("pCode").value.trim(),category:$("pCat").value.trim(),unit:$("pUnit").value.trim()||"ခု",cost:Number($("pCost").value),retail:Number($("pRetail").value),wholesale:Number($("pWholesale").value),stock:Number($("pStock").value),minStock:Math.max(0,Number($("pMinStock").value)||0),photo};
   if(old)Object.assign(old,p);else db.products.unshift(p);
   persist();resetProduct();
@@ -707,34 +902,15 @@ function receipt(id,paper="80mm"){
 <script>
 (function(){
   function applyEntryMode(){
-    const params=new URLSearchParams(location.search);
-    const mode=params.get("entry")==="owner"?"owner":"user";
-    const panel=document.getElementById("akFirebasePanel");
-    const email=document.getElementById("fbEmail");
-    const register=document.getElementById("akRegisterButton");
-    if(!panel||!email)return;
-    let banner=document.getElementById("akEntryModeNotice");
-    if(!banner){
-      banner=document.createElement("div");
-      banner.id="akEntryModeNotice";
-      banner.className="notice";
-      panel.insertBefore(banner,panel.firstChild);
-    }
-    if(mode==="owner"){
-      email.value="painglin102@gmail.com";
-      email.readOnly=true;
-      banner.textContent="OWNER LOGIN — သတ်မှတ်ထားသော Platform Owner Gmail ဖြင့်သာ ဝင်ပါ။ Server က Verified Owner အဖြစ် ထပ်မံစစ်ဆေးမည်။";
-      if(register)register.hidden=true;
-    }else{
-      if(email.value==="painglin102@gmail.com")email.value="";
-      email.readOnly=false;
-      banner.textContent="USER LOGIN — ကိုယ့် Gmail ဖြင့် ဝင်ပါ။ အကောင့်အသစ်ဖွင့်ပြီးနောက် Package ငွေပေးချေမှုတင်နိုင်သည်။ Owner အတည်ပြုပြီးမှ POS အသုံးပြုခွင့်ရမည်။";
-      if(register)register.hidden=false;
-    }
-    if(location.hash==="#akFirebasePanel"){
-      setTimeout(()=>panel.scrollIntoView({behavior:"smooth",block:"start"}),250);
-    }
-  }
+ const panel=document.getElementById("akFirebasePanel");
+ const email=document.getElementById("fbEmail");
+ if(!panel||!email)return;
+ let banner=document.getElementById("akEntryModeNotice");
+ if(!banner){banner=document.createElement("div");banner.id="akEntryModeNotice";banner.className="notice";panel.insertBefore(banner,panel.firstChild)}
+ email.readOnly=false;
+ banner.textContent="ဆိုင်အကောင့်နှင့် Owner အကောင့်အားလုံး ဤနေရာမှ Gmail ဖြင့် ဝင်ပါ။ Owner ခွင့်ကို အတည်ပြုထားသော Owner Gmail ဖြင့်သာ အလိုအလျောက်ဖွင့်ပေးမည်။";
+ if(location.hash==="#akFirebasePanel")setTimeout(()=>panel.scrollIntoView({behavior:"smooth",block:"start"}),250);
+}
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",applyEntryMode);
   else applyEntryMode();
 })();
@@ -1181,6 +1357,17 @@ let akCloudConflict=false;
 let akCloudRevision=0;
 let akCloudSaveInFlight=false;
 let akCloudSaveQueued=false;
+function akCloudDataWithoutPhotos(source){
+ const copy=JSON.parse(JSON.stringify(source||fresh()));
+ copy.products=(copy.products||[]).map(p=>({...p,photo:""}));
+ return copy;
+}
+function akMergeLocalProductPhotos(remote){
+ const localPhotos=new Map((db.products||[]).map(p=>[p.id,p.photo||""]));
+ const merged={...fresh(),...(remote||{})};
+ merged.products=(merged.products||[]).map(p=>({...p,photo:localPhotos.get(p.id)||p.photo||""}));
+ return merged;
+}
 function startAkCloudSync(){
  if(akCloudUnsubscribe){akCloudUnsubscribe();akCloudUnsubscribe=null}
  if(!fbAuth?.currentUser||!cloudReady)return;
@@ -1201,7 +1388,7 @@ function startAkCloudSync(){
   }
   akApplyingRemote=true;
   try{
-   db={...fresh(),...remote};
+   db=akMergeLocalProductPhotos(remote);
    localStorage.setItem(userDBKey(uid),JSON.stringify(db));
    renderAll();
    $("fbStatus").textContent="အခြားဖုန်းမှ နောက်ဆုံး Cloud ဒေတာကို လက်ခံရရှိပါပြီ";
@@ -1216,7 +1403,7 @@ async function cloudSave(){
   if(akCloudConflict)throw Object.assign(new Error("အခြားဖုန်းမှ ဒေတာအသစ်ရှိနေသည်။ Cloud Load ဖြင့် စစ်ဆေးပြီးမှ ဆက်လုပ်ပါ။"),{code:"ak/cloud-conflict"});
   if(akApplyingRemote)return;
   const uid=fbAuth.currentUser.uid;
-  const payload=JSON.stringify(db);
+  const payload=JSON.stringify(akCloudDataWithoutPhotos(db));
   const payloadBytes=new TextEncoder().encode(payload).length;
   if(payloadBytes>700000)throw Error("Cloud ဒေတာ 700KB ကျော်နေပါသည်။ ယခင် Cloud မှတ်တမ်းကို မအစားထိုးဘဲ ထိန်းထားပါသည်။ ဓာတ်ပုံများကို လျှော့ပြီး Backup သိမ်းပါ။ အချက်အလက်များစွာအတွက် Database အပိုင်းခွဲစနစ် အဆင့်မြှင့်ရန်လိုသည်။");
   const expectedRevision=akCloudRevision;
@@ -1236,15 +1423,17 @@ async function cloudSave(){
     conflict.code="ak/cloud-conflict";
     throw conflict;
    }
-   if(snap.exists&&currentData.data){
+   const lastBackupAt=currentData.lastBackupAt&&typeof currentData.lastBackupAt.toDate==="function"?currentData.lastBackupAt.toDate().getTime():0;
+   const shouldBackup=!snap.exists||current===0||current%10===0||!lastBackupAt||Date.now()-lastBackupAt>=6*60*60*1000;
+   if(snap.exists&&currentData.data&&shouldBackup){
     const previous={data:currentData.data,centerManagement:centerSnap.exists?(centerSnap.data().center||null):null};
     const previousBytes=new TextEncoder().encode(JSON.stringify(previous)).length;
-    if(previousBytes>700000)throw Error("Cloud မှတ်တမ်းဟောင်း 700KB ကျော်နေသောကြောင့် အလိုအလျောက် Backup မလုပ်နိုင်ပါ။ Cloud ဒေတာကို မပြောင်းဘဲ ထိန်းထားပါသည်။ JSON Backup ထုတ်ယူပါ။");
-    tx.set(backupRef,{data:currentData.data,centerManagement:centerSnap.exists?(centerSnap.data().center||null):null,sizeBytes:previousBytes,backupType:"automatic-before-save",sourceRevision:current,createdAt:firebase.firestore.FieldValue.serverTimestamp(),createdBy:uid});
+    if(previousBytes>700000)throw Error("Cloud မှတ်တမ်းဟောင်း 700KB ကျော်နေသောကြောင့် အလိုအလျောက် Backup မလုပ်နိုင်ပါ။ JSON Backup ထုတ်ယူပါ။");
+    tx.set(backupRef,{data:currentData.data,centerManagement:centerSnap.exists?(centerSnap.data().center||null):null,sizeBytes:previousBytes,backupType:"periodic-before-save",sourceRevision:current,createdAt:firebase.firestore.FieldValue.serverTimestamp(),createdBy:uid});
     createdBackup=true;
    }
    committedRevision=current+1;
-   tx.set(ref,{data:JSON.parse(payload),revision:committedRevision,updatedByDevice:akDeviceId(),updatedAt:firebase.firestore.FieldValue.serverTimestamp(),dataBytes:payloadBytes});
+   tx.set(ref,{data:JSON.parse(payload),revision:committedRevision,updatedByDevice:akDeviceId(),updatedAt:firebase.firestore.FieldValue.serverTimestamp(),lastBackupAt:createdBackup?firebase.firestore.FieldValue.serverTimestamp():(currentData.lastBackupAt||null),dataBytes:payloadBytes});
   });
   akCloudRevision=committedRevision;
   markLocalTransactionsSynced(uid,db.sales);
@@ -1254,7 +1443,7 @@ async function cloudSave(){
     if(!old.empty){const batch=fbStore.batch();old.docs.forEach(doc=>batch.delete(doc.ref));await batch.commit()}
    }catch(cleanupError){console.warn("Automatic backup retention cleanup deferred",cleanupError)}
   }
-  const unchanged=JSON.stringify(db)===payload;
+  const unchanged=JSON.stringify(akCloudDataWithoutPhotos(db))===payload;
   if(unchanged){
    akLocalDirty=false;
    $("fbStatus").textContent="Cloud သိမ်းပြီးပါပြီ · Revision "+committedRevision+(createdBackup?" · ယခင်ဗားရှင်းကို Backup သိမ်းပြီး":"");
@@ -1280,7 +1469,7 @@ async function cloudSave(){
 // Retry queued local changes automatically when connectivity returns or the app becomes active.
 window.addEventListener("online",()=>{if(fbUser&&cloudReady&&akLocalDirty&&!akCloudConflict)cloudSave()});
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&fbUser&&cloudReady&&akLocalDirty&&!akCloudConflict)cloudSave()});
-async function cloudLoad(){try{if(!fbAuth||!fbAuth.currentUser)throw Error("Firebase Login အရင်ဝင်ပါ");const user=fbAuth.currentUser;const isOwner=String(user.email||"").trim().toLowerCase()==="painglin102@gmail.com"&&user.emailVerified===true;if(!isOwner&&!await refreshLicense())throw Error("Subscription သက်တမ်းမရှိပါ။ သက်တမ်းတိုးပါ။");const uid=user.uid;const d=await fbStore.collection("users").doc(uid).collection("private").doc("appData").get();if(!d.exists)throw Error("Cloud မှာ ဒေတာမရှိသေးပါ");if(!confirm("Cloud ဒေတာဖြင့် ဒီဖုန်းဒေတာကို အစားထိုးမည်။ မသိမ်းရသေးသော ပြင်ဆင်ချက်များကို အရင် JSON Backup သိမ်းထားပါ။ ဆက်လုပ်မလား။"))return;const remote=d.data()||{},x=remote.data;if(!x||!Array.isArray(x.products)||!Array.isArray(x.sales))throw Error("Cloud data format မမှန်ပါ");db={...fresh(),...x};localStorage.setItem(userDBKey(uid),JSON.stringify(db));akCloudRevision=Number.isSafeInteger(remote.revision)&&remote.revision>=0?remote.revision:0;akCloudConflict=false;akLocalDirty=false;renderAll();$("fbStatus").textContent="Cloud မှ ပြန်ယူပြီးပါပြီ · Revision "+akCloudRevision}catch(e){$("fbStatus").textContent="Cloud Load မအောင်မြင်: "+e.message}}
+async function cloudLoad(){try{if(!fbAuth||!fbAuth.currentUser)throw Error("Firebase Login အရင်ဝင်ပါ");const user=fbAuth.currentUser;const isOwner=String(user.email||"").trim().toLowerCase()==="painglin102@gmail.com"&&user.emailVerified===true;if(!isOwner&&!await refreshLicense())throw Error("Subscription သက်တမ်းမရှိပါ။ သက်တမ်းတိုးပါ။");const uid=user.uid;const d=await fbStore.collection("users").doc(uid).collection("private").doc("appData").get();if(!d.exists)throw Error("Cloud မှာ ဒေတာမရှိသေးပါ");if(!confirm("Cloud ဒေတာဖြင့် ဒီဖုန်းဒေတာကို အစားထိုးမည်။ မသိမ်းရသေးသော ပြင်ဆင်ချက်များကို အရင် JSON Backup သိမ်းထားပါ။ ဆက်လုပ်မလား။"))return;const remote=d.data()||{},x=remote.data;if(!x||!Array.isArray(x.products)||!Array.isArray(x.sales))throw Error("Cloud data format မမှန်ပါ");db=akMergeLocalProductPhotos(x);localStorage.setItem(userDBKey(uid),JSON.stringify(db));akCloudRevision=Number.isSafeInteger(remote.revision)&&remote.revision>=0?remote.revision:0;akCloudConflict=false;akLocalDirty=false;renderAll();$("fbStatus").textContent="Cloud မှ ပြန်ယူပြီးပါပြီ · Revision "+akCloudRevision}catch(e){$("fbStatus").textContent="Cloud Load မအောင်မြင်: "+e.message}}
 async function akCreateCloudBackup(){
  const status=$("akCloudBackupStatus");status.textContent="Cloud Backup သိမ်းနေသည်...";
  try{

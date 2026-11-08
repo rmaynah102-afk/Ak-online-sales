@@ -231,10 +231,12 @@ button.alt{background:#e9f1ff;color:#123b72;border:1px solid #c8d9f6;box-shadow:
 nav button{color:#17417a;border-color:#d5e2f4}
 input:focus,select:focus,textarea:focus{border-color:#2878d7;box-shadow:0 0 0 3px #2878d71b}
 .owner-only[style*="display: none"]{display:none!important}
+body.ak-owner-user-preview .owner-only{display:none!important} body.ak-owner-user-preview #akOwnerPreviewBanner{display:block!important}
 </style>
 </head>
 <body class="ak-license-locked">
-<header><div class="brand-lockup"><img src="./ak-logo.svg" alt="AK Sale logo" width="48" height="48"><div><h1 id="brandTitle">AK Sale Software</h1><small>Hardware & Electrical POS</small></div></div><div class="actions no-print"><button id="akInstallBtn" class="alt" type="button" hidden>Install</button><button id="akShareBtn" class="alt" type="button">Share</button><button id="akLanguageBtn" class="alt" type="button" aria-label="Switch language">English</button><span class="pill" id="saveState">ဖုန်းထဲသိမ်းဆည်းမည်</span></div></header>
+<header><div class="brand-lockup"><img src="./ak-logo.svg" alt="AK Sale logo" width="48" height="48"><div><h1 id="brandTitle">AK Sale Software</h1><small>Hardware & Electrical POS</small></div></div><div class="actions no-print"><button id="akInstallBtn" class="alt" type="button" hidden>Install</button><button id="akShareBtn" class="alt" type="button">Share</button><button id="akOwnerUserPreviewBtn" class="alt owner-only" type="button" onclick="akToggleOwnerUserPreview()">User View</button><button id="akLanguageBtn" class="alt" type="button" aria-label="Switch language">English</button><span class="pill" id="saveState">ဖုန်းထဲသိမ်းဆည်းမည်</span></div></header>
+<div id="akOwnerPreviewBanner" class="notice no-print" style="display:none;position:sticky;top:0;z-index:9000;margin:8px auto;max-width:1100px">User View Preview — Owner account remains signed in. <button type="button" onclick="akToggleOwnerUserPreview()">Owner Mode သို့ပြန်ရန်</button></div>
 <main>
 <nav id="nav" class="no-print"></nav>
 <section id="home" class="view">
@@ -445,6 +447,15 @@ function enableOwnerPrivileges(){
 }
 function restrictUserPermissions(){
  document.querySelectorAll(".owner-only").forEach(el=>{el.style.display="none";el.classList.add("hidden")});
+}
+function akToggleOwnerUserPreview(){
+ if(!akIsPlatformOwner()){alert("Owner account ဖြင့်သာ User View ကိုဖွင့်နိုင်သည်။");return}
+ const enabled=document.body.classList.toggle("ak-owner-user-preview");
+ const banner=document.getElementById("akOwnerPreviewBanner");
+ if(banner)banner.style.display=enabled?"block":"none";
+ const btn=document.getElementById("akOwnerUserPreviewBtn");
+ if(btn)btn.textContent=enabled?"User View ဖွင့်ထားသည်":"User View";
+ if(enabled){go("home");window.scrollTo({top:0,behavior:"smooth"})}
 }
 function checkUserRole(user){
  const isOwner=akIsPlatformOwner(user);

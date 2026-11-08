@@ -1082,17 +1082,21 @@ function akRenderPlatformUsers(){
  body.innerHTML=akPlatformUserRows.length?akPlatformUserRows.map(u=>"<tr><td>"+esc(u.email||u.uid)+"</td><td>Free Beta · အသုံးပြုခွင့်ရှိ</td><td>"+esc(u.lastLoginAt?new Date(u.lastLoginAt).toLocaleString():"-")+"</td><td>"+esc(u.uid)+"</td></tr>").join(""):"<tr><td colspan=\"4\">Free Beta User မရှိသေးပါ။</td></tr>";
 }
 
+function akRenderPlatformUsers(){
+ const body=$("akPlatformUserRows");if(!body)return;
+ body.innerHTML=akPlatformUserRows.length?akPlatformUserRows.map(u=>"<tr><td>"+esc(u.email||u.uid)+"</td><td>Free Beta · အသုံးပြုခွင့်ရှိ</td><td>"+esc(u.lastLoginAt?new Date(u.lastLoginAt).toLocaleString():"-")+"</td><td>"+esc(u.uid)+"</td></tr>").join(""):"<tr><td colspan=\"4\">Free Beta User မရှိသေးပါ။</td></tr>";
+}
+let akPlatformUserPageToken="",akPlatformUserRows=[];
 async function loadPlatformUsers(){
  try{
   if(!akIsPlatformOwner())throw Error("Owner Gmail ဖြင့် Login ဝင်ပါ");
   $("akPlatformUserStatus").textContent="Free Beta User စာရင်းဖတ်နေသည်...";
   const snap=await fbStore.collection("freeBetaUsers").orderBy("lastLoginAt","desc").limit(50).get();
-  akPlatformUserPageToken="";akPlatformUserRows=snap.docs.map(d=>({uid:d.id,...d.data()}));
+  akPlatformUserRows=snap.docs.map(d=>({uid:d.id,...d.data()}));
   akRenderPlatformUsers();
   $("akPlatformUserStatus").textContent="Free Beta အကောင့် "+akPlatformUserRows.length+" / 50 ခု ပြထားသည်။";
  }catch(e){$("akPlatformUserStatus").textContent="User စာရင်းဖတ်မရပါ: "+e.message}
 }
-async function loadMorePlatformUsers(){try{if(!akIsPlatform
 async function loadMorePlatformUsers(){
  $("akPlatformUserStatus").textContent="Free Beta စာရင်းတွင် ပထမဆုံး User ၅၀ ကို ပြထားပါသည်။";
 }

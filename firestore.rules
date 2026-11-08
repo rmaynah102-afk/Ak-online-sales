@@ -8,14 +8,16 @@ service cloud.firestore {
     }
 
     function hasActiveLicense(uid) {
-      // Platform owner may access only the owner's own UID path.
-      // Free Beta shops must have an active owner-controlled directory record.
+      // The platform owner may access only their own UID path.
+      // Customer access requires a server-issued, unexpired active license.
       return request.auth != null
         && request.auth.uid == uid
         && (isVerifiedOwner()
           || (request.auth.token.email_verified == true
-            && exists(/databases/$(database)/documents/freeBetaUsers/$(uid))
-            && get(/databases/$(database)/documents/freeBetaUsers/$(uid)).data.status == 'active'));
+            && exists(/databases/$(database)/documents/licenses/$(uid))
+            && get(/databases/$(database)/documents/licenses/$(uid)).data.status == 'active'
+            && get(/databases/$(database)/documents/licenses/$(uid)).data.expiresAt is timestamp
+            && get(/databases/$(database)/documents/licenses/$(uid)).data.expiresAt > request.time));
     }
 
     function freeBetaCapacityPath() {

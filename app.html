@@ -1071,18 +1071,24 @@ async function loadPlatformUsers(){
  try{
   if(!akIsPlatformOwner())throw Error("Owner Gmail ဖြင့် Login ဝင်ပါ");
   $("akPlatformUserStatus").textContent="Free Beta User စာရင်းဖတ်နေသည်...";
-  const snap=await fbStore.collection("freeBetaUsers").orderBy("lastLoginAt","desc").limit(30).get();
-  akPlatformUserRows=snap.docs.map(d=>({uid:d.id,...d.data()}));
+  // Avoid orderBy(lastLoginAt): legacy profiles may not contain that field.
+  // Read the full owner-only collection so older accounts are counted too.
+  const snap=await fbStore.collection("freeBetaUsers").get();
+  akPlatformUserRows=snap.docs.map(d=>({uid:d.id,...d.data()})).sort((a,b)=>{
+   const dateValue=v=>v&&typeof v.toDate==="function"?v.toDate().getTime():v?new Date(v).getTime():0;
+   return dateValue(b.lastLoginAt)-dateValue(a.lastLoginAt);
+  });
   akRenderPlatformUsers();
   const capRef=fbStore.collection("freeBetaCapacity").doc("slots");
   const cap=await capRef.get();
   let used=cap.exists?Number((cap.data()||{}).count||0):0;
-  // Migrate accounts created before the 30-account counter existed.
+  if(!Number.isInteger(used)||used<0)throw Error("Free Beta capacity counter မမှန်ကန်ပါ။");
+  // Reconcile legacy profiles only when the Firestore rules' 30-user cap permits it.
   if(!cap.exists||used<snap.size){
    used=Math.max(used,snap.size);
-   await capRef.set({count:used,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+   if(used<=30)await capRef.set({count:used,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
   }
-  $("akPlatformUserStatus").textContent="အသုံးပြုသူ "+used+" / 30 · Owner က အကောင့်တစ်ခုချင်းစီကို ရပ်ဆိုင်း/ပြန်ဖွင့်နိုင်သည်။";
+  $("akPlatformUserStatus").textContent="အသုံးပြုသူ "+used+" / 30 · Owner က အကောင့်တစ်ခုချင်းစီကို ရပ်ဆိုင်း/ပြန်ဖွင့်နိုင်သည်။"+(used>30?" · Legacy အကောင့်များ ၃၀ ကျော်နေသည်၊ အပိုအကောင့်များကို Owner က ရပ်ဆိုင်းရန်လိုသည်။":"");
  }catch(e){$("akPlatformUserStatus").textContent="User စာရင်းဖတ်မရပါ: "+e.message}
 }
 async function akSetCustomerAccess(uid,action){

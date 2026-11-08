@@ -582,7 +582,42 @@ function akAddScannedSaleProduct(rawCode){const code=String(rawCode||"").trim().
 document.getElementById("saleBarcodeInput")?.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();akAddScannedSaleProduct(e.currentTarget.value);}});
 $("pPhoto").addEventListener("change",e=>{let f=e.target.files[0];if(!f)return;if(f.size>1.5*1024*1024)return alert("ဓာတ်ပုံ 1.5MB အောက်ရွေးပါ");let r=new FileReader();r.onload=()=>{productImageData=r.result;$("photoPreview").src=productImageData;$("photoPreview").classList.remove("hidden")};r.readAsDataURL(f)});
 // Product photos use Firebase Storage so the same shop account can view them in Web and Android.
-$("productForm").addEventListener("submit",async e=>{e.preventDefault();let id=$("pId").value||uid(),old=db.products.find(x=>x.id===id);let photo=productImageData||old?.photo||"";const file=$("pPhoto").files?.[0];if(file&&fbUser&&cloudReady&&window.firebase?.storage){try{$("saveState").textContent="ပစ္စည်းဓာတ်ပုံ Cloud သို့ တင်နေသည်...";const path="productPhotos/"+fbUser.uid+"/"+id+"/photo";const ref=firebase.storage().ref(path);await ref.put(file,{contentType:file.type,cacheControl:"public,max-age=3600"});photo=await ref.getDownloadURL()}catch(err){alert("ဓာတ်ပုံ Cloud သို့ မတင်နိုင်ပါ: "+err.message);return}}let p={id,name:$("pName").value.trim(),code:$("pCode").value.trim(),category:$("pCat").value.trim(),unit:$("pUnit").value.trim()||"ခု",cost:+$("pCost").value,retail:+$("pRetail").value,wholesale:+$("pWholesale").value,stock:+$("pStock").value,minStock:Math.max(0,Number($("pMinStock").value)||0),photo};if(!p.name)return alert("ပစ္စည်းအမည်ထည့်ပါ");if(old)Object.assign(old,p);else db.products.unshift(p);persist();resetProduct()});
+$("productForm").addEventListener("submit",async e=>{
+ e.preventDefault();
+ const form=$("productForm"),saveButton=form.querySelector('button[type="submit"]')||form.querySelector("button:not([type])");
+ if(saveButton?.disabled)return;
+ if(!String($("pName").value||"").trim()){alert("ပစ္စည်းအမည်ထည့်ပါ");$("pName").focus();return}
+ const numberFields=["pCost","pRetail","pWholesale","pStock","pMinStock"];
+ for(const field of numberFields){const input=$(field),value=Number(input.value);if(input.value.trim()===""||!Number.isFinite(value)||value<0){alert("ဈေးနှုန်းနှင့် လက်ကျန်ကို သုည သို့မဟုတ် အပေါင်းကိန်း ထည့်ပါ။");input.focus();return}}
+ if(!fbUser&&!document.body.classList.contains("ak-owner-user-preview")&&document.body.classList.contains("ak-license-locked")){alert("ပစ္စည်းထည့်ရန် Owner Login သို့မဟုတ် အတည်ပြုပြီးသော Subscription လိုအပ်သည်။");return}
+ if(saveButton){saveButton.disabled=true;saveButton.textContent="သိမ်းဆည်းနေသည်..."}
+ try{
+  const id=$("pId").value||uid(),old=db.products.find(x=>x.id===id),file=$("pPhoto").files?.[0];
+  let photo=productImageData||old?.photo||"";
+  if(file&&fbUser&&cloudReady&&window.firebase?.storage){
+   try{
+    $("saveState").textContent="ပစ္စည်းဓာတ်ပုံ Cloud သို့ တင်နေသည်...";
+    const path="productPhotos/"+fbUser.uid+"/"+id+"/photo",ref=firebase.storage().ref(path);
+    await ref.put(file,{contentType:file.type,cacheControl:"public,max-age=3600"});
+    photo=await ref.getDownloadURL();
+   }catch(err){
+    console.error("Product photo upload failed; saving product without cloud photo",err);
+    const continueWithoutPhoto=confirm("ဓာတ်ပုံကို Cloud သို့ မတင်နိုင်ပါ။ ပစ္စည်းအချက်အလက်ကို ဓာတ်ပုံမပါဘဲ ဆက်သိမ်းမလား?\n\n"+(err.message||"Storage setup / permission ကို စစ်ပါ။"));
+    if(!continueWithoutPhoto)return;
+    photo="";
+   }
+  }
+  const p={id,name:$("pName").value.trim(),code:$("pCode").value.trim(),category:$("pCat").value.trim(),unit:$("pUnit").value.trim()||"ခု",cost:Number($("pCost").value),retail:Number($("pRetail").value),wholesale:Number($("pWholesale").value),stock:Number($("pStock").value),minStock:Math.max(0,Number($("pMinStock").value)||0),photo};
+  if(old)Object.assign(old,p);else db.products.unshift(p);
+  persist();resetProduct();
+  $("saveState").textContent=fbUser&&cloudReady?"Cloud သိမ်းဆည်းရန် ပို့ပြီး":"ဖုန်းထဲ သိမ်းပြီး";
+ }catch(err){
+  console.error("Product save failed",err);
+  alert("ပစ္စည်းသိမ်းမရပါ။ "+(err.message||String(err)));
+ }finally{
+  if(saveButton){saveButton.disabled=false;saveButton.textContent="သိမ်းမည်"}
+ }
+});
 function editProduct(id){let p=db.products.find(x=>x.id===id);if(!p)return;for(let [k,v] of Object.entries({pId:p.id,pName:p.name,pCode:p.code,pCat:p.category,pUnit:p.unit,pCost:p.cost,pRetail:p.retail??p.price,pWholesale:p.wholesale??p.price,pStock:p.stock,pMinStock:p.minStock??0}))$(k).value=v??"";productImageData=p.photo||"";if(productImageData){$("photoPreview").src=productImageData;$("photoPreview").classList.remove("hidden")}go("products")}
 function removeProduct(id){if(confirm("ဒီပစ္စည်းကို ဖျက်မလား။")){db.products=db.products.filter(x=>x.id!==id);persist()}}
 function renderProducts(){let q=($("productQuery").value||"").toLowerCase();$("productRows").innerHTML=db.products.filter(p=>(p.name+" "+p.code+" "+p.category).toLowerCase().includes(q)).map(p=>`<tr><td>${p.photo?`<img class="thumb" src="${p.photo}">`:"-"}</td><td>${esc(p.name)}<div class="muted">${esc(p.category)}</div></td><td>${esc(p.code)}</td><td>${p.stock} ${esc(p.unit)} ${Number(p.minStock)>0&&Number(p.stock)<=Number(p.minStock)?"⚠ လက်ကျန်နည်း":""}</td><td>${money(p.cost)}</td><td>${money(p.retail??p.price)}</td><td>${money(p.wholesale??p.price)}</td><td><button onclick="editProduct('${p.id}')">ပြင်</button> <button class="red" onclick="removeProduct('${p.id}')">ဖျက်</button></td></tr>`).join("")}

@@ -299,6 +299,7 @@ body.ak-owner-user-preview .owner-only{display:none!important} body.ak-owner-use
  <div><label>ဓာတ်ပုံ</label><input id="adPhoto" type="file" accept="image/*"></div>
  </div>
  <div class="actions"><button onclick="makeAd()">ကြော်ငြာပုံဖန်တီးမည်</button><button onclick="shareAd()">Social အားလုံးသို့ ပုံ+စာ Share</button><button class="alt" onclick="shareAdTo('facebook')">Facebook</button><button class="alt" onclick="shareAdTo('telegram')">Telegram</button><button class="alt" onclick="shareAdTo('viber')">Viber</button><button class="alt" onclick="shareAdTo('tiktok')">TikTok</button><button class="alt" onclick="shareAdTo('whatsapp')">WhatsApp</button><button class="alt" onclick="shareAdTo('messenger')">Messenger</button><button class="alt" onclick="shareAdTo('instagram')">Instagram</button><button class="alt" onclick="shareAdTo('copy')">Caption/Link Copy</button><button class="alt" onclick="downloadAd()">ပုံသိမ်းမည်</button></div>
+  <div class="panel" style="margin-top:12px"><h3>AI ကြော်ငြာစာသား</h3><p class="muted">ပစ္စည်းအချက်အလက်ကိုသာ AI သို့ပို့ပြီး မြန်မာဘာသာကြော်ငြာစာသား ရေးပေးမည်။ AI စာသားကို စစ်ဆေးပြီးမှ အသုံးပြုပါ။</p><div class="actions"><button type="button" onclick="akGenerateAdCopy()">AI ဖြင့် ကြော်ငြာစာသားရေးမည်</button><button type="button" class="alt" onclick="akOpenChatGPT()">ChatGPT ဖြင့် မေးရန်</button></div><textarea id="adAiCaption" maxlength="1200" placeholder="AI ရေးပေးသော ကြော်ငြာစာသား ဒီမှာပေါ်မည်။ ပြင်ဆင်နိုင်သည်။"></textarea><p id="adAiStatus" class="muted">AI API Key ချိတ်ဆက်ပြီးမှ AI ကြော်ငြာရေးနိုင်မည်။</p></div>
  <canvas id="adCanvas" width="1080" height="1080" class="preview" style="width:min(100%,420px);margin-top:12px;background:white"></canvas>
  <p class="muted">အကောင်းဆုံးနည်းမှာ ပုံနှင့် Caption ကို Android Share Menu မှ တစ်ခါတည်းရွေးပို့ခြင်းဖြစ်သည်။ Platform တစ်ခုချင်းစီ Shortcut သည် ပုံကိုသိမ်း၊ Caption ကို Copy လုပ်ပြီး သက်ဆိုင်ရာ App ဖွင့်ပေးမည်။ App ထဲတွင် ပုံကိုရွေးပြီး Post တင်ပါ။ Auto-post အတွက် သက်ဆိုင်ရာ Platform API/OAuth ခွင့်ပြုချက်လိုအပ်သည်။</p>
  </div>
@@ -336,6 +337,7 @@ body.ak-owner-user-preview .owner-only{display:none!important} body.ak-owner-use
 
 <section id="backup" class="view active">
 <div id="akPaywallNotice" class="panel notice"><h2>AK Sale Free Beta</h2><p id="akPaywallDetail">Gmail ဖြင့် Login ဝင်ပြီး Email ကို အတည်ပြုပါ။ Free Beta ဆိုင်အကောင့် ၃၀ အထိသာ လက်ခံမည်။ Owner က အကောင့်အသုံးပြုခွင့်ကို စီမံနိုင်သည်။</p></div>
+<div class="panel"><h2>AI လုံခြုံရေးစစ်ဆေးမှု</h2><p class="muted">ဆိုင် Cloud audit မှတ်တမ်းများကိုသာ စစ်ဆေးမည်။ Password၊ ငွေစာရင်းနှင့် Customer အချက်အလက်များကို AI သို့ မပို့ပါ။ Login မအောင်မြင်မှုနှင့် IP မှတ်တမ်းများ မရှိသေးပါက အဲဒီအမျိုးအစားကို မစစ်နိုင်ပါ။</p><div class="actions"><button type="button" onclick="akRunSecurityReview()">AI လုံခြုံရေး စစ်ဆေးမည်</button><button type="button" class="alt" onclick="akOpenChatGPT()">ChatGPT နဲ့ မေးမြန်းရန်</button></div><p id="akSecurityStatus" class="muted">Login ဝင်ထားသော ဆိုင်အကောင့်ဖြင့် အသုံးပြုပါ။</p><div id="akSecurityResult" style="white-space:pre-wrap;overflow-wrap:anywhere"></div></div>
 <div class="panel"><h2>Online / Offline အသုံးပြုမှု</h2><div class="grid"><div><label>အလုပ်လုပ်မည့်စနစ်</label><select id="akSyncModeSelect" onchange="akSetSyncMode(this.value)"><option value="auto">အလိုအလျောက် (Online ရှိလျှင် Cloud Sync)</option><option value="offline">Offline သီးသန့် · ဖုန်းထဲသိမ်း</option><option value="online">Online သီးသန့် · Cloud Sync</option></select></div><div><label>ချိတ်ဆက်မှုအခြေအနေ</label><p id="akConnectionStatus" class="pill">စစ်ဆေးနေသည်…</p></div></div><p class="muted">အရောင်း၊ ပစ္စည်း၊ ဝယ်ယူမှုနှင့် ဓာတ်ပုံများကို အရင်ဆုံး ဒီဖုန်း/ကွန်ပျူတာထဲတွင် သိမ်းသည်။ Offline ရွေးထားလျှင် Cloud သို့ အလိုအလျောက်မပို့ပါ။ Online ပြန်ဖွင့်ပြီး Internet ရှိလျှင် ပြန် Sync လုပ်နိုင်သည်။ ပထမဆုံး Login နှင့် အကောင့်/အသုံးပြုခွင့် စစ်ဆေးရန် Internet လိုအပ်သည်။</p><div class="actions"><button type="button" onclick="akSyncNow()">Cloud သို့ ယခုပြန် Sync လုပ်မည်</button><button type="button" class="alt" onclick="akCheckBrowserStorage()">ဖုန်း Storage စစ်မည်</button></div></div><div class="panel"><h2>Backup / Restore</h2><p class="muted">ပစ္စည်းဓာတ်ပုံများအပါအဝင် ပစ္စည်း၊ အရောင်း၊ အဝယ်၊ Customer/Supplier၊ အကြွေး၊ အသုံးစရိတ်နှင့် ကောင်တာ/ဝန်ထမ်းစာရင်းတို့ကို JSON မိတ္တူတစ်ခုတည်းဖြင့် ထုတ်နိုင်သည်။ ဒီ JSON ဖိုင်ကို ဖုန်းထဲ Files/Downloads တွင် သိမ်းထားပါ။ ဖုန်းပြောင်းလျှင် အဲဒီဖိုင်ကို Restore လုပ်ပါ။ Restore မလုပ်မီ လက်ရှိဒေတာကိုလည်း Pre-restore snapshot အဖြစ် သိမ်းပေးမည်။</p><div class="actions"><button onclick="backup()">ဓာတ်ပုံနှင့်စာရင်း Backup ထုတ်မည်</button><label class="btn">Backup ပြန်ယူမည်<input type="file" accept=".json,application/json" id="restoreInput" hidden onchange="restore(event)"></label><button class="alt" onclick="csvExport()">အရောင်း CSV ထုတ်မည်</button></div><p id="akBackupStatus" class="muted">Backup ဖိုင်ထုတ်ပြီး ဖုန်းထဲသိမ်းထားပါ။</p></div>
 <div class="panel" id="akLicensePanel"><h2>Owner Dashboard · အကောင့်ထိန်းချုပ်မှု</h2>
 <div class="owner-only"><p class="muted">အတည်ပြုထားသော Owner Gmail တစ်ခုတည်းမှ Free Beta ဆိုင်အကောင့် ၃၀ အထိ စီမံနိုင်သည်။</p>
@@ -870,6 +872,33 @@ function selectAdProduct(){let p=db.products.find(x=>x.id===$("adProduct").value
 function openAkTikTok(){window.open("https://www.tiktok.com/@sannnlinpaing?_r=1&_t=ZS-9B8ER2Rjvl7","_blank","noopener")}
 function downloadAd(){let c=$("adCanvas");c.toBlob(blob=>{if(!blob)return;let a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="AK-Product-Ad.png";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500)},"image/png")}
 function adCaption(){let shop=db.shop?.name||"AK Hardware";let name=$("adName").value.trim()||"ကုန်ပစ္စည်း";let price=$("adPrice").value.trim();let contact=$("adContact").value.trim();return shop+"\n"+name+(price?"\nဈေးနှုန်း: "+price:"")+"\n"+(contact?"ဆက်သွယ်ရန်: "+contact:"အသေးစိတ်မေးမြန်းနိုင်ပါသည်။")+"\nTikTok: @sannnlinpaing\nhttps://www.tiktok.com/@sannnlinpaing\n\n#Hardware #Electrical #Myanmar"}
+async function akGenerateAdCopy(){
+ const status=$("adAiStatus"),out=$("adAiCaption");
+ try{
+  if(!fbAuth?.currentUser)throw Error("Gmail Login ဝင်ပါ။");
+  if(!cloudReady||!await refreshLicense())throw Error("သက်တမ်းရှိသော ဆိုင်အကောင့်လိုအပ်သည်။");
+  const productName=$("adName").value.trim(),price=$("adPrice").value.trim(),contact=$("adContact").value.trim();
+  if(productName.length<2)throw Error("ပစ္စည်းအမည် အရင်ထည့်ပါ။");
+  status.textContent="AI ကြော်ငြာစာသား ရေးနေသည်...";
+  const result=await firebase.functions().httpsCallable("akAiGenerateAd")({shopName:String(db.shop?.name||"AK Hardware").slice(0,90),productName:productName.slice(0,100),price:price.slice(0,80),contact:contact.slice(0,100),language:"Burmese"});
+  out.value=String(result.data?.text||"").slice(0,1200);
+  if(!out.value)throw Error("AI စာသားမရရှိပါ။");
+  status.textContent="AI စာသားရပါပြီ။ မှန်ကန်မှုစစ်ပြီးမှ Share လုပ်ပါ။";
+ }catch(e){status.textContent="AI ကြော်ငြာ မရသေးပါ: "+(e.message||e)}
+}
+function akOpenChatGPT(){window.open("https://chatgpt.com/","_blank","noopener,noreferrer")}
+async function akRunSecurityReview(){
+ const status=$("akSecurityStatus"),box=$("akSecurityResult");
+ try{
+  if(!fbAuth?.currentUser)throw Error("Gmail Login ဝင်ပါ။");
+  if(!cloudReady||!await refreshLicense())throw Error("သက်တမ်းရှိသော ဆိုင်အကောင့်လိုအပ်သည်။");
+  status.textContent="Cloud လုံခြုံရေးမှတ်တမ်းများကို AI ဖြင့် စစ်ဆေးနေသည်...";
+  box.textContent="";
+  const result=await firebase.functions().httpsCallable("akAiSecurityReview")({});
+  box.textContent=String(result.data?.text||"စစ်ဆေးချက် မရရှိပါ။");
+  status.textContent="စစ်ဆေးမှု ပြီးပါပြီ။ အကြံပြုချက်များကို ဖတ်ရှုပါ။";
+ }catch(e){status.textContent="လုံခြုံရေးစစ်ဆေးမှု မအောင်မြင်ပါ: "+(e.message||e)}
+}
 function adBlob(){return new Promise(resolve=>$("adCanvas").toBlob(resolve,"image/png"))}
 async function saveAdAndCopyCaption(){let blob=await adBlob();if(!blob)throw Error("ကြော်ငြာပုံဖန်တီးမရပါ");let url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="AK-Product-Ad.png";a.click();setTimeout(()=>URL.revokeObjectURL(url),2000);try{await navigator.clipboard.writeText(adCaption())}catch(e){}return true}
 async function shareAd(){let blob=await adBlob();if(!blob)return alert("ကြော်ငြာပုံဖန်တီးမရပါ");let file=new File([blob],"AK-Product-Ad.png",{type:"image/png"});try{if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:$("adName").value||"AK Hardware",text:adCaption()});return}}catch(e){if(e.name==="AbortError")return}try{await saveAdAndCopyCaption();alert("ပုံကို သိမ်းပြီး Caption ကို Copy လုပ်ထားပါပြီ။ Facebook၊ TikTok၊ Viber၊ Telegram တို့တွင် ပုံနှင့်စာကို တွဲတင်နိုင်ပါပြီ။")}catch(e){alert(e.message)}}

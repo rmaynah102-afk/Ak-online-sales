@@ -5,16 +5,7 @@ concurrency:
   cancel-in-progress: false
 
 on:
-  # Build a fresh test APK whenever the Android app source changes.
-  push:
-    branches: [main]
-    paths:
-      - 'app.html'
-      - 'package.json'
-      - 'package-lock.json'
-      - 'capacitor.config.*'
-      - 'scripts/**'
-      - '.github/workflows/build-android-apk.yml'
+  # Manual only: build APK only after explicit owner approval.
   workflow_dispatch:
 
 permissions:

@@ -1074,8 +1074,14 @@ async function loadPlatformUsers(){
   const snap=await fbStore.collection("freeBetaUsers").orderBy("lastLoginAt","desc").limit(30).get();
   akPlatformUserRows=snap.docs.map(d=>({uid:d.id,...d.data()}));
   akRenderPlatformUsers();
-  const cap=await fbStore.collection("freeBetaCapacity").doc("slots").get();
-  const used=cap.exists?Number((cap.data()||{}).count||0):akPlatformUserRows.length;
+  const capRef=fbStore.collection("freeBetaCapacity").doc("slots");
+  const cap=await capRef.get();
+  let used=cap.exists?Number((cap.data()||{}).count||0):0;
+  // Migrate accounts created before the 30-account counter existed.
+  if(!cap.exists||used<snap.size){
+   used=Math.max(used,snap.size);
+   await capRef.set({count:used,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+  }
   $("akPlatformUserStatus").textContent="အသုံးပြုသူ "+used+" / 30 · Owner က အကောင့်တစ်ခုချင်းစီကို ရပ်ဆိုင်း/ပြန်ဖွင့်နိုင်သည်။";
  }catch(e){$("akPlatformUserStatus").textContent="User စာရင်းဖတ်မရပါ: "+e.message}
 }

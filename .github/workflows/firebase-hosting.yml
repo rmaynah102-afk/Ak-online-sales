@@ -60,8 +60,8 @@ jobs:
           const fs = require('fs');
           const vm = require('vm');
           const html = fs.readFileSync('app.html', 'utf8');
-          const scripts = [...html.matchAll(/<script\\b([^>]*)>([\\s\\S]*?)<\\/script>/gi)]
-            .filter(([, attrs]) => !/\\bsrc\\s*=/.test(attrs));
+          const scripts = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)]
+            .filter(([, attrs]) => !/\bsrc\s*=/.test(attrs));
           if (!scripts.length) throw new Error('No inline app JavaScript found');
           scripts.forEach((match, index) => new vm.Script(match[2], {filename: 'app.html:inline-' + (index + 1)}));
           console.log('JavaScript syntax OK:', scripts.length, 'inline script block(s)');

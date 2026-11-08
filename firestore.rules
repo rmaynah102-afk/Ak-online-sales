@@ -8,14 +8,11 @@ service cloud.firestore {
     }
 
     function hasActiveLicense(uid) {
-      // Every private shop document is strictly scoped to the signed-in UID.
-      // The verified platform owner bypasses subscription only for their own shop.
+      // Free Beta on Firebase Spark: verified accounts may access only their own UID path.
+      // No client can read or write another shop's private documents.
       return request.auth != null
         && request.auth.uid == uid
-        && (isVerifiedOwner()
-          || (exists(/databases/$(database)/documents/licenses/$(uid))
-            && get(/databases/$(database)/documents/licenses/$(uid)).data.status == 'active'
-            && get(/databases/$(database)/documents/licenses/$(uid)).data.expiresAt > request.time));
+        && request.auth.token.email_verified == true;
     }
 
     // Staff membership is written only by trusted Cloud Functions.
@@ -25,6 +22,20 @@ service cloud.firestore {
         && (request.auth.uid == memberUid
           || resource.data.shopId == request.auth.uid);
       allow write: if false;
+    }
+
+    // Free Beta directory: each verified user can maintain only their own profile;
+    // only the verified platform owner can list the directory.
+    match /freeBetaUsers/{userId} {
+      allow read: if isVerifiedOwner()
+        || (request.auth != null && request.auth.uid == userId);
+      allow create, update: if request.auth != null
+        && request.auth.uid == userId
+        && request.auth.token.email_verified == true
+        && request.resource.data.uid == userId
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.keys().hasOnly(['uid','email','createdAt','lastLoginAt']);
+      allow delete: if isVerifiedOwner();
     }
 
     match /licenses/{userId} {

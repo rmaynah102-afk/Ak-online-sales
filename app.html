@@ -235,7 +235,7 @@ body.ak-owner-user-preview .owner-only{display:none!important} body.ak-owner-use
 </style>
 </head>
 <body class="ak-license-locked">
-<header><div class="brand-lockup"><img src="./ak-logo.svg" alt="AK Sale logo" width="48" height="48"><div><h1 id="brandTitle">AK Sale Software</h1><small>Hardware & Electrical POS</small></div></div><div class="actions no-print"><button id="akInstallBtn" class="alt" type="button" hidden>Install</button><button id="akShareBtn" class="alt" type="button">Share</button><button id="akOwnerUserPreviewBtn" class="alt owner-only" type="button" onclick="akToggleOwnerUserPreview()">User View</button><button id="akLanguageBtn" class="alt" type="button" aria-label="Switch language">English</button><span class="pill" id="saveState">ဖုန်းထဲသိမ်းဆည်းမည်</span></div></header>
+<header><div class="brand-lockup"><img src="./ak-logo.svg" alt="AK Sale logo" width="48" height="48"><div><h1 id="brandTitle">AK Sale Software</h1><small>Hardware & Electrical POS</small></div></div><div class="actions no-print"><button id="akInstallBtn" class="alt" type="button" hidden>Install</button><button id="akShareBtn" class="alt" type="button">Share</button><button id="akOwnerUserPreviewBtn" class="alt owner-only" type="button" onclick="akToggleOwnerUserPreview()">User View</button><button id="akLanguageBtn" class="alt" type="button" aria-label="Switch language">English</button><span class="pill" id="saveState">ဖုန်းထဲသိမ်းဆည်းမည်</span><span class="pill" id="akStorageState" title="ဖုန်း/ကွန်ပျူတာ၏ local storage အခြေအနေ">Storage စစ်ဆေးနေသည်…</span></div></header>
 <div id="akOwnerPreviewBanner" class="notice no-print" style="display:none;position:sticky;top:0;z-index:9000;margin:8px auto;max-width:1100px">User View Preview — Owner account remains signed in. <button type="button" onclick="akToggleOwnerUserPreview()">Owner Mode သို့ပြန်ရန်</button></div>
 <main>
 <nav id="nav" class="no-print"></nav>
@@ -364,7 +364,9 @@ body.ak-owner-user-preview .owner-only{display:none!important} body.ak-owner-use
 const $=id=>document.getElementById(id), DBKEY="ak_sale_complete_v2";
 const fresh=()=>({products:[],sales:[],purchases:[],people:[],payments:[],expenses:[],shop:{name:"Ak shopping markets",currency:"MMK"}});
 function readDB(storageKey=DBKEY){try{let x=JSON.parse(localStorage.getItem(storageKey));if(!x||typeof x!=="object")return fresh();let d=fresh();for(let k of ["products","sales","purchases","people","payments","expenses"])d[k]=Array.isArray(x[k])?x[k].filter(v=>v&&typeof v==="object").map(v=>({...v,id:/^[A-Za-z0-9_-]{1,80}$/.test(String(v.id||""))?String(v.id):uid()})):[];d.products=d.products.map(p=>({...p,photo:/^(data:image\/(png|jpeg|webp);base64,|https:\/\/)/i.test(String(p.photo||""))?String(p.photo):""}));d.shop={...d.shop,...(x.shop||{})};return d}catch(e){console.warn(e);return fresh()}}
-let db=readDB(), fbApp=null,fbAuth=null,fbStore=null,fbUser=null,fbAuthListenerReady=false,akRedirectResultChecked=false,cloudReady=false,adImage=null,productImageData="";
+let db=readDB();
+window.addEventListener("load",()=>akRequestPersistentStorage(),{once:true});
+let fbApp=null,fbAuth=null,fbStore=null,fbUser=null,fbAuthListenerReady=false,akRedirectResultChecked=false,cloudReady=false,adImage=null,productImageData="";
 let currentLicense=null,akUserClaims={};
 const userDBKey=uid=>DBKEY+"_user_"+uid;
 const uid=()=>("xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx").replace(/[xy]/g,c=>{let r=Math.random()*16|0;return(c==="x"?r:(r&3|8)).toString(16)});
@@ -435,13 +437,39 @@ function scheduleAkCloudSave(delay=900){
  if(akCloudSaveTimer)clearTimeout(akCloudSaveTimer);
  akCloudSaveTimer=setTimeout(()=>{akCloudSaveTimer=null;if(fbUser&&cloudReady&&akLocalDirty&&!akCloudConflict)cloudSave()},delay);
 }
+async function akCheckBrowserStorage(){
+ const el=$("akStorageState");if(!el)return;
+ try{
+  if(!navigator.storage?.estimate){el.textContent="Storage အချက်အလက်မရနိုင်";return}
+  const estimate=await navigator.storage.estimate(),used=Number(estimate.usage||0),quota=Number(estimate.quota||0);
+  const mb=n=>(n/1024/1024).toFixed(1);
+  el.textContent=quota?"Storage "+mb(used)+"/"+mb(quota)+" MB":"Storage "+mb(used)+" MB";
+  el.title="အသုံးပြုထားသည် "+mb(used)+" MB · ခန့်မှန်းခွင့်ပြုချက် "+(quota?mb(quota)+" MB":"မသိရ");
+  if(quota&&used/quota>.85)el.style.background="#ffe2dc";
+ }catch(e){el.textContent="Storage အခြေအနေ မသိရ"}
+}
+async function akRequestPersistentStorage(){
+ try{
+  if(navigator.storage?.persist){
+   const persisted=await navigator.storage.persist();
+   const el=$("akStorageState");
+   if(el&&persisted)el.title+=" · Browser က persistent storage ခွင့်ပြုထားသည်";
+  }
+ }catch(e){console.warn("Persistent storage request unavailable",e)}
+ akCheckBrowserStorage();
+}
 function persist(){
  try{
   localStorage.setItem(fbUser?userDBKey(fbUser.uid):DBKEY,JSON.stringify(db));
   $("saveState").textContent=fbUser?"ဖုန်းထဲသိမ်းပြီး · Cloud Sync စောင့်နေသည်":"ဖုန်းထဲသိမ်းပြီး";
   renderAll();
   if(fbUser&&cloudReady){akLocalDirty=true;scheduleAkCloudSave()}
- }catch(e){alert("ဖုန်းထဲသိမ်းမရပါ။ ဓာတ်ပုံအရွယ်အစားလျှော့ပါ သို့မဟုတ် Backup ထုတ်ပါ။");console.error(e)}
+  akCheckBrowserStorage();
+ }catch(e){
+  $("saveState").textContent="သိမ်းဆည်းမှု မအောင်မြင်";
+  alert("ဖုန်းထဲသိမ်းမရပါ။ Storage ပြည့်နေနိုင်သည်။ ချက်ချင်း JSON Backup ထုတ်ပြီး ဓာတ်ပုံအရွယ်အစား/မလိုအပ်သောဖိုင်များ လျှော့ပါ။");
+  console.error("AK local save failed",e);
+ }
 }
 const pages=[["home","ပင်မ"],["products","ပစ္စည်း"],["sales","အရောင်း"],["purchases","အဝယ်"],["people","Customer/Supplier"],["expenses","အသုံးစရိတ်"],["reports","အစီရင်ခံစာ"],["ads","ကြော်ငြာ"],["market","AK Market"],["centerManagement","စင်တာထိန်းချုပ်မှု"],["backup","Backup / Settings"]];
 $("nav").innerHTML=pages.map(([id,n])=>'<button type="button" data-view="'+id+'" aria-label="'+n+'" title="'+n+'" onclick="go(\''+id+'\')">'+n+'</button>').join("");

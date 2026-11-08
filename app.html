@@ -1079,29 +1079,23 @@ async function adminRejectRequest(requestId){if(!requestId||!confirm("ဤငွ�
 let akPlatformUserPageToken="",akPlatformUserRows=[];
 function akRenderPlatformUsers(){
  const body=$("akPlatformUserRows");if(!body)return;
- body.innerHTML=akPlatformUserRows.length?akPlatformUserRows.map(u=>"<tr><td>"+esc(u.email||u.uid)+"</td><td>Free Beta · အသုံးပြုခွင့်ရှိ</td><td>"+esc(u.lastLoginAt?new Date(u.lastLoginAt).toLocaleString():"-")+"</td><td>"+esc(u.uid)+"</td></tr>").join(""):"<tr><td colspan=\"4\">Free Beta User မရှိသေးပါ။</td></tr>";
+ body.innerHTML=akPlatformUserRows.length?akPlatformUserRows.map(u=>"<tr><td>"+esc(u.email||u.uid)+"</td><td>Free Beta · စာရင်းသွင်းထား</td><td>"+esc(u.lastLoginAt?new Date(u.lastLoginAt).toLocaleString():"-")+"</td><td>"+esc(u.uid)+"</td></tr>").join(""):"<tr><td colspan=\"4\">Free Beta User မရှိသေးပါ။</td></tr>";
 }
-
-function akRenderPlatformUsers(){
- const body=$("akPlatformUserRows");if(!body)return;
- body.innerHTML=akPlatformUserRows.length?akPlatformUserRows.map(u=>"<tr><td>"+esc(u.email||u.uid)+"</td><td>Free Beta · အသုံးပြုခွင့်ရှိ</td><td>"+esc(u.lastLoginAt?new Date(u.lastLoginAt).toLocaleString():"-")+"</td><td>"+esc(u.uid)+"</td></tr>").join(""):"<tr><td colspan=\"4\">Free Beta User မရှိသေးပါ။</td></tr>";
-}
-let akPlatformUserPageToken="",akPlatformUserRows=[];
 async function loadPlatformUsers(){
  try{
   if(!akIsPlatformOwner())throw Error("Owner Gmail ဖြင့် Login ဝင်ပါ");
   $("akPlatformUserStatus").textContent="Free Beta User စာရင်းဖတ်နေသည်...";
-  const snap=await fbStore.collection("freeBetaUsers").orderBy("lastLoginAt","desc").limit(50).get();
+  const snap=await fbStore.collection("freeBetaUsers").orderBy("lastLoginAt","desc").limit(30).get();
   akPlatformUserRows=snap.docs.map(d=>({uid:d.id,...d.data()}));
   akRenderPlatformUsers();
-  $("akPlatformUserStatus").textContent="Free Beta အကောင့် "+akPlatformUserRows.length+" / 50 ခု ပြထားသည်။";
+  $("akPlatformUserStatus").textContent="ပထမဆုံး အကောင့် "+akPlatformUserRows.length+" / 30 ခု ပြထားသည်။ မှတ်ချက် - ဤစာရင်းကန့်သတ်ချက်သည် အကောင့်အသစ်ဖွင့်ခြင်းကို လုံခြုံစွာပိတ်သည့် Server-side limit မဟုတ်သေးပါ။";
  }catch(e){$("akPlatformUserStatus").textContent="User စာရင်းဖတ်မရပါ: "+e.message}
 }
 async function loadMorePlatformUsers(){
- $("akPlatformUserStatus").textContent="Free Beta စာရင်းတွင် ပထမဆုံး User ၅၀ ကို ပြထားပါသည်။";
+ $("akPlatformUserStatus").textContent="အခမဲ့စနစ်၏ ပထမဆုံး User ၃၀ ကိုသာ ပြသထားသည်။";
 }
 async function akSetCustomerAccess(uid,action){
- alert("Spark Free Plan တွင် Cloud Functions မရှိသဖြင့် App ထဲမှ Account Suspend/Reactivate ကို ယာယီပိတ်ထားသည်။ လိုအပ်ပါက Firebase Authentication Console မှ အကောင့်ကို Disable လုပ်ပါ။");
+ alert("Owner မှ User ပိတ်/ပြန်ဖွင့်နိုင်သည့် လုံခြုံသော Server-side စနစ်ကို Cloud Functions မရှိသေးသဖြင့် မဖွင့်ထားပါ။");
 }
 
 let akCloudUnsubscribe=null;

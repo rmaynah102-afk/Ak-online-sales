@@ -36,20 +36,30 @@ service cloud.firestore {
     match /freeBetaCapacity/slots {
       allow read: if isVerifiedOwner()
         || (request.auth != null && request.auth.token.email_verified == true);
-      allow create: if request.auth != null
-        && request.auth.token.email_verified == true
-        && request.resource.data.keys().hasOnly(['count','updatedAt'])
-        && request.resource.data.count == 1
-        && existsAfter(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid))
-        && !exists(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid));
-      allow update: if request.auth != null
-        && request.auth.token.email_verified == true
-        && request.resource.data.keys().hasOnly(['count','updatedAt'])
-        && resource.data.count is int
-        && request.resource.data.count == resource.data.count + 1
-        && request.resource.data.count <= 30
-        && existsAfter(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid))
-        && !exists(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid));
+      allow create: if (isVerifiedOwner()
+          && request.resource.data.keys().hasOnly(['count','updatedAt'])
+          && request.resource.data.count is int
+          && request.resource.data.count >= 0
+          && request.resource.data.count <= 30)
+        || (request.auth != null
+          && request.auth.token.email_verified == true
+          && request.resource.data.keys().hasOnly(['count','updatedAt'])
+          && request.resource.data.count == 1
+          && existsAfter(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid))
+          && !exists(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid)));
+      allow update: if (isVerifiedOwner()
+          && request.resource.data.keys().hasOnly(['count','updatedAt'])
+          && request.resource.data.count is int
+          && request.resource.data.count >= 0
+          && request.resource.data.count <= 30)
+        || (request.auth != null
+          && request.auth.token.email_verified == true
+          && request.resource.data.keys().hasOnly(['count','updatedAt'])
+          && resource.data.count is int
+          && request.resource.data.count == resource.data.count + 1
+          && request.resource.data.count <= 30
+          && existsAfter(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid))
+          && !exists(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid)));
       allow delete: if false;
     }
 

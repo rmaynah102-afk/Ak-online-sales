@@ -1,6 +1,8 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const crypto = require("crypto");
+const { defineSecret } = require("firebase-functions/params");
+const OPENAI_API_KEY = defineSecret("OPENAI_API_KEY");
 // Sole platform owner; fixed allowlist, never client-configurable.
 const OWNER_EMAIL = "painglin102@gmail.com";
 
@@ -923,3 +925,74 @@ exports.saveShopWorkspace = functions.https.onCall(async (data,context)=>{
   });
   return {ok:true,revision:nextRevision,changedCollections:Object.keys(changed)};
 });
+
+// AI features are server-only. The OpenAI key is stored in Firebase Secret Manager,
+// never shipped to the browser or APK. Only submitted ad fields and shop audit
+// metadata are sent; POS sales, customer records, passwords and payment proofs are not.
+async function akCallOpenAI(instructions, input, maxOutputTokens) {
+  const apiKey = OPENAI_API_KEY.value();
+  if (!apiKey) throw new functions.https.HttpsError("failed-precondition", "AI API Key မသတ်မှတ်ရသေးပါ။");
+  const response = await fetch("https://api.openai.com/v1/responses", {
+    method: "POST",
+    headers: { "Authorization": "Bearer " + apiKey, "Content-Type": "application/json" },
+    body: JSON.stringify({ model: "gpt-6-luna", instructions, input, max_output_tokens: maxOutputTokens })
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    console.error("OpenAI request failed", response.status, payload.error && payload.error.type);
+    throw new functions.https.HttpsError("unavailable", "AI ဝန်ဆောင်မှု ယာယီမရနိုင်ပါ။ နောက်မှပြန်စမ်းပါ။");
+  }
+  const output = (payload.output || []).flatMap(item => item.content || [])
+    .filter(part => part.type === "output_text" && typeof part.text === "string")
+    .map(part => part.text).join("\n").trim();
+  if (!output) throw new functions.https.HttpsError("internal", "AI မှ စာသားပြန်မရရှိပါ။");
+  return output.slice(0, 3000);
+}
+
+exports.akAiGenerateAd = functions.runWith({ secrets: [OPENAI_API_KEY], timeoutSeconds: 60, memory: "256MB" })
+  .https.onCall(async (data, context) => {
+    await requireActiveShop(context);
+    const shopName = String(data.shopName || "").trim().slice(0, 90);
+    const productName = String(data.productName || "").trim().slice(0, 100);
+    const price = String(data.price || "").trim().slice(0, 80);
+    const contact = String(data.contact || "").trim().slice(0, 100);
+    if (productName.length < 2) throw new functions.https.HttpsError("invalid-argument", "ပစ္စည်းအမည် ထည့်ပါ။");
+    const input = ["ဆိုင်: " + shopName, "ပစ္စည်း: " + productName,
+      "ဈေးနှုန်း: " + (price || "မဖော်ပြထား"), "ဆက်သွယ်ရန်: " + (contact || "မဖော်ပြထား")].join("\n");
+    const text = await akCallOpenAI(
+      "သင်သည် မြန်မာနိုင်ငံရှိ Hardware နှင့် Electrical ဆိုင်များအတွက် ကြော်ငြာစာသားရေးသူဖြစ်သည်။ မြန်မာဘာသာဖြင့် တိုတောင်းပြီး ယုံကြည်စိတ်ချရသော Social Media caption တစ်ခုနှင့် hashtag 5 ခုအထိရေးပါ။ ပေးထားသော အချက်အလက်ထက်ပို၍ အရည်အသွေး၊ အာမခံ၊ stock၊ discount၊ origin သို့မဟုတ် delivery အကြောင်း မတီထွင်ပါနှင့်။ ဈေးနှုန်းနှင့် ဆက်သွယ်ရန်ကို ပေးထားမှသာ ထည့်ပါ။",
+      input, 350
+    );
+    return { ok: true, text };
+  });
+
+exports.akAiSecurityReview = functions.runWith({ secrets: [OPENAI_API_KEY], timeoutSeconds: 60, memory: "256MB" })
+  .https.onCall(async (data, context) => {
+    const identity = workspaceIdentity(context);
+    await verifyWorkspaceMember(context, identity);
+    const snap = await db.collection("shops").doc(identity.shopId)
+      .collection("auditLogs").orderBy("createdAt", "desc").limit(40).get();
+    const events = snap.docs.map(doc => {
+      const x = doc.data() || {};
+      return {
+        action: String(x.action || "unknown").slice(0, 60),
+        role: String(x.role || "unknown").slice(0, 30),
+        actorIsOwner: x.actorUid === identity.shopId,
+        changedCollections: Array.isArray(x.changedCollections) ? x.changedCollections.slice(0, 10) : [],
+        at: x.createdAt && x.createdAt.toDate ? x.createdAt.toDate().toISOString() : null
+      };
+    });
+    if (!events.length) {
+      return { ok: true, text: "စစ်ဆေးနိုင်သော Cloud Audit မှတ်တမ်း မရှိသေးပါ။ မသင်္ကာသောလုပ်ဆောင်ချက်ရှိ/မရှိကို အတည်မပြုနိုင်ပါ။" };
+    }
+    const text = await akCallOpenAI(
+      "သင်သည် defensive application security reviewer ဖြစ်သည်။ အောက်ပါ sanitized shop audit metadata ကိုသာ သုံး၍ အတိုချုံး မြန်မာလို သုံးသပ်ပါ။ ထူးခြားသော save burst၊ မမျှော်လင့်သော role/action pattern များကိုသာ သတိပေးပါ။ သက်သေမရှိလျှင် အန္တရာယ်ရှိသည်ဟု မစွပ်စွဲပါနှင့်။ ဤမှတ်တမ်းတွင် IP၊ failed login၊ device fingerprint မပါသောကြောင့် အဲဒီအရာများကို စစ်ပြီးပြီဟု မပြောပါနှင့်။ နောက်ဆုံးတွင် စစ်ဆေးမှုကန့်သတ်ချက်ကို ဖော်ပြပါ။",
+      JSON.stringify({ eventCount: events.length, events }), 450
+    );
+    await db.collection("shops").doc(identity.shopId).collection("auditLogs").add({
+      action: "ai_security_review", role: identity.role, actorUid: context.auth.uid,
+      createdAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+    return { ok: true, text };
+  });
+

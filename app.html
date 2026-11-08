@@ -871,7 +871,7 @@ function fillAdProducts(){let s=$("adProduct");if(!s)return;let chosen=s.value;s
 function selectAdProduct(){let p=db.products.find(x=>x.id===$("adProduct").value);if(!p)return;$("adName").value=p.name;$("adPrice").value=money(p.retail??p.price??0)+" "+(db.shop.currency||"MMK");if(p.photo){adImage=new Image();adImage.onload=makeAd;adImage.src=p.photo}else{adImage=null;makeAd()}}
 function openAkTikTok(){window.open("https://www.tiktok.com/@sannnlinpaing?_r=1&_t=ZS-9B8ER2Rjvl7","_blank","noopener")}
 function downloadAd(){let c=$("adCanvas");c.toBlob(blob=>{if(!blob)return;let a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="AK-Product-Ad.png";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500)},"image/png")}
-function adCaption(){let shop=db.shop?.name||"AK Hardware";let name=$("adName").value.trim()||"ကုန်ပစ္စည်း";let price=$("adPrice").value.trim();let contact=$("adContact").value.trim();return shop+"\n"+name+(price?"\nဈေးနှုန်း: "+price:"")+"\n"+(contact?"ဆက်သွယ်ရန်: "+contact:"အသေးစိတ်မေးမြန်းနိုင်ပါသည်။")+"\nTikTok: @sannnlinpaing\nhttps://www.tiktok.com/@sannnlinpaing\n\n#Hardware #Electrical #Myanmar"}
+function adCaption(){const aiCaption=$("adAiCaption")?.value.trim();if(aiCaption)return aiCaption;let shop=db.shop?.name||"AK Hardware";let name=$("adName").value.trim()||"ကုန်ပစ္စည်း";let price=$("adPrice").value.trim();let contact=$("adContact").value.trim();return shop+"\n"+name+(price?"\nဈေးနှုန်း: "+price:"")+"\n"+(contact?"ဆက်သွယ်ရန်: "+contact:"အသေးစိတ်မေးမြန်းနိုင်ပါသည်။")+"\nTikTok: @sannnlinpaing\nhttps://www.tiktok.com/@sannnlinpaing\n\n#Hardware #Electrical #Myanmar"}
 async function akGenerateAdCopy(){
  const status=$("adAiStatus"),out=$("adAiCaption");
  try{

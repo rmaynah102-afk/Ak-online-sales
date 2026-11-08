@@ -531,6 +531,10 @@ function go(id){
  const activeNav=document.querySelector('#nav button[data-view="'+id+'"]');
  if(activeNav&&window.matchMedia("(max-width: 650px)").matches)activeNav.scrollIntoView({block:"nearest",inline:"nearest",behavior:"smooth"});
  renderAll();
+ if(id==="sales"){
+  const scanInput=document.getElementById("saleBarcodeInput");
+  if(scanInput)requestAnimationFrame(()=>scanInput.focus());
+ }
 }
 function resetProduct(){ $("productForm").reset();$("pId").value="";$("pUnit").value="ခု";$("pCost").value=0;$("pRetail").value=0;$("pWholesale").value=0;$("pStock").value=0;$("pMinStock").value=0;productImageData="";$("photoPreview").classList.add("hidden")}
 // Camera barcode scanner: uses the Android/Chrome camera sensor through BarcodeDetector when supported.

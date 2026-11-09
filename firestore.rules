@@ -363,9 +363,20 @@ service cloud.firestore {
         && request.resource.data.currency == 'USD'
         && request.resource.data.status == 'pending_payment'
         && request.resource.data.createdAt == request.time;
-      allow read: if isVerifiedOwner()
+      allow read: if resource.data.status == 'active'
+        || isVerifiedOwner()
         || (request.auth != null && resource.data.ownerUid == request.auth.uid);
-      allow update, delete: if false;
+      allow update: if isVerifiedOwner()
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['status','paymentReference','reviewedAt','expiresAt'])
+        && request.resource.data.status in ['pending_payment','active','rejected','expired']
+        && (request.resource.data.status != 'active'
+          || (request.resource.data.paymentReference is string
+            && request.resource.data.paymentReference.size() >= 3
+            && request.resource.data.expiresAt is timestamp
+            && request.resource.data.expiresAt > request.time))
+        && request.resource.data.reviewedAt == request.time;
+      allow delete: if isVerifiedOwner();
     }
 
     match /{document=**} {

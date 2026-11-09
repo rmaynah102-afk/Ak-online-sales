@@ -1482,7 +1482,27 @@ async function placeMarketOrder(id){try{if(!fbAuth?.currentUser||!fbStore)throw 
 function marketNormalizePhone(phone){let n=String(phone||"").replace(/[^0-9+]/g,"");if(n.startsWith("09"))n="+959"+n.slice(2);else if(n.startsWith("959"))n="+"+n;else if(n.startsWith("9")&&n.length>=8)n="+95"+n;return n}
 function contactMarketSeller(phone){const n=marketNormalizePhone(phone);if(!n)return alert("ရောင်းသူက ဖုန်းနံပါတ် မဖော်ပြထားပါ။");location.href="tel:"+n}
 function viberMarketSeller(phone){const n=marketNormalizePhone(phone);if(!n)return alert("ရောင်းသူက Viber နံပါတ် မဖော်ပြထားပါ။");location.href="viber://chat?number="+encodeURIComponent(n)}
-function shareMarketListing(id){const x=marketListings.find(v=>v.id===id);if(!x)return;const url="https://rmaynah102-afk.github.io/Ak-online-sales/";const text=x.title+" · "+Number(x.price).toLocaleString("en-US")+" ကျပ်\\n"+[x.township,x.city].filter(Boolean).join(", ")+"\\nAK Commerce";if(navigator.share)navigator.share({title:x.title,text,url}).catch(()=>{});else if(navigator.clipboard)navigator.clipboard.writeText(text+"\n"+url).then(()=>alert("ပစ္စည်းအချက်အလက်နှင့် Website Link ကို Copy လုပ်ပြီးပါပြီ။"));else prompt("Website Link",url)}
+const AK_MARKET_PUBLIC_URL="https://rmaynah102-afk.github.io/Ak-online-sales/app.html?market=1";
+async function shareAKMarket(){
+ const title="AK Market · မြန်မာ့အရောင်းအဝယ်";
+ const text="AK Market မှာ ပစ္စည်းကြော်ငြာတွေ အခမဲ့ကြည့်ရှုနိုင်၊ တင်ရောင်းနိုင်ပါပြီ။";
+ try{if(navigator.share){await navigator.share({title,text,url:AK_MARKET_PUBLIC_URL});return}}
+ catch(e){if(e&&e.name==="AbortError")return}
+ try{if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(AK_MARKET_PUBLIC_URL);alert("AK Market Link ကို Copy လုပ်ပြီးပါပြီ။ Viber/Facebook ထဲမှာ Paste လုပ်ပြီး ပို့နိုင်ပါပြီ။");return}}
+ catch(e){}
+ prompt("ဒီ AK Market Link ကို Copy လုပ်ပြီး မျှဝေပါ",AK_MARKET_PUBLIC_URL);
+}
+async function shareMarketListing(id){
+ const x=marketListings.find(v=>v.id===id);if(!x)return;
+ const place=[x.township,x.city].filter(Boolean).join(", ");
+ const text=(x.title||"AK Market ကြော်ငြာ")+" · "+Number(x.price||0).toLocaleString("en-US")+" ကျပ်"+(place?"\n"+place:"")+"\nAK Market မှာ ကြည့်ရန်";
+ try{if(navigator.share){await navigator.share({title:x.title||"AK Market ကြော်ငြာ",text,url:AK_MARKET_PUBLIC_URL});return}}
+ catch(e){if(e&&e.name==="AbortError")return}
+ const shareText=text+"\n"+AK_MARKET_PUBLIC_URL;
+ try{if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(shareText);alert("ကြော်ငြာစာသားနှင့် AK Market Link ကို Copy လုပ်ပြီးပါပြီ။ Viber/Facebook ထဲမှာ Paste လုပ်ပြီး ပို့ပါ။");return}}
+ catch(e){}
+ prompt("ဒီစာသားနှင့် Link ကို Copy လုပ်ပြီး မျှဝေပါ",shareText);
+}
 const AK_DEVICE_KEY="ak_device_id_v1";
 function akDeviceId(){let id=localStorage.getItem(AK_DEVICE_KEY);if(!id){id="akd_"+(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2));localStorage.setItem(AK_DEVICE_KEY,id)}return id}
 async function claimThisDevice(){const call=firebase.functions().httpsCallable("claimShopDevice");const result=await call({deviceId:akDeviceId(),label:(navigator.userAgent||"Device").slice(0,110)});if(!result.data||!result.data.ok)throw Error("ဒီဆိုင်အကောင့်တွင် ခွင့်ပြုထားသော ဖုန်း ၅ လုံး ပြည့်နေပါသည်။ Owner ထံမှ စက်ဟောင်းတစ်လုံး ဖြုတ်ခိုင်းပါ။");await refreshShopDevices()}

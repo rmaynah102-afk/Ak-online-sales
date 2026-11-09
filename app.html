@@ -1718,8 +1718,11 @@ body.ak-public footer{display:block}
   const hero=document.createElement("div");hero.className="ak-public-hero";
   hero.innerHTML='<div><h2>မြန်မာ့ဈေးကွက်ကို တစ်နေရာတည်းမှာ ရှာဖွေပါ</h2><p>ကုန်မာ၊ လျှပ်စစ်၊ ဆောက်လုပ်ရေးနှင့် အိမ်သုံးပစ္စည်းများ · ဈေးနှိုင်းယှဉ် · ဆိုင်ကို တိုက်ရိုက်ဆက်သွယ်</p></div><a href="./download.html">AK Software · Web ဝင်ရန် / APK ရယူရန်</a>';
   market.prepend(hero);
-  const postPanel=document.getElementById("marketForm")?.parentElement;
-  if(postPanel)postPanel.style.display="none";
+  const authPanel=document.getElementById("akFirebasePanel");
+  const marketForm=document.getElementById("marketForm");
+  if(authPanel&&marketForm?.parentElement)marketForm.parentElement.before(authPanel);
+  const posLink=document.createElement("a");posLink.href="./download.html";posLink.className="ak-pos-use";posLink.textContent="AK POS အသုံးပြုရန် · APK";posLink.setAttribute("aria-label","AK POS APK အသုံးပြုရန်");
+  hero.querySelector("a")?.replaceWith(posLink);
   const note=document.createElement("div");note.className="ak-public-note";
   note.textContent="အများပြည်သူကြည့်ရှုရန် ပစ္စည်းကြော်ငြာများသာ ပြသထားသည်။ ဆိုင်ပိုင်ရှင်၏ အရောင်းစာရင်း၊ အမြတ်၊ အကြွေးနှင့် ငွေစာရင်းများကို ဤစာမျက်နှာတွင် မပြပါ။";
   hero.after(note);
@@ -1736,7 +1739,8 @@ body.ak-public footer{display:block}
    if(typeof akLoadFirebaseSDK==="function")await akLoadFirebaseSDK();
    if(!window.firebase||!firebase.firestore)throw Error("Firebase SDK မရပါ။ Internet စစ်ပါ။");
    if(!firebase.apps.length)firebase.initializeApp(cfg);
-   fbApp=firebase.app();fbStore=firebase.firestore();
+   fbApp=firebase.app();fbAuth=firebase.auth();fbStore=firebase.firestore();fbAuth.languageCode="my";
+   fbAuth.onAuthStateChanged(user=>{const status=document.getElementById("fbStatus");if(status)status.textContent=user?"Login ဝင်ထားသည်: "+(user.email||"")+" · ကြော်ငြာတင်နိုင်ပါပြီ။":"ကြော်ငြာတင်ရန် Gmail Login ဝင်ပါ။";if(user){if(typeof loadMyMarketListings==="function")void loadMyMarketListings();if(typeof loadMyMarketOrders==="function")void loadMyMarketOrders();}});
    if(typeof loadMarket==="function")await loadMarket();if(typeof loadSponsoredAds==="function")await loadSponsoredAds();
   }catch(e){const status=document.getElementById("marketStatus");if(status)status.textContent="Public Market ချိတ်ဆက်မရပါ: "+e.message;}
  }

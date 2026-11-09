@@ -8,7 +8,6 @@ const APP_SHELL = [
   "./community.html",
   "./app.html",
   "./firebase-config.js",
-  "./PRINTER-SETUP-MY.md",
   "./download.html",
   "./manifest.webmanifest",
   "./ak-logo.svg"

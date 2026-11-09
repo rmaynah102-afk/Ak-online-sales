@@ -330,6 +330,28 @@ footer{color:var(--ak-muted)}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{transition:none!important;animation:none!important}}
 
 </style>
+
+<script>
+if(new URLSearchParams(location.search).get("market")==="1")document.documentElement.classList.add("ak-public-market");
+</script>
+<style>
+html.ak-public-market body{padding:0!important;max-width:none!important;background:#f3f7fb!important}
+html.ak-public-market header .actions,
+html.ak-public-market #nav,
+html.ak-public-market #akOwnerPreviewBanner,
+html.ak-public-market main>.view:not(#market){display:none!important}
+html.ak-public-market main{max-width:1180px!important;margin:0 auto!important;padding:12px!important}
+html.ak-public-market #market{display:block!important}
+html.ak-public-market #market>.panel:first-child{display:none!important}
+html.ak-public-market #market .panel:has(#marketForm),
+html.ak-public-market #market .panel:has(#akShopProfileForm),
+html.ak-public-market #market .panel:has(#akAdForm),
+html.ak-public-market #market .panel:has(#myMarketOrders),
+html.ak-public-market #market .panel:has(#myMarketFeed){display:none!important}
+html.ak-public-market footer{display:none!important}
+@media(max-width:600px){html.ak-public-market main{padding:8px!important}}
+</style>
+
 </head>
 <body class="ak-license-locked">
 <header><div class="brand-lockup"><img src="./ak-logo.svg" alt="AK Sale logo" width="48" height="48"><div><h1 id="brandTitle">AK Sale Software</h1><small>Multi-Business POS · ဆိုင်နှင့် လုပ်ငန်းအမျိုးမျိုးအတွက်</small></div></div><div class="actions no-print"><button id="akInstallBtn" class="alt" type="button" hidden>Install</button><button id="akShareBtn" class="alt" type="button">Share</button><button id="akOwnerUserPreviewBtn" class="alt owner-only" type="button" onclick="akToggleOwnerUserPreview()">User View</button><button id="akLanguageBtn" class="alt" type="button" aria-label="Switch language">English</button><span class="pill" id="saveState">ဖုန်းထဲသိမ်းဆည်းမည်</span><span class="pill" id="akStorageState" title="ဖုန်း/ကွန်ပျူတာ၏ local storage အခြေအနေ">Storage စစ်ဆေးနေသည်…</span></div></header>

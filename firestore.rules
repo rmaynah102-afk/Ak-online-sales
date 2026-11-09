@@ -77,7 +77,6 @@ service cloud.firestore {
         && request.auth.uid == userId
         && request.auth.token.email_verified == true
         && request.resource.data.uid == userId
-        && request.resource.data.email == request.auth.token.email
         && request.resource.data.status == 'active'
         && request.resource.data.keys().hasOnly(['uid','email','status','createdAt','lastLoginAt'])
         && !exists(/databases/$(database)/documents/freeBetaUsers/$(userId))
@@ -257,7 +256,7 @@ service cloud.firestore {
         || (request.auth != null && resource.data.ownerUid == request.auth.uid);
       allow create: if request.auth != null
         && request.auth.token.email_verified == true
-        && request.resource.data.keys().hasOnly(['ownerUid','email','displayName','kind','body','country','product','price','currency','link','status','createdAt'])
+        && request.resource.data.keys().hasOnly(['ownerUid','displayName','kind','body','country','product','price','currency','link','status','createdAt'])
         && request.resource.data.ownerUid == request.auth.uid
         && request.resource.data.email == request.auth.token.email
         && request.resource.data.displayName is string

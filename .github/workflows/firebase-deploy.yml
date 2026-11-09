@@ -1,20 +1,5 @@
 name: Deploy AK Commerce to Firebase
-on:
-  workflow_dispatch:
-    inputs:
-      deploy_storage_rules:
-        description: "Deploy Storage Rules (requires Firebase Storage bucket setup)"
-        required: true
-        type: boolean
-        default: false
-      deploy_cloud_functions:
-        description: "Deploy Cloud Functions (may require Blaze billing; enable only after owner approval)"
-        required: true
-        type: boolean
-        default: false
-concurrency:
-  group: ak-commerce-production-deploy
-  cancel-in-progress: false
+
 on:
   push:
     branches: [main]
@@ -35,25 +20,46 @@ on:
       - 'manifest.webmanifest'
       - '.github/workflows/firebase-deploy.yml'
   workflow_dispatch:
+    inputs:
+      deploy_storage_rules:
+        description: 'Deploy Storage Rules after the Firebase Storage bucket is created'
+        required: true
+        type: boolean
+        default: false
+      deploy_cloud_functions:
+        description: 'Deploy Cloud Functions only after owner approval of possible Blaze billing'
+        required: true
+        type: boolean
+        default: false
+
+concurrency:
+  group: ak-commerce-production-deploy
+  cancel-in-progress: false
+
 permissions:
   contents: read
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_AK_ONLIN_SALES }}
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
+
       - name: Install Firebase CLI
         run: npm install --global firebase-tools
-      - name: Deploy hosting and Firestore rules/indexes
+
+      - name: Deploy Hosting and Firestore rules/indexes
         run: firebase deploy --only hosting,firestore:rules,firestore:indexes --project ak-onlin-sales --non-interactive
 
       - name: Deploy Storage Rules (manual opt-in only)

@@ -4,6 +4,16 @@ on:
   push:
     branches:
       - main
+    # APK-only commits must never trigger website/Marketplace or Firestore deployment.
+    paths-ignore:
+      - '.github/workflows/firebase-hosting.yml'
+      - '.github/workflows/build-android-apk.yml'
+      - 'scripts/validate-apk-contract.js'
+      - 'scripts/install-native-printer.js'
+      - 'scripts/generate-android-icons.js'
+      - 'native/android/**'
+      - 'capacitor.config.json'
+      - 'google-services.json'
   workflow_dispatch:
 
 permissions:

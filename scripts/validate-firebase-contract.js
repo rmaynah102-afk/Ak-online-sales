@@ -50,7 +50,14 @@ const clientCallables = new Set(
   [...html.matchAll(/httpsCallable\(\s*['"]([A-Za-z0-9_]+)['"]\s*\)/g)].map(match => match[1])
 );
 const serverCallables = new Set(
-  [...functionsSource.matchAll(/exports\.([A-Za-z0-9_]+)\s*=\s*functions(?:\.runWith\([\s\S]*?\))?\.https\.onCall\s*\(/g)].map(match => match[1])
+  [...functionsSource.matchAll(/exports\.([A-Za-z0-9_]+)\s*=/g)]
+    .filter(match => {
+      const start = match.index;
+      const next = functionsSource.indexOf('\nexports.', start + 1);
+      const declaration = functionsSource.slice(start, next < 0 ? undefined : next);
+      return declaration.includes('.https.onCall(') || declaration.includes('.https.onCall (');
+    })
+    .map(match => match[1])
 );
 
 const missing = [...clientCallables].filter(name => !serverCallables.has(name));
@@ -66,21 +73,25 @@ if (!privateRule || !/allow read, write: if hasActiveLicense\(userId\)/.test(pri
   console.error('Private shop data must remain protected by the owner UID/license rule.');
   process.exitCode = 1;
 }
-const marketRule = rules.match(/match \/marketListings\/\{listingId\} \{([\s\S]*?)\n\s*\}/);
-if (!marketRule ||
-    !/allow create: if/.test(marketRule[1]) ||
-    !/isVerifiedMarketplaceUser\(\)/.test(marketRule[1]) ||
-    !/request\.resource\.data\.ownerUid == request\.auth\.uid/.test(marketRule[1]) ||
-    !/allow update: if isVerifiedMarketplaceUser\(\)/.test(marketRule[1]) ||
-    !/allow delete: if isVerifiedMarketplaceUser\(\)/.test(marketRule[1])) {
+function extractRuleBlock(marker) {
+  const start = rules.indexOf(marker);
+  if (start < 0) return '';
+  const next = rules.indexOf('\n    match ', start + marker.length);
+  return rules.slice(start, next < 0 ? undefined : next);
+}
+const marketRule = extractRuleBlock('match /marketListings/{listingId} {');
+if (!marketRule.includes('allow create: if') ||
+    !marketRule.includes('isVerifiedMarketplaceUser()') ||
+    !marketRule.includes('request.resource.data.ownerUid == request.auth.uid') ||
+    !marketRule.includes('allow update: if isVerifiedMarketplaceUser()') ||
+    !marketRule.includes('allow delete: if isVerifiedMarketplaceUser()')) {
   console.error('Marketplace listing writes must require verified identity and enforce owner-only update/delete.');
   process.exitCode = 1;
 }
-const shopSubmissionRule = rules.match(/match \/publicShopSubmissions\/\{ownerUid\} \{([\s\S]*?)\n\s*\}/);
-if (!shopSubmissionRule ||
-    !/allow create, update: if isVerifiedMarketplaceUser\(\)/.test(shopSubmissionRule[1]) ||
-    !/request\.auth\.uid == ownerUid/.test(shopSubmissionRule[1]) ||
-    !/request\.resource\.data\.ownerUid == ownerUid/.test(shopSubmissionRule[1])) {
+const shopSubmissionRule = extractRuleBlock('match /publicShopSubmissions/{ownerUid} {');
+if (!shopSubmissionRule.includes('allow create, update: if isVerifiedMarketplaceUser()') ||
+    !shopSubmissionRule.includes('request.auth.uid == ownerUid') ||
+    !shopSubmissionRule.includes('request.resource.data.ownerUid == ownerUid')) {
   console.error('Public shop submissions must require verified identity and bind writes to the owner UID.');
   process.exitCode = 1;
 }

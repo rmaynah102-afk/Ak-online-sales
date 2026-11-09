@@ -464,7 +464,40 @@ tbody tr:hover{background:#292b2b!important}
 a{color:#f4d78e}
 @media(max-width:720px){.ak-market-hero{grid-template-columns:1fr;padding:20px}.ak-hero-art{grid-row:1}.ak-hero-art svg{max-height:205px}.ak-market-hero h2{font-size:25px!important}.ak-market-hero .actions a{flex:1 1 100%;text-align:center}}
 @media print{body{background:#fff!important;color:#000!important}.panel{background:#fff!important;color:#000!important}}
-</style></head>
+</style><style id="ak-single-desktop-responsive">
+/* One AK website for desktop, tablet and phone — shared layout, responsive sizing */
+html{width:100%;min-height:100%;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{width:100%;min-width:0!important;max-width:none!important;margin:0!important;overflow-x:hidden}
+header{width:100%;box-sizing:border-box;flex-wrap:wrap;gap:12px}
+header .actions{display:flex;flex-wrap:wrap;align-items:center;gap:7px}
+main{width:min(100% - 28px,1480px)!important;max-width:1480px!important;margin:0 auto!important;box-sizing:border-box}
+#nav{display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr))!important;gap:8px!important;align-items:stretch;overflow:visible!important}
+#nav button{min-width:0!important;width:100%;white-space:normal;overflow-wrap:anywhere}
+.grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr))}
+.view .grid.stats{grid-template-columns:repeat(auto-fit,minmax(min(100%,205px),1fr))}
+.panel{min-width:0;box-sizing:border-box}
+.tablewrap{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{min-width:680px}
+img,video,svg,canvas{max-width:100%}
+input,select,textarea,button{max-width:100%;box-sizing:border-box}
+@media(max-width:760px){
+ body{padding:0!important}
+ header{position:relative;padding:12px!important;align-items:flex-start}
+ header .brand-lockup{max-width:100%}
+ header .actions{width:100%;justify-content:flex-start}
+ main{width:calc(100% - 20px)!important;padding:8px 0!important}
+ #nav{position:sticky!important;top:0!important;z-index:50;grid-template-columns:repeat(3,minmax(0,1fr))!important;padding:8px!important;border-radius:12px!important}
+ #nav button{min-height:48px!important;padding:8px 5px!important;font-size:12px!important}
+ .grid,.view .grid.stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .panel{padding:14px!important}
+ .tablewrap table{min-width:680px}
+}
+@media(max-width:380px){
+ .grid,.view .grid.stats{grid-template-columns:minmax(0,1fr)}
+ header .actions>*{flex:1 1 auto}
+}
+</style>
+</head>
 <body class="ak-license-locked">
 <header><div class="brand-lockup"><img src="./ak-logo.svg" alt="AK Sale logo" width="48" height="48"><div><h1 id="brandTitle">AK Sale Software</h1><small>Multi-Business POS · ဆိုင်နှင့် လုပ်ငန်းအမျိုးမျိုးအတွက်</small></div></div><div class="actions no-print"><button id="akInstallBtn" class="alt" type="button" hidden>Install</button><button id="akShareBtn" class="alt" type="button">Share</button><button id="akOwnerUserPreviewBtn" class="alt owner-only" type="button" onclick="akToggleOwnerUserPreview()">User View</button><button id="akLanguageBtn" class="alt" type="button" aria-label="Switch language">English</button><span class="pill" id="saveState">ဖုန်းထဲသိမ်းဆည်းမည်</span><span class="pill" id="akStorageState" title="ဖုန်း/ကွန်ပျူတာ၏ local storage အခြေအနေ">Storage စစ်ဆေးနေသည်…</span></div></header>
 <div id="akOwnerPreviewBanner" class="notice no-print" style="display:none;position:sticky;top:0;z-index:9000;margin:8px auto;max-width:1100px">User View Preview — Owner account remains signed in. <button type="button" onclick="akToggleOwnerUserPreview()">Owner Mode သို့ပြန်ရန်</button></div>

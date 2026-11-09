@@ -141,36 +141,92 @@ async function loadTrade(){
 function setAuthMessage(s){$("authStatus").textContent=s}
 function safeText(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 async function loadActiveAds(){try{const snap=await db.collection("globalAdApplications").where("status","==","active").orderBy("createdAt","desc").limit(20).get();const live=snap.docs.filter(d=>d.data().expiresAt&&d.data().expiresAt.toDate()>new Date());$("activeAds").innerHTML=live.length?live.map(d=>{const a=d.data();return '<div style="padding:12px 0;border-bottom:1px solid #dce5f1"><b>'+safeText(a.business)+'</b> · '+safeText(a.targetMarket)+'<p>'+safeText(a.title)+'</p><a href="'+safeText(a.url)+'" target="_blank" rel="noopener">Visit advertiser ↗</a></div>'}).join(""):"No approved campaigns yet."}catch(e){$("activeAds").textContent="Campaign feed unavailable. Firebase rules/indexes may need deployment."}}
-async function loadOwnerAds(){try{const snap=await db.collection("globalAdApplications").orderBy("createdAt","desc").limit(50).get();if(!snap.size){$("ownerAds").innerHTML="No applications yet.";return}$("ownerAds").innerHTML=snap.docs.map(d=>{const a=d.data();return '<div class="card"><b>'+safeText(a.business)+'</b> · '+safeText(a.plan)+' · US
-async function initFirebase(){
- try{const base="https://www.gstatic.com/firebasejs/10.12.2/";const load=n=>new Promise((ok,no)=>{const s=document.createElement("script");s.src=base+n;s.onload=ok;s.onerror=()=>no(Error("Firebase SDK failed: "+n));document.head.appendChild(s)});await load("firebase-app-compat.js");await Promise.all(["firebase-auth-compat.js","firebase-firestore-compat.js"].map(load));const cfg=window.AK_FIREBASE_PUBLIC_CONFIG;if(!cfg)throw Error("Firebase public config missing");if(!firebase.apps.length)firebase.initializeApp(cfg);auth=firebase.auth();db=firebase.firestore();auth.onAuthStateChanged(async u=>{currentUser=u;setAuthMessage(u?"Signed in: "+u.email+(u.emailVerified?" · verified":" · verify your email before submitting"):"Not signed in. Sign in to send enquiries or ad requests.");const owner=!!(u&&u.emailVerified&&u.email==="painglin102@gmail.com");$("ownerDesk").hidden=!owner;if(owner)await loadOwnerAds();await loadActiveAds()});}
- catch(e){setAuthMessage("Sign-in unavailable: "+e.message)}
-}
-$("googleLogin").onclick=async()=>{try{await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())}catch(e){setAuthMessage(e.message)}};
-$("emailLogin").onclick=async()=>{const email=prompt("Email address");if(!email)return;const password=prompt("Password");if(!password)return;try{await auth.signInWithEmailAndPassword(email,password)}catch(e){setAuthMessage("Email sign-in failed: "+e.message)}};
-$("logout").onclick=()=>auth?.signOut();
-$("leadForm").onsubmit=async e=>{e.preventDefault();if(!currentUser||!currentUser.emailVerified)return $("leadStatus").textContent="Verified email sign-in is required.";try{await db.collection("globalTradeLeads").add({ownerUid:currentUser.uid,email:currentUser.email,name:$("leadName").value.trim(),country:$("leadCountry").value.trim(),type:$("leadType").value,message:$("leadMessage").value.trim(),status:"new",createdAt:firebase.firestore.FieldValue.serverTimestamp()});$("leadForm").reset();$("leadStatus").textContent="Enquiry received. AK owner will review it. This is not an order confirmation."}catch(e){$("leadStatus").textContent="Could not submit: "+e.message}};
-document.querySelectorAll(".choose-ad").forEach(b=>b.onclick=()=>{$("adPlan").value=b.dataset.plan;$("adForm").scrollIntoView({behavior:"smooth"})});
-$("adForm").onsubmit=async e=>{e.preventDefault();if(!currentUser||!currentUser.emailVerified)return $("adStatus").textContent="Verified email sign-in is required.";const plan=$("adPlan").value,prices={starter:5,growth:15,business:30};try{await db.collection("globalAdApplications").add({ownerUid:currentUser.uid,email:currentUser.email,business:$("adBusiness").value.trim(),title:$("adTitle").value.trim(),url:$("adUrl").value.trim(),targetMarket:$("adMarket").value.trim(),contactEmail:$("adEmail").value.trim(),plan,amountUSD:prices[plan],currency:"USD",status:"pending_payment",createdAt:firebase.firestore.FieldValue.serverTimestamp()});$("adForm").reset();$("adStatus").textContent="Request received. The AK owner must confirm payment and approve the campaign before it appears publicly."}catch(e){$("adStatus").textContent="Could not submit: "+e.message}};
-$("from").onchange=loadFx;$("to").onchange=loadFx;$("amount").oninput=renderFx;$("convertBtn").onclick=loadFx;$("country").onchange=loadMacro;$("refreshMacro").onclick=loadMacro;$("tradeDataBtn").onclick=loadTrade;
-const year=new Date().getFullYear();for(let y=year-2;y>=year-10;y--){const o=document.createElement("option");o.value=y;o.textContent=y;$("period").appendChild(o)}
-loadFx();loadMacro();initFirebase();
-</script>
-</body></html>+safeText(a.amountUSD)+'<p>'+safeText(a.title)+'</p><p class="muted">'+safeText(a.targetMarket)+' · '+safeText(a.contactEmail)+' · '+safeText(a.status)+'</p><a href="'+safeText(a.url)+'" target="_blank" rel="noopener">Review business link ↗</a><div class="actions" style="margin-top:10px"><button type="button" data-publish="'+d.id+'" data-plan="'+safeText(a.plan)+'">Confirm payment & publish</button><button type="button" class="secondary" data-reject="'+d.id+'">Reject</button></div></div>'}).join("");$("ownerAdStatus").textContent="Loaded "+snap.size+" applications."}catch(e){$("ownerAdStatus").textContent="Owner applications unavailable: "+e.message}}
-$("ownerAds").onclick=async e=>{const pub=e.target.closest("[data-publish]"),rej=e.target.closest("[data-reject]");if(pub){const ref=prompt("Enter verified payment transaction reference. Publish only after funds are confirmed.");if(!ref||ref.trim().length<3)return;const days=pub.dataset.plan==="starter"?7:30;try{await db.collection("globalAdApplications").doc(pub.dataset.publish).update({status:"active",paymentReference:ref.trim(),reviewedAt:firebase.firestore.FieldValue.serverTimestamp(),expiresAt:firebase.firestore.Timestamp.fromDate(new Date(Date.now()+days*86400000))});await loadOwnerAds();await loadActiveAds();alert("Campaign published for "+days+" days.")}catch(x){alert("Could not publish: "+x.message)}}if(rej){if(!confirm("Reject this ad application?"))return;try{await db.collection("globalAdApplications").doc(rej.dataset.reject).update({status:"rejected",reviewedAt:firebase.firestore.FieldValue.serverTimestamp()});await loadOwnerAds()}catch(x){alert("Could not reject: "+x.message)}}};
 
+async function loadOwnerAds(){
+ try{
+  const snap=await db.collection("globalAdApplications").orderBy("createdAt","desc").limit(50).get();
+  if(!snap.size){$("ownerAds").innerHTML="No applications yet.";return}
+  $("ownerAds").innerHTML=snap.docs.map(d=>{
+   const a=d.data();
+   return '<div class="card"><b>'+safeText(a.business)+'</b> · '+safeText(a.plan)+' · US$'+safeText(a.amountUSD)+'<p>'+safeText(a.title)+'</p><p class="muted">'+safeText(a.targetMarket)+' · '+safeText(a.contactEmail)+' · '+safeText(a.status)+'</p><a href="'+safeText(a.url)+'" target="_blank" rel="noopener">Review business link ↗</a><div class="actions" style="margin-top:10px"><button type="button" data-publish="'+d.id+'" data-plan="'+safeText(a.plan)+'" '+(a.status==="active"?"disabled":"") +'>Confirm payment & publish</button><button type="button" class="secondary" data-reject="'+d.id+'">Reject</button></div></div>';
+  }).join("");
+  $("ownerAdStatus").textContent="Loaded "+snap.size+" applications.";
+ }catch(e){$("ownerAdStatus").textContent="Owner applications unavailable: "+e.message}
+}
+$("ownerAds").onclick=async e=>{
+ const pub=e.target.closest("[data-publish]"),rej=e.target.closest("[data-reject]");
+ if(pub){
+  const ref=prompt("Enter verified payment transaction reference. Publish only after funds are confirmed.");
+  if(!ref||ref.trim().length<3)return;
+  const days=pub.dataset.plan==="starter"?7:30;
+  try{
+   await db.collection("globalAdApplications").doc(pub.dataset.publish).update({
+    status:"active",paymentReference:ref.trim(),
+    reviewedAt:firebase.firestore.FieldValue.serverTimestamp(),
+    expiresAt:firebase.firestore.Timestamp.fromDate(new Date(Date.now()+days*86400000))
+   });
+   await loadOwnerAds();await loadActiveAds();
+   alert("Campaign published for "+days+" days.");
+  }catch(x){alert("Could not publish: "+x.message)}
+ }
+ if(rej){
+  if(!confirm("Reject this ad application?"))return;
+  try{
+   await db.collection("globalAdApplications").doc(rej.dataset.reject).update({
+    status:"rejected",reviewedAt:firebase.firestore.FieldValue.serverTimestamp()
+   });
+   await loadOwnerAds();
+  }catch(x){alert("Could not reject: "+x.message)}
+ }
+};
 async function initFirebase(){
- try{const base="https://www.gstatic.com/firebasejs/10.12.2/";const load=n=>new Promise((ok,no)=>{const s=document.createElement("script");s.src=base+n;s.onload=ok;s.onerror=()=>no(Error("Firebase SDK failed: "+n));document.head.appendChild(s)});await load("firebase-app-compat.js");await Promise.all(["firebase-auth-compat.js","firebase-firestore-compat.js"].map(load));const cfg=window.AK_FIREBASE_PUBLIC_CONFIG;if(!cfg)throw Error("Firebase public config missing");if(!firebase.apps.length)firebase.initializeApp(cfg);auth=firebase.auth();db=firebase.firestore();auth.onAuthStateChanged(async u=>{currentUser=u;setAuthMessage(u?"Signed in: "+u.email+(u.emailVerified?" · verified":" · verify your email before submitting"):"Not signed in. Sign in to send enquiries or ad requests.");const owner=!!(u&&u.emailVerified&&u.email==="painglin102@gmail.com");$("ownerDesk").hidden=!owner;if(owner)await loadOwnerAds();await loadActiveAds()});}
- catch(e){setAuthMessage("Sign-in unavailable: "+e.message)}
+ try{
+  const base="https://www.gstatic.com/firebasejs/10.12.2/";
+  const load=n=>new Promise((ok,no)=>{const s=document.createElement("script");s.src=base+n;s.onload=ok;s.onerror=()=>no(Error("Firebase SDK failed: "+n));document.head.appendChild(s)});
+  await load("firebase-app-compat.js");
+  await Promise.all(["firebase-auth-compat.js","firebase-firestore-compat.js"].map(load));
+  const cfg=window.AK_FIREBASE_PUBLIC_CONFIG;
+  if(!cfg)throw Error("Firebase public config missing");
+  if(!firebase.apps.length)firebase.initializeApp(cfg);
+  auth=firebase.auth();db=firebase.firestore();
+  auth.onAuthStateChanged(async u=>{
+   currentUser=u;
+   setAuthMessage(u?"Signed in: "+u.email+(u.emailVerified?" · verified":" · verify your email before submitting"):"Not signed in. Sign in to send enquiries or ad requests.");
+   const owner=!!(u&&u.emailVerified&&u.email==="painglin102@gmail.com");
+   $("ownerDesk").hidden=!owner;
+   if(owner)await loadOwnerAds();
+   await loadActiveAds();
+  });
+ }catch(e){setAuthMessage("Sign-in unavailable: "+e.message)}
 }
 $("googleLogin").onclick=async()=>{try{await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())}catch(e){setAuthMessage(e.message)}};
-$("emailLogin").onclick=async()=>{const email=prompt("Email address");if(!email)return;const password=prompt("Password");if(!password)return;try{await auth.signInWithEmailAndPassword(email,password)}catch(e){setAuthMessage("Email sign-in failed: "+e.message)}};
+$("emailLogin").onclick=async()=>{
+ const email=prompt("Email address");if(!email)return;
+ const password=prompt("Password");if(!password)return;
+ try{await auth.signInWithEmailAndPassword(email,password)}catch(e){setAuthMessage("Email sign-in failed: "+e.message)}
+};
 $("logout").onclick=()=>auth?.signOut();
-$("leadForm").onsubmit=async e=>{e.preventDefault();if(!currentUser||!currentUser.emailVerified)return $("leadStatus").textContent="Verified email sign-in is required.";try{await db.collection("globalTradeLeads").add({ownerUid:currentUser.uid,email:currentUser.email,name:$("leadName").value.trim(),country:$("leadCountry").value.trim(),type:$("leadType").value,message:$("leadMessage").value.trim(),status:"new",createdAt:firebase.firestore.FieldValue.serverTimestamp()});$("leadForm").reset();$("leadStatus").textContent="Enquiry received. AK owner will review it. This is not an order confirmation."}catch(e){$("leadStatus").textContent="Could not submit: "+e.message}};
+$("leadForm").onsubmit=async e=>{
+ e.preventDefault();
+ if(!currentUser||!currentUser.emailVerified)return $("leadStatus").textContent="Verified email sign-in is required.";
+ try{
+  await db.collection("globalTradeLeads").add({ownerUid:currentUser.uid,email:currentUser.email,name:$("leadName").value.trim(),country:$("leadCountry").value.trim(),type:$("leadType").value,message:$("leadMessage").value.trim(),status:"new",createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+  $("leadForm").reset();$("leadStatus").textContent="Enquiry received. AK owner will review it. This is not an order confirmation.";
+ }catch(e){$("leadStatus").textContent="Could not submit: "+e.message}
+};
 document.querySelectorAll(".choose-ad").forEach(b=>b.onclick=()=>{$("adPlan").value=b.dataset.plan;$("adForm").scrollIntoView({behavior:"smooth"})});
-$("adForm").onsubmit=async e=>{e.preventDefault();if(!currentUser||!currentUser.emailVerified)return $("adStatus").textContent="Verified email sign-in is required.";const plan=$("adPlan").value,prices={starter:5,growth:15,business:30};try{await db.collection("globalAdApplications").add({ownerUid:currentUser.uid,email:currentUser.email,business:$("adBusiness").value.trim(),title:$("adTitle").value.trim(),url:$("adUrl").value.trim(),targetMarket:$("adMarket").value.trim(),contactEmail:$("adEmail").value.trim(),plan,amountUSD:prices[plan],currency:"USD",status:"pending_payment",createdAt:firebase.firestore.FieldValue.serverTimestamp()});$("adForm").reset();$("adStatus").textContent="Request received. The AK owner must confirm payment and approve the campaign before it appears publicly."}catch(e){$("adStatus").textContent="Could not submit: "+e.message}};
+$("adForm").onsubmit=async e=>{
+ e.preventDefault();
+ if(!currentUser||!currentUser.emailVerified)return $("adStatus").textContent="Verified email sign-in is required.";
+ const plan=$("adPlan").value,prices={starter:5,growth:15,business:30};
+ try{
+  await db.collection("globalAdApplications").add({ownerUid:currentUser.uid,email:currentUser.email,business:$("adBusiness").value.trim(),title:$("adTitle").value.trim(),url:$("adUrl").value.trim(),targetMarket:$("adMarket").value.trim(),contactEmail:$("adEmail").value.trim(),plan,amountUSD:prices[plan],currency:"USD",status:"pending_payment",createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+  $("adForm").reset();$("adStatus").textContent="Request received. The AK owner must confirm payment and approve the campaign before it appears publicly.";
+ }catch(e){$("adStatus").textContent="Could not submit: "+e.message}
+};
 $("from").onchange=loadFx;$("to").onchange=loadFx;$("amount").oninput=renderFx;$("convertBtn").onclick=loadFx;$("country").onchange=loadMacro;$("refreshMacro").onclick=loadMacro;$("tradeDataBtn").onclick=loadTrade;
-const year=new Date().getFullYear();for(let y=year-2;y>=year-10;y--){const o=document.createElement("option");o.value=y;o.textContent=y;$("period").appendChild(o)}
+const year=new Date().getFullYear();
+for(let y=year-2;y>=year-10;y--){const o=document.createElement("option");o.value=y;o.textContent=y;$("period").appendChild(o)}
 loadFx();loadMacro();initFirebase();
 </script>
 </body></html>

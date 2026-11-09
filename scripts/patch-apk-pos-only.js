@@ -16,13 +16,16 @@ function replaceExactly(oldText, newText, expected = 1) {
   html = html.replace(oldText, newText);
 }
 
-if (!/<html\\s+lang="my">/i.test(html)) throw new Error('HTML root language tag not found.');\nhtml = html.replace(/<html\\s+lang="my">/i, '<html lang="my" class="ak-apk-pos-only">');
+if (!/<html\s+lang="my">/i.test(html)) throw new Error('HTML root language tag not found.');
+html = html.replace(/<html\s+lang="my">/i, '<html lang="my" class="ak-apk-pos-only">');
 replaceExactly('const publicViews=["backup","market"];', 'const publicViews=["backup"];');
 replaceExactly('id="market";', 'id="backup";');
 replaceExactly(
   'if(typeof loadSponsoredAds==="function")void loadSponsoredAds();if(typeof loadPublicShops==="function")void loadPublicShops();if(typeof loadMyMarketListings==="function")void loadMyMarketListings();',
   '/* APK POS-only: Marketplace background loaders disabled. */'
 );
+replaceExactly('<button type="button" class="alt" onclick="akSendProductToMarket()">Market ကြော်ငြာတင်ရန်</button>', '');
+replaceExactly('Viber ကိုနှိပ်လျှင် ပုံနှင့်စာကို Share Menu မှတစ်ဆင့် ကိုယ့် Channel သို့ ရွေးပို့နိုင်သည်။ Market ကိုနှိပ်လျှင် အချက်အလက်များကို အလိုအလျောက်ဖြည့်ပေးမည်။','Viber ကိုနှိပ်လျှင် ပုံနှင့်စာကို Share Menu မှတစ်ဆင့် ကိုယ့် Channel သို့ ရွေးပို့နိုင်သည်။');
 // APK-only POS branding: the website source remains unchanged.
 replaceExactly('Myanmar shop POS, inventory, wholesale, retail, sales records and AK Shopping Markets.','Myanmar shop POS, inventory, wholesale, retail and sales records.');
 replaceExactly('AK Sale Software · AK Shopping Markets','AK Sale Software · Shop POS');

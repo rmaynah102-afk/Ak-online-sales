@@ -50,7 +50,7 @@ const clientCallables = new Set(
   [...html.matchAll(/httpsCallable\(\s*['"]([A-Za-z0-9_]+)['"]\s*\)/g)].map(match => match[1])
 );
 const serverCallables = new Set(
-  [...functionsSource.matchAll(/exports\.([A-Za-z0-9_]+)\s*=\s*functions\.https\.onCall\s*\(/g)].map(match => match[1])
+  [...functionsSource.matchAll(/exports\.([A-Za-z0-9_]+)\s*=\s*functions(?:\.runWith\([\\s\\S]*?\\))?\.https\.onCall\s*\\(/g)].map(match => match[1])
 );
 
 const missing = [...clientCallables].filter(name => !serverCallables.has(name));
@@ -66,14 +66,22 @@ if (!privateRule || !/allow read, write: if hasActiveLicense\(userId\)/.test(pri
   console.error('Private shop data must remain protected by the owner UID/license rule.');
   process.exitCode = 1;
 }
-const marketRule = rules.match(/match \/marketListings\/\{listingId\} \{([\s\S]*?)\n\s*\}/);
-if (!marketRule || !/allow create: if hasActiveLicense\(request\.auth\.uid\)/.test(marketRule[1]) || !/allow update: if hasActiveLicense\(request\.auth\.uid\)/.test(marketRule[1]) || !/allow delete: if hasActiveLicense\(request\.auth\.uid\)/.test(marketRule[1])) {
-  console.error('Public market listings must require an active license for create, update and delete.');
+const marketRule = rules.match(/match \/marketListings\/\{listingId\} \{([\\s\\S]*?)\\n\\s*\}/);
+if (!marketRule ||
+    !/allow create: if/.test(marketRule[1]) ||
+    !/isVerifiedMarketplaceUser\(\)/.test(marketRule[1]) ||
+    !/request\.resource\.data\.ownerUid == request\.auth\.uid/.test(marketRule[1]) ||
+    !/allow update: if isVerifiedMarketplaceUser\(\)/.test(marketRule[1]) ||
+    !/allow delete: if isVerifiedMarketplaceUser\(\)/.test(marketRule[1])) {
+  console.error('Marketplace listing writes must require verified identity and enforce owner-only update/delete.');
   process.exitCode = 1;
 }
-const shopSubmissionRule = rules.match(/match \/publicShopSubmissions\/\{ownerUid\} \{([\s\S]*?)\n\s*\}/);
-if (!shopSubmissionRule || !/allow create, update: if hasActiveLicense\(ownerUid\)/.test(shopSubmissionRule[1])) {
-  console.error('Public shop submissions must require an active license.');
+const shopSubmissionRule = rules.match(/match \/publicShopSubmissions\/\{ownerUid\} \{([\\s\\S]*?)\\n\\s*\}/);
+if (!shopSubmissionRule ||
+    !/allow create, update: if isVerifiedMarketplaceUser\(\)/.test(shopSubmissionRule[1]) ||
+    !/request\.auth\.uid == ownerUid/.test(shopSubmissionRule[1]) ||
+    !/request\.resource\.data\.ownerUid == ownerUid/.test(shopSubmissionRule[1])) {
+  console.error('Public shop submissions must require verified identity and bind writes to the owner UID.');
   process.exitCode = 1;
 }
 

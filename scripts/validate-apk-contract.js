@@ -138,18 +138,16 @@ if (!html.includes('if(!user){checkUserRole(null);akSetLicenseGate(false') ||
   console.error('POS must remain locked until Gmail login and an owner-approved active subscription are verified online.');
   process.exitCode = 1;
 }
-// Payment/package UI is intentionally hidden in the current Free Beta build.
-if (html.includes('id="akPlanButtons"') && !html.includes('function selectAkPlan(days)')) {
-  console.error('If package buttons are exposed, their plan-selection handler must exist.');
+// APK onboarding must present Package -> Google Gmail -> payment proof, then owner approval.
+if (!html.includes('id="akPlanButtons"') || !html.includes('id="akOnboardingGoogleButton"') ||
+    !html.includes('id="akPaymentProofStep"') || !html.includes('function akStartSubscriptionGoogleLogin()')) {
+  console.error('APK subscription onboarding must include package selection, Google Gmail connection and payment proof steps.');
   process.exitCode = 1;
 }
-if (!html.includes('#akFirebasePanel{order:1}') || !html.includes('#akLicensePanel{order:2}')) {
-  console.error('The subscription gate must show Gmail sign-in before package payment.');
+if (!html.includes('AK_APK_SUBSCRIPTION_UI_V2') && !html.includes('AK_APK_SUBSCRIPTION_UI_V1')) {
+  console.error('APK subscription onboarding patch marker is missing.');
   process.exitCode = 1;
 }
-
-// The current Free Beta UI does not expose payment submission. If the callable is used,
-// the trusted server still rejects requests without screenshot proof.
 if (!functionsSource.includes('!screenshotUrl') || !html.includes('function validateAndSubmitKPay(paymentData,screenshotFile)')) {
   console.error('Payment proof validation must remain present in client and trusted server.');
   process.exitCode = 1;

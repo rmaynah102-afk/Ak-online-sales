@@ -423,7 +423,48 @@ html.ak-public-market #akPublicTikTokCard{border:1px solid var(--ak-border)!impo
 @media(hover:hover){html.ak-public-market #market #marketFeed>article:hover{transform:translateY(-3px);box-shadow:0 12px 26px #132b4a16!important}}
 </style>
 <style id="ak-market-detail-style">.ak-market-detail-dialog{width:min(92vw,620px);max-height:85vh;overflow:auto;border:0;border-radius:18px;padding:20px;box-shadow:0 20px 70px #0005}.ak-market-detail-dialog::backdrop{background:#06152dcc}.ak-market-detail-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.ak-market-detail-head h2{margin:0}.ak-market-detail-dialog img{width:100%;max-height:320px;object-fit:contain;background:#f3f5f8;border-radius:12px}.ak-market-detail-dialog .ak-detail-price{font-size:1.35rem;font-weight:900;color:#1557ad;margin:12px 0}.ak-market-detail-dialog .actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}</style>
-</head>
+<style id="ak-black-gold-market-refresh">
+:root{--ak-gold:#e8b94f;--ak-gold-bright:#f6d77c;--ak-black:#0b0d10;--ak-charcoal:#171b20;--ak-surface:#20252b;--ak-border:#3b4149;--ak-text:#f5f1e6;--ak-muted:#b8b3a7}
+body{background:#0b0d10!important;color:var(--ak-text)!important}
+header{background:linear-gradient(110deg,#050607,#171b20 72%,#302718)!important;border-bottom:3px solid var(--ak-gold)!important}
+header .brand-lockup small,header small{color:#e8d8ae!important}
+main{color:var(--ak-text)}
+nav{background:#11151a!important;border-color:#37332a!important}
+nav button{background:#20252b!important;color:#f4d78e!important;border-color:#51452c!important}
+nav button:hover,nav button:focus-visible{background:#34302a!important}
+.panel{background:linear-gradient(145deg,#1b2026,#14181d)!important;border-color:#3a3d40!important;color:#f4f0e6!important;box-shadow:0 8px 24px #0006!important}
+h2,h3{color:#f4d78e!important}
+p,label,.muted{color:#c7c2b7!important}
+input,select,textarea{background:#101419!important;color:#fff!important;border-color:#55504a!important}
+input::placeholder,textarea::placeholder{color:#8d8a82}
+.stat{color:#f4c75e!important}
+button,.btn{background:linear-gradient(135deg,#f0c45e,#c58e2c)!important;color:#111!important;border:1px solid #f5d98d!important;font-weight:800!important;box-shadow:0 4px 14px #0005!important}
+button.alt,.ak-outline-btn{background:#242a31!important;color:#f4d78e!important;border:1px solid #8d713b!important}
+.pill{background:#3b3020!important;color:#f6d77c!important;border:1px solid #866b35}
+.notice{background:#302819!important;color:#f4dfae!important;border-color:#8d713b!important}
+th{background:#2b2b28!important;color:#f4d78e!important}
+td{color:#eee8dc!important;border-color:#3b4149!important}
+tbody tr:nth-child(even){background:#1a1f25!important}
+tbody tr:hover{background:#292b2b!important}
+.tablewrap{border-color:#3b4149!important}
+.ak-market-hero{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(220px,.75fr);gap:22px;align-items:center;padding:clamp(20px,4vw,42px);margin:10px 0 18px;border:1px solid #715b30;border-bottom:4px solid var(--ak-gold);border-radius:22px;background:radial-gradient(circle at 85% 30%,#4b3a1d 0,transparent 34%),linear-gradient(120deg,#080a0d,#171b20 70%,#282116);box-shadow:0 16px 40px #0008}
+.ak-hero-kicker{display:inline-block;color:#f4cf78;font-weight:900;font-size:12px;letter-spacing:1.3px}
+.ak-market-hero h2{font-size:clamp(25px,4vw,39px)!important;line-height:1.35;margin:12px 0;color:#fff!important}
+.ak-market-hero h2 em{font-style:normal;color:#f4c75e}
+.ak-market-hero p{font-size:15px;line-height:1.8;color:#d4d0c5!important}
+.ak-hero-points{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0;color:#f4d78e;font-size:12px;font-weight:700}
+.ak-hero-points span{padding:6px 9px;border:1px solid #68532e;border-radius:20px;background:#2b2418}
+.ak-hero-art{min-width:0}.ak-hero-art svg{width:100%;max-width:420px;display:block;margin:auto;filter:drop-shadow(0 12px 20px #0008)}
+.ak-gold-btn{background:linear-gradient(135deg,#f6d77c,#c58e2c)!important;color:#111!important}
+.ak-market-hero .actions{gap:10px}
+#akLiveAdsPanel{background:#191f25!important;border-color:#8d713b!important}
+#akPublicSponsoredSection{background:#191f25!important}
+#marketFeed article{background:#1b2026!important}
+#marketFeed img{background:#272b30}
+a{color:#f4d78e}
+@media(max-width:720px){.ak-market-hero{grid-template-columns:1fr;padding:20px}.ak-hero-art{grid-row:1}.ak-hero-art svg{max-height:205px}.ak-market-hero h2{font-size:25px!important}.ak-market-hero .actions a{flex:1 1 100%;text-align:center}}
+@media print{body{background:#fff!important;color:#000!important}.panel{background:#fff!important;color:#000!important}}
+</style></head>
 <body class="ak-license-locked">
 <header><div class="brand-lockup"><img src="./ak-logo.svg" alt="AK Sale logo" width="48" height="48"><div><h1 id="brandTitle">AK Sale Software</h1><small>Multi-Business POS · ဆိုင်နှင့် လုပ်ငန်းအမျိုးမျိုးအတွက်</small></div></div><div class="actions no-print"><button id="akInstallBtn" class="alt" type="button" hidden>Install</button><button id="akShareBtn" class="alt" type="button">Share</button><button id="akOwnerUserPreviewBtn" class="alt owner-only" type="button" onclick="akToggleOwnerUserPreview()">User View</button><button id="akLanguageBtn" class="alt" type="button" aria-label="Switch language">English</button><span class="pill" id="saveState">ဖုန်းထဲသိမ်းဆည်းမည်</span><span class="pill" id="akStorageState" title="ဖုန်း/ကွန်ပျူတာ၏ local storage အခြေအနေ">Storage စစ်ဆေးနေသည်…</span></div></header>
 <div id="akOwnerPreviewBanner" class="notice no-print" style="display:none;position:sticky;top:0;z-index:9000;margin:8px auto;max-width:1100px">User View Preview — Owner account remains signed in. <button type="button" onclick="akToggleOwnerUserPreview()">Owner Mode သို့ပြန်ရန်</button></div>
@@ -497,8 +538,15 @@ html.ak-public-market #akPublicTikTokCard{border:1px solid var(--ak-border)!impo
 
 
 <section id="market" class="view">
-<div class="panel" style="background:linear-gradient(120deg,#0b2f24,#176b4b);color:white"><span class="pill">AK Sale Software</span><h2 style="color:white;font-size:24px">သင့်ဆိုင်ကို စနစ်တကျ ထိန်းချုပ်ပါ</h2><p>AK Sale APK ကို ထည့်သွင်းအသုံးပြုပြီး အရောင်း POS · ကုန်ပစ္စည်းစာရင်း · အကြွေးစာရင်း · ဝယ်ယူမှု · အသုံးစရိတ်နှင့် အမြတ်/အရှုံးစာရင်းများကို စီမံခန့်ခွဲနိုင်သော ဆိုင်နှင့် လုပ်ငန်းအမျိုးမျိုးအတွက် စနစ်</p><div class="actions"><button onclick="if(navigator.share){navigator.share({title:'AK Sale Software',text:'AK Sale Software · ဆိုင်အရောင်းနှင့် စာရင်းစီမံခန့်ခွဲမှု',url:location.origin+location.pathname+'?app=1'}).catch(()=>{})}else if(navigator.clipboard){navigator.clipboard.writeText(location.origin+location.pathname+'?app=1').then(()=>alert('AK Software Link Copy လုပ်ပြီးပါပြီ'))}">AK Software ကို မျှဝေကြော်ငြာမည်</button><a class="btn" href="?app=1#backup">ဆိုင်သုံးစနစ် ဝင်ရန်</a></div></div>
-<div class="panel" id="akLiveAdsPanel" style="border:2px solid #d9e8df;background:linear-gradient(120deg,#f3fbf6,#fff)">
+<section class="ak-market-hero">
+ <div class="ak-market-hero-copy"><span class="ak-hero-kicker">AK SALE POS · AK ONLINE MARKET</span>
+ <h2>သင့်လုပ်ငန်းအတွက် <em>AK Sale POS</em> ကို အသုံးပြုပြီး အရောင်းအဝယ်ကို ပိုမိုလွယ်ကူစွာ စီမံလိုက်ပါ</h2>
+ <p>ကုန်ပစ္စည်းကြော်ငြာတင်ပါ · ဈေးနှုန်းကြည့်ပါ · ရောင်းသူနှင့် တိုက်ရိုက်ဆက်သွယ်ပါ · Website ပေါ်မှ Order မေးမြန်းမှာယူနိုင်ပါသည်။</p>
+ <div class="ak-hero-points"><span>✓ အများပြည်သူကြည့်နိုင်</span><span>✓ Login မလိုဘဲ ကြော်ငြာတင်နိုင်</span><span>✓ ဖုန်း / Viber ဖြင့် Order</span></div>
+ <div class="actions"><a class="btn ak-gold-btn" href="#marketForm">အခမဲ့ ကြော်ငြာတင်မည်</a><a class="btn ak-outline-btn" href="#marketFeed">ပစ္စည်းများ ကြည့်မည်</a><a class="btn ak-outline-btn" href="?app=1#backup">AK Sale POS သုံးမည်</a></div>
+ </div>
+ <div class="ak-hero-art" role="img" aria-label="AK Sale POS အရောင်းစနစ်နှင့် Online Shopping"><svg viewBox="0 0 420 290" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="akHeroGold" x1="0" x2="1"><stop stop-color="#f9d77c"/><stop offset="1" stop-color="#c28b25"/></linearGradient></defs><circle cx="218" cy="145" r="125" fill="#f4bd4f" opacity=".12"/><rect x="55" y="48" width="190" height="168" rx="18" fill="#17202b" stroke="#f4bd4f" stroke-width="3"/><rect x="70" y="64" width="160" height="112" rx="8" fill="#f8f5eb"/><rect x="84" y="78" width="70" height="8" rx="4" fill="#d3a33e"/><rect x="84" y="96" width="126" height="7" rx="3" fill="#d7d1c4"/><rect x="84" y="111" width="105" height="7" rx="3" fill="#d7d1c4"/><rect x="84" y="131" width="48" height="28" rx="5" fill="#111820"/><rect x="140" y="131" width="70" height="28" rx="5" fill="url(#akHeroGold)"/><rect x="92" y="187" width="116" height="16" rx="8" fill="#303b49"/><path d="M265 110h82l-10 104h-62z" fill="url(#akHeroGold)" stroke="#fbe5a5" stroke-width="3"/><path d="M283 112c0-26 45-26 45 0" fill="none" stroke="#f4bd4f" stroke-width="8" stroke-linecap="round"/><path d="M283 145h47M283 163h47" stroke="#1a2028" stroke-width="6" stroke-linecap="round"/><circle cx="324" cy="75" r="24" fill="#f4bd4f"/><path d="M314 75l7 7 14-16" fill="none" stroke="#111820" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><rect x="238" y="226" width="120" height="35" rx="17" fill="#f4bd4f"/><text x="298" y="249" text-anchor="middle" font-size="16" font-weight="800" fill="#101820">AK MARKET</text></svg></div>
+ </section><div class="panel" id="akLiveAdsPanel" style="border:2px solid #d9e8df;background:linear-gradient(120deg,#f3fbf6,#fff)">
 <div class="split"><div><span class="pill">LIVE · အများပြည်သူကြော်ငြာ</span><h3 style="margin:8px 0 2px">လုပ်ငန်းရှင်များ၏ ကြော်ငြာများ</h3><p class="muted" style="margin:0">အသစ်တင်ထားသော ပစ္စည်းကြော်ငြာများကို တစ်ခုချင်း အလိုအလျောက်ပြသနေသည်။</p></div><div class="actions"><button type="button" class="alt" id="akLivePrev">‹ နောက်ပြန်</button><button type="button" class="alt" id="akLiveNext">နောက်တစ်ခု ›</button></div></div>
 <div id="akLiveAdSlide" aria-live="polite" style="margin-top:12px"><p class="muted">Live ကြော်ငြာများကို ဖတ်နေသည်...</p></div><p id="akLiveAdCount" class="muted" style="text-align:center;margin:8px 0 0"></p></div>
 <div class="panel" id="akPublicSponsoredSection"><div class="ak-section-heading"><div><span class="ak-eyebrow">AK PARTNER & SPONSORED</span><h2>လုပ်ငန်းရှင်များ၏ ကြော်ငြာများ</h2><p class="muted">AK Sale နှင့် အခြားလုပ်ငန်းရှင်များ၏ အထူးကြော်ငြာများ</p></div><span class="pill">ကြော်ငြာများ</span></div><div id="akSponsoredPublicGrid" class="ak-sponsored-grid"><p class="muted">ကြော်ငြာများကို ဖတ်နေသည်...</p></div></div><div class="panel"><div class="split"><div><h2>AK Market · မြန်မာ့အရောင်းအဝယ်</h2><p class="muted">ပစ္စည်းပုံ၊ ဈေးနှုန်း၊ ဆိုင်အမည်၊ ဖုန်းနှင့် တည်နေရာကို အခမဲ့တင်ရောင်းပါ။ Login မလိုပါ။</p></div><span class="pill">အခြေခံအသုံးပြုမှု အခမဲ့</span></div>

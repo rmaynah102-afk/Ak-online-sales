@@ -1,4 +1,7 @@
 name: Deploy AK Commerce to Firebase
+concurrency:
+  group: ak-commerce-production-deploy
+  cancel-in-progress: false
 on:
   push:
     branches: [main]
@@ -13,6 +16,8 @@ on:
       - 'firestore.rules'
       - 'firestore.indexes.json'
       - 'storage.rules'
+      - 'functions/**'
+      - '.firebaserc'
       - 'sw.js'
       - 'manifest.webmanifest'
       - '.github/workflows/firebase-deploy.yml'
@@ -35,5 +40,5 @@ jobs:
           node-version: 20
       - name: Install Firebase CLI
         run: npm install --global firebase-tools
-      - name: Deploy hosting, Firestore rules and indexes
-        run: firebase deploy --only hosting,firestore:rules,firestore:indexes --project ak-onlin-sales --non-interactive
+      - name: Deploy hosting, Firestore rules, Storage rules and Cloud Functions
+        run: firebase deploy --only hosting,firestore:rules,firestore:indexes,storage,functions --project ak-onlin-sales --non-interactive

@@ -1523,7 +1523,8 @@ let akSponsoredCache=[];
 function akSafeAdUrl(value){try{const u=new URL(String(value||""));return ["https:","http:"].includes(u.protocol)?u.href:""}catch(e){return ""}}
 function renderSponsoredAds(){
  const host=$("akSponsoredPublicGrid");if(!host)return;
- const now=Date.now(),items=akSponsoredCache.filter(x=>x.status==="approved"&&(!x.startsAt||(x.startsAt.toDate?x.startsAt.toDate().getTime():new Date(x.startsAt).getTime())<=now)&&(!x.endsAt||(x.endsAt.toDate?x.endsAt.toDate().getTime():new Date(x.endsAt).getTime())>now));
+ const now=Date.now(),active=akSponsoredCache.filter(x=>x.status==="approved"&&(!x.startsAt||(x.startsAt.toDate?x.startsAt.toDate().getTime():new Date(x.startsAt).getTime())<=now)&&(!x.endsAt||(x.endsAt.toDate?x.endsAt.toDate().getTime():new Date(x.endsAt).getTime())>now));
+ const seen=new Set(),items=active.filter(x=>{const key=String(akSafeAdUrl(x.url)||x.title||x.id).trim().toLowerCase();if(seen.has(key))return false;seen.add(key);return true});
  if(!items.length){host.innerHTML='<p class="muted">အထူးကြော်ငြာ မရှိသေးပါ။ မကြာမီ တင်ပေးပါမည်။</p>';return}
  host.innerHTML=items.map(x=>{const link=akSafeAdUrl(x.url)||(x.category==="AK Sale APK"?"https://rmaynah102-afk.github.io/Ak-online-sales/?app=1":"https://rmaynah102-afk.github.io/Ak-online-sales/app.html?market=1");const image=String(x.imageData||'').startsWith('data:image/')?x.imageData:'';return '<article><div class="ak-sponsored-card-image">'+(image?'<img src="'+esc(image)+'" alt="'+esc(x.title)+'">':'')+'<div class="ak-sponsored-card-caption">'+esc(x.title||'အထူးကြော်ငြာ')+'</div></div><span class="pill">SPONSORED · '+esc(x.category||'AK')+'</span><h3>'+esc(x.title||'ကြော်ငြာ')+'</h3><p>'+esc(x.text||'')+'</p><a href="'+esc(link)+'" target="_blank" rel="noopener">အသေးစိတ်ကြည့်ရန် ↗</a></article>'}).join('');
 }
@@ -1544,15 +1545,15 @@ async function akPublishDefaultPromos(){
  try{
   const user=fbAuth?.currentUser;if(!user||!akIsPlatformOwner(user))throw Error("painglin102@gmail.com Owner Gmail ဖြင့် Email အတည်ပြုပြီး Login ဝင်ပါ။");
   if(!fbStore)throw Error("Cloud ချိတ်ဆက်မှု မရှိသေးပါ။ အရင် Firebase Login ဝင်ပါ။");
-  if(!confirm("AK Sale APK နှင့် AK Website ကြော်ငြာ ၂ ခုကို Public Marketplace တွင် ရက် ၃၀ Live တင်မလား။"))return;
-  status.textContent="AK ကြော်ငြာ ၂ ခုကို Cloud သို့ တင်နေသည်...";
+  if(!confirm("AK Sale APK နှင့် AK Website ကြော်ငြာ ၂ ခုကို တစ်ကြိမ်တည်းတင်မလား။ ရှိပြီးသားကြော်ငြာကို ထပ်မပွားဘဲ Update လုပ်ပါမည်။"))return;
+  status.textContent="ရှိပြီးသားကြော်ငြာကို စစ်ပြီး တစ်ကြိမ်သာ သိမ်းနေသည်...";
   const end=firebase.firestore.Timestamp.fromDate(new Date(Date.now()+29*24*60*60*1000));
   const promos=[
    {category:"AK Sale APK",title:"AK Sale APK · သင့်ဆိုင်အတွက် အရောင်းစီမံခန့်ခွဲမှု",text:"ဖုန်းတစ်လုံးတည်းဖြင့် ပစ္စည်းစာရင်း၊ အရောင်း၊ အကြွေး၊ ဝယ်ယူမှုနှင့် အမြတ်/အရှုံးကို စနစ်တကျ စီမံလိုက်ပါ။ AK Sale Software ကို စမ်းသုံးကြည့်ပါ။",url:"https://rmaynah102-afk.github.io/Ak-online-sales/?app=1",tag:"AK SALE APK ကို ကြည့်ရန်",art:"AK SALE APK",line:"SMART SHOP MANAGEMENT"},
    {category:"AK Website",title:"AK Shopping Market · မြန်မာ့အရောင်းအဝယ်",text:"ကုန်ပစ္စည်းကြော်ငြာများကို ပုံ၊ ဈေးနှုန်း၊ ဆိုင်အမည်နှင့် ဖုန်းနံပါတ်တို့ဖြင့် အွန်လိုင်းပေါ် အခမဲ့တင်ရောင်းနိုင်ပါပြီ။ AK Marketplace သို့ ဝင်ကြည့်ပါ။",url:"https://rmaynah102-afk.github.io/Ak-online-sales/app.html?market=1",tag:"AK MARKET ကို ဝင်ရန်",art:"AK SHOPPING MARKET",line:"BUY · SELL · CONNECT"}
   ];
-  for(const p of promos){const imageData=akPromoSvg(p.art,p.line,p.tag);await fbStore.collection("sponsoredAds").add({ownerUid:user.uid,email:user.email,shopName:"AK Commerce",category:p.category,city:"မန္တလေးတိုင်း",township:"မန္တလေး",phone:"",title:p.title,imageUrl:"",imageData,text:p.text,url:p.url,status:"approved",createdAt:firebase.firestore.FieldValue.serverTimestamp(),startsAt:firebase.firestore.FieldValue.serverTimestamp(),endsAt:end})}
-  status.textContent="AK APK နှင့် Website ကြော်ငြာ ၂ ခုကို Cloud သို့ တင်ပြီးပါပြီ။ Public မှာ ပြန်ဖတ်နေသည်...";
+  for(const p of promos){const imageData=akPromoSvg(p.art,p.line,p.tag);const stableId=p.category==="AK Sale APK"?"ak-owner-promo-apk":"ak-owner-promo-market";await fbStore.collection("sponsoredAds").doc(stableId).set({ownerUid:user.uid,email:user.email,shopName:"AK Commerce",category:p.category,city:"မန္တလေးတိုင်း",township:"မန္တလေး",phone:"",title:p.title,imageUrl:"",imageData,text:p.text,url:p.url,status:"approved",createdAt:firebase.firestore.FieldValue.serverTimestamp(),startsAt:firebase.firestore.FieldValue.serverTimestamp(),endsAt:end},{merge:true})}
+  status.textContent="AK APK နှင့် Website ကြော်ငြာ ၂ မျိုးကို ထပ်မပွားဘဲ သိမ်းပြီးပါပြီ။ Public မှာ ပြန်ဖတ်နေသည်...";
   await loadSponsoredAds();
  }catch(e){status.textContent="ကြော်ငြာတင်မရပါ: "+e.message;alert("ကြော်ငြာတင်မရပါ: "+e.message)}
 }

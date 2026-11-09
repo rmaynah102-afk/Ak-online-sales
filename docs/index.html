@@ -1,35 +1,73 @@
 <!doctype html>
-<html lang="my"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#09152d">
-<meta name="description" content="AK Market — ဆိုင်များ၊ ကုန်ပစ္စည်းများနှင့် ဝန်ဆောင်မှုများကို ရှာဖွေဝယ်ယူပါ။ AK Sale POS ဖြင့် သင့်ဆိုင်ကို စနစ်တကျ စီမံပါ။">
-<meta property="og:title" content="AK Market | သင့်ဆိုင်အတွက်၊ သင့်ဈေးကွက်အတွက်">
-<meta property="og:description" content="ဆိုင်ကြော်ငြာတင်ပါ။ ပစ္စည်းရှာပါ။ ဆိုင်ကို တိုက်ရိုက်ဆက်သွယ်ပြီး အော်ဒါမှာယူပါ။">
-<title>AK Market — Myanmar Shops & Marketplace</title>
+<html lang="my">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#091a36">
+<meta name="description" content="AK Commerce — one connected marketplace for shops, buyers, suppliers, global trade and business advertising.">
+<meta property="og:title" content="AK Commerce | One connected trade network">
+<meta property="og:description" content="Discover products, connect with suppliers, manage your shop and promote your business in one place.">
+<title>AK Commerce — One Connected Trade Network</title>
 <link rel="icon" href="./ak-logo.svg" type="image/svg+xml">
+<link rel="manifest" href="./manifest.webmanifest">
 <style>
-:root{--navy:#09152d;--navy2:#10294e;--blue:#246bfe;--cyan:#6de0dc;--gold:#f7c86a;--ink:#17243a;--muted:#65738a;--paper:#f5f7fb;--line:#e3e9f2;--white:#fff;--green:#087f66;--shadow:0 18px 55px #10294e12}
-*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--paper);color:var(--ink);font-family:system-ui,-apple-system,"Noto Sans Myanmar",sans-serif;line-height:1.7}a{color:inherit;text-decoration:none}.wrap{width:min(1160px,calc(100% - 36px));margin:auto}
-.top{background:var(--navy);color:#d8e4f8;font-size:12px}.top .wrap{display:flex;justify-content:space-between;gap:14px;padding:7px 0}.top b{color:var(--gold)}
-header{position:sticky;top:0;z-index:20;background:#fffF;border-bottom:1px solid var(--line);backdrop-filter:blur(16px)}.nav{height:74px;display:flex;align-items:center;justify-content:space-between;gap:18px}.brand{display:flex;align-items:center;gap:10px;font-weight:900;color:var(--navy);font-size:19px}.brand img{width:43px;height:43px}.brand small{display:block;font-size:10px;letter-spacing:1.5px;color:var(--muted);font-weight:700}.links{display:flex;align-items:center;gap:22px;font-size:13px;font-weight:700;color:#53627a}.links a:hover{color:var(--blue)}.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 17px;border-radius:11px;font-size:13px;font-weight:800;border:1px solid transparent;transition:.2s}.btn:hover{transform:translateY(-2px)}.primary{background:var(--blue);color:white;box-shadow:0 8px 22px #246bfe35}.dark{background:var(--navy);color:white}.light{background:white;color:var(--navy);border-color:#dce5f1}.gold{background:var(--gold);color:var(--navy)}
-.hero{position:relative;overflow:hidden;background:radial-gradient(circle at 85% 20%,#1d68a7 0,transparent 34%),linear-gradient(120deg,#09152d,#102d56 62%,#0d526c);color:#fff;padding:76px 0 70px}.hero:after{content:"";position:absolute;width:460px;height:460px;border:1px solid #ffffff1c;border-radius:50%;right:-130px;top:-150px;box-shadow:0 0 0 45px #ffffff08,0 0 0 90px #ffffff05}.hero-grid{position:relative;z-index:1;display:grid;grid-template-columns:1.15fr .85fr;align-items:center;gap:45px}.eyebrow{display:inline-flex;align-items:center;gap:8px;color:var(--gold);font-size:11px;font-weight:900;letter-spacing:2px}.dot{width:7px;height:7px;background:var(--cyan);border-radius:50%;box-shadow:0 0 0 5px #6de0dc20}.hero h1{font-size:clamp(34px,5vw,58px);line-height:1.35;letter-spacing:-1.4px;margin:17px 0 13px}.hero h1 span{color:var(--gold)}.hero p{color:#d5e3f7;font-size:15px;max-width:610px;margin:0}.hero-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:25px}.trust{display:flex;gap:20px;flex-wrap:wrap;margin-top:29px;color:#c4d2e8;font-size:11px}.trust span{display:flex;align-items:center;gap:7px}.visual{min-height:330px;position:relative;display:grid;place-items:center}.orbit{width:290px;height:290px;border-radius:50%;border:1px solid #ffffff30;display:grid;place-items:center;box-shadow:0 0 0 32px #ffffff08,0 0 0 64px #ffffff05}.market-card{width:min(330px,90%);padding:20px;border:1px solid #ffffff35;border-radius:20px;background:#ffffff16;backdrop-filter:blur(15px);box-shadow:0 25px 70px #0004;transform:rotate(-4deg)}.market-card .tag{display:inline-block;background:var(--gold);color:var(--navy);font-size:10px;font-weight:900;border-radius:30px;padding:4px 10px}.mock-products{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:15px 0}.mock-products i{display:grid;place-items:center;height:78px;border-radius:12px;background:linear-gradient(145deg,#ffffff35,#ffffff10);font-style:normal;font-size:29px}.market-card strong{font-size:17px}.market-card small{display:block;color:#d8e7fa;font-size:11px}
-.strip{background:#fff;border-bottom:1px solid var(--line)}.strip .wrap{display:grid;grid-template-columns:repeat(4,1fr);padding:19px 0;gap:12px}.stat{text-align:center;border-right:1px solid var(--line)}.stat:last-child{border:0}.stat b{display:block;color:var(--navy);font-size:17px}.stat small{font-size:11px;color:var(--muted)}
-section.content{padding:66px 0}.section-head{display:flex;align-items:end;justify-content:space-between;gap:20px;margin-bottom:24px}.kicker{font-size:10px;color:var(--blue);font-weight:900;letter-spacing:1.8px}.section-head h2{font-size:clamp(23px,3vw,34px);line-height:1.35;margin:5px 0;color:var(--navy)}.section-head p{font-size:13px;color:var(--muted);margin:0;max-width:590px}.categories{display:grid;grid-template-columns:repeat(6,1fr);gap:12px}.cat{background:#fff;border:1px solid var(--line);border-radius:15px;padding:18px 12px;text-align:center;transition:.2s}.cat:hover{border-color:#9bb8fb;transform:translateY(-3px);box-shadow:var(--shadow)}.cat i{display:grid;place-items:center;width:48px;height:48px;margin:0 auto 9px;background:#eef4ff;border-radius:14px;font-size:23px;font-style:normal}.cat b{font-size:12px;color:var(--navy)}
-.market-band{background:linear-gradient(135deg,#eaf1ff,#e9f8f5);border:1px solid #dbe7f5;border-radius:22px;padding:28px;display:flex;align-items:center;justify-content:space-between;gap:20px}.market-band h3{font-size:22px;margin:0;color:var(--navy)}.market-band p{font-size:12px;color:var(--muted);margin:5px 0 0}.features{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.feature{background:white;border:1px solid var(--line);border-radius:17px;padding:22px}.feature .ico{width:43px;height:43px;border-radius:13px;display:grid;place-items:center;background:#edf3ff;color:var(--blue);font-size:21px}.feature h3{font-size:15px;margin:13px 0 5px;color:var(--navy)}.feature p{font-size:12px;color:var(--muted);margin:0}
-.adbox{background:var(--navy);color:#fff;border-radius:22px;padding:34px;display:grid;grid-template-columns:1fr auto;align-items:center;gap:20px}.adbox h2{font-size:26px;margin:0 0 7px}.adbox p{font-size:13px;color:#c8d8ef;margin:0}.adbox .btn{white-space:nowrap}
-footer{background:#071126;color:#b9c8dd;padding:42px 0 22px}.footgrid{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:28px}.footbrand{font-size:18px;color:#fff;font-weight:900}.footgrid p,.footgrid a{font-size:12px;color:#b9c8dd}.footgrid h4{color:#fff;margin:0 0 9px}.footlinks{display:grid;gap:6px}.copyright{border-top:1px solid #ffffff1a;margin-top:28px;padding-top:16px;font-size:10px;color:#8192ab}
-@media(max-width:850px){.hero-grid{grid-template-columns:1fr .8fr;gap:15px}.categories{grid-template-columns:repeat(3,1fr)}.features{grid-template-columns:repeat(2,1fr)}.links{gap:12px}}
-@media(max-width:620px){.wrap{width:min(100% - 26px,1160px)}.top .wrap{justify-content:center}.top .wrap span:last-child{display:none}.nav{height:62px}.links{display:none}.brand{font-size:17px}.hero{padding:48px 0 42px}.hero-grid{grid-template-columns:1fr}.hero h1{font-size:36px}.hero p{font-size:13px}.visual{min-height:230px;margin-top:8px}.orbit{width:210px;height:210px}.market-card{width:270px;padding:15px}.mock-products i{height:54px}.strip .wrap{grid-template-columns:repeat(2,1fr);row-gap:14px}.stat:nth-child(2){border:0}.stat b{font-size:15px}.content{padding:46px 0!important}.section-head{display:block}.section-head .btn{margin-top:12px}.categories{grid-template-columns:repeat(3,1fr);gap:8px}.cat{padding:13px 5px}.cat i{width:40px;height:40px;font-size:20px}.cat b{font-size:10px}.market-band{display:block;padding:21px}.market-band .btn{margin-top:14px}.features{grid-template-columns:1fr}.adbox{grid-template-columns:1fr;padding:24px}.adbox h2{font-size:22px}.footgrid{grid-template-columns:1fr;gap:16px}}
-</style></head><body>
-<div class="top"><div class="wrap"><span><b>AK MARKET</b> · မြန်မာ့ဆိုင်များနှင့် ကုန်ပစ္စည်းများ</span><span>Shop local. Grow together.</span></div></div>
-<header><div class="wrap nav"><a class="brand" href="./"><img src="./ak-logo.svg" alt="AK"><span>AK MARKET<small>MYANMAR SHOPPING NETWORK</small></span></a><nav class="links"><a href="#categories">အမျိုးအစားများ</a><a href="#market">ဈေးကွက်</a><a href="#pos">AK POS</a><a href="#advertise">ကြော်ငြာတင်ရန်</a><a href="./global.html">AK Global 🌐</a><a href="./community.html">AK Community</a></nav><a class="btn primary" href="./app.html?market=1#market">ဈေးကွက်ဝင်ရန် ↗</a><a class="btn" href="./global.html">AK Global · International Trade</a><a class="btn" href="./download.html">AK POS အသုံးပြုရန် · APK</a></div></header>
+:root{--navy:#091a36;--blue:#1d63cf;--gold:#f2c15e;--ink:#182b46;--muted:#6c7d94;--line:#dce5f0;--paper:#f3f6fb}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--paper);color:var(--ink);font-family:system-ui,-apple-system,"Noto Sans Myanmar",sans-serif}
+header{height:64px;background:linear-gradient(110deg,#07152e,#12427f);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 16px;gap:12px;box-shadow:0 3px 16px #07152e30;position:relative;z-index:5}
+.brand{display:flex;align-items:center;gap:9px;color:white;text-decoration:none;min-width:0}.brand img{width:38px;height:38px}.brand strong{font-size:17px;letter-spacing:.3px;white-space:nowrap}.brand small{display:block;color:#d2e1f5;font-size:9px;letter-spacing:1.2px}
+.live{font-size:11px;color:#f8d98e;white-space:nowrap}
+nav{height:48px;display:flex;align-items:center;gap:5px;overflow-x:auto;white-space:nowrap;padding:5px 12px;background:white;border-bottom:1px solid var(--line);scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+nav button{border:0;border-radius:9px;background:transparent;color:#50627b;font:700 12px system-ui;padding:9px 13px;cursor:pointer;min-height:38px}
+nav button.active{background:#e9f1ff;color:#164f9e}
+nav button:hover{background:#f0f4fa}
+main{height:calc(100dvh - 112px);height:calc(100vh - 112px);position:relative}
+iframe{display:block;width:100%;height:100%;border:0;background:#f3f6fb}
+#fallback{display:none;position:absolute;inset:0;background:white;padding:24px;z-index:2}
+@media(max-width:650px){
+ header{height:58px;padding:0 12px}.brand img{width:34px;height:34px}.brand strong{font-size:15px}.live{font-size:10px}
+ nav{height:48px;padding:4px 7px;gap:2px}nav button{font-size:11px;padding:8px 10px}
+ main{height:calc(100dvh - 106px);height:calc(100vh - 106px)}
+}
+</style>
+</head>
+<body>
+<header>
+ <a class="brand" href="./" aria-label="AK Commerce home"><img src="./ak-logo.svg" alt=""><span><strong>AK COMMERCE</strong><small>ONE CONNECTED TRADE NETWORK</small></span></a>
+ <div class="live">● LIVE BUSINESS NETWORK</div>
+</header>
+<nav aria-label="Main navigation" id="tabs">
+ <button data-view="market" class="active">ဈေးကွက် / Market</button>
+ <button data-view="pos">ဆိုင်စီမံခန့်ခွဲမှု / POS</button>
+ <button data-view="trade">Global Trade</button>
+ <button data-view="community">Community</button>
+ <button data-view="ads">ကြော်ငြာ / Ads</button>
+ <button data-view="download">APK</button>
+</nav>
 <main>
-<section class="hero"><div class="wrap hero-grid"><div><div class="eyebrow"><i class="dot"></i> MYANMAR DIGITAL COMMERCE</div><h1>သင့်ဆိုင်အတွက်<br><span>ဈေးကွက်အသစ်</span> တစ်ခု</h1><p>ဆိုင်ကြော်ငြာတင်ပါ။ ပစ္စည်းများကို ရှာဖွေပါ။ ရောင်းသူနှင့် တိုက်ရိုက်ဆက်သွယ်ပြီး အော်ဒါမှာယူပါ။ AK Market က ဆိုင်ငယ်မှ လုပ်ငန်းကြီးအထိ အွန်လိုင်းဈေးကွက်ထဲသို့ ချိတ်ဆက်ပေးသည်။</p><div class="hero-actions"><a class="btn gold" href="./app.html?market=1#market">ကြော်ငြာများ ကြည့်ရန် →</a><a class="btn" style="border-color:#ffffff65;color:white;background:#ffffff12" href="./app.html?market=1#marketForm">ကြော်ငြာတင်ရန်</a></div><div class="trust"><span>✓ ဆိုင်ကိုယ်ပိုင်စာမျက်နှာ</span><span>✓ ပုံနှင့် ဈေးနှုန်း</span><span>✓ ဖုန်း/Viber ဆက်သွယ်ရန်</span></div></div><div class="visual"><div class="orbit"><div class="market-card"><span class="tag">AK MARKET</span><div class="mock-products"><i>🛍️</i><i>📱</i><i>👕</i></div><strong>ဆိုင်များကို တစ်နေရာတည်းမှာ</strong><small>ရှာဖွေ · နှိုင်းယှဉ် · ဆက်သွယ် · မှာယူ</small></div></div></div></div></section>
-<div class="strip"><div class="wrap"><div class="stat"><b>ဆိုင်အမျိုးမျိုး</b><small>လုပ်ငန်းအမျိုးအစားစုံ</small></div><div class="stat"><b>ပုံ + ဈေးနှုန်း</b><small>ကြော်ငြာတစ်ခုချင်းစီ</small></div><div class="stat"><b>တိုက်ရိုက်ဆက်သွယ်</b><small>ဖုန်း / Viber / Link</small></div><div class="stat"><b>AK POS ချိတ်ဆက်</b><small>ဆိုင်စီမံခန့်ခွဲမှု</small></div></div></div>
-<section class="content" id="categories"><div class="wrap"><div class="section-head"><div><div class="kicker">EXPLORE CATEGORIES</div><h2>ဘာတွေ ရှာဖွေချင်ပါသလဲ?</h2><p>ကုန်ပစ္စည်းနဲ့ ဝန်ဆောင်မှုအမျိုးအစားအလိုက် ဈေးကွက်ကို ရှာဖွေနိုင်ရန် စီစဉ်ထားသည်။</p></div><a class="btn light" href="./app.html?market=1#market">အားလုံးကြည့်ရန် →</a></div><div class="categories"><a class="cat" href="./app.html?market=1#market"><i>🧰</i><b>ကုန်မာ / ဆောက်လုပ်ရေး</b></a><a class="cat" href="./app.html?market=1#market"><i>💡</i><b>လျှပ်စစ်ပစ္စည်း</b></a><a class="cat" href="./app.html?market=1#market"><i>🛒</i><b>ကုန်စုံ / စားသောက်ကုန်</b></a><a class="cat" href="./app.html?market=1#market"><i>👗</i><b>အဝတ်အထည် / အလှကုန်</b></a><a class="cat" href="./app.html?market=1#market"><i>📱</i><b>ဖုန်း / အီလက်ထရွန်းနစ်</b></a><a class="cat" href="./app.html?market=1#market"><i>🔧</i><b>အပိုပစ္စည်း / အခြား</b></a></div></div></section>
-<section class="content" id="market" style="padding-top:0"><div class="wrap"><div class="market-band"><div><div class="kicker">AK MARKETPLACE</div><h3>မြန်မာ့ဆိုင်များရဲ့ ကြော်ငြာများကို တစ်နေရာတည်းမှာ</h3><p>ဆိုင်စာမျက်နှာ၊ ကုန်ပစ္စည်းပုံ၊ ဈေးနှုန်းနှင့် ဆက်သွယ်ရန်အချက်အလက်များကို ကြည့်ရှုပါ။</p></div><a class="btn dark" href="./app.html?market=1#market">AK Market ဖွင့်ရန် ↗</a></div></div></section>
-<section class="content" id="pos"><div class="wrap"><div class="adbox"><div><div class="kicker" style="color:#f7c86a">AK SALE POS · ANDROID APK</div><h2>ဆိုင်တွင်း POS အသုံးပြုရန်</h2><p>ကုန်ပစ္စည်း၊ အရောင်း၊ အကြွေး၊ ဝယ်ယူမှုနှင့် စာရင်းများကို AK POS APK မှတစ်ဆင့် အသုံးပြုပါ။</p></div><a class="btn gold" href="./download.html">AK POS အသုံးပြုရန် →</a></div></div></section>
-<section class="content" id="advertise" style="padding-top:0"><div class="wrap"><div class="adbox"><div><div class="kicker" style="color:#f7c86a">GROW YOUR BUSINESS</div><h2>သင့်ဆိုင်ကို လူသိများအောင် စတင်ကြော်ငြာပါ</h2><p>ကြော်ငြာပုံ၊ ဆိုင်အမည်၊ ဖုန်း/Viber နှင့် Website သို့မဟုတ် Facebook Link ကို ပြင်ဆင်ပြီး တင်သွင်းနိုင်သည်။</p></div><a class="btn gold" href="./app.html?market=1#market">ကြော်ငြာတင်ရန် →</a></div></div></section>
+ <iframe id="workspace" title="AK Commerce workspace" src="./app.html?market=1#market" allow="clipboard-read; clipboard-write; payment" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+ <div id="fallback"><h2>AK Commerce ကို ဖွင့်မရသေးပါ</h2><p>အင်တာနက်ချိတ်ဆက်မှုကို စစ်ပြီး ပြန်ဖွင့်ပါ။</p><a href="./app.html?market=1#market">Marketplace ကို တိုက်ရိုက်ဖွင့်ရန်</a></div>
 </main>
-<footer><div class="wrap"><div class="footgrid"><div><div class="footbrand">AK MARKET</div><p>မြန်မာ့ဆိုင်များ၊ ရောင်းသူများနှင့် ဝယ်ယူသူများကို ချိတ်ဆက်ပေးမည့် ဒစ်ဂျစ်တယ်ဈေးကွက်။</p></div><div><h4>ဈေးကွက်</h4><div class="footlinks"><a href="./app.html?market=1#market">ကြော်ငြာများကြည့်ရန်</a><a href="./app.html?market=1#market">ဆိုင်ကြော်ငြာတင်ရန်</a></div></div><div><h4>AK GLOBAL</h4><div class="footlinks"><a href="./global.html">International Trade & Finance</a><a href="./community.html">AK Community</a><a href="./global.html#advertise">Advertise with AK</a></div></div><div><h4>AK POS</h4><div class="footlinks"><a href="./app.html">POS ဝင်ရန်</a><a href="#pos">လုပ်ဆောင်ချက်များ</a></div></div></div><div class="copyright">© AK Market · AK Sale Software. All rights reserved. · အရောင်းအဝယ်နှင့် ငွေပေးချေမှုကို ဝယ်သူနှင့် ရောင်းသူတို့ တိုက်ရိုက်အတည်ပြုပါ။</div></div></footer>
+<script>
+const pages={
+ market:"./app.html?market=1#market",
+ pos:"./app.html",
+ trade:"./global.html",
+ community:"./community.html",
+ ads:"./global.html#advertise",
+ download:"./download.html"
+};
+const frame=document.getElementById("workspace"),buttons=[...document.querySelectorAll("[data-view]")];
+function setView(view,write=true){
+ if(!pages[view])view="market";
+ frame.src=pages[view];
+ buttons.forEach(b=>{const on=b.dataset.view===view;b.classList.toggle("active",on);b.setAttribute("aria-current",on?"page":"false")});
+ if(write){const u=new URL(location.href);u.searchParams.set("view",view);history.replaceState(null,"",u.pathname+u.search)}
+}
+buttons.forEach(b=>b.addEventListener("click",()=>setView(b.dataset.view)));
+frame.addEventListener("error",()=>document.getElementById("fallback").style.display="block");
+const requested=new URLSearchParams(location.search).get("view");
+if(requested&&pages[requested])setView(requested,false);
+if("serviceWorker" in navigator && location.protocol!=="file:"){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}))}
+</script>
 </body></html>

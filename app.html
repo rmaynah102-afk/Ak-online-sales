@@ -1319,7 +1319,7 @@ function renderSponsoredAds(){
  const host=$("akSponsoredPublicGrid");if(!host)return;
  const now=Date.now(),items=akSponsoredCache.filter(x=>x.status==="approved"&&(!x.startsAt||(x.startsAt.toDate?x.startsAt.toDate().getTime():new Date(x.startsAt).getTime())<=now)&&(!x.endsAt||(x.endsAt.toDate?x.endsAt.toDate().getTime():new Date(x.endsAt).getTime())>now));
  if(!items.length){host.innerHTML='<p class="muted">အထူးကြော်ငြာ မရှိသေးပါ။ မကြာမီ တင်ပေးပါမည်။</p>';return}
- host.innerHTML=items.map(x=>{const link=akSafeAdUrl(x.url)||'https://rmaynah102-afk.github.io/Ak-online-sales/';const image=String(x.imageData||'').startsWith('data:image/')?x.imageData:'';return '<article><div class="ak-sponsored-card-image">'+(image?'<img src="'+esc(image)+'" alt="'+esc(x.title)+'">':'')+'<div class="ak-sponsored-card-caption">'+esc(x.title||'အထူးကြော်ငြာ')+'</div></div><span class="pill">SPONSORED · '+esc(x.category||'AK')+'</span><h3>'+esc(x.title||'ကြော်ငြာ')+'</h3><p>'+esc(x.text||'')+'</p><a href="'+esc(link)+'" target="_blank" rel="noopener">အသေးစိတ်ကြည့်ရန် ↗</a></article>'}).join('');
+ host.innerHTML=items.map(x=>{const link=akSafeAdUrl(x.url)||(x.category==="AK Sale APK"?"https://rmaynah102-afk.github.io/Ak-online-sales/?app=1":"https://rmaynah102-afk.github.io/Ak-online-sales/app.html?market=1");const image=String(x.imageData||'').startsWith('data:image/')?x.imageData:'';return '<article><div class="ak-sponsored-card-image">'+(image?'<img src="'+esc(image)+'" alt="'+esc(x.title)+'">':'')+'<div class="ak-sponsored-card-caption">'+esc(x.title||'အထူးကြော်ငြာ')+'</div></div><span class="pill">SPONSORED · '+esc(x.category||'AK')+'</span><h3>'+esc(x.title||'ကြော်ငြာ')+'</h3><p>'+esc(x.text||'')+'</p><a href="'+esc(link)+'" target="_blank" rel="noopener">အသေးစိတ်ကြည့်ရန် ↗</a></article>'}).join('');
 }
 async function loadSponsoredAds(){
  try{if(!fbStore){akSponsoredCache=[];renderSponsoredAds();return}
@@ -1340,12 +1340,12 @@ async function akPublishDefaultPromos(){
   if(!fbStore)throw Error("Cloud ချိတ်ဆက်မှု မရှိသေးပါ။ အရင် Firebase Login ဝင်ပါ။");
   if(!confirm("AK Sale APK နှင့် AK Website ကြော်ငြာ ၂ ခုကို Public Marketplace တွင် ရက် ၃၀ Live တင်မလား။"))return;
   status.textContent="AK ကြော်ငြာ ၂ ခုကို Cloud သို့ တင်နေသည်...";
-  const now=firebase.firestore.Timestamp.now(),end=firebase.firestore.Timestamp.fromDate(new Date(Date.now()+30*24*60*60*1000));
+  const end=firebase.firestore.Timestamp.fromDate(new Date(Date.now()+29*24*60*60*1000));
   const promos=[
    {category:"AK Sale APK",title:"AK Sale APK · သင့်ဆိုင်အတွက် အရောင်းစီမံခန့်ခွဲမှု",text:"ဖုန်းတစ်လုံးတည်းဖြင့် ပစ္စည်းစာရင်း၊ အရောင်း၊ အကြွေး၊ ဝယ်ယူမှုနှင့် အမြတ်/အရှုံးကို စနစ်တကျ စီမံလိုက်ပါ။ AK Sale Software ကို စမ်းသုံးကြည့်ပါ။",url:"https://rmaynah102-afk.github.io/Ak-online-sales/?app=1",tag:"AK SALE APK ကို ကြည့်ရန်",art:"AK SALE APK",line:"SMART SHOP MANAGEMENT"},
    {category:"AK Website",title:"AK Shopping Market · မြန်မာ့အရောင်းအဝယ်",text:"ကုန်ပစ္စည်းကြော်ငြာများကို ပုံ၊ ဈေးနှုန်း၊ ဆိုင်အမည်နှင့် ဖုန်းနံပါတ်တို့ဖြင့် အွန်လိုင်းပေါ် အခမဲ့တင်ရောင်းနိုင်ပါပြီ။ AK Marketplace သို့ ဝင်ကြည့်ပါ။",url:"https://rmaynah102-afk.github.io/Ak-online-sales/app.html?market=1",tag:"AK MARKET ကို ဝင်ရန်",art:"AK SHOPPING MARKET",line:"BUY · SELL · CONNECT"}
   ];
-  for(const p of promos){const imageData=akPromoSvg(p.art,p.line,p.tag);await fbStore.collection("sponsoredAds").add({ownerUid:user.uid,email:user.email,shopName:"AK Commerce",category:p.category,city:"မန္တလေးတိုင်း",township:"မန္တလေး",phone:"",title:p.title,imageUrl:"",imageData,text:p.text,status:"approved",createdAt:now,startsAt:now,endsAt:end})}
+  for(const p of promos){const imageData=akPromoSvg(p.art,p.line,p.tag);await fbStore.collection("sponsoredAds").add({ownerUid:user.uid,email:user.email,shopName:"AK Commerce",category:p.category,city:"မန္တလေးတိုင်း",township:"မန္တလေး",phone:"",title:p.title,imageUrl:"",imageData,text:p.text,status:"approved",createdAt:firebase.firestore.FieldValue.serverTimestamp(),startsAt:firebase.firestore.FieldValue.serverTimestamp(),endsAt:end})}
   status.textContent="AK APK နှင့် Website ကြော်ငြာ ၂ ခုကို Cloud သို့ တင်ပြီးပါပြီ။ Public မှာ ပြန်ဖတ်နေသည်...";
   await loadSponsoredAds();
  }catch(e){status.textContent="ကြော်ငြာတင်မရပါ: "+e.message;alert("ကြော်ငြာတင်မရပါ: "+e.message)}

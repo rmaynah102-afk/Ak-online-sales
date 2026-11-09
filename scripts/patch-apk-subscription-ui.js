@@ -67,6 +67,8 @@ const authAnchor = 'checkUserRole(user);if(typeof loadSponsoredAds==="function")
 if (html.split(authAnchor).length !== 2) throw new Error('Unique auth-state payment initialization point not found.');
 const authPatch = 'checkUserRole(user);const akPaymentPanel=document.getElementById("akSubscriptionPayment");if(akPaymentPanel)akPaymentPanel.style.display=akIsPlatformOwner(user)?"none":"";if(user){void loadPaymentAccountSettings();if(akIsPlatformOwner(user))void loadAdminPaymentRequests();}if(typeof loadSponsoredAds==="function")void loadSponsoredAds();';
 html = html.replace(authAnchor, authPatch);
-html = html.replace('</body>', '<script>/* AK_APK_SUBSCRIPTION_UI_V1 */</script>\n</body>');
+const bodyEnd = html.lastIndexOf('</body>');
+if (bodyEnd < 0) throw new Error('HTML body closing tag not found.');
+html = html.slice(0, bodyEnd) + '<script>/* AK_APK_SUBSCRIPTION_UI_V1 */</script>\n' + html.slice(bodyEnd);
 fs.writeFileSync(target, html);
 console.log('APK-only subscription UI applied: packages, KBZPay proof upload, owner payment review and server-verified approval/rejection.');

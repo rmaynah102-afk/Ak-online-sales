@@ -258,7 +258,6 @@ service cloud.firestore {
         && request.auth.token.email_verified == true
         && request.resource.data.keys().hasOnly(['ownerUid','displayName','kind','body','country','product','price','currency','link','status','createdAt'])
         && request.resource.data.ownerUid == request.auth.uid
-        && request.resource.data.email == request.auth.token.email
         && request.resource.data.displayName is string
         && request.resource.data.displayName.size() <= 100
         && request.resource.data.kind in ['business','product','question','supplier','knowledge']

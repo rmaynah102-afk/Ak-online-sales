@@ -7,6 +7,11 @@ service cloud.firestore {
         && request.auth.token.email_verified == true;
     }
 
+    // Marketplace is a separate public web service: verified Gmail users do not need a POS license or APK device slot.
+    function isVerifiedMarketplaceUser() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+
     function hasActiveLicense(uid) {
       // The platform owner may access only their own UID path.
       // Customer access requires a server-issued, unexpired active license.
@@ -122,7 +127,7 @@ service cloud.firestore {
     match /marketListings/{listingId} {
       allow read: if resource.data.status == 'published'
         || (request.auth != null && resource.data.ownerUid == request.auth.uid);
-      allow create: if hasActiveLicense(request.auth.uid)
+      allow create: if isVerifiedMarketplaceUser()
         && request.resource.data.ownerUid == request.auth.uid
         && request.resource.data.status == 'published'
         && request.resource.data.title is string
@@ -141,7 +146,7 @@ service cloud.firestore {
         && request.resource.data.township.size() <= 80
         && request.resource.data.phone is string
         && request.resource.data.phone.size() <= 32;
-      allow update: if hasActiveLicense(request.auth.uid)
+      allow update: if isVerifiedMarketplaceUser()
         && request.auth.uid == resource.data.ownerUid
         && request.resource.data.ownerUid == resource.data.ownerUid
         && request.resource.data.status == 'published'
@@ -153,7 +158,7 @@ service cloud.firestore {
         && request.resource.data.currency == 'MMK'
         && request.resource.data.description is string
         && request.resource.data.description.size() <= 700;
-      allow delete: if hasActiveLicense(request.auth.uid) && resource.data.ownerUid == request.auth.uid;
+      allow delete: if isVerifiedMarketplaceUser() && resource.data.ownerUid == request.auth.uid;
     }
 
     // Public marketplace likes: authenticated users may create/remove only their own like.
@@ -203,7 +208,7 @@ service cloud.firestore {
 
     match /publicShopSubmissions/{ownerUid} {
       allow read: if request.auth != null && request.auth.uid == ownerUid;
-      allow create, update: if hasActiveLicense(ownerUid)
+      allow create, update: if isVerifiedMarketplaceUser()
         && request.auth.uid == ownerUid
         && request.resource.data.ownerUid == ownerUid
         && request.resource.data.status == 'pending'
@@ -212,7 +217,7 @@ service cloud.firestore {
         && request.resource.data.shopName.size() <= 90
         && request.resource.data.about is string
         && request.resource.data.about.size() <= 300;
-      allow delete: if false;
+      allow delete: if isVerifiedMarketplaceUser() && request.auth.uid == ownerUid;
     }
     match /publicShops/{ownerUid} {
       allow read: if resource.data.status == 'approved';

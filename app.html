@@ -1751,7 +1751,7 @@ body.ak-public footer{display:block}
  }
  // The Firebase Web App config is public client configuration, but must be
  // supplied by the project owner; security is enforced by Firestore/Storage rules.
- async function connectPublicCatalog(){
+ async async function connectPublicCatalog(){
   try{
    const raw=window.AK_FIREBASE_PUBLIC_CONFIG || localStorage.getItem("ak_firebase_config");
    if(!raw){const status=document.getElementById("marketStatus");if(status)status.textContent="ဈေးစာရင်းဖတ်ရန် Firebase Web App Config မချိတ်ရသေးပါ။ ဆိုင်သုံး App ထဲတွင်လည်း အများကြည့်ရန် Config ကို သတ်မှတ်ရပါမည်။";return;}

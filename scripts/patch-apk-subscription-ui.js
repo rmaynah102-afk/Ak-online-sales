@@ -74,8 +74,8 @@ if (html.split(authAnchor).length !== 2) {
   throw new Error('Could not find unique auth-state insertion point; refusing unsafe APK patch.');
 }
 html = html.replace(authAnchor, authPatch);
-const loadAnchor = 'if(typeof loadMyMarketListings==="function")void loadMyMarketListings();';
-const loadPatch = 'if(typeof loadMyMarketListings==="function")void loadMyMarketListings();if(user){void loadPaymentAccountSettings();if(akIsPlatformOwner(user))void loadAdminPaymentRequests();}';
+const loadAnchor = 'if(typeof loadMyMarketListings==="function")void loadMyMarketListings();if(window.cmLoadLocal)window.cmLoadLocal();';
+const loadPatch = 'if(typeof loadMyMarketListings==="function")void loadMyMarketListings();if(user){void loadPaymentAccountSettings();if(akIsPlatformOwner(user))void loadAdminPaymentRequests();}if(window.cmLoadLocal)window.cmLoadLocal();';
 if (html.split(loadAnchor).length !== 2) {
   throw new Error('Could not find unique payment-screen initialization point; refusing unsafe APK patch.');
 }

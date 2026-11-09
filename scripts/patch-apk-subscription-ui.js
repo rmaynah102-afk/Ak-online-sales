@@ -31,17 +31,17 @@ const customerPanel = `<div class="panel" id="akSubscriptionPayment">
   <p>အောက်ပါအဆင့် ၃ ဆင့်ပြီးမှ ဆိုင် POS ကို ဖွင့်ပေးမည်။ Owner အတည်ပြုချက်မရမချင်း ဆိုင်စာရင်းများကို ဝင်မရပါ။</p>
   <div class="notice"><b>အဆင့် ၁ · Package ရွေးပါ</b></div>
   <div class="grid" id="akPlanButtons">
-    <button type="button" class="ak-plan-option active" data-days="30" onclick="selectAkPlan(30)">၁ လ · ၃၀,၀၀၀ ကျပ်</button>
+    <button type="button" class="ak-plan-option" data-days="30" onclick="selectAkPlan(30)">၁ လ · ၃၀,၀၀၀ ကျပ်</button>
     <button type="button" class="ak-plan-option alt" data-days="90" onclick="selectAkPlan(90)">၃ လ · ၉၀,၀၀၀ ကျပ်</button>
     <button type="button" class="ak-plan-option alt" data-days="180" onclick="selectAkPlan(180)">၆ လ · ၁၈၀,၀၀၀ ကျပ်</button>
     <button type="button" class="ak-plan-option alt" data-days="365" onclick="selectAkPlan(365)">၁ နှစ် · ၃၆၀,၀၀၀ ကျပ်</button>
   </div>
   <select id="payPlan" aria-label="Package" style="display:none">
-    <option value="30">၁ လ</option><option value="90">၃ လ</option><option value="180">၆ လ</option><option value="365">၁ နှစ်</option>
+    <option value="" selected disabled>Package ရွေးပါ</option><option value="30">၁ လ</option><option value="90">၃ လ</option><option value="180">၆ လ</option><option value="365">၁ နှစ်</option>
   </select>
-  <p id="paymentAmountLabel" class="pill">ပေးချေရမည့်ငွေ: ၃၀,၀၀၀ MMK</p>
+  <p id="paymentAmountLabel" class="pill">Package အရင်ရွေးပါ</p>
   <div class="notice"><b>အဆင့် ၂ · Gmail ချိတ်ပါ</b><p>Google ဖြင့် မိမိ Gmail ကိုရွေးပါ။ အကောင့်တစ်ခုလျှင် ဆိုင်ဒေတာတစ်ခု သီးသန့်သိမ်းမည်။</p>
-    <button type="button" id="akOnboardingGoogleButton" onclick="akStartSubscriptionGoogleLogin()">Google ဖြင့် Gmail ချိတ်မည်</button>
+    <button type="button" id="akOnboardingGoogleButton" onclick="akStartSubscriptionGoogleLogin()" disabled>Package ရွေးပြီးမှ Google ချိတ်နိုင်သည်</button>
     <p id="akOnboardingStatus" class="muted">Package ရွေးပြီး Google ချိတ်ပါ။</p>
   </div>
   <div id="akPaymentProofStep" style="display:none">
@@ -54,7 +54,7 @@ const customerPanel = `<div class="panel" id="akSubscriptionPayment">
     <label for="payScreenshot">ငွေလွှဲ Screenshot · JPG / PNG / WEBP · 2MB အောက်</label>
     <input id="payScreenshot" type="file" accept="image/jpeg,image/png,image/webp">
     <div class="actions"><button type="button" onclick="submitPaymentRequest()">ငွေလွှဲအထောက်အထား တင်မည်</button><button type="button" class="alt" onclick="loadPaymentAccountSettings()">KPay အချက်အလက် ပြန်ဖတ်မည်</button></div>
-    <p id="licenseStatus" class="muted">ငွေပေးချေမှု မတင်ရသေးပါ။</p>
+    <p id="licenseStatus" class="muted">ငွေပေးချေမှု မတင်ရသေးပါ။</p><button type="button" class="alt" id="akReLoginAfterApproval" onclick="akReLoginAfterApproval()">Owner အတည်ပြုပြီးပြီ · Login ပြန်ဝင်မည်</button>
   </div>
 </div>
 `;
@@ -80,10 +80,10 @@ html = html.replace(authAnchor, authPatch);
 
 const helperAnchor = 'const AK_PLAN_AMOUNTS={30:30000,90:90000,180:180000,365:360000};';
 if (html.split(helperAnchor).length !== 2) throw new Error('Unique plan pricing declaration not found.');
-const helper = `function akStartSubscriptionGoogleLogin(){const days=Number(document.getElementById("payPlan")?.value||30);if(!Object.prototype.hasOwnProperty.call(AK_PLAN_AMOUNTS,days))return;try{localStorage.setItem("ak_selected_plan_days",String(days));const status=document.getElementById("akOnboardingStatus");if(status)status.textContent="Google Login ဖွင့်နေသည်...";const button=document.getElementById("akOnboardingGoogleButton");if(button){button.disabled=true;button.textContent="Google ချိတ်ဆက်နေသည်...";}Promise.resolve(firebaseGoogleLogin()).then(()=>{if(!fbAuth?.currentUser&&status){const fbStatus=document.getElementById("fbStatus");status.textContent=fbStatus?.textContent||"Google Login ပြီးဆုံးရန် စောင့်နေသည်...";}}).catch(error=>{if(status)status.textContent="Google Login မအောင်မြင်: "+(error.message||error)}).finally(()=>{if(button){button.disabled=false;button.textContent="Google ဖြင့် Gmail ချိတ်မည်";}})}catch(e){const status=document.getElementById("akOnboardingStatus");if(status)status.textContent="မအောင်မြင်ပါ: "+e.message}}`;
+const helper = `const akSelectPlanOriginal=selectAkPlan;selectAkPlan=function(days){if(!Object.prototype.hasOwnProperty.call(AK_PLAN_AMOUNTS,Number(days)))return;akSelectPlanOriginal(Number(days));localStorage.setItem("ak_selected_plan_days",String(days));const button=document.getElementById("akOnboardingGoogleButton");if(button){button.disabled=false;button.textContent="Google ဖြင့် Gmail ချိတ်မည်";}};function akStartSubscriptionGoogleLogin(){const days=Number(document.getElementById("payPlan")?.value||0);if(!Object.prototype.hasOwnProperty.call(AK_PLAN_AMOUNTS,days)){const status=document.getElementById("akOnboardingStatus");if(status)status.textContent="Google မချိတ်မီ Package ကို အရင်ရွေးပါ။";return;}try{localStorage.setItem("ak_selected_plan_days",String(days));const status=document.getElementById("akOnboardingStatus");if(status)status.textContent="Google Login ဖွင့်နေသည်...";const button=document.getElementById("akOnboardingGoogleButton");if(button){button.disabled=true;button.textContent="Google ချိတ်ဆက်နေသည်...";}Promise.resolve(firebaseGoogleLogin()).then(()=>{if(!fbAuth?.currentUser&&status){const fbStatus=document.getElementById("fbStatus");status.textContent=fbStatus?.textContent||"Google Login ပြီးဆုံးရန် စောင့်နေသည်...";}}).catch(error=>{if(status)status.textContent="Google Login မအောင်မြင်: "+(error.message||error)}).finally(()=>{if(button){button.disabled=false;button.textContent="Google ဖြင့် Gmail ချိတ်မည်";}})}catch(e){const status=document.getElementById("akOnboardingStatus");if(status)status.textContent="မအောင်မြင်ပါ: "+e.message}}async function akReLoginAfterApproval(){const button=document.getElementById("akReLoginAfterApproval"),status=document.getElementById("licenseStatus");try{if(!fbAuth?.currentUser)throw Error("Gmail ကို အရင်ချိတ်ပါ။");if(button){button.disabled=true;button.textContent="Owner အတည်ပြုမှု စစ်ဆေးနေသည်...";}const active=await refreshLicense();if(!active||!currentLicense||currentLicense.status!=="active")throw Error("Owner အတည်ပြုချက် မရသေးပါ။ KBZPay ထဲ ငွေဝင်မှုကို စစ်ပြီး Owner Approve လုပ်ပြီးမှ ပြန်နှိပ်ပါ။");await fbAuth.signOut();await firebaseGoogleLogin();if(status)status.textContent="Login ပြန်ဝင်နေပါပြီ။ Subscription နှင့် Cloud ဒေတာစစ်ဆေးပြီးမှ POS ဖွင့်မည်။";}catch(e){if(status)status.textContent=e.message||String(e);}finally{if(button){button.disabled=false;button.textContent="Owner အတည်ပြုပြီးပြီ · Login ပြန်ဝင်မည်";}}}`;
 html = html.replace(helperAnchor, helper + helperAnchor);
 const bodyEnd = html.lastIndexOf('</body>');
 if (bodyEnd < 0) throw new Error('HTML body closing tag not found.');
 html = html.slice(0, bodyEnd) + '<script>/* AK_APK_SUBSCRIPTION_UI_V2 */</script>\n' + html.slice(bodyEnd);
 fs.writeFileSync(target, html);
-console.log('APK onboarding V2 applied: package first, Google Gmail second, payment proof third, owner approval before POS.');
+console.log('APK onboarding V3 applied: explicit package selection -> native Google Gmail -> payment proof -> owner approval -> re-login -> POS.');

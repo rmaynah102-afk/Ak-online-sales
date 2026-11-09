@@ -67,7 +67,7 @@ jobs:
           node --check functions/index.js
           node -e "JSON.parse(require('fs').readFileSync('functions/package.json','utf8')); console.log('Firebase Functions package.json valid')"
       - name: Validate Firebase client/server contracts and security guards
-        run: node scripts/validate-firebase-contract.js
+        run: node scripts/validate-apk-contract.js
       - name: Validate native printer installer
         run: node --check scripts/install-native-printer.js
       - name: Generate Android project

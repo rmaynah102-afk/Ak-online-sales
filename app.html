@@ -353,7 +353,7 @@ footer{color:var(--ak-muted)}
 <section id="products" class="view">
 <div class="panel"><h2>ပစ္စည်းထည့် / ပြင်</h2><form id="productForm"><input type="hidden" id="pId"><div class="grid">
 <div><label>ပစ္စည်းအမည် *</label><input id="pName" required></div><div><label>ပစ္စည်းကုဒ် / Barcode</label><div class="actions"><input id="pCode" autocomplete="off" style="flex:1;min-width:130px"><button type="button" class="alt" id="akScanBarcodeBtn">📷 Scan</button></div><small class="muted">Camera barcode scan သို့မဟုတ် Bluetooth/USB HID scanner ဖြင့် ဖတ်နိုင်သည်။</small></div><div><label>အမျိုးအစား</label><input id="pCat" placeholder="အမျိုးအစား ဥပမာ - အစားအသောက် / အဝတ်အထည် / ကုန်မာ"></div><div><label>ယူနစ်</label><input id="pUnit" value="ခု"></div><div><label>ဝယ်ဈေး</label><input id="pCost" type="number" min="0" step="any" value="0"></div><div><label>လက်လီဈေး</label><input id="pRetail" type="number" min="0" step="any" value="0"></div><div><label>လက်ကားဈေး</label><input id="pWholesale" type="number" min="0" step="any" value="0"></div><div><label>လက်ကျန်</label><input id="pStock" type="number" min="0" step="any" value="0"></div><div><label>အနည်းဆုံးထားရမည့်လက်ကျန် (Alert)</label><input id="pMinStock" type="number" min="0" step="any" value="0"><small class="muted">ဒီပမာဏအောက်ရောက်ရင် ပြန်မှာရန် သတိပေးမည်။</small></div><div><label>ပစ္စည်းဓာတ်ပုံ</label><input id="pPhoto" type="file" accept="image/*"><small class="muted">ဓာတ်ပုံကို အရွယ်အစားလျှော့ပြီး ဒီဖုန်းထဲတွင် သိမ်းမည်။ အခြားဖုန်းသို့ ပုံပါပြောင်းလိုပါက Backup JSON ကို အသုံးပြုပါ။</small></div>
-</div><img id="photoPreview" class="thumb hidden" alt="preview"><div class="actions"><button>သိမ်းမည်</button><button type="button" class="alt" onclick="resetProduct()">ရှင်းမည်</button></div></form></div>
+</div><img id="photoPreview" class="thumb hidden" alt="preview"><div class="actions"><button>သိမ်းမည်</button><button type="button" class="alt" onclick="akShareProductToViber()">Viber Channel ကြော်ငြာတင်ရန်</button><button type="button" class="alt" onclick="akSendProductToMarket()">Market ကြော်ငြာတင်ရန်</button><button type="button" class="alt" onclick="resetProduct()">ရှင်းမည်</button></div><p class="muted">Viber ကိုနှိပ်လျှင် ပုံနှင့်စာကို Share Menu မှတစ်ဆင့် ကိုယ့် Channel သို့ ရွေးပို့နိုင်သည်။ Market ကိုနှိပ်လျှင် အချက်အလက်များကို အလိုအလျောက်ဖြည့်ပေးမည်။</p></form></div>
 <div class="panel"><div class="split"><h2>ပစ္စည်းစာရင်း</h2><div class="actions"><button type="button" class="alt" onclick="exportProductsCsv()">CSV ထုတ်ရန်</button><input style="max-width:220px" id="productQuery" placeholder="ရှာရန်" oninput="renderProducts()"></div></div><div class="tablewrap"><table><thead><tr><th>ပုံ</th><th>ပစ္စည်း</th><th>ကုဒ်</th><th>လက်ကျန်</th><th>ဝယ်ဈေး</th><th>လက်လီ</th><th>လက်ကား</th><th>လုပ်ဆောင်ချက်</th></tr></thead><tbody id="productRows"></tbody></table></div></div>
 </section>
 
@@ -622,6 +622,46 @@ function go(id){
   const scanInput=document.getElementById("saleBarcodeInput");
   if(scanInput)requestAnimationFrame(()=>scanInput.focus());
  }
+}
+async function akBuildProductPromo(){
+ const name=$("pName").value.trim(),price=$("pRetail").value.trim(),phone=db.shop?.phone||$("shopPhone")?.value||"",shop=db.shop?.name||$("shopName")?.value||"မိမိဆိုင်";
+ if(name.length<2)throw Error("ပစ္စည်းအမည် အရင်ထည့်ပါ။");
+ const canvas=document.createElement("canvas");canvas.width=1080;canvas.height=1080;
+ const c=canvas.getContext("2d");const grad=c.createLinearGradient(0,0,1080,1080);grad.addColorStop(0,"#0b2f24");grad.addColorStop(1,"#0756a8");c.fillStyle=grad;c.fillRect(0,0,1080,1080);
+ c.fillStyle="#f4d477";c.font="bold 32px sans-serif";c.fillText(shop.slice(0,40),64,72);
+ c.fillStyle="#fff";c.font="bold 58px sans-serif";c.fillText("ပစ္စည်းကြော်ငြာ",64,150);
+ c.fillStyle="#fff";c.fillRect(55,190,970,590);
+ const photo=productImageData||db.products.find(p=>p.id===$("pId").value)?.photo||"";
+ if(photo){const img=new Image();await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=reject;img.src=photo});const scale=Math.min(910/img.width,530/img.height),w=img.width*scale,h=img.height*scale;c.drawImage(img,(1080-w)/2,220+(530-h)/2,w,h)}
+ else{c.fillStyle="#e8eef5";c.font="bold 42px sans-serif";c.textAlign="center";c.fillText("ပစ္စည်းဓာတ်ပုံ မထည့်ရသေးပါ",540,500);c.textAlign="left"}
+ c.fillStyle="#fff";c.font="bold 48px sans-serif";c.fillText(name.slice(0,35),64,850);
+ c.fillStyle="#f4d477";c.font="bold 42px sans-serif";c.fillText(price?Number(price).toLocaleString()+" MMK":"ဈေးနှုန်းမေးရန်",64,920);
+ c.fillStyle="#fff";c.font="30px sans-serif";c.fillText("ဆက်သွယ်ရန်: "+(phone||"ဆိုင်သို့ ဆက်သွယ်မေးမြန်းပါ"),64,1000);
+ const blob=await new Promise(resolve=>canvas.toBlob(resolve,"image/png"));if(!blob)throw Error("ကြော်ငြာပုံဖန်တီးမရပါ");
+ const caption=shop+" မှ "+name+" ကို ရောင်းချနေပါသည်။"+(price?" ဈေးနှုန်း: "+price+" MMK.":"")+" ဆက်သွယ်ရန်: "+(phone||"ဆိုင်သို့ ဆက်သွယ်ပါ။");
+ return {blob,caption,name,price,photo};
+}
+async function akShareProductToViber(){
+ try{
+  const p=await akBuildProductPromo(),file=new File([p.blob],"AK-Product-"+Date.now()+".png",{type:"image/png"});
+  if(navigator.canShare?.({files:[file]})){await navigator.share({files:[file],title:p.name,text:p.caption});return}
+  const url=URL.createObjectURL(p.blob),a=document.createElement("a");a.href=url;a.download="AK-Product-Ad.png";a.click();setTimeout(()=>URL.revokeObjectURL(url),2000);
+  try{await navigator.clipboard.writeText(p.caption)}catch(_){}
+  alert("ကြော်ငြာပုံကို သိမ်းပြီး စာသားကို Copy လုပ်ထားပါပြီ။ Viber ဖွင့်ပြီး ကိုယ့် Channel ထဲတွင် ပုံနှင့်စာကို Post တင်ပါ။");
+ }catch(e){if(e.name!=="AbortError")alert("Viber ကြော်ငြာပြင်ဆင်မရပါ: "+e.message)}
+}
+async function akSendProductToMarket(){
+ try{
+  const p=await akBuildProductPromo();
+  const nav=document.querySelector('#nav [data-view="market"]');if(nav)nav.click();else{const market=document.getElementById("market");if(market){document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));market.classList.add("active")}}
+  $("mTitle").value=p.name;$("mPrice").value=Number(p.price)||"";
+  $("mCategory").value=$("pCat").value||"အထွေထွေ";$("mPhone").value=db.shop?.phone||$("shopPhone")?.value||"";
+  $("mDescription").value="ဆိုင်: "+(db.shop?.name||$("shopName")?.value||"မိမိဆိုင်")+" · "+$("pName").value;
+  if(p.photo){const res=await fetch(p.photo),blob=await res.blob();marketPhotoFile=new File([blob],"product-photo.png",{type:blob.type||"image/png"});$("mPreview").src=p.photo;$("mPreview").classList.remove("hidden")}
+  $("marketForm").querySelector('button[type="submit"]').textContent="Market ကြော်ငြာတင်မည်";
+  $("marketForm").scrollIntoView({behavior:"smooth",block:"start"});
+  $("marketStatus").textContent="ပစ္စည်းအချက်အလက်များ ဖြည့်ပြီးပါပြီ။ Login ဝင်ထားပါက Market သို့ တင်နိုင်သည်။";
+ }catch(e){alert("Market ကြော်ငြာပြင်ဆင်မရပါ: "+e.message)}
 }
 function resetProduct(){ $("productForm").reset();$("pId").value="";$("pUnit").value="ခု";$("pCost").value=0;$("pRetail").value=0;$("pWholesale").value=0;$("pStock").value=0;$("pMinStock").value=0;productImageData="";$("photoPreview").classList.add("hidden")}
 // Camera barcode scanner: uses the Android/Chrome camera sensor through BarcodeDetector when supported.

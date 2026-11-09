@@ -261,7 +261,7 @@ service cloud.firestore {
       allow read: if isVerifiedOwner()
         || resource.data.status == 'approved'
         || (request.auth != null && resource.data.ownerUid == request.auth.uid);
-      allow create: if request.resource.data.keys().hasOnly(['ownerUid','email','shopName','category','city','township','phone','title','imageUrl','imageData','text','status','createdAt','startsAt','endsAt'])
+      allow create: if request.resource.data.keys().hasOnly(['ownerUid','email','shopName','category','city','township','phone','title','imageUrl','imageData','text','url','status','createdAt','startsAt','endsAt'])
         && request.resource.data.ownerUid is string
         && request.resource.data.email is string
         && request.resource.data.shopName is string
@@ -287,6 +287,8 @@ service cloud.firestore {
         && request.resource.data.text is string
         && request.resource.data.text.size() >= 8
         && request.resource.data.text.size() <= 240
+        && request.resource.data.url is string
+        && request.resource.data.url.matches('https://[^ ]+')
         && request.resource.data.status == 'approved'
         && request.resource.data.createdAt == request.time
         && request.resource.data.startsAt is timestamp

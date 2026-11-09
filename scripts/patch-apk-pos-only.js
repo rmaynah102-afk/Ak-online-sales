@@ -15,8 +15,8 @@ function replaceExactly(oldText, newText, expected = 1) {
   html = html.replace(oldText, newText);
 }
 
-if (!/<html\s+lang="my">/i.test(html)) throw new Error('HTML root language tag not found.');
-html = html.replace(/<html\s+lang="my">/i, '<html lang="my" class="ak-apk-pos-only">');
+if (!html.includes('<html lang="my">')) throw new Error('HTML root language tag not found.');
+html = html.replace('<html lang="my">', '<html lang="my" class="ak-apk-pos-only">');
 replaceExactly('const publicViews=["backup","market"];', 'const publicViews=["backup"];');
 replaceExactly('if(new URLSearchParams(location.search).get("market")==="1")document.documentElement.classList.add("ak-public-market");','/* APK POS-only: public Market URL mode disabled. */');
 replaceExactly('id="market";', 'id="backup";');

@@ -224,11 +224,20 @@ service cloud.firestore {
     }
 
     match /sponsoredAds/{adId} {
-      allow read: if resource.data.status == 'approved'
+      // Public visitors see only approved ads. The verified platform owner can review pending ads.
+      allow read: if isVerifiedOwner()
+        || resource.data.status == 'approved'
         || (request.auth != null && resource.data.ownerUid == request.auth.uid);
-      allow create: if hasActiveLicense(request.auth.uid)
+      // Any verified marketplace advertiser can submit a pending ad; no shop POS license is required.
+      allow create: if isVerifiedMarketplaceUser()
+        && request.resource.data.keys().hasOnly(['ownerUid','email','shopName','title','url','text','status','createdAt'])
         && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.shopName is string
+        && request.resource.data.shopName.size() >= 2
+        && request.resource.data.shopName.size() <= 100
         && request.resource.data.status == 'pending'
+        && request.resource.data.createdAt == request.time
         && request.resource.data.title is string
         && request.resource.data.title.size() >= 3
         && request.resource.data.title.size() <= 80
@@ -237,7 +246,23 @@ service cloud.firestore {
         && request.resource.data.text.size() <= 240
         && request.resource.data.url is string
         && request.resource.data.url.matches('https?://[^ ]+');
-      allow update, delete: if false;
+      // Only the single verified platform owner can approve/reject; approval requires a recorded
+      // payment reference and a bounded, explicit display window.
+      allow update: if isVerifiedOwner()
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['status','paymentReference','reviewedAt','startsAt','endsAt'])
+        && request.resource.data.reviewedAt == request.time
+        && (request.resource.data.status == 'rejected'
+          || (request.resource.data.status == 'approved'
+            && request.resource.data.paymentReference is string
+            && request.resource.data.paymentReference.size() >= 3
+            && request.resource.data.paymentReference.size() <= 100
+            && request.resource.data.startsAt is timestamp
+            && request.resource.data.endsAt is timestamp
+            && request.resource.data.startsAt <= request.time
+            && request.resource.data.endsAt > request.time
+            && request.resource.data.endsAt <= request.time + duration.value(31, 'd')));
+      allow delete: if false;
     }
 
     match /paymentRequests/{requestId} {

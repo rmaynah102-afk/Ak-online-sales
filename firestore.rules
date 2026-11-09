@@ -156,6 +156,51 @@ service cloud.firestore {
       allow delete: if hasActiveLicense(request.auth.uid) && resource.data.ownerUid == request.auth.uid;
     }
 
+    // Public marketplace likes: authenticated users may create/remove only their own like.
+    match /marketListings/{listingId}/likes/{userId} {
+      allow read: if true;
+      allow create: if request.auth != null
+        && request.auth.uid == userId
+        && exists(/databases/$(database)/documents/marketListings/$(listingId))
+        && get(/databases/$(database)/documents/marketListings/$(listingId)).data.status == 'published'
+        && request.resource.data.keys().hasOnly(['uid','createdAt'])
+        && request.resource.data.uid == userId;
+      allow delete: if request.auth != null && request.auth.uid == userId;
+      allow update: if false;
+    }
+
+    // Buyers submit orders; buyer and seller can read their own order.
+    match /marketOrders/{orderId} {
+      allow create: if request.auth != null
+        && request.resource.data.buyerUid == request.auth.uid
+        && request.resource.data.sellerUid is string
+        && request.resource.data.sellerUid != request.auth.uid
+        && request.resource.data.listingId is string
+        && exists(/databases/$(database)/documents/marketListings/$(request.resource.data.listingId))
+        && get(/databases/$(database)/documents/marketListings/$(request.resource.data.listingId)).data.ownerUid == request.resource.data.sellerUid
+        && get(/databases/$(database)/documents/marketListings/$(request.resource.data.listingId)).data.status == 'published'
+        && request.resource.data.title is string
+        && request.resource.data.title.size() <= 90
+        && request.resource.data.price is number
+        && request.resource.data.price > 0
+        && request.resource.data.qty is int
+        && request.resource.data.qty >= 1
+        && request.resource.data.qty <= 9999
+        && request.resource.data.total == request.resource.data.price * request.resource.data.qty
+        && request.resource.data.buyerName is string
+        && request.resource.data.buyerName.size() >= 2
+        && request.resource.data.buyerPhone is string
+        && request.resource.data.buyerPhone.size() >= 7
+        && request.resource.data.status == 'new';
+      allow read: if request.auth != null
+        && (resource.data.buyerUid == request.auth.uid || resource.data.sellerUid == request.auth.uid);
+      allow update: if request.auth != null
+        && resource.data.sellerUid == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','sellerNote','updatedAt'])
+        && request.resource.data.status in ['accepted','rejected','completed'];
+      allow delete: if false;
+    }
+
     match /publicShopSubmissions/{ownerUid} {
       allow read: if request.auth != null && request.auth.uid == ownerUid;
       allow create, update: if hasActiveLicense(ownerUid)

@@ -68,6 +68,19 @@ buttons.forEach(b=>b.addEventListener("click",()=>setView(b.dataset.view)));
 frame.addEventListener("error",()=>document.getElementById("fallback").style.display="block");
 const requested=new URLSearchParams(location.search).get("view");
 if(requested&&pages[requested])setView(requested,false);
-if("serviceWorker" in navigator && location.protocol!=="file:"){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}))}
+// AK Commerce public website is online-only: remove any older offline PWA worker/cache
+// so visitors always receive the current live website and cloud-backed marketplace.
+if("serviceWorker" in navigator){
+ window.addEventListener("load",async()=>{
+  try{
+   const registrations=await navigator.serviceWorker.getRegistrations();
+   await Promise.all(registrations.map(reg=>reg.unregister()));
+   if("caches" in window){
+    const keys=await caches.keys();
+    await Promise.all(keys.map(key=>caches.delete(key)));
+   }
+  }catch(e){console.warn("Online-only cleanup:",e)}
+ });
+}
 </script>
 </body></html>

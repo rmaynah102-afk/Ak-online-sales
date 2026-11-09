@@ -1344,12 +1344,12 @@ $("marketForm").addEventListener("submit",async e=>{
    }else{
     const raw=await new Promise((resolve,reject)=>{const fr=new FileReader();fr.onload=()=>resolve(fr.result);fr.onerror=()=>reject(Error("ပုံဖတ်မရပါ။"));fr.readAsDataURL(marketPhotoFile);});
     const pic=await new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(Error("ပုံဖွင့်မရပါ။"));im.src=raw;});
-    const cv=document.createElement("canvas"),scale=Math.min(1,850/Math.max(pic.width,pic.height));
+    const cv=document.createElement("canvas"),scale=Math.min(1,720/Math.max(pic.width,pic.height));
     cv.width=Math.max(1,Math.round(pic.width*scale));cv.height=Math.max(1,Math.round(pic.height*scale));
     cv.getContext("2d").drawImage(pic,0,0,cv.width,cv.height);
-    let q=.68;imageUrl=cv.toDataURL("image/jpeg",q);
-    while(imageUrl.length>420000&&q>.32){q-=.06;imageUrl=cv.toDataURL("image/jpeg",q);}
-    if(imageUrl.length>420000)throw Error("ပုံဖိုင်ကြီးနေသေးသည်။ ပိုသေးသောပုံရွေးပါ။");
+    let q=.62;imageUrl=cv.toDataURL("image/jpeg",q);
+    while(imageUrl.length>180000&&q>.30){q-=.05;imageUrl=cv.toDataURL("image/jpeg",q);}
+    if(imageUrl.length>180000)throw Error("ပုံဖိုင်ကြီးနေသေးသည်။ ပိုသေးသောပုံရွေးပါ။");
    }
   }
   const payload={title,price,currency:"MMK",category:$("mCategory").value,city,township,address,phone,description,imageUrl,ownerUid:uid,status:"published",shopName};

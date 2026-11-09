@@ -16,7 +16,7 @@ function replaceExactly(oldText, newText, expected = 1) {
   html = html.replace(oldText, newText);
 }
 
-replaceExactly('<html lang="my">', '<html lang="my" class="ak-apk-pos-only">');
+if (!/<html\\s+lang="my">/i.test(html)) throw new Error('HTML root language tag not found.');\nhtml = html.replace(/<html\\s+lang="my">/i, '<html lang="my" class="ak-apk-pos-only">');
 replaceExactly('const publicViews=["backup","market"];', 'const publicViews=["backup"];');
 replaceExactly('id="market";', 'id="backup";');
 replaceExactly(

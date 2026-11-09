@@ -229,10 +229,7 @@ service cloud.firestore {
         || resource.data.status == 'approved'
         || (request.auth != null && resource.data.ownerUid == request.auth.uid);
       // Any verified marketplace advertiser can submit a pending ad; no shop POS license is required.
-      allow create: if isVerifiedMarketplaceUser()
-        && request.resource.data.keys().hasOnly(['ownerUid','email','shopName','title','url','text','status','createdAt'])
-        && request.resource.data.ownerUid == request.auth.uid
-        && request.resource.data.email == request.auth.token.email
+      allow create: if request.resource.data.keys().hasOnly(['ownerUid','email','shopName','title','url','text','status','createdAt'])
         && request.resource.data.shopName is string
         && request.resource.data.shopName.size() >= 2
         && request.resource.data.shopName.size() <= 100
@@ -245,7 +242,13 @@ service cloud.firestore {
         && request.resource.data.text.size() >= 8
         && request.resource.data.text.size() <= 240
         && request.resource.data.url is string
-        && request.resource.data.url.matches('https?://[^ ]+');
+        && request.resource.data.url.matches('https?://[^ ]+')
+        && ((request.auth == null
+              && request.resource.data.ownerUid == 'public'
+              && request.resource.data.email == '')
+          || (isVerifiedMarketplaceUser()
+              && request.resource.data.ownerUid == request.auth.uid
+              && request.resource.data.email == request.auth.token.email));
       // Only the single verified platform owner can approve/reject; approval requires a recorded
       // payment reference and a bounded, explicit display window.
       allow update: if isVerifiedOwner()

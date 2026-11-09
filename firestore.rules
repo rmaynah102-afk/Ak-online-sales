@@ -275,8 +275,8 @@ service cloud.firestore {
         && request.resource.data.township.size() >= 2
         && request.resource.data.township.size() <= 80
         && request.resource.data.phone is string
-        && request.resource.data.phone.size() >= 9
         && request.resource.data.phone.size() <= 32
+        && (request.resource.data.ownerUid != 'public' || request.resource.data.phone.size() >= 9)
         && request.resource.data.title is string
         && request.resource.data.title.size() >= 3
         && request.resource.data.title.size() <= 80

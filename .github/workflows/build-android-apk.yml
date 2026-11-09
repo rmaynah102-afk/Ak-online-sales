@@ -80,6 +80,9 @@ jobs:
             ['Market product action removed', 'onclick="akSendProductToMarket()"'],
             ['Market deep-link disabled', 'public Market URL mode disabled'],
             ['Subscription payment UI', 'id="akSubscriptionPayment"'],
+            ['Explicit package selection', 'Package ရွေးပြီးမှ Google ချိတ်နိုင်သည်'],
+            ['Google Gmail onboarding', 'id="akOnboardingGoogleButton"'],
+            ['Owner approval re-login action', 'function akReLoginAfterApproval()'],
             ['Owner payment review UI', 'id="akOwnerPaymentReview"'],
             ['Email login handler', 'async function firebaseLogin()'],
             ['Email registration handler', 'async function firebaseRegister()'],
@@ -99,6 +102,12 @@ jobs:
           if (scriptCount < 5) throw new Error('Generated APK bundle is missing expected application scripts');
           if (!html.includes('AK_APK_SUBSCRIPTION_UI_V2') || !html.includes('AK_APK_CLOUD_STARTUP_GUARD_V1')) {
             throw new Error('Generated APK patch markers are missing');
+          }
+          if (!/id="payPlan"[\\s\\S]*?<option value="" selected disabled>Package ရွေးပါ<\\/option>/.test(html)) {
+            throw new Error('APK must require an explicit package choice before Google sign-in');
+          }
+          if (!html.includes('Owner အတည်ပြုပြီးပြီ · Login ပြန်ဝင်မည်')) {
+            throw new Error('APK is missing post-approval re-login flow');
           }
           console.log('Generated APK POS bundle validated:', scriptCount, 'script tags; Market isolated; login, payment and printer UI present.');
           NODE

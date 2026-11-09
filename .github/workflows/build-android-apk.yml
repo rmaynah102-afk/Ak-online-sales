@@ -65,6 +65,8 @@ jobs:
         run: node scripts/patch-apk-cloud-startup.js
       - name: Apply APK-only subscription and payment UI (does not modify website source)
         run: node scripts/patch-apk-subscription-ui.js
+      - name: Apply APK-only POS isolation (Marketplace stays in website only)
+        run: node scripts/patch-apk-pos-only.js
       - name: Validate Firebase Functions
         run: |
           npm --prefix functions install --package-lock=false

@@ -125,7 +125,7 @@ input,select,textarea{width:100%;padding:11px;border:1px solid #cbd8e8;border-ra
 <script>
 const $=id=>document.getElementById(id);
 const fmt=n=>Number(n).toLocaleString(undefined,{maximumFractionDigits:4});
-let db=null,auth=null,currentUser=null,fxRates={};
+let db=null,auth=null,currentUser=null,fxRates={},adSubmitting=false;
 async function loadFx(){
  try{const from=$("from").value,to=$("to").value;const r=await fetch("https://api.frankfurter.dev/v2/rates?base="+encodeURIComponent(from)+"&quotes="+encodeURIComponent(to));if(!r.ok)throw Error("Rate service returned "+r.status);const data=await r.json();if(!Array.isArray(data)||!data.length)throw Error("No reference rate available for this pair");fxRates[to]=data[0];renderFx()}catch(e){$("fxResult").textContent="Rate unavailable";$("fxDate").textContent=e.message+" · MMK and some currencies may not be covered by this source."}
 }
@@ -219,12 +219,18 @@ $("leadForm").onsubmit=async e=>{
 document.querySelectorAll(".choose-ad").forEach(b=>b.onclick=()=>{$("adPlan").value=b.dataset.plan;$("adForm").scrollIntoView({behavior:"smooth"})});
 $("adForm").onsubmit=async e=>{
  e.preventDefault();
+ if(adSubmitting)return;
  if(!currentUser||!currentUser.emailVerified)return $("adStatus").textContent="Verified email sign-in is required.";
+ const submitBtn=$("adForm").querySelector('button[type="submit"]');
  const plan=$("adPlan").value,prices={starter:5,growth:15,business:30};
+ adSubmitting=true;
+ if(submitBtn){submitBtn.disabled=true;submitBtn.dataset.originalText=submitBtn.textContent;submitBtn.textContent="Submitting…";}
+ $("adStatus").textContent="Submitting one request. Please wait…";
  try{
   await db.collection("globalAdApplications").add({ownerUid:currentUser.uid,email:currentUser.email,business:$("adBusiness").value.trim(),title:$("adTitle").value.trim(),url:$("adUrl").value.trim(),targetMarket:$("adMarket").value.trim(),contactEmail:$("adEmail").value.trim(),plan,amountUSD:prices[plan],currency:"USD",status:"pending_payment",createdAt:firebase.firestore.FieldValue.serverTimestamp()});
-  $("adForm").reset();$("adStatus").textContent="Request received. The AK owner must confirm payment and approve the campaign before it appears publicly.";
+  $("adForm").reset();$("adStatus").textContent="One request received. The AK owner must confirm payment and approve the campaign before it appears publicly.";
  }catch(e){$("adStatus").textContent="Could not submit: "+e.message}
+ finally{adSubmitting=false;if(submitBtn){submitBtn.disabled=false;submitBtn.textContent=submitBtn.dataset.originalText||"Submit ad request";}}
 };
 $("from").onchange=loadFx;$("to").onchange=loadFx;$("amount").oninput=renderFx;$("convertBtn").onclick=loadFx;$("country").onchange=loadMacro;$("refreshMacro").onclick=loadMacro;$("tradeDataBtn").onclick=loadTrade;
 const year=new Date().getFullYear();

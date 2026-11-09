@@ -1318,8 +1318,9 @@ $("marketForm").addEventListener("submit",async e=>{
   if(!fbStore){await firebaseConnect();}
   if(!fbStore)throw Error("Marketplace Cloud မချိတ်နိုင်ပါ။ Internet နှင့် Firebase Web Config ကို စစ်ပါ။");
   const user=fbAuth?.currentUser||null;
-  if(user&&!user.emailVerified)throw Error("ဒီ Gmail အကောင့်ကို Email အတည်မပြုရသေးပါ။ အကောင့်မှထွက်ပြီး Login မလိုသော Public ကြော်ငြာအဖြစ် ပြန်တင်ပါ၊ သို့မဟုတ် Gmail ကို Verify လုပ်ပါ။");
-  const uid=user?.uid||"public";
+  const verifiedUser=!!(user&&user.emailVerified);
+  // Verified users own/edit their posts; unverified or signed-out visitors post as public guest.
+  const uid=verifiedUser?user.uid:"public";
   const title=$("mTitle").value.trim(),price=Number($("mPrice").value),phone=$("mPhone").value.trim();
   const description=$("mDescription").value.trim(),shopName=$("mShopName").value.trim();
   const city=$("mCity").value.trim(),township=$("mTownship").value.trim(),address=$("mAddress").value.trim();
@@ -1328,14 +1329,14 @@ $("marketForm").addEventListener("submit",async e=>{
   if(phone.replace(/[^0-9]/g,"").length<7)throw Error("ဖုန်း/Viber နံပါတ် အနည်းဆုံး ၇ လုံး ထည့်ပါ။");
   if(shopName.length<2||city.length<2||township.length<2)throw Error("ဆိုင်အမည်၊ မြို့နှင့် မြို့နယ် ဖြည့်ပါ။");
   if(description.length>700||address.length>180)throw Error("လိပ်စာ သို့မဟုတ် အကြောင်းအရာ အရှည်လွန်နေသည်။");
-  if(marketEditId&&!user)throw Error("မိမိကြော်ငြာကို ပြင်ရန် မူလ Gmail Login ဝင်ပါ။");
+  if(marketEditId&&!verifiedUser)throw Error("မိမိကြော်ငြာကို ပြင်ရန် မူလ Verify လုပ်ထားသော Gmail ဖြင့် Login ဝင်ပါ။");
   const ref=marketEditId?fbStore.collection("marketListings").doc(marketEditId):fbStore.collection("marketListings").doc();
   let existing=null;
   if(marketEditId){const snap=await ref.get();if(!snap.exists||snap.data().ownerUid!==uid)throw Error("ဤကြော်ငြာကို ပြင်ခွင့်မရှိပါ။");existing=snap.data();}
-  let imageUrl=existing?.imageUrl||"",imagePath=user?"market/"+uid+"/"+ref.id+"/photo":"";
+  let imageUrl=existing?.imageUrl||"",imagePath=verifiedUser?"market/"+uid+"/"+ref.id+"/photo":"";
   if(marketPhotoFile){
    if(!/^image\/(jpeg|png|webp)$/.test(marketPhotoFile.type)||marketPhotoFile.size>2*1024*1024)throw Error("JPG/PNG/WebP ပုံ 2MB အောက်သာ ရွေးပါ။");
-   if(user){
+   if(verifiedUser){
     imagePath="market/"+uid+"/"+ref.id+"/photo";uploadedPath=imagePath;
     const upload=await firebase.storage().ref(imagePath).put(marketPhotoFile,{contentType:marketPhotoFile.type,cacheControl:"public,max-age=3600"});
     imageUrl=await upload.ref.getDownloadURL();
@@ -1352,7 +1353,7 @@ $("marketForm").addEventListener("submit",async e=>{
   }
   const payload={title,price,currency:"MMK",category:$("mCategory").value,city,township,address,phone,description,imageUrl,ownerUid:uid,status:"published",shopName};
   if(marketEditId)await ref.update({...payload,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
-  else if(user)await ref.set({...payload,imagePath,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+  else if(verifiedUser)await ref.set({...payload,imagePath,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
   else await ref.set({...payload,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
   marketPhotoFile=null;marketEditId=null;form.reset();
   $("mPreview").src="";$("mPreview").classList.add("hidden");

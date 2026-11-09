@@ -1,4 +1,17 @@
 name: Deploy AK Commerce to Firebase
+on:
+  workflow_dispatch:
+    inputs:
+      deploy_storage_rules:
+        description: "Deploy Storage Rules (requires Firebase Storage bucket setup)"
+        required: true
+        type: boolean
+        default: false
+      deploy_cloud_functions:
+        description: "Deploy Cloud Functions (may require Blaze billing; enable only after owner approval)"
+        required: true
+        type: boolean
+        default: false
 concurrency:
   group: ak-commerce-production-deploy
   cancel-in-progress: false
@@ -40,5 +53,13 @@ jobs:
           node-version: 20
       - name: Install Firebase CLI
         run: npm install --global firebase-tools
-      - name: Deploy hosting, Firestore rules, Storage rules and Cloud Functions
-        run: firebase deploy --only hosting,firestore:rules,firestore:indexes,storage,functions --project ak-onlin-sales --non-interactive
+      - name: Deploy hosting and Firestore rules/indexes
+        run: firebase deploy --only hosting,firestore:rules,firestore:indexes --project ak-onlin-sales --non-interactive
+
+      - name: Deploy Storage Rules (manual opt-in only)
+        if: github.event_name == 'workflow_dispatch' && inputs.deploy_storage_rules
+        run: firebase deploy --only storage --project ak-onlin-sales --non-interactive
+
+      - name: Deploy Cloud Functions (manual opt-in only)
+        if: github.event_name == 'workflow_dispatch' && inputs.deploy_cloud_functions
+        run: firebase deploy --only functions --project ak-onlin-sales --non-interactive

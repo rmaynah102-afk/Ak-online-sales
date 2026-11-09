@@ -123,6 +123,27 @@ service cloud.firestore {
       allow read, write: if hasActiveLicense(userId);
     }
 
+    match /marketReports/{reportId} {
+      allow read: if isVerifiedOwner();
+      allow create: if request.resource.data.keys().hasOnly(['listingId','listingTitle','reason','details','createdAt','status'])
+        && request.resource.data.listingId is string
+        && request.resource.data.listingId.size() >= 1
+        && exists(/databases/$(database)/documents/marketListings/$(request.resource.data.listingId))
+        && get(/databases/$(database)/documents/marketListings/$(request.resource.data.listingId)).data.status == 'published'
+        && request.resource.data.listingTitle is string
+        && request.resource.data.listingTitle.size() <= 90
+        && request.resource.data.reason in ['လိမ်လည်မှု / ငွေကြေးလိမ်လည်မှု','မမှန်ကန်သော ဈေးနှုန်း / အချက်အလက်','မသင့်လျော်သော ပုံ / စာသား','Spam / ထပ်တလဲလဲကြော်ငြာ','အခြား']
+        && request.resource.data.details is string
+        && request.resource.data.details.size() <= 300
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.status == 'new';
+      allow update: if isVerifiedOwner()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','reviewedAt'])
+        && request.resource.data.status in ['reviewed','resolved','dismissed']
+        && request.resource.data.reviewedAt == request.time;
+      allow delete: if isVerifiedOwner();
+    }
+
     match /marketListings/{listingId} {
       allow read: if resource.data.status == 'published'
         || (request.auth != null && resource.data.ownerUid == request.auth.uid);

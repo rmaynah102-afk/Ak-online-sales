@@ -50,7 +50,7 @@ const clientCallables = new Set(
   [...html.matchAll(/httpsCallable\(\s*['"]([A-Za-z0-9_]+)['"]\s*\)/g)].map(match => match[1])
 );
 const serverCallables = new Set(
-  [...functionsSource.matchAll(/exports\.([A-Za-z0-9_]+)\s*=\s*functions(?:\.runWith\([\\s\\S]*?\\))?\.https\.onCall\s*\\(/g)].map(match => match[1])
+  [...functionsSource.matchAll(/exports\.([A-Za-z0-9_]+)\s*=\s*functions(?:\.runWith\([\s\S]*?\))?\.https\.onCall\s*\(/g)].map(match => match[1])
 );
 
 const missing = [...clientCallables].filter(name => !serverCallables.has(name));
@@ -66,7 +66,7 @@ if (!privateRule || !/allow read, write: if hasActiveLicense\(userId\)/.test(pri
   console.error('Private shop data must remain protected by the owner UID/license rule.');
   process.exitCode = 1;
 }
-const marketRule = rules.match(/match \/marketListings\/\{listingId\} \{([\\s\\S]*?)\\n\\s*\}/);
+const marketRule = rules.match(/match \/marketListings\/\{listingId\} \{([\s\S]*?)\n\s*\}/);
 if (!marketRule ||
     !/allow create: if/.test(marketRule[1]) ||
     !/isVerifiedMarketplaceUser\(\)/.test(marketRule[1]) ||
@@ -76,7 +76,7 @@ if (!marketRule ||
   console.error('Marketplace listing writes must require verified identity and enforce owner-only update/delete.');
   process.exitCode = 1;
 }
-const shopSubmissionRule = rules.match(/match \/publicShopSubmissions\/\{ownerUid\} \{([\\s\\S]*?)\\n\\s*\}/);
+const shopSubmissionRule = rules.match(/match \/publicShopSubmissions\/\{ownerUid\} \{([\s\S]*?)\n\s*\}/);
 if (!shopSubmissionRule ||
     !/allow create, update: if isVerifiedMarketplaceUser\(\)/.test(shopSubmissionRule[1]) ||
     !/request\.auth\.uid == ownerUid/.test(shopSubmissionRule[1]) ||

@@ -600,6 +600,7 @@ input,select,textarea,button{max-width:100%;box-sizing:border-box}
 <label>ပစ္စည်းအကြောင်းအရာ</label><textarea id="mDescription" maxlength="700" placeholder="အခြေအနေ၊ အရည်အသွေး၊ ပို့ဆောင်မှု စသည်"></textarea>
 <img id="mPreview" class="preview hidden" alt="ပစ္စည်းပုံနမူနာ" style="width:min(100%,360px);margin-top:8px">
 <div class="actions"><button type="submit">AK Market သို့ အခမဲ့တင်မည်</button><button type="button" class="alt" onclick="resetMarketForm()">ရှင်းမည်</button></div>
+<p id="marketDailyQuota" class="notice" style="margin:10px 0">ယနေ့ ကြော်ငြာတင်ခွင့် ၂၀ ခု · ဒီဖုန်း / Browser အလိုက်တွက်ချက်မည်။</p>
 <p id="marketStatus" class="muted">Public ပို့စ်များကို အောက်တွင်ကြည့်နိုင်သည်။</p>
 </form></div>
 <div class="panel"><div class="split"><div><h2>မြန်မာ့ Online Shopping Center · ဆိုင်အားလုံး</h2><p class="muted">AK Sale Software အသုံးပြုသော ဆိုင်များ၏ အများပြည်သူမြင်နိုင်သည့် ဆိုင်စာမျက်နှာများကို တစ်နေရာတည်းတွင် စုစည်းပြသမည်။</p></div></div><div class="grid"><div><label>ဆိုင်ရှာရန်</label><input id="akShopSearch" placeholder="ဆိုင်အမည်၊ မြို့၊ မြို့နယ်..." oninput="renderPublicShops()"></div><div><label>အမျိုးအစား</label><select id="akShopCategory" onchange="renderPublicShops()"><option value="">လုပ်ငန်းအမျိုးအစားအားလုံး</option><option>အထွေထွေ</option><option>ကုန်မာ</option><option>လျှပ်စစ်ပစ္စည်း</option><option>စားသောက်ကုန် / Grocery</option><option>စားသောက်ဆိုင် / Cafe</option><option>အဝတ်အထည် / Fashion</option><option>အလှကုန် / Beauty</option><option>ဆေးဆိုင် / Pharmacy</option><option>ဖုန်းနှင့် အီလက်ထရွန်းနစ်</option><option>စာရေးကိရိယာ / Stationery</option><option>စိုက်ပျိုးရေး / မွေးမြူရေး</option><option>ယာဉ်နှင့် အပိုပစ္စည်း</option><option>ဆောက်လုပ်ရေး</option><option>ဝန်ဆောင်မှုလုပ်ငန်း</option><option>အခြား</option></select></div></div><p id="akShopCount" class="muted">ဆိုင်စာရင်း ဖတ်နေသည်...</p><div id="akPublicShops" class="grid"><p class="muted">အတည်ပြုထားသော ဆိုင်စာမျက်နှာများ ပေါ်လာမည်။</p></div></div>
@@ -1306,6 +1307,25 @@ async function deleteMyMarketListing(id){
   await Promise.all([loadMyMarketListings(),loadMarket()]);
  }catch(e){alert("ကြော်ငြာဖျက်မရပါ: "+e.message)}
 }
+const AK_MARKET_DAILY_KEY="ak_market_daily_posts_v1";
+function akMarketTodayKey(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function akMarketQuotaState(){
+ const today=akMarketTodayKey();
+ try{const saved=JSON.parse(localStorage.getItem(AK_MARKET_DAILY_KEY)||"null");if(!saved||saved.day!==today)return {day:today,count:0,available:true};return {day:today,count:Math.max(0,Math.min(20,Number(saved.count)||0)),available:true}}
+ catch(e){return {day:today,count:0,available:false}}
+}
+function akRenderMarketQuota(){
+ const el=$("marketDailyQuota");if(!el)return;
+ const q=akMarketQuotaState();
+ el.textContent=q.available?("ယနေ့ ကြော်ငြာတင်ပြီး "+q.count+"/20 ခု · ကျန် "+Math.max(0,20-q.count)+" ခု · ဒီဖုန်း / Browser အလိုက်တွက်ချက်သည်။"):"Browser storage ပိတ်ထားသောကြောင့် နေ့စဉ်ကန့်သတ်မှု မလုပ်နိုင်ပါ။ Browser storage ကို ဖွင့်ပါ။";
+}
+function akRecordMarketPost(){
+ const q=akMarketQuotaState();if(!q.available)throw Error("နေ့စဉ်ကန့်သတ်မှုအတွက် Browser storage ဖွင့်ထားရန်လိုအပ်သည်။");
+ if(q.count>=20)throw Error("ဒီဖုန်း / Browser မှ ယနေ့ ကြော်ငြာ ၂၀ ခု ပြည့်ပါပြီ။ မနက်ဖြန်မှ ထပ်တင်နိုင်ပါမည်။");
+ localStorage.setItem(AK_MARKET_DAILY_KEY,JSON.stringify({day:q.day,count:q.count+1}));
+ akRenderMarketQuota();
+}
+akRenderMarketQuota();
 $("marketForm").addEventListener("submit",async e=>{
  e.preventDefault();
  const status=$("marketStatus"),form=e.currentTarget,button=form.querySelector('button[type="submit"]');
@@ -1331,6 +1351,8 @@ $("marketForm").addEventListener("submit",async e=>{
   if(shopName.length<2||city.length<2||township.length<2)throw Error("ဆိုင်အမည်၊ မြို့နှင့် မြို့နယ် ဖြည့်ပါ။");
   if(description.length>700||address.length>180)throw Error("လိပ်စာ သို့မဟုတ် အကြောင်းအရာ အရှည်လွန်နေသည်။");
   if(marketEditId&&!verifiedUser)throw Error("မိမိကြော်ငြာကို ပြင်ရန် မူလ Verify လုပ်ထားသော Gmail ဖြင့် Login ဝင်ပါ။");
+  const isNewMarketPost=!marketEditId;
+  if(isNewMarketPost){const quota=akMarketQuotaState();if(!quota.available)throw Error("နေ့စဉ်ကန့်သတ်မှုအတွက် Browser storage ဖွင့်ထားရန်လိုအပ်သည်။");if(quota.count>=20)throw Error("ဒီဖုန်း / Browser မှ ယနေ့ ကြော်ငြာ ၂၀ ခု ပြည့်ပါပြီ။ မနက်ဖြန်မှ ထပ်တင်နိုင်ပါမည်။");}
   const ref=marketEditId?fbStore.collection("marketListings").doc(marketEditId):fbStore.collection("marketListings").doc();
   let existing=null;
   if(marketEditId){const snap=await ref.get();if(!snap.exists||snap.data().ownerUid!==uid)throw Error("ဤကြော်ငြာကို ပြင်ခွင့်မရှိပါ။");existing=snap.data();}
@@ -1356,9 +1378,11 @@ $("marketForm").addEventListener("submit",async e=>{
   if(marketEditId)await ref.update({...payload,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
   else if(verifiedUser)await ref.set({...payload,imagePath,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
   else await ref.set({...payload,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+  if(isNewMarketPost)akRecordMarketPost();
   marketPhotoFile=null;marketEditId=null;form.reset();
   $("mPreview").src="";$("mPreview").classList.add("hidden");
   if(status)status.textContent="အောင်မြင်ပါပြီ။ သင့်ကြော်ငြာကို အများပြည်သူမြင်နိုင်သော ကြော်ငြာစာရင်းထဲ တင်ပြီးပါပြီ။";
+  akRenderMarketQuota();
   await loadMarket(true);
   const feed=document.getElementById("marketFeed");if(feed)feed.scrollIntoView({behavior:"smooth",block:"start"});
  }catch(err){

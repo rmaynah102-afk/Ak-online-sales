@@ -229,26 +229,198 @@ service cloud.firestore {
         || resource.data.status == 'approved'
         || (request.auth != null && resource.data.ownerUid == request.auth.uid);
       // Any verified marketplace advertiser can submit a pending ad; no shop POS license is required.
-      allow create: if request.resource.data.keys().hasOnly(['ownerUid','email','shopName','title','url','text','status','createdAt'])
+      allow create: if request.resource.data.keys().hasOnly(['ownerUid','email','shopName','category','city','township','phone','title','imageUrl','text','status','createdAt','startsAt','endsAt'])
+        && request.resource.data.ownerUid == 'public'
+        && request.resource.data.email == ''
         && request.resource.data.shopName is string
         && request.resource.data.shopName.size() >= 2
         && request.resource.data.shopName.size() <= 100
-        && request.resource.data.status == 'pending'
-        && request.resource.data.createdAt == request.time
+        && request.resource.data.category is string
+        && request.resource.data.category.size() >= 2
+        && request.resource.data.category.size() <= 100
+        && request.resource.data.city in ['မန္တလေးတိုင်း','ရန်ကုန်တိုင်း']
+        && request.resource.data.township is string
+        && request.resource.data.township.size() >= 2
+        && request.resource.data.township.size() <= 80
+        && request.resource.data.phone is string
+        && request.resource.data.phone.matches('^[0-9+() -]{7,32}
+      // Only the single verified platform owner can approve/reject; approval requires a recorded
+      // payment reference and a bounded, explicit display window.
+      allow update: if isVerifiedOwner()
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['status','paymentReference','reviewedAt','startsAt','endsAt'])
+        && request.resource.data.reviewedAt == request.time
+        && (request.resource.data.status == 'rejected'
+          || (request.resource.data.status == 'approved'
+            && request.resource.data.paymentReference is string
+            && (request.resource.data.paymentReference == 'FREE_BETA'
+              || (request.resource.data.paymentReference.size() >= 3
+                && request.resource.data.paymentReference.size() <= 100))
+            && request.resource.data.startsAt is timestamp
+            && request.resource.data.endsAt is timestamp
+            && request.resource.data.startsAt <= request.time
+            && request.resource.data.endsAt > request.time
+            && request.resource.data.endsAt <= request.time + duration.value(31, 'd')));
+      allow delete: if false;
+    }
+
+    match /paymentRequests/{requestId} {
+      // Payment submissions and reference reservations are created only by the
+      // trusted callable, which validates package amounts and prevents reuse.
+      allow read: if request.auth != null && resource.data.uid == request.auth.uid;
+      allow create, update, delete: if false;
+    }
+    match /paymentReferences/{referenceHash} {
+      allow read, write: if false;
+    }
+
+    // AK Community commerce-first public posts. Users cannot alter another user's posts.
+    match /globalCommunityPosts/{postId} {
+      allow read: if resource.data.status == 'published'
+        || (request.auth != null && resource.data.ownerUid == request.auth.uid);
+      allow create: if request.auth != null
+        && request.auth.token.email_verified == true
+        && request.resource.data.keys().hasOnly(['ownerUid','displayName','kind','body','country','product','price','currency','link','status','createdAt'])
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.displayName is string
+        && request.resource.data.displayName.size() <= 100
+        && request.resource.data.kind in ['business','product','question','supplier','knowledge']
+        && request.resource.data.body is string
+        && request.resource.data.body.size() >= 1
+        && request.resource.data.body.size() <= 1800
+        && request.resource.data.country is string
+        && request.resource.data.country.size() <= 80
+        && request.resource.data.product is string
+        && request.resource.data.product.size() <= 100
+        && (request.resource.data.price == null || (request.resource.data.price is number && request.resource.data.price >= 0))
+        && request.resource.data.currency in ['USD','MMK','CNY','THB','SGD','EUR']
+        && request.resource.data.link is string
+        && request.resource.data.link.size() <= 400
+        && (request.resource.data.link == '' || request.resource.data.link.matches('https://[^ ]+'))
+        && request.resource.data.status == 'published'
+        && request.resource.data.createdAt == request.time;
+      allow delete: if request.auth != null && resource.data.ownerUid == request.auth.uid;
+      allow update: if false;
+
+      match /likes/{userId} {
+        allow read: if true;
+        allow create: if request.auth != null
+          && request.auth.token.email_verified == true
+          && request.auth.uid == userId
+          && exists(/databases/$(database)/documents/globalCommunityPosts/$(postId))
+          && get(/databases/$(database)/documents/globalCommunityPosts/$(postId)).data.status == 'published'
+          && request.resource.data.keys().hasOnly(['uid','createdAt'])
+          && request.resource.data.uid == userId
+          && request.resource.data.createdAt == request.time;
+        allow delete: if request.auth != null && request.auth.uid == userId;
+        allow update: if false;
+      }
+      match /comments/{commentId} {
+        allow read: if true;
+        allow create: if request.auth != null
+          && request.auth.token.email_verified == true
+          && exists(/databases/$(database)/documents/globalCommunityPosts/$(postId))
+          && get(/databases/$(database)/documents/globalCommunityPosts/$(postId)).data.status == 'published'
+          && request.resource.data.keys().hasOnly(['uid','displayName','body','createdAt'])
+          && request.resource.data.uid == request.auth.uid
+          && request.resource.data.displayName is string
+          && request.resource.data.displayName.size() <= 160
+          && request.resource.data.body is string
+          && request.resource.data.body.size() >= 1
+          && request.resource.data.body.size() <= 500
+          && request.resource.data.createdAt == request.time;
+        allow update, delete: if false;
+      }
+    }
+
+    // AK Global: verified business enquiries. Private to the submitter and platform owner.
+    match /globalTradeLeads/{leadId} {
+      allow create: if request.auth != null
+        && request.auth.token.email_verified == true
+        && request.resource.data.keys().hasOnly(['ownerUid','email','name','country','type','message','status','createdAt'])
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 2
+        && request.resource.data.name.size() <= 100
+        && request.resource.data.country is string
+        && request.resource.data.country.size() >= 2
+        && request.resource.data.country.size() <= 80
+        && request.resource.data.type in ['Find supplier','Find buyer','Import / export quotation','Logistics / shipping','Other business partnership']
+        && request.resource.data.message is string
+        && request.resource.data.message.size() >= 3
+        && request.resource.data.message.size() <= 1800
+        && request.resource.data.status == 'new'
+        && request.resource.data.createdAt == request.time;
+      allow read: if isVerifiedOwner()
+        || (request.auth != null && resource.data.ownerUid == request.auth.uid);
+      allow update, delete: if false;
+    }
+
+    // AK Global paid-ad requests are applications only. A trusted owner/backend must
+    // verify payment and approve the campaign; clients cannot mark an ad as paid/live.
+    match /globalAdApplications/{applicationId} {
+      allow create: if request.auth != null
+        && request.auth.token.email_verified == true
+        && request.resource.data.keys().hasOnly(['ownerUid','email','business','title','url','targetMarket','contactEmail','plan','amountUSD','currency','status','createdAt'])
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.business is string
+        && request.resource.data.business.size() >= 2
+        && request.resource.data.business.size() <= 100
+        && request.resource.data.title is string
+        && request.resource.data.title.size() >= 3
+        && request.resource.data.title.size() <= 100
+        && request.resource.data.url is string
+        && request.resource.data.url.matches('https://[^ ]+')
+        && request.resource.data.targetMarket is string
+        && request.resource.data.targetMarket.size() >= 2
+        && request.resource.data.targetMarket.size() <= 100
+        && request.resource.data.contactEmail is string
+        && request.resource.data.contactEmail.size() >= 5
+        && request.resource.data.contactEmail.size() <= 160
+        && ((request.resource.data.plan == 'starter' && request.resource.data.amountUSD == 5)
+          || (request.resource.data.plan == 'growth' && request.resource.data.amountUSD == 15)
+          || (request.resource.data.plan == 'business' && request.resource.data.amountUSD == 30))
+        && request.resource.data.currency == 'USD'
+        && request.resource.data.status == 'pending_payment'
+        && request.resource.data.createdAt == request.time;
+      allow read: if resource.data.status == 'active'
+        || isVerifiedOwner()
+        || (request.auth != null && resource.data.ownerUid == request.auth.uid);
+      allow update: if isVerifiedOwner()
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['status','paymentReference','reviewedAt','expiresAt'])
+        && request.resource.data.status in ['pending_payment','active','rejected','expired']
+        && (request.resource.data.status != 'active'
+          || (request.resource.data.paymentReference is string
+            && request.resource.data.paymentReference.size() >= 3
+            && request.resource.data.expiresAt is timestamp
+            && request.resource.data.expiresAt > request.time))
+        && request.resource.data.reviewedAt == request.time;
+      allow delete: if isVerifiedOwner();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+})
         && request.resource.data.title is string
         && request.resource.data.title.size() >= 3
         && request.resource.data.title.size() <= 80
+        && request.resource.data.imageUrl is string
+        && (request.resource.data.imageUrl == '' || request.resource.data.imageUrl.matches('https?://[^ ]+'))
         && request.resource.data.text is string
         && request.resource.data.text.size() >= 8
         && request.resource.data.text.size() <= 240
-        && request.resource.data.url is string
-        && request.resource.data.url.matches('https?://[^ ]+')
-        && ((request.auth == null
-              && request.resource.data.ownerUid == 'public'
-              && request.resource.data.email == '')
-          || (isVerifiedMarketplaceUser()
-              && request.resource.data.ownerUid == request.auth.uid
-              && request.resource.data.email == request.auth.token.email));
+        && request.resource.data.status == 'approved'
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.startsAt is timestamp
+        && request.resource.data.startsAt == request.time
+        && request.resource.data.endsAt is timestamp
+        && request.resource.data.endsAt > request.time
+        && request.resource.data.endsAt <= request.time + duration.value(30, 'd');
       // Only the single verified platform owner can approve/reject; approval requires a recorded
       // payment reference and a bounded, explicit display window.
       allow update: if isVerifiedOwner()

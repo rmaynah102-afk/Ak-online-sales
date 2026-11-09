@@ -798,7 +798,7 @@ async function akShareProductToViber(){
   alert("ကြော်ငြာပုံကို သိမ်းပြီး စာသားကို Copy လုပ်ထားပါပြီ။ Viber ဖွင့်ပြီး ကိုယ့် Channel ထဲတွင် ပုံနှင့်စာကို Post တင်ပါ။");
  }catch(e){if(e.name!=="AbortError")alert("Viber ကြော်ငြာပြင်ဆင်မရပါ: "+e.message)}
 }
-async async function akSendProductToMarket(){
+async function akSendProductToMarket(){
  try{
   const p=await akBuildProductPromo();
   const nav=document.querySelector('#nav [data-view="market"]');if(nav)nav.click();else{const market=document.getElementById("market");if(market){document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));market.classList.add("active")}}

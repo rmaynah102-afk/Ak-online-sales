@@ -92,11 +92,15 @@ jobs:
               if (present) throw new Error(label + ' is still visible in APK bundle');
             } else if (!present) throw new Error('APK bundle check failed: ' + label);
           }
-          const scripts = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)]
-            .filter(([, attrs]) => !/\bsrc\s*=/.test(attrs));
-          if (!scripts.length) throw new Error('No inline scripts in generated APK bundle');
-          scripts.forEach((match, index) => new vm.Script(match[2], { filename: 'www/index.html:inline-' + (index + 1) }));
-          console.log('Generated APK POS bundle validated:', scripts.length, 'inline scripts; Market isolated; login, payment and printer UI present.');
+          // Source JavaScript is syntax-checked before APK-only transformations.
+          // Avoid regex-extracting generated scripts: nested receipt document.write HTML
+          // makes regex stop at embedded closing-script text rather than the real boundary.
+          const scriptCount = (html.match(/<script\\b/gi) || []).length;
+          if (scriptCount < 5) throw new Error('Generated APK bundle is missing expected application scripts');
+          if (!html.includes('AK_APK_SUBSCRIPTION_UI_V1') || !html.includes('AK_APK_CLOUD_STARTUP_GUARD_V1')) {
+            throw new Error('Generated APK patch markers are missing');
+          }
+          console.log('Generated APK POS bundle validated:', scriptCount, 'script tags; Market isolated; login, payment and printer UI present.');
           NODE
       - name: Validate Firebase Functions
         run: |

@@ -1240,8 +1240,9 @@ function akSaleLivePromoImage(){
 function akLiveAdItems(){
  const products=[...marketListings].filter(x=>x.status==="published").sort((a,b)=>marketDate(b.createdAt)-marketDate(a.createdAt));
  const promos=(akSponsoredCache||[]).filter(x=>x.status==="approved"&&(!x.endsAt||(x.endsAt.toDate?x.endsAt.toDate().getTime():new Date(x.endsAt).getTime())>Date.now())).map(x=>({...x,_akPromo:true}));
- const ownPromo={id:"ak-sale-pos-featured",_akPromo:true,status:"approved",category:"AK Sale POS",title:"AK Sale POS · သင့်ဆိုင်အတွက် အရောင်းစီမံခန့်ခွဲမှု",text:"ဖုန်းတစ်လုံးတည်းဖြင့် ပစ္စည်းစာရင်း၊ အရောင်း၊ ဝယ်ယူမှု၊ အကြွေးနှင့် အမြတ်/အရှုံးကို စနစ်တကျ စီမံပါ။ AK Sale POS ကို ဝင်ကြည့်ပြီး စမ်းသုံးနိုင်ပါပြီ။",imageData:akSaleLivePromoImage(),url:"https://rmaynah102-afk.github.io/Ak-online-sales/?app=1",shopName:"AK Sale POS · Official",city:"မြန်မာ",township:"Online"};
- return [ownPromo,...promos,...products];
+ // AK Sale POS အဓိကကြော်ငြာကို အပေါ် Hero မှာ တစ်နေရာတည်းပြသပါ။
+ // Live ကြော်ငြာ Slider မှာ အခြားလုပ်ငန်းရှင်ကြော်ငြာများနှင့် အများပြည်သူတင်ထားသော ပစ္စည်းကြော်ငြာများကိုသာ ပြပါ။
+ return [...promos,...products];
 }
 function renderAkLiveAd(){
  const host=$("akLiveAdSlide"),count=$("akLiveAdCount");if(!host)return;

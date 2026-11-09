@@ -251,6 +251,62 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // AK Community commerce-first public posts. Users cannot alter another user's posts.
+    match /globalCommunityPosts/{postId} {
+      allow read: if resource.data.status == 'published'
+        || (request.auth != null && resource.data.ownerUid == request.auth.uid);
+      allow create: if request.auth != null
+        && request.auth.token.email_verified == true
+        && request.resource.data.keys().hasOnly(['ownerUid','email','displayName','kind','body','country','product','price','currency','link','status','createdAt'])
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.displayName is string
+        && request.resource.data.displayName.size() <= 100
+        && request.resource.data.kind in ['business','product','question','supplier','knowledge']
+        && request.resource.data.body is string
+        && request.resource.data.body.size() >= 1
+        && request.resource.data.body.size() <= 1800
+        && request.resource.data.country is string
+        && request.resource.data.country.size() <= 80
+        && request.resource.data.product is string
+        && request.resource.data.product.size() <= 100
+        && (request.resource.data.price == null || (request.resource.data.price is number && request.resource.data.price >= 0))
+        && request.resource.data.currency in ['USD','MMK','CNY','THB','SGD','EUR']
+        && request.resource.data.link is string
+        && request.resource.data.link.size() <= 400
+        && (request.resource.data.link == '' || request.resource.data.link.matches('https://[^ ]+'))
+        && request.resource.data.status == 'published'
+        && request.resource.data.createdAt == request.time;
+      allow delete: if request.auth != null && resource.data.ownerUid == request.auth.uid;
+      allow update: if false;
+
+      match /likes/{userId} {
+        allow read: if true;
+        allow create: if request.auth != null
+          && request.auth.token.email_verified == true
+          && request.auth.uid == userId
+          && request.resource.data.keys().hasOnly(['uid','createdAt'])
+          && request.resource.data.uid == userId
+          && request.resource.data.createdAt == request.time;
+        allow delete: if request.auth != null && request.auth.uid == userId;
+        allow update: if false;
+      }
+      match /comments/{commentId} {
+        allow read: if true;
+        allow create: if request.auth != null
+          && request.auth.token.email_verified == true
+          && request.resource.data.keys().hasOnly(['uid','displayName','body','createdAt'])
+          && request.resource.data.uid == request.auth.uid
+          && request.resource.data.displayName is string
+          && request.resource.data.displayName.size() <= 160
+          && request.resource.data.body is string
+          && request.resource.data.body.size() >= 1
+          && request.resource.data.body.size() <= 500
+          && request.resource.data.createdAt == request.time;
+        allow update, delete: if false;
+      }
+    }
+
     // AK Global: verified business enquiries. Private to the submitter and platform owner.
     match /globalTradeLeads/{leadId} {
       allow create: if request.auth != null

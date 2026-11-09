@@ -588,7 +588,7 @@ input,select,textarea,button{max-width:100%;box-sizing:border-box}
 <div class="split"><div><span class="pill">LIVE · အများပြည်သူကြော်ငြာ</span><h3 style="margin:8px 0 2px">လုပ်ငန်းရှင်များ၏ ကြော်ငြာများ</h3><p class="muted" style="margin:0">အသစ်တင်ထားသော ပစ္စည်းကြော်ငြာများကို တစ်ခုချင်း အလိုအလျောက်ပြသနေသည်။</p></div><div class="actions"><button type="button" class="alt" id="akLivePrev">‹ နောက်ပြန်</button><button type="button" class="alt" id="akLiveNext">နောက်တစ်ခု ›</button></div></div>
 <div id="akLiveAdSlide" aria-live="polite" style="margin-top:12px"><p class="muted">Live ကြော်ငြာများကို ဖတ်နေသည်...</p></div><p id="akLiveAdCount" class="muted" style="text-align:center;margin:8px 0 0"></p></div>
 <div class="panel" id="akPublicSponsoredSection"><div class="ak-section-heading"><div><span class="ak-eyebrow">AK PARTNER & SPONSORED</span><h2>လုပ်ငန်းရှင်များ၏ ကြော်ငြာများ</h2><p class="muted">AK Sale နှင့် အခြားလုပ်ငန်းရှင်များ၏ အထူးကြော်ငြာများ</p></div><span class="pill">ကြော်ငြာများ</span></div><div id="akSponsoredPublicGrid" class="ak-sponsored-grid"><p class="muted">ကြော်ငြာများကို ဖတ်နေသည်...</p></div></div><div class="panel"><div class="split"><div><h2>AK Market · မြန်မာ့အရောင်းအဝယ်</h2><p class="muted">ပစ္စည်းပုံ၊ ဈေးနှုန်း၊ ဆိုင်အမည်၊ ဖုန်းနှင့် တည်နေရာကို အခမဲ့တင်ရောင်းပါ။ Login မလိုပါ။</p></div><span class="pill">အခြေခံအသုံးပြုမှု အခမဲ့</span></div>
-<div class="notice">အများပြည်သူအားလုံး Login မလိုဘဲ ပစ္စည်းအမည်၊ ဈေးနှုန်း၊ ဓာတ်ပုံ၊ ဆိုင်အမည်နှင့် နေရပ်လိပ်စာကို အခမဲ့တင်နိုင်သည်။ တင်ပြီးသည်နှင့် Public Marketplace တွင် Live ပြသမည်။ POS ကိုယ်ရေးစာရင်းများ သီးခြားလုံခြုံထားသည်။</div>
+<div class="notice"><b>📢 Gmail မလို · Login မလို · အကောင့်ဖွင့်ရန်မလိုပါ။</b><br>မည်သူမဆို အမည်၊ ဈေးနှုန်း၊ ဆိုင်/ရောင်းသူအမည်၊ ဖုန်းနံပါတ်နှင့် မြို့နယ်ဖြည့်ပြီး ကြော်ငြာကို အခမဲ့တင်နိုင်သည်။ ဓာတ်ပုံလည်း ထည့်နိုင်သည်။ တင်ပြီးပါက အများပြည်သူ Market စာရင်းတွင် ပြသမည်။ POS အကောင့်နှင့် ကိုယ်ရေးစာရင်းများကို သီးခြားထားသည်။</div>
 <form id="marketForm"><div class="grid">
 <div><label>ပစ္စည်းအမည် *</label><input id="mTitle" maxlength="90" required placeholder="ဥပမာ - LED မီးလုံး 12W"></div><div><label>ဆိုင် / ရောင်းချသူအမည် *</label><input id="mShopName" maxlength="90" required placeholder="ဆိုင်အမည်"></div>
 <div><label>ရောင်းဈေး (ကျပ်) *</label><input id="mPrice" type="number" min="1" step="1" required placeholder="8500"></div>
@@ -847,7 +847,7 @@ async function akSendProductToMarket(){
   if(p.photo){const res=await fetch(p.photo),blob=await res.blob();marketPhotoFile=new File([blob],"product-photo.png",{type:blob.type||"image/png"});$("mPreview").src=p.photo;$("mPreview").classList.remove("hidden")}
   $("marketForm").querySelector('button[type="submit"]').textContent="Market ကြော်ငြာတင်မည်";
   $("marketForm").scrollIntoView({behavior:"smooth",block:"start"});
-  $("marketStatus").textContent="ပစ္စည်းအချက်အလက်များ ဖြည့်ပြီးပါပြီ။ Login ဝင်ထားပါက Market သို့ တင်နိုင်သည်။";
+  $("marketStatus").textContent="ပစ္စည်းအချက်အလက်များ ပြင်ဆင်ပြီးပါပြီ။ Gmail/Login မလိုဘဲ အခမဲ့တင်နိုင်သည်။";
  }catch(e){alert("Market ကြော်ငြာပြင်ဆင်မရပါ: "+e.message)}
 }
 function resetProduct(){ $("productForm").reset();$("pId").value="";$("pUnit").value="ခု";$("pCost").value=0;$("pRetail").value=0;$("pWholesale").value=0;$("pStock").value=0;$("pMinStock").value=0;productImageData="";$("photoPreview").classList.add("hidden")}
@@ -1313,8 +1313,8 @@ $("marketForm").addEventListener("submit",async e=>{
  if(button){button.disabled=true;button.textContent="ကြော်ငြာတင်နေသည်...";}
  if(status)status.textContent="Marketplace Cloud ကို ချိတ်ဆက်နေသည်...";
  try{
-  // Public ad posting must work without Gmail. Wait for Firebase startup instead of
-  // failing immediately when a visitor taps Submit before the SDK finishes loading.
+  // Public Marketplace guest posting: no Gmail, no account, and no sign-in required.
+  // Wait for Firebase startup before attempting the public Firestore write.
   if(!fbStore){await firebaseConnect();}
   if(!fbStore)throw Error("Marketplace Cloud မချိတ်နိုင်ပါ။ Internet နှင့် Firebase Web Config ကို စစ်ပါ။");
   const user=fbAuth?.currentUser||null;

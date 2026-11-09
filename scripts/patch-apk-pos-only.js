@@ -7,7 +7,7 @@ const path = require('path');
 const target = path.resolve(__dirname, '..', 'www', 'index.html');
 if (!fs.existsSync(target)) throw new Error('APK web bundle missing: run npm run copy-web first.');
 let html = fs.readFileSync(target, 'utf8');
-const marker = '/* AK_APK_POS_ONLY_MARKET_ISOLATION_V2 */';
+const marker = '/* AK_APK_POS_ONLY_MARKET_ISOLATION_V3 */';
 if (html.includes(marker)) { console.log('APK POS-only isolation already applied.'); process.exit(0); }
 
 function replaceExactly(oldText, newText, expected = 1) {
@@ -23,6 +23,12 @@ replaceExactly(
   'if(typeof loadSponsoredAds==="function")void loadSponsoredAds();if(typeof loadPublicShops==="function")void loadPublicShops();if(typeof loadMyMarketListings==="function")void loadMyMarketListings();',
   '/* APK POS-only: Marketplace background loaders disabled. */'
 );
+// APK-only POS branding: the website source remains unchanged.
+replaceExactly('Myanmar shop POS, inventory, wholesale, retail, sales records and AK Shopping Markets.','Myanmar shop POS, inventory, wholesale, retail and sales records.');
+replaceExactly('AK Sale Software · AK Shopping Markets','AK Sale Software · Shop POS');
+replaceExactly('ဆိုင်အရောင်း၊ ကုန်ပစ္စည်း၊ စာရင်းနှင့် မြန်မာ့အွန်လိုင်းဈေးကွက်','ဆိုင်အရောင်း၊ ကုန်ပစ္စည်း၊ စာရင်းနှင့် အမြတ်အရှုံး စီမံခန့်ခွဲမှု');
+replaceExactly('<footer>Ak shopping markets · Myanmar Retail & Market Platform</footer>','<footer>AK Sale Software · Hardware & Electrical Shop POS</footer>');
+replaceExactly('ဆိုင်သုံး POS ကို အသုံးပြုရန် Login နှင့် အသုံးပြုခွင့်လိုအပ်သည်။ AK Market၊ အတည်ပြုဆိုင်စာရင်းနှင့် ကြော်ငြာများကို အများပြည်သူ ကြည့်ရှုနိုင်သည်။','ဆိုင်သုံး POS ကို အသုံးပြုရန် Gmail Login နှင့် အသုံးပြုခွင့်လိုအပ်သည်။ Package ရွေးချယ်ပြီး ငွေပေးချေမှု တင်ပြနိုင်ပါသည်။');
 replaceExactly('if(typeof loadMarket==="function")await loadMarket()', '/* APK POS-only: do not load public Marketplace listings. */', 2);
 replaceExactly('applyAkTheme();renderAll();loadMarket();', 'applyAkTheme();renderAll();');
 replaceExactly('connectPublicCatalog();', '/* APK POS-only: public catalog listener disabled. */');
@@ -33,16 +39,24 @@ replaceExactly(
 
 const css = `
 <style id="ak-apk-pos-only">
-/* AK_APK_POS_ONLY_MARKET_ISOLATION_V2 */
+/* AK_APK_POS_ONLY_MARKET_ISOLATION_V3 */
 html.ak-apk-pos-only #market,
 html.ak-apk-pos-only #nav button[data-view="market"],
 html.ak-apk-pos-only body #market,
 html.ak-apk-pos-only body #nav button[data-view="market"] {
   display: none !important;
 }
+/* APK POS only: show the subscription form even while the shop is locked. */
+html.ak-apk-pos-only #akSubscriptionPayment { display:block!important; }
+html.ak-apk-pos-only body.ak-license-locked main>#backup>#akSubscriptionPayment {
+  display:block!important; order:3;
+}
+html.ak-apk-pos-only body.ak-license-locked #nav button:not([data-view="backup"]) {
+  display:none!important;
+}
 </style>
 `;
 if (!html.includes('</head>')) throw new Error('HTML head closing tag not found.');
 html = html.replace('</head>', css + '\n</head>');
 fs.writeFileSync(target, html);
-console.log('APK POS-only isolation V2 applied: high-specificity Marketplace hide, route redirect, public catalog startup/listeners/polling disabled. Website source remains unchanged.');
+console.log('APK POS-only isolation V3 applied: Marketplace hidden, POS-only branding, subscription payment panel visible while locked. Website source remains unchanged.');

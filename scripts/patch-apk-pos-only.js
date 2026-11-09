@@ -21,6 +21,7 @@ html = html.replace(/<html\s+lang="my">/i, '<html lang="my" class="ak-apk-pos-on
 replaceExactly('const publicViews=["backup","market"];', 'const publicViews=["backup"];');
 replaceExactly('if(new URLSearchParams(location.search).get("market")==="1")document.documentElement.classList.add("ak-public-market");','/* APK POS-only: public Market URL mode disabled. */');
 replaceExactly('id="market";', 'id="backup";');
+replaceExactly('name:"Ak shopping markets"','name:"AK Hardware & Electrical"');
 replaceExactly(
   'if(typeof loadSponsoredAds==="function")void loadSponsoredAds();if(typeof loadPublicShops==="function")void loadPublicShops();if(typeof loadMyMarketListings==="function")void loadMyMarketListings();',
   '/* APK POS-only: Marketplace background loaders disabled. */'
@@ -60,7 +61,8 @@ html.ak-apk-pos-only body.ak-license-locked #nav button:not([data-view="backup"]
 }
 </style>
 `;
-if (!html.includes('</head>')) throw new Error('HTML head closing tag not found.');
-html = html.replace('</head>', css + '\n</head>');
+const headEnd = html.lastIndexOf('</head>');
+if (headEnd < 0) throw new Error('HTML head closing tag not found.');
+html = html.slice(0, headEnd) + css + '\n' + html.slice(headEnd);
 fs.writeFileSync(target, html);
 console.log('APK POS-only isolation V3 applied: Marketplace hidden, POS-only branding, subscription payment panel visible while locked. Website source remains unchanged.');

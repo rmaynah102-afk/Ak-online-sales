@@ -63,6 +63,8 @@ jobs:
         run: npm run copy-web
       - name: Apply APK-only Cloud startup guard (does not modify website source)
         run: node scripts/patch-apk-cloud-startup.js
+      - name: Apply APK-only subscription and payment UI (does not modify website source)
+        run: node scripts/patch-apk-subscription-ui.js
       - name: Validate Firebase Functions
         run: |
           npm --prefix functions install --package-lock=false

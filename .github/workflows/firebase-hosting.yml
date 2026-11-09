@@ -11,6 +11,7 @@ on:
       - 'scripts/validate-apk-contract.js'
       - 'scripts/install-native-printer.js'
       - 'scripts/generate-android-icons.js'
+      - 'scripts/patch-apk-*.js'
       - 'native/android/**'
       - 'capacitor.config.json'
       - 'google-services.json'

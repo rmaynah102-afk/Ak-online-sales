@@ -258,8 +258,9 @@ service cloud.firestore {
         && (request.resource.data.status == 'rejected'
           || (request.resource.data.status == 'approved'
             && request.resource.data.paymentReference is string
-            && request.resource.data.paymentReference.size() >= 3
-            && request.resource.data.paymentReference.size() <= 100
+            && (request.resource.data.paymentReference == 'FREE_BETA'
+              || (request.resource.data.paymentReference.size() >= 3
+                && request.resource.data.paymentReference.size() <= 100))
             && request.resource.data.startsAt is timestamp
             && request.resource.data.endsAt is timestamp
             && request.resource.data.startsAt <= request.time

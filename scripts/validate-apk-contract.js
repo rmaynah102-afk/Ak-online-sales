@@ -138,14 +138,14 @@ if (!html.includes('if(!user){checkUserRole(null);akSetLicenseGate(false') ||
   console.error('POS must remain locked until Gmail login and an owner-approved active subscription are verified online.');
   process.exitCode = 1;
 }
-// APK onboarding must present Package -> Google Gmail -> payment proof, then owner approval.
-if (!html.includes('id="akPlanButtons"') || !html.includes('id="akOnboardingGoogleButton"') ||
-    !html.includes('id="akPaymentProofStep"') || !html.includes('function akStartSubscriptionGoogleLogin()')) {
-  console.error('APK subscription onboarding must include package selection, Google Gmail connection and payment proof steps.');
-  process.exitCode = 1;
-}
-if (!html.includes('AK_APK_SUBSCRIPTION_UI_V2') && !html.includes('AK_APK_SUBSCRIPTION_UI_V1')) {
-  console.error('APK subscription onboarding patch marker is missing.');
+// APK onboarding is injected into www/index.html by the APK-only build patch.
+const apkSubscriptionPatch = fs.readFileSync(path.join(__dirname, 'patch-apk-subscription-ui.js'), 'utf8');
+if (!apkSubscriptionPatch.includes('id="akPlanButtons"') ||
+    !apkSubscriptionPatch.includes('id="akOnboardingGoogleButton"') ||
+    !apkSubscriptionPatch.includes('id="akPaymentProofStep"') ||
+    !apkSubscriptionPatch.includes('function akStartSubscriptionGoogleLogin()') ||
+    !apkSubscriptionPatch.includes('AK_APK_SUBSCRIPTION_UI_V2')) {
+  console.error('APK subscription onboarding patch must include Package -> Google Gmail -> payment proof.');
   process.exitCode = 1;
 }
 if (!functionsSource.includes('!screenshotUrl') || !html.includes('function validateAndSubmitKPay(paymentData,screenshotFile)')) {

@@ -59,12 +59,19 @@ jobs:
           node - <<'NODE'
           const fs = require('fs');
           const vm = require('vm');
-          const html = fs.readFileSync('app.html', 'utf8');
-          const scripts = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)]
-            .filter(([, attrs]) => !/\bsrc\s*=/.test(attrs));
-          if (!scripts.length) throw new Error('No inline app JavaScript found');
-          scripts.forEach((match, index) => new vm.Script(match[2], {filename: 'app.html:inline-' + (index + 1)}));
-          console.log('JavaScript syntax OK:', scripts.length, 'inline script block(s)');
+          const pages = ['index.html', 'app.html', 'global.html', 'community.html'];
+          let checked = 0;
+          for (const page of pages) {
+            const html = fs.readFileSync(page, 'utf8');
+            const scripts = [...html.matchAll(/<script\\b([^>]*)>([\\s\\S]*?)<\\/script>/gi)]
+              .filter(([, attrs]) => !/\\bsrc\\s*=/.test(attrs));
+            scripts.forEach((match, index) => {
+              new vm.Script(match[2], {filename: page + ':inline-' + (index + 1)});
+              checked++;
+            });
+          }
+          if (!checked) throw new Error('No inline JavaScript found');
+          console.log('JavaScript syntax OK:', checked, 'inline script block(s) across', pages.length, 'pages');
           NODE
 
       - name: Install Firebase CLI
@@ -105,7 +112,7 @@ jobs:
             echo "Hosting deployment completed successfully."
           } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Attempt Firestore Rules deployment
+      - name: Deploy Firestore Rules and Indexes
         id: rules
         if: steps.auth.outputs.available == 'true'
         continue-on-error: true
@@ -118,13 +125,13 @@ jobs:
           trap 'rm -f "$KEY_FILE"' EXIT
           printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$KEY_FILE"
           export GOOGLE_APPLICATION_CREDENTIALS="$KEY_FILE"
-          firebase deploy --only firestore:rules --project ak-onlin-sales --non-interactive
-          echo "Firestore Rules deployment succeeded." >> "$GITHUB_STEP_SUMMARY"
+          firebase deploy --only firestore --project ak-onlin-sales --non-interactive
+          echo "Firestore Rules and Indexes deployment succeeded." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Record Rules deployment limitation
         if: steps.auth.outputs.available == 'true' && steps.rules.outcome == 'failure'
         run: |
-          echo "Firestore Rules were not deployed. Grant Firebase Rules Admin (roles/firebaserules.admin) to the deployment service account, then rerun." >> "$GITHUB_STEP_SUMMARY"
+          echo "Firestore Rules or Indexes were not deployed. Grant the required Firestore Rules Admin and Cloud Datastore Index Admin permissions to the deployment service account, then rerun." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Attempt Firebase Storage Rules deployment
         id: storage

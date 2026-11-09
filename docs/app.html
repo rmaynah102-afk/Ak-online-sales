@@ -1186,7 +1186,7 @@ async function placeMarketOrder(id){try{if(!fbAuth?.currentUser||!fbStore)throw 
 function marketNormalizePhone(phone){let n=String(phone||"").replace(/[^0-9+]/g,"");if(n.startsWith("09"))n="+959"+n.slice(2);else if(n.startsWith("959"))n="+"+n;else if(n.startsWith("9")&&n.length>=8)n="+95"+n;return n}
 function contactMarketSeller(phone){const n=marketNormalizePhone(phone);if(!n)return alert("ရောင်းသူက ဖုန်းနံပါတ် မဖော်ပြထားပါ။");location.href="tel:"+n}
 function viberMarketSeller(phone){const n=marketNormalizePhone(phone);if(!n)return alert("ရောင်းသူက Viber နံပါတ် မဖော်ပြထားပါ။");location.href="viber://chat?number="+encodeURIComponent(n)}
-function shareMarketListing(id){const x=marketListings.find(v=>v.id===id);if(!x)return;const text=x.title+" · "+Number(x.price).toLocaleString("en-US")+" ကျပ်\n"+[x.township,x.city].filter(Boolean).join(", ");if(navigator.share)navigator.share({title:x.title,text,url:x.imageUrl}).catch(()=>{});else if(navigator.clipboard)navigator.clipboard.writeText(text).then(()=>alert("ပစ္စည်းအချက်အလက် Copy လုပ်ပြီးပါပြီ။"))}
+function shareMarketListing(id){const x=marketListings.find(v=>v.id===id);if(!x)return;const url="https://rmaynah102-afk.github.io/Ak-online-sales/";const text=x.title+" · "+Number(x.price).toLocaleString("en-US")+" ကျပ်\\n"+[x.township,x.city].filter(Boolean).join(", ")+"\\nAK Commerce";if(navigator.share)navigator.share({title:x.title,text,url}).catch(()=>{});else if(navigator.clipboard)navigator.clipboard.writeText(text+"\\n"+url).then(()=>alert("ပစ္စည်းအချက်အလက်နှင့် Website Link ကို Copy လုပ်ပြီးပါပြီ။"));else prompt("Website Link",url)}
 const AK_DEVICE_KEY="ak_device_id_v1";
 function akDeviceId(){let id=localStorage.getItem(AK_DEVICE_KEY);if(!id){id="akd_"+(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2));localStorage.setItem(AK_DEVICE_KEY,id)}return id}
 async function claimThisDevice(){const call=firebase.functions().httpsCallable("claimShopDevice");const result=await call({deviceId:akDeviceId(),label:(navigator.userAgent||"Device").slice(0,110)});if(!result.data||!result.data.ok)throw Error("ဒီဆိုင်အကောင့်တွင် ခွင့်ပြုထားသော ဖုန်း ၅ လုံး ပြည့်နေပါသည်။ Owner ထံမှ စက်ဟောင်းတစ်လုံး ဖြုတ်ခိုင်းပါ။");await refreshShopDevices()}
@@ -1775,7 +1775,7 @@ body.ak-public footer{display:block}
    if(!firebase.apps.length)firebase.initializeApp(cfg);
    fbApp=firebase.app();fbAuth=firebase.auth();fbStore=firebase.firestore();fbAuth.languageCode="my";
    fbAuth.onAuthStateChanged(user=>{const status=document.getElementById("fbStatus");if(status)status.textContent=user?"Login ဝင်ထားသည်: "+(user.email||"")+" · ကြော်ငြာတင်နိုင်ပါပြီ။":"ကြော်ငြာတင်ရန် Gmail Login ဝင်ပါ။";if(user){if(typeof loadMyMarketListings==="function")void loadMyMarketListings();if(typeof loadMyMarketOrders==="function")void loadMyMarketOrders();}});
-   if(typeof loadMarket==="function")await loadMarket();if(typeof loadSponsoredAds==="function")await loadSponsoredAds();
+   if(typeof loadMarket==="function")await loadMarket();if(typeof loadPublicShops==="function")await loadPublicShops();if(typeof loadSponsoredAds==="function")await loadSponsoredAds();
   }catch(e){const status=document.getElementById("marketStatus");if(status)status.textContent="Public Market ချိတ်ဆက်မရပါ: "+e.message;}
  }
  connectPublicCatalog();

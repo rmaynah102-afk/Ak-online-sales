@@ -1,13 +1,12 @@
 'use strict';
 
 // APK-only POS edition. This patches generated www/index.html only.
-// It deliberately leaves app.html (the public website / Marketplace) untouched.
 const fs = require('fs');
 const path = require('path');
 const target = path.resolve(__dirname, '..', 'www', 'index.html');
 if (!fs.existsSync(target)) throw new Error('APK web bundle missing: run npm run copy-web first.');
 let html = fs.readFileSync(target, 'utf8');
-const marker = '/* AK_APK_POS_ONLY_MARKET_ISOLATION_V3 */';
+const marker = '/* AK_APK_POS_ONLY_MARKET_ISOLATION_V4 */';
 if (html.includes(marker)) { console.log('APK POS-only isolation already applied.'); process.exit(0); }
 
 function replaceExactly(oldText, newText, expected = 1) {
@@ -16,8 +15,8 @@ function replaceExactly(oldText, newText, expected = 1) {
   html = html.replace(oldText, newText);
 }
 
-if (!/<html\s+lang="my">/i.test(html)) throw new Error('HTML root language tag not found.');
-html = html.replace(/<html\s+lang="my">/i, '<html lang="my" class="ak-apk-pos-only">');
+if (!/<html\\s+lang="my">/i.test(html)) throw new Error('HTML root language tag not found.');
+html = html.replace(/<html\\s+lang="my">/i, '<html lang="my" class="ak-apk-pos-only">');
 replaceExactly('const publicViews=["backup","market"];', 'const publicViews=["backup"];');
 replaceExactly('if(new URLSearchParams(location.search).get("market")==="1")document.documentElement.classList.add("ak-public-market");','/* APK POS-only: public Market URL mode disabled. */');
 replaceExactly('id="market";', 'id="backup";');
@@ -28,7 +27,6 @@ replaceExactly(
 );
 replaceExactly('<button type="button" class="alt" onclick="akSendProductToMarket()">Market ကြော်ငြာတင်ရန်</button>', '');
 replaceExactly('Viber ကိုနှိပ်လျှင် ပုံနှင့်စာကို Share Menu မှတစ်ဆင့် ကိုယ့် Channel သို့ ရွေးပို့နိုင်သည်။ Market ကိုနှိပ်လျှင် အချက်အလက်များကို အလိုအလျောက်ဖြည့်ပေးမည်။','Viber ကိုနှိပ်လျှင် ပုံနှင့်စာကို Share Menu မှတစ်ဆင့် ကိုယ့် Channel သို့ ရွေးပို့နိုင်သည်။');
-// APK-only POS branding: the website source remains unchanged.
 replaceExactly('Myanmar shop POS, inventory, wholesale, retail, sales records and AK Shopping Markets.','Myanmar shop POS, inventory, wholesale, retail and sales records.');
 replaceExactly('AK Sale Software · AK Shopping Markets','AK Sale Software · Shop POS');
 replaceExactly('ဆိုင်အရောင်း၊ ကုန်ပစ္စည်း၊ စာရင်းနှင့် မြန်မာ့အွန်လိုင်းဈေးကွက်','ဆိုင်အရောင်း၊ ကုန်ပစ္စည်း၊ စာရင်းနှင့် အမြတ်အရှုံး စီမံခန့်ခွဲမှု');
@@ -44,25 +42,22 @@ replaceExactly(
 
 const css = `
 <style id="ak-apk-pos-only">
-/* AK_APK_POS_ONLY_MARKET_ISOLATION_V3 */
+/* AK_APK_POS_ONLY_MARKET_ISOLATION_V4 */
 html.ak-apk-pos-only #market,
 html.ak-apk-pos-only #nav button[data-view="market"],
-html.ak-apk-pos-only body #market,
-html.ak-apk-pos-only body #nav button[data-view="market"] {
-  display: none !important;
-}
-/* APK POS only: show the subscription form even while the shop is locked. */
-html.ak-apk-pos-only #akSubscriptionPayment { display:block!important; }
-html.ak-apk-pos-only body.ak-license-locked main>#backup>#akSubscriptionPayment {
-  display:block!important; order:3;
-}
-html.ak-apk-pos-only body.ak-license-locked #nav button:not([data-view="backup"]) {
+html.ak-apk-pos-only #akFirebasePanel { display:none!important; }
+html.ak-apk-pos-only body.ak-license-locked #nav { display:none!important; }
+html.ak-apk-pos-only body.ak-license-locked main>#backup>.panel:not(#akPaywallNotice):not(#akSubscriptionPayment):not(#akLicensePanel) {
   display:none!important;
 }
+html.ak-apk-pos-only body.ak-license-locked main>#backup>#akPaywallNotice { display:block!important; order:0; }
+html.ak-apk-pos-only body.ak-license-locked main>#backup>#akSubscriptionPayment { display:block!important; order:1; }
+html.ak-apk-pos-only #akSubscriptionPayment .ak-plan-option { min-height:64px; white-space:normal; }
+html.ak-apk-pos-only #akSubscriptionPayment #akPaymentProofStep { margin-top:14px; }
 </style>
 `;
 const headEnd = html.lastIndexOf('</head>');
 if (headEnd < 0) throw new Error('HTML head closing tag not found.');
 html = html.slice(0, headEnd) + css + '\n' + html.slice(headEnd);
 fs.writeFileSync(target, html);
-console.log('APK POS-only isolation V3 applied: Marketplace hidden, POS-only branding, subscription payment panel visible while locked. Website source remains unchanged.');
+console.log('APK POS-only isolation V4 applied: Market removed; locked app shows only package/Gmail/payment onboarding; POS stays locked until server-approved license.');

@@ -176,7 +176,7 @@ service cloud.firestore {
         && request.resource.data.description is string
         && request.resource.data.description.size() <= 700
         && request.resource.data.imageUrl is string
-        && request.resource.data.imageUrl.size() <= 420000
+        && request.resource.data.imageUrl.size() <= 180000
         && request.resource.data.createdAt == request.time
       );
       allow update: if isVerifiedMarketplaceUser()

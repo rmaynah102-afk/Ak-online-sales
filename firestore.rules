@@ -251,6 +251,63 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // AK Global: verified business enquiries. Private to the submitter and platform owner.
+    match /globalTradeLeads/{leadId} {
+      allow create: if request.auth != null
+        && request.auth.token.email_verified == true
+        && request.resource.data.keys().hasOnly(['ownerUid','email','name','country','type','message','status','createdAt'])
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 2
+        && request.resource.data.name.size() <= 100
+        && request.resource.data.country is string
+        && request.resource.data.country.size() >= 2
+        && request.resource.data.country.size() <= 80
+        && request.resource.data.type in ['Find supplier','Find buyer','Import / export quotation','Logistics / shipping','Other business partnership']
+        && request.resource.data.message is string
+        && request.resource.data.message.size() >= 3
+        && request.resource.data.message.size() <= 1800
+        && request.resource.data.status == 'new'
+        && request.resource.data.createdAt == request.time;
+      allow read: if isVerifiedOwner()
+        || (request.auth != null && resource.data.ownerUid == request.auth.uid);
+      allow update, delete: if false;
+    }
+
+    // AK Global paid-ad requests are applications only. A trusted owner/backend must
+    // verify payment and approve the campaign; clients cannot mark an ad as paid/live.
+    match /globalAdApplications/{applicationId} {
+      allow create: if request.auth != null
+        && request.auth.token.email_verified == true
+        && request.resource.data.keys().hasOnly(['ownerUid','email','business','title','url','targetMarket','contactEmail','plan','amountUSD','currency','status','createdAt'])
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.business is string
+        && request.resource.data.business.size() >= 2
+        && request.resource.data.business.size() <= 100
+        && request.resource.data.title is string
+        && request.resource.data.title.size() >= 3
+        && request.resource.data.title.size() <= 100
+        && request.resource.data.url is string
+        && request.resource.data.url.matches('https://[^ ]+')
+        && request.resource.data.targetMarket is string
+        && request.resource.data.targetMarket.size() >= 2
+        && request.resource.data.targetMarket.size() <= 100
+        && request.resource.data.contactEmail is string
+        && request.resource.data.contactEmail.size() >= 5
+        && request.resource.data.contactEmail.size() <= 160
+        && ((request.resource.data.plan == 'starter' && request.resource.data.amountUSD == 5)
+          || (request.resource.data.plan == 'growth' && request.resource.data.amountUSD == 15)
+          || (request.resource.data.plan == 'business' && request.resource.data.amountUSD == 30))
+        && request.resource.data.currency == 'USD'
+        && request.resource.data.status == 'pending_payment'
+        && request.resource.data.createdAt == request.time;
+      allow read: if isVerifiedOwner()
+        || (request.auth != null && resource.data.ownerUid == request.auth.uid);
+      allow update, delete: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

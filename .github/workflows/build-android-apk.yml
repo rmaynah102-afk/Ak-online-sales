@@ -5,7 +5,18 @@ concurrency:
   cancel-in-progress: false
 
 on:
-  # Manual only: build APK only after explicit owner approval.
+  # Build a fresh signed APK when APK inputs change; keep manual build available.
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/build-android-apk.yml'
+      - 'app.html'
+      - 'package.json'
+      - 'capacitor.config.json'
+      - 'google-services.json'
+      - 'native/android/**'
+      - 'scripts/**'
+      - 'ak-logo.svg'
   workflow_dispatch:
 
 permissions:

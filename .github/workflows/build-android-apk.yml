@@ -77,7 +77,7 @@ jobs:
             ['APK POS-only root', '<html lang="my" class="ak-apk-pos-only">'],
             ['Marketplace hidden', 'html.ak-apk-pos-only #market'],
             ['Market navigation hidden', 'html.ak-apk-pos-only #nav button[data-view="market"]'],
-            ['Market product action removed', 'Market ကြော်ငြာတင်ရန်'],
+            ['Market product action removed', 'onclick="akSendProductToMarket()"'],
             ['Market deep-link disabled', 'public Market URL mode disabled'],
             ['Subscription payment UI', 'id="akSubscriptionPayment"'],
             ['Owner payment review UI', 'id="akOwnerPaymentReview"'],
@@ -92,8 +92,8 @@ jobs:
               if (present) throw new Error(label + ' is still visible in APK bundle');
             } else if (!present) throw new Error('APK bundle check failed: ' + label);
           }
-          const scripts = [...html.matchAll(/<script\\b([^>]*)>([\\s\\S]*?)<\\/script>/gi)]
-            .filter(([, attrs]) => !/\\bsrc\\s*=/.test(attrs));
+          const scripts = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)]
+            .filter(([, attrs]) => !/\bsrc\s*=/.test(attrs));
           if (!scripts.length) throw new Error('No inline scripts in generated APK bundle');
           scripts.forEach((match, index) => new vm.Script(match[2], { filename: 'www/index.html:inline-' + (index + 1) }));
           console.log('Generated APK POS bundle validated:', scripts.length, 'inline scripts; Market isolated; login, payment and printer UI present.');

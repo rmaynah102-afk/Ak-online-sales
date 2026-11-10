@@ -27,18 +27,18 @@
 header{height:64px;background:linear-gradient(110deg,#07152e,#12427f);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 16px;gap:12px;box-shadow:0 3px 16px #07152e30;position:relative;z-index:5}
 .brand{display:flex;align-items:center;gap:9px;color:white;text-decoration:none;min-width:0}.brand img{width:38px;height:38px}.brand strong{font-size:17px;letter-spacing:.3px;white-space:nowrap}.brand small{display:block;color:#d2e1f5;font-size:9px;letter-spacing:1.2px}
 .live{font-size:11px;color:#f8d98e;white-space:nowrap}
-nav{display:none!important;height:0;align-items:center;gap:5px;overflow-x:auto;white-space:nowrap;padding:5px 12px;background:white;border-bottom:1px solid var(--line);scrollbar-width:none}
+nav{display:flex;height:48px;align-items:center;gap:5px;overflow-x:auto;white-space:nowrap;padding:5px 12px;background:white;border-bottom:1px solid var(--line);scrollbar-width:none}
 nav::-webkit-scrollbar{display:none}
 nav button{border:0;border-radius:9px;background:transparent;color:#50627b;font:700 12px system-ui;padding:9px 13px;cursor:pointer;min-height:38px}
 nav button.active{background:#e9f1ff;color:#164f9e}
 nav button:hover{background:#f0f4fa}
-main{height:calc(100dvh - 64px);height:calc(100vh - 64px);position:relative}
+main{height:calc(100dvh - 112px);height:calc(100vh - 112px);position:relative}
 iframe{display:block;width:100%;height:100%;border:0;background:#f3f6fb}
 #fallback{display:none;position:absolute;inset:0;background:white;padding:24px;z-index:2}
 @media(max-width:650px){
  header{height:58px;padding:0 12px}.brand img{width:34px;height:34px}.brand strong{font-size:15px}.live{font-size:10px}
  nav{height:48px;padding:4px 7px;gap:2px}nav button{font-size:11px;padding:8px 10px}
- main{height:calc(100dvh - 58px);height:calc(100vh - 58px)}
+ main{height:calc(100dvh - 106px);height:calc(100vh - 106px)}
 }
 </style>
 </head>
@@ -76,22 +76,10 @@ function setView(view,write=true){
  if(write){const u=new URL(location.href);u.searchParams.set("view",view);history.replaceState(null,"",u.pathname+u.search)}
 }
 buttons.forEach(b=>b.addEventListener("click",()=>setView(b.dataset.view)));
+frame.addEventListener("load",()=>document.getElementById("fallback").style.display="none");
 frame.addEventListener("error",()=>document.getElementById("fallback").style.display="block");
 const requested=new URLSearchParams(location.search).get("view");
 if(requested&&pages[requested])setView(requested,false);
-// AK Commerce public website is online-only: remove any older offline PWA worker/cache
-// so visitors always receive the current live website and cloud-backed marketplace.
-if("serviceWorker" in navigator){
- window.addEventListener("load",async()=>{
-  try{
-   const registrations=await navigator.serviceWorker.getRegistrations();
-   await Promise.all(registrations.map(reg=>reg.unregister()));
-   if("caches" in window){
-    const keys=await caches.keys();
-    await Promise.all(keys.map(key=>caches.delete(key)));
-   }
-  }catch(e){console.warn("Online-only cleanup:",e)}
- });
-}
+// Preserve the shared AK PWA service worker and offline caches.
 </script>
 </body></html>

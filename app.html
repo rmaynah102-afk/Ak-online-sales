@@ -2047,7 +2047,7 @@ async function submitPaymentRequest(){
  let uploadedPath="";
  try{
   if(!fbAuth?.currentUser||!fbStore)throw Error("Gmail ဖြင့် Login ဝင်ပါ။");
-  const uid=fbAuth.currentUser.uid,email=String(fbAuth.currentUser.email||"").trim().toLowerCase();
+  const uid=fbAuth.currentUser.uid,email=String(fbAuth.currentUser.email||"").trim();
   const reference=$("payReference").value.trim(),method=$("payMethod").value,days=Number($("payPlan").value),amount=AK_PLAN_AMOUNTS[days];
   if(method!=="KBZPay")throw Error("KBZPay တစ်ခုတည်းသာ အသုံးပြုနိုင်သည်။");
   if(reference.length<3||reference.length>100)throw Error("Transaction ID ကို 3 မှ 100 လုံးအတွင်း ထည့်ပါ။");

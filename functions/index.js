@@ -797,7 +797,7 @@ exports.listGlobalAnnouncements = functions.https.onCall(async (data, context) =
 // not by the staff member's personal UID. Client SDKs never write these paths.
 const WORKSPACE_ARRAYS = ["products","sales","purchases","people","payments","expenses"];
 const WORKSPACE_READ_ROLES = ["manager","cashier","employee"];
-function workspaceIdentity(context) {
+async function workspaceIdentity(context) {
   if (!context.auth) throw new functions.https.HttpsError("unauthenticated","Login လိုအပ်သည်။");
   const claims=context.auth.token||{};
   const email=String(context.auth.token.email||"").trim().toLowerCase();
@@ -806,7 +806,10 @@ function workspaceIdentity(context) {
   if (claims.shopId && WORKSPACE_READ_ROLES.includes(String(claims.shopRole||""))) {
     return {shopId:String(claims.shopId),role:String(claims.shopRole),isOwner:false};
   }
-  throw new functions.https.HttpsError("permission-denied","ဆိုင် Owner သို့မဟုတ် ခွင့်ပြုထားသော ဝန်ထမ်းအကောင့် လိုအပ်သည်။");
+  // Any paid, licensed account without a shopId claim is the owner of its own shop.
+  // This lets normal subscribing merchants use the same isolated workspace as their staff.
+  const ownerUid=await requireActiveShop(context);
+  return {shopId:ownerUid,role:"owner",isOwner:true};
 }
 async function verifyWorkspaceMember(context, identity) {
   if (identity.isOwner) return;

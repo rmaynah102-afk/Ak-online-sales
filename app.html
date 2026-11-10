@@ -360,7 +360,7 @@ html.ak-public-market #market [id*="Login"]:not(#akFirebasePanel),
 html.ak-public-market #market [id*="login"]:not(#akFirebasePanel),
 html.ak-public-market #market [id*="Auth"]:not(#akFirebasePanel),
 html.ak-public-market #market [id*="auth"]:not(#akFirebasePanel){display:none!important}
-html.ak-public-market #akFirebasePanel{display:block!important;visibility:visible!important;}
+html.ak-public-market #akFirebasePanel,html.ak-public-market #akLicensePanel,html.ak-public-market #akPaywallNotice,html.ak-public-market #akMarketOwnerEntry,html.ak-public-market #akOwnerAdManager{display:none!important;visibility:hidden!important;}
 html.ak-public-market #akAdForm input[type="tel"]{display:block!important}
 html.ak-public-market .ak-sponsored-card-image{position:relative;overflow:hidden;border-radius:14px}
 html.ak-public-market .ak-sponsored-card-image img{display:block;width:100%;max-height:250px;object-fit:cover}
@@ -2607,7 +2607,7 @@ body.ak-public footer{display:block}
  const publicMode=params.get("market")==="1" && params.get("app")!=="1";
  if(!publicMode)return;
  document.body.classList.add("ak-public");
- const marketIsolationStyle=document.createElement("style");marketIsolationStyle.id="ak-public-market-account-isolation";marketIsolationStyle.textContent="body.ak-public #akFirebasePanel,body.ak-public #akOwnerStaffPanel,body.ak-public #akOwnerDashboardPanels,body.ak-public #ownerDashboard,body.ak-public #akOwnerPaymentQueue,body.ak-public #akCustomerPaymentPanel,body.ak-public #akStaffJoinPanel,body.ak-public #akStaffJoin,body.ak-public #akPlatformUserRows{display:none!important}";document.head.appendChild(marketIsolationStyle);
+ const marketIsolationStyle=document.createElement("style");marketIsolationStyle.id="ak-public-market-account-isolation";marketIsolationStyle.textContent="html.ak-public-market #akFirebasePanel,html.ak-public-market #akAccountType,html.ak-public-market #akOwnerStaffPanel,html.ak-public-market #akOwnerDashboardPanels,html.ak-public-market #ownerDashboard,html.ak-public-market #akOwnerPaymentQueue,html.ak-public-market #akCustomerPaymentPanel,html.ak-public-market #akMarketOwnerEntry,html.ak-public-market #akOwnerAdManager,html.ak-public-market #akPaywallNotice,html.ak-public-market #akLicensePanel,body.ak-public #akFirebasePanel,body.ak-public #akOwnerStaffPanel,body.ak-public #akOwnerDashboardPanels,body.ak-public #ownerDashboard,body.ak-public #akOwnerPaymentQueue,body.ak-public #akCustomerPaymentPanel,body.ak-public #akStaffJoinPanel,body.ak-public #akStaffJoin,body.ak-public #akPlatformUserRows{display:none!important}";document.head.appendChild(marketIsolationStyle);
  document.title="Ak shopping markets · မြန်မာ့အွန်လိုင်းဈေး";
  const desc=document.querySelector('meta[name="description"]');
  if(desc)desc.content="မြန်မာနိုင်ငံတစ်ဝှမ်း ပစ္စည်းရှာဖွေ၊ ဈေးနှိုင်းယှဉ်၊ ဆိုင်များနှင့် တိုက်ရိုက်ဆက်သွယ်နိုင်သော Ak shopping markets";

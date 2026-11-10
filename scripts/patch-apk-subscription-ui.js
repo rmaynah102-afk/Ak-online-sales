@@ -20,6 +20,19 @@ const required = [
   'async function firebaseGoogleLogin()'
 ];
 for (const item of required) if (!html.includes(item)) throw new Error('Required existing payment/auth logic missing: ' + item);
+if (html.includes('id="payPlan"') && html.includes('id="adminPaymentRows"') && html.includes('id="akCustomerPaymentPanel"')) {
+  const nativeOld = 'const nativeAuth=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.FirebaseAuthentication;if(!nativeAuth||typeof nativeAuth.signInWithGoogle!=="function")throw Error("Native Google Login Plugin မတွေ့ပါ။ APK အသစ်ကို Install လုပ်ပါ။");$("fbStatus").textContent="Google အကောင့်ရွေးချယ်ရန် ဖွင့်နေသည်...";const nativeResult=await nativeAuth.signInWithGoogle({skipNativeAuth:true});';
+  const nativeNew = 'const cap=window.Capacitor;if(!cap||typeof cap.nativePromise!=="function")throw Error("Android Native Bridge မချိတ်နိုင်ပါ။ APK ကို ပြန်ဖွင့်ပါ။");$("fbStatus").textContent="Android Google Login Plugin ကို စတင်နေသည်...";let nativeResult;try{nativeResult=await cap.nativePromise("FirebaseAuthentication","signInWithGoogle",{skipNativeAuth:true,useCredentialManager:false});}catch(nativeError){console.error("AK native Google auth bridge failed",nativeError);throw Error("Google Login မအောင်မြင် ("+(nativeError.code||"NATIVE_AUTH_ERROR")+"): "+(nativeError.message||String(nativeError)))}';
+  if (html.includes(nativeOld)) html = html.replace(nativeOld, nativeNew);
+  else if (!html.includes('cap.nativePromise("FirebaseAuthentication","signInWithGoogle"')) throw new Error('Native Google Login patch point not found in integrated payment UI.');
+  const bodyEnd = html.lastIndexOf('</body>');
+  if (bodyEnd < 0) throw new Error('HTML body closing tag not found.');
+  html = html.slice(0, bodyEnd) + '<script>/* AK_APK_SUBSCRIPTION_UI_V3 */</script>\\n' + html.slice(bodyEnd);
+  fs.writeFileSync(target, html);
+  console.log('APK uses the integrated Firestore payment request and Owner review UI; duplicate onboarding panels skipped.');
+  process.exit(0);
+}
+
 for (const id of ['payPlan','payMethod','payReference','payScreenshot','paymentAccountInfo','paymentAmountLabel','licenseStatus','adminPaymentRows','adminStatus','paymentOwnerSettings','ownerPaymentSettingsStatus','akOnboardingGoogleButton']) {
   if (html.includes('id="' + id + '"')) throw new Error('Unexpected existing payment UI ID: ' + id);
 }

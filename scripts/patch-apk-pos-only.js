@@ -47,7 +47,7 @@ replaceExactly(
 
 const css = `
 <style id="ak-apk-pos-only">
-/* AK_APK_POS_ONLY_MARKET_ISOLATION_V4 */
+/* AK_APK_POS_ONLY_MARKET_ISOLATION_V5 */
 html.ak-apk-pos-only #market,
 html.ak-apk-pos-only #nav button[data-view="market"],
 html.ak-apk-pos-only #akFirebasePanel,

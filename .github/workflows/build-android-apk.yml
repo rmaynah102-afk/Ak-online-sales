@@ -11,6 +11,8 @@ on:
     paths:
       - '.github/workflows/build-android-apk.yml'
       - 'app.html'
+      - 'functions/**'
+      - 'firestore.rules'
       - 'package.json'
       - 'capacitor.config.json'
       - 'google-services.json'

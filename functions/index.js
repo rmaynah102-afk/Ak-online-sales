@@ -827,8 +827,7 @@ async function verifyWorkspaceMember(context, identity) {
 }
 function workspaceCanWrite(role,key) {
   if (role==="owner" || role==="manager") return true;
-  if (role==="cashier") return ["products","sales","payments"].includes(key);
-  if (role==="employee") return ["products","sales"].includes(key);
+  if (role==="cashier" || role==="employee") return ["products","sales","payments"].includes(key);
   return false;
 }
 function workspaceCanRead(role,key) {
@@ -887,7 +886,7 @@ exports.saveShopWorkspace = functions.https.onCall(async (data,context)=>{
       const oldSnap=oldVersion?await db.collection("shops").doc(identity.shopId).collection("workspaceVersions").doc(oldVersion).collection("products").get():null;
       const oldProducts=new Map((oldSnap?oldSnap.docs:[]).map(doc=>{const record=doc.data().record;return [String(record.id||doc.id),record]}));
       if (input.products.length!==oldProducts.size) throw new functions.https.HttpsError("permission-denied","ဝန်ထမ်းသည် ပစ္စည်းအသစ်ထည့်ခြင်း/ဖျက်ခြင်း မလုပ်နိုင်ပါ။ ဆိုင်ရှင်ထံ ဆက်သွယ်ပါ။");
-      const canonical=value=>JSON.stringify(Object.keys(value||{}).filter(k=>k!=="stock").sort().map(k=>[k,value[k]]));
+      const canonical=value=>JSON.stringify(Object.keys(value||{}).filter(k=>k!=="stock"&&k!=="photo").sort().map(k=>[k,value[k]]));
       for (const product of input.products) {
         const beforeProduct=oldProducts.get(String(product&&product.id||""));
         if (!beforeProduct || canonical(beforeProduct)!==canonical(product) ||

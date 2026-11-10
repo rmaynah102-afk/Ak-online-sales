@@ -144,7 +144,9 @@ if (!apkSubscriptionPatch.includes('id="akPlanButtons"') ||
     !apkSubscriptionPatch.includes('id="akOnboardingGoogleButton"') ||
     !apkSubscriptionPatch.includes('id="akPaymentProofStep"') ||
     !apkSubscriptionPatch.includes('function akStartSubscriptionGoogleLogin()') ||
-    !apkSubscriptionPatch.includes('AK_APK_SUBSCRIPTION_UI_V2')) {
+    !apkSubscriptionPatch.includes('AK_APK_SUBSCRIPTION_UI_V3') ||
+    !apkSubscriptionPatch.includes('nativePromise("FirebaseAuthentication","signInWithGoogle"') ||
+    !apkSubscriptionPatch.includes('document.body.classList.add("ak-license-locked")')) {
   console.error('APK subscription onboarding patch must include Package -> Google Gmail -> payment proof.');
   process.exitCode = 1;
 }

@@ -841,7 +841,7 @@ function workspaceDocId(value,index) {
   return raw.replace(/[^A-Za-z0-9_-]/g,"_").slice(0,120) || ("row_"+index);
 }
 exports.loadShopWorkspace = functions.https.onCall(async (data,context)=>{
-  const identity=workspaceIdentity(context);
+  const identity=await workspaceIdentity(context);
   await verifyWorkspaceMember(context,identity);
   const root=db.collection("shops").doc(identity.shopId).collection("workspace").doc("current");
   const metaSnap=await root.get();
@@ -864,7 +864,7 @@ exports.loadShopWorkspace = functions.https.onCall(async (data,context)=>{
 });
 
 exports.saveShopWorkspace = functions.https.onCall(async (data,context)=>{
-  const identity=workspaceIdentity(context);
+  const identity=await workspaceIdentity(context);
   await verifyWorkspaceMember(context,identity);
   const input=data && data.data;
   if (!input || typeof input!=="object" || Array.isArray(input)) {

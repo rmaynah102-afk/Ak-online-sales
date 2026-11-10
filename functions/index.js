@@ -537,6 +537,78 @@ exports.assignShopStaffRole = functions.https.onCall(async (data, context) => {
   return { ok: true, uid: staff.uid, email, role };
 });
 
+// One-time merchant invite codes: owner creates a role-bound code, staff claims it
+// after signing in with their own verified Gmail. Codes expire after 24 hours.
+exports.createShopInviteCode = functions.https.onCall(async (data, context) => {
+  const ownerUid = await requireActiveShop(context);
+  const role = String(data.role || "").trim().toLowerCase();
+  if (!SHOP_STAFF_ROLES.includes(role)) {
+    throw new functions.https.HttpsError("invalid-argument", "ဝန်ထမ်းရာထူး မမှန်ပါ။");
+  }
+  const members = await db.collection("shopMembers").where("shopId", "==", ownerUid).get();
+  if (members.size >= 2) {
+    throw new functions.https.HttpsError("resource-exhausted", "ဝန်ထမ်း ၂ ဦး ပြည့်နေပါပြီ။ စုစုပေါင်း အကောင့် ၃ ခုသာ ခွင့်ပြုထားသည်။");
+  }
+  const code = crypto.randomBytes(5).toString("hex").toUpperCase();
+  const hash = crypto.createHash("sha256").update(code).digest("hex");
+  await db.collection("shopInviteCodes").doc(hash).create({
+    shopId: ownerUid, role, status: "pending",
+    expiresAt: admin.firestore.Timestamp.fromMillis(Date.now() + 24 * 60 * 60 * 1000),
+    createdBy: ownerUid, createdAt: admin.firestore.FieldValue.serverTimestamp()
+  });
+  return { ok: true, code, role, expiresInHours: 24 };
+});
+
+exports.claimShopInviteCode = functions.https.onCall(async (data, context) => {
+  if (!context.auth || context.auth.token.email_verified !== true) {
+    throw new functions.https.HttpsError("unauthenticated", "ကိုယ်ပိုင် Gmail ဖြင့် Login ဝင်ပြီး Email အတည်ပြုပါ။");
+  }
+  const code = String(data.code || "").trim().toUpperCase();
+  if (!/^[A-F0-9]{10}$/.test(code)) {
+    throw new functions.https.HttpsError("invalid-argument", "Merchant Code မမှန်ပါ။");
+  }
+  const uid = context.auth.uid;
+  const email = String(context.auth.token.email || "").trim().toLowerCase();
+  if (!email || email === OWNER_EMAIL) {
+    throw new functions.https.HttpsError("permission-denied", "ဤ Gmail ကို ဝန်ထမ်းအဖြစ် မချိတ်နိုင်ပါ။");
+  }
+  const hash = crypto.createHash("sha256").update(code).digest("hex");
+  const inviteRef = db.collection("shopInviteCodes").doc(hash);
+  const outcome = await db.runTransaction(async tx => {
+    const inviteSnap = await tx.get(inviteRef);
+    if (!inviteSnap.exists) throw new functions.https.HttpsError("not-found", "Merchant Code မတွေ့ပါ။");
+    const invite = inviteSnap.data();
+    if (invite.status !== "pending" || !invite.expiresAt || invite.expiresAt.toMillis() <= Date.now()) {
+      throw new functions.https.HttpsError("failed-precondition", "Code သက်တမ်းကုန်နေသည် သို့မဟုတ် အသုံးပြုပြီးဖြစ်သည်။");
+    }
+    const user = await admin.auth().getUser(uid);
+    if (user.customClaims?.platformAdmin === true || (user.customClaims?.shopId && user.customClaims.shopId !== invite.shopId)) {
+      throw new functions.https.HttpsError("already-exists", "ဤ Gmail ကို အခြားဆိုင်တွင် ချိတ်ထားပြီးဖြစ်သည်။");
+    }
+    const membersQuery = db.collection("shopMembers").where("shopId", "==", invite.shopId);
+    const membersSnap = await tx.get(membersQuery);
+    const already = membersSnap.docs.some(doc => doc.id === uid);
+    if (!already && membersSnap.size >= 2) {
+      throw new functions.https.HttpsError("resource-exhausted", "ဝန်ထမ်း ၂ ဦး ပြည့်နေပါပြီ။");
+    }
+    tx.update(inviteRef, { status: "claimed", claimedBy: uid, claimedEmail: email, claimedAt: admin.firestore.FieldValue.serverTimestamp() });
+    tx.set(db.collection("shopMembers").doc(uid), {
+      uid, shopId: invite.shopId, email, role: invite.role,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(), invitedBy: invite.createdBy
+    }, { merge: true });
+    return { shopId: invite.shopId, role: invite.role };
+  });
+  const staff = await admin.auth().getUser(uid);
+  await admin.auth().setCustomUserClaims(uid, {
+    ...(staff.customClaims || {}), shopId: outcome.shopId, shopRole: outcome.role
+  });
+  await db.collection("users").doc(outcome.shopId).collection("auditLogs").add({
+    action: "staff_joined_by_merchant_code", targetUid: uid, email, role: outcome.role,
+    actorUid: outcome.shopId, createdAt: admin.firestore.FieldValue.serverTimestamp()
+  });
+  return { ok: true, ...outcome };
+});
+
 exports.listShopStaff = functions.https.onCall(async (data, context) => {
   const ownerUid = await requireActiveShop(context);
   const snap = await db.collection("shopMembers").where("shopId", "==", ownerUid).limit(100).get();
@@ -836,7 +908,8 @@ async function verifyWorkspaceMember(context, identity) {
   }
 }
 function workspaceCanWrite(role,key) {
-  if (role==="owner" || role==="manager") return true;
+  if (role==="owner") return true;
+  if (role==="manager") return false;
   if (role==="cashier") return ["products","sales","payments","people"].includes(key);
   if (role==="employee") return ["products","sales","payments"].includes(key);
   return false;

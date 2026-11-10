@@ -140,6 +140,25 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    match /subscriptionAccessRequests/{userId} {
+      allow create, update: if request.auth != null
+        && request.auth.uid == userId
+        && request.resource.data.uid == userId
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.days in [30, 90, 180, 365]
+        && request.resource.data.status == 'pending'
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+      allow read: if isVerifiedOwner()
+        || (request.auth != null && request.auth.uid == userId);
+      allow update: if isVerifiedOwner()
+        && resource.data.status == 'pending'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','reviewedBy','reviewedAt'])
+        && request.resource.data.status == 'reviewed'
+        && request.resource.data.reviewedAt == request.time;
+      allow delete: if false;
+    }
+
     // Customer payment requests are written by the customer and reviewed by the verified Owner.
     // A matching reference reservation and request must be committed in one atomic batch.
     match /paymentRequests/{requestId} {

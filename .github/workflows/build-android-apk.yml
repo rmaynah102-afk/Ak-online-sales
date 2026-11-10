@@ -1,7 +1,7 @@
 name: Build AK Sale Android APK
 
 concurrency:
-  group: ak-sale-build-${{ github.ref }}-${{ matrix.edition }}
+  group: ak-sale-build-${{ github.ref }}
   cancel-in-progress: false
 
 on:

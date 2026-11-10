@@ -21,7 +21,7 @@ replaceExactly('const publicViews=["backup","market"];', 'const publicViews=["ba
 replaceExactly('const publicMode=params.get("market")==="1" && params.get("app")!=="1";', 'const publicMode=false; /* APK: never move login or Merchant Code into Market. */');
 replaceExactly('if(new URLSearchParams(location.search).get("market")==="1")document.documentElement.classList.add("ak-public-market");','/* APK POS-only: public Market URL mode disabled. */');
 replaceExactly('s.src="https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js";s.async=true;','s.src="./vendor/zxing.min.js";s.async=true;');
-replaceExactly('id="market";', 'id="backup";');
+// Keep the real Marketplace section ID unchanged. Rewriting it to "backup" created duplicate IDs and exposed Market inside the APK login/backup view.
 replaceExactly('name:"Ak shopping markets"','name:"AK Hardware & Electrical"');
 // Subscription onboarding patch already removes public shop/listing loaders from the APK auth listener.
 replaceExactly(

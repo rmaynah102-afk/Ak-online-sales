@@ -85,7 +85,7 @@ jobs:
           const vm = require('vm');
           const html = fs.readFileSync('www/index.html', 'utf8');
           const checks = [
-            ['APK POS-only root', '<html lang="my" class="ak-apk-pos-only">'],
+            ['APK POS-only root and edition marker', html.includes('<html lang="my" class="ak-apk-pos-only"') && html.includes('data-ak-apk-edition=')],
             ['Marketplace hidden', 'html.ak-apk-pos-only #market'],
             ['Market navigation hidden', 'html.ak-apk-pos-only #nav button[data-view="market"]'],
             ['Owner Market promotion panel hidden', 'html.ak-apk-pos-only #akOwnerPromoPanel'],

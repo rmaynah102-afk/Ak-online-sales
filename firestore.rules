@@ -18,7 +18,9 @@ service cloud.firestore {
       return request.auth != null
         && request.auth.uid == uid
         && (isVerifiedOwner()
-          || (request.auth.token.email_verified == true
+          || ((request.auth.token.email_verified == true
+              || (request.auth.token.phone_number is string
+                && request.auth.token.phone_number.size() >= 8))
             && exists(/databases/$(database)/documents/licenses/$(uid))
             && get(/databases/$(database)/documents/licenses/$(uid)).data.status == 'active'
             && get(/databases/$(database)/documents/licenses/$(uid)).data.expiresAt is timestamp

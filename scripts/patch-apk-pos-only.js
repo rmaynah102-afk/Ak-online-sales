@@ -50,16 +50,16 @@ const css = `
 /* AK_APK_POS_ONLY_MARKET_ISOLATION_V5 */
 html.ak-apk-pos-only #market,
 html.ak-apk-pos-only #nav button[data-view="market"],
-html.ak-apk-pos-only #akFirebasePanel,
 html.ak-apk-pos-only #akOwnerPromoPanel,
 html.ak-apk-pos-only #akMarketReportsPanel,
 html.ak-apk-pos-only #akPublicSponsoredSection { display:none!important; }
 html.ak-apk-pos-only body.ak-license-locked #nav { display:none!important; }
-html.ak-apk-pos-only body.ak-license-locked main>#backup>.panel:not(#akPaywallNotice):not(#akSubscriptionPayment):not(#akLicensePanel) {
+html.ak-apk-pos-only body.ak-license-locked main>#backup>.panel:not(#akPaywallNotice):not(#akSubscriptionPayment):not(#akLicensePanel):not(#akFirebasePanel) {
   display:none!important;
 }
 html.ak-apk-pos-only body.ak-license-locked main>#backup>#akPaywallNotice { display:block!important; order:0; }
 html.ak-apk-pos-only body.ak-license-locked main>#backup>#akSubscriptionPayment { display:block!important; order:1; }
+html.ak-apk-pos-only body.ak-license-locked main>#backup>#akFirebasePanel { display:block!important; order:1; }
 html.ak-apk-pos-only #akSubscriptionPayment .ak-plan-option { min-height:64px; white-space:normal; }
 html.ak-apk-pos-only #akSubscriptionPayment #akPaymentProofStep { margin-top:14px; }
 </style>

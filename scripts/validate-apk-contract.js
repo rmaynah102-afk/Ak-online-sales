@@ -112,8 +112,9 @@ if (!html.includes('const authGeneration=++akAuthGeneration')) {
   console.error('Authentication callbacks must ignore stale async work after account switching.');
   process.exitCode = 1;
 }
-if (!html.includes('akCloudRevision=snap.exists&&Number.isSafeInteger(snap.data().revision)')) {
-  console.error('Initial Cloud load must initialize the revision before enabling synchronization.');
+if (!html.includes('akWorkspaceRevision=Number(ws.revision||0)') ||
+    !html.includes('httpsCallable("loadShopWorkspace")')) {
+  console.error('Initial shop workspace load must initialize its revision before enabling synchronization.');
   process.exitCode = 1;
 }
 if (!html.includes('akCloudConflict=false;akLocalDirty=false;')) {
@@ -132,7 +133,7 @@ if (!html.includes('const AK_PLAN_AMOUNTS={30:30000,90:90000,180:180000,365:3600
   console.error('Subscription pricing must match: 1 month 30000, 3 months 90000, 6 months 180000, 1 year 360000 MMK.');
   process.exitCode = 1;
 }
-if (!html.includes('if(!user){checkUserRole(null);akSetLicenseGate(false') ||
+if (!html.includes('if(!user){akWorkspaceMode=false;akWorkspaceShopId="";akWorkspaceRevision=0;checkUserRole(null);akSetLicenseGate(false') ||
     html.includes('akSetLicenseGate(true,"Offline Local Mode') ||
     !html.includes('Cloud / License စစ်ဆေးမှု မအောင်မြင်ပါ')) {
   console.error('POS must remain locked until Gmail login and an owner-approved active subscription are verified online.');

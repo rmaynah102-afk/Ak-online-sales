@@ -815,7 +815,7 @@ function checkUserRole(user){
 }
 function akApplyRoleNavigation(){
  const role=akUserRole,staff=["manager","cashier","employee"].includes(role);
- const allowed=role==="employee"?["home","sales"]:role==="cashier"?["home","sales","people"]:role==="manager"?["home","reports"]:null;
+ const allowed=role==="employee"?["home","sales"]:role==="cashier"?["home","products","sales","people","market"]:role==="manager"?["home","reports"]:null;
  document.querySelectorAll("#nav button[data-view]").forEach(btn=>{btn.hidden=staff&&!allowed.includes(btn.dataset.view)});
  const ownerBtn=document.querySelector('#nav button[data-view="ownerDashboard"]');if(ownerBtn)ownerBtn.hidden=!["shop-owner","platform-owner"].includes(role);
 }

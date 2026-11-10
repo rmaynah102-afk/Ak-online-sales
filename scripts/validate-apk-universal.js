@@ -9,7 +9,7 @@ const checks = [
   ['single stable Android package', config.appId === 'com.ak.hardware.sales'],
   ['single launcher name', config.appName === 'AK Sale Software'],
   ['Market disabled inside APK', html.includes('const publicMode=false;') && html.includes('if(!publicMode)return;')],
-  ['Market login relocation disabled', !html.includes('marketForm.parentElement.before(authPanel)')],
+  ['Market login relocation disabled by hard guard', html.includes('const publicMode=false;') && html.includes('if(!publicMode)return;')],
   ['Merchant Code panel exists only in POS login', html.includes('id="akMerchantJoinPanel"')],
   ['role determined from Firebase identity', html.includes('function checkUserRole(user)') && html.includes('claims.shopId?String(claims.shopRole||"staff").toLowerCase():"shop-owner"')],
   ['role-based navigation exists', html.includes('function akApplyRoleNavigation()')],

@@ -31,6 +31,32 @@ service cloud.firestore {
       return /databases/$(database)/documents/freeBetaCapacity/slots;
     }
 
+    function activeShopLicense(shopId) {
+      return exists(/databases/$(database)/documents/licenses/$(shopId))
+        && get(/databases/$(database)/documents/licenses/$(shopId)).data.status == 'active'
+        && get(/databases/$(database)/documents/licenses/$(shopId)).data.expiresAt is timestamp
+        && get(/databases/$(database)/documents/licenses/$(shopId)).data.expiresAt > request.time;
+    }
+
+    function canReadShopWorkspaceMeta(shopId) {
+      return request.auth != null && (
+        (request.auth.uid == shopId && (isVerifiedOwner() || activeShopLicense(shopId)))
+        || (request.auth.token.shopId == shopId
+          && request.auth.token.shopRole in ['manager','cashier','employee']
+          && activeShopLicense(shopId)
+          && exists(/databases/$(database)/documents/shopMembers/$(request.auth.uid))
+          && get(/databases/$(database)/documents/shopMembers/$(request.auth.uid)).data.shopId == shopId
+          && get(/databases/$(database)/documents/shopMembers/$(request.auth.uid)).data.role == request.auth.token.shopRole)
+      );
+    }
+
+    // Client can subscribe to revision metadata only. All workspace records are read/written
+    // through trusted callable functions so role permissions are enforced server-side.
+    match /shops/{shopId}/workspace/{documentId} {
+      allow read: if documentId == 'current' && canReadShopWorkspaceMeta(shopId);
+      allow write: if false;
+    }
+
     // Staff membership is written only by trusted Cloud Functions.
     // Owners can list their staff; each staff member can read their own role.
     match /shopMembers/{memberUid} {

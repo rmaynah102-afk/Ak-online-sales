@@ -121,7 +121,7 @@ jobs:
           if (!html.includes('<option value="30">30 ရက် · 30,000 MMK</option>') || !html.includes('<option value="365">365 ရက် · 360,000 MMK</option>')) {
             throw new Error('APK subscription duration and amount options are missing');
           }
-          if (!html.includes('Owner အတည်ပြုပြီးမှ POS အသုံးပြုခွင့်ရမည်')) {
+          if (!html.includes('Owner အတည်ပြုပြီးမှ Cloud POS အသုံးပြုခွင့်ရမည်')) {
             throw new Error('APK is missing owner-approved subscription gate messaging');
           }
           console.log('Generated APK POS bundle validated:', scriptCount, 'script tags; Market isolated; login, payment and printer UI present.');

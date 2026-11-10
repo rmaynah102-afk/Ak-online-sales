@@ -687,12 +687,12 @@ async function akSubmitMarketAdOrder(e){
  e.preventDefault();const status=document.getElementById("akMarketAdOrderStatus");
  const data={type:document.getElementById("akAdOrderType").value,days:Number(document.getElementById("akAdOrderDays").value),shopName:document.getElementById("akAdOrderShop").value.trim(),phone:document.getElementById("akAdOrderPhone").value.trim(),category:document.getElementById("akAdOrderCategory").value.trim(),budget:Number(document.getElementById("akAdOrderBudget").value||0),note:document.getElementById("akAdOrderNote").value.trim(),status:"new",createdAt:firebase.firestore.FieldValue.serverTimestamp()};
  if(!data.shopName||data.phone.replace(/[^0-9]/g,"").length<7){status.textContent="ဆိုင်အမည်နှင့် ဖုန်းနံပါတ်ကို မှန်ကန်စွာ ဖြည့်ပါ။";return}
- try{if(!window.fbStore)throw Error("Cloud database မချိတ်ဆက်ရသေးပါ။ နောက်မှ ထပ်ကြိုးစားပါ။");await fbStore.collection("marketAdOrders").add(data);document.getElementById("akMarketAdOrderForm").reset();status.textContent="အော်ဒါလက်ခံပြီးပါပြီ။ Owner က စစ်ဆေးပြီး ဆက်သွယ်ပါမည်။";}
+ try{if(!fbStore)throw Error("Cloud database မချိတ်ဆက်ရသေးပါ။ နောက်မှ ထပ်ကြိုးစားပါ။");await fbStore.collection("marketAdOrders").add(data);document.getElementById("akMarketAdOrderForm").reset();status.textContent="အော်ဒါလက်ခံပြီးပါပြီ။ Owner က စစ်ဆေးပြီး ဆက်သွယ်ပါမည်။";}
  catch(err){status.textContent="အော်ဒါမတင်နိုင်ပါ: "+(err.message||err);console.error("AK ad order submit",err)}
 }
 window.akLoadMarketAdOrders=async function(){
  const status=document.getElementById("akMarketAdOrdersStatus"),host=document.getElementById("akMarketAdOrdersRows");
- if(!window.fbAuth?.currentUser||!window.akIsPlatformOwner?.(fbAuth.currentUser)){if(status)status.textContent="Owner အတည်ပြု Login လိုအပ်သည်။";return}
+ if(!fbAuth?.currentUser||!akIsPlatformOwner(fbAuth.currentUser)){if(status)status.textContent="Owner အတည်ပြု Login လိုအပ်သည်။";return}
  try{const snap=await fbStore.collection("marketAdOrders").orderBy("createdAt","desc").limit(100).get();
  status.textContent="အော်ဒါ "+snap.size+" ခု";
  host.innerHTML=snap.empty?"<p>အော်ဒါမရှိသေးပါ။</p>":snap.docs.map(d=>{const x=d.data();return '<article class="notice" style="margin:8px 0"><b>'+String(x.shopName||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))+'</b><div>'+String(x.type||"")+' · '+String(x.days||"")+' ရက် · '+String(x.phone||"")+'</div><div>'+String(x.note||"")+'</div></article>'}).join("");

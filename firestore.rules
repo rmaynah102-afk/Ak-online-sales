@@ -366,6 +366,34 @@ service cloud.firestore {
       allow delete: if isVerifiedOwner();
     }
 
+    // Public ad booking requests need no login; strict validation limits spam payloads.
+    match /marketAdOrders/{orderId} {
+      allow create: if request.resource.data.keys().hasOnly(['type','days','shopName','phone','category','budget','note','status','createdAt'])
+        && request.resource.data.type in ['ဆိုင်ကြော်ငြာ','Live ကြော်ငြာ','Sponsored Banner','ပစ္စည်းအထူးကြော်ငြာ']
+        && request.resource.data.days in [7,15,30]
+        && request.resource.data.shopName is string
+        && request.resource.data.shopName.size() >= 2
+        && request.resource.data.shopName.size() <= 100
+        && request.resource.data.phone is string
+        && request.resource.data.phone.size() >= 7
+        && request.resource.data.phone.size() <= 30
+        && request.resource.data.category is string
+        && request.resource.data.category.size() <= 80
+        && request.resource.data.budget is number
+        && request.resource.data.budget >= 0
+        && request.resource.data.budget <= 1000000000
+        && request.resource.data.note is string
+        && request.resource.data.note.size() <= 700
+        && request.resource.data.status == 'new'
+        && request.resource.data.createdAt == request.time;
+      allow read: if isVerifiedOwner();
+      allow update: if isVerifiedOwner()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','reviewedAt'])
+        && request.resource.data.status in ['contacted','approved','rejected','completed']
+        && request.resource.data.reviewedAt == request.time;
+      allow delete: if isVerifiedOwner();
+    }
+
     match /paymentRequests/{requestId} {
       // Payment submissions and reference reservations are created only by the
       // trusted callable, which validates package amounts and prevents reuse.

@@ -136,7 +136,20 @@ public class AkPrinterPlugin extends Plugin {
                     socket.connect();
                 }
                 OutputStream output = socket.getOutputStream();
-                output.write(bytes);
+                // Small paced writes are more reliable with low-cost Bluetooth ESC/POS boards.
+                final int chunkSize = 2048;
+                for (int offset = 0; offset < bytes.length; offset += chunkSize) {
+                    int count = Math.min(chunkSize, bytes.length - offset);
+                    output.write(bytes, offset, count);
+                    if ((offset / chunkSize) % 8 == 7) {
+                        output.flush();
+                        try { Thread.sleep(12); }
+                        catch (InterruptedException interrupted) {
+                            Thread.currentThread().interrupt();
+                            throw new IOException("Bluetooth Print ကို ရပ်လိုက်သည်။", interrupted);
+                        }
+                    }
+                }
                 output.flush();
                 try { Thread.sleep(180); } catch (InterruptedException ignored) { Thread.currentThread().interrupt(); }
                 JSObject result = new JSObject();
@@ -175,7 +188,12 @@ public class AkPrinterPlugin extends Plugin {
                     socket.connect(new InetSocketAddress(address, port), 5000);
                     socket.setSoTimeout(5000);
                     OutputStream output = socket.getOutputStream();
-                    output.write(bytes);
+                    // Stream in bounded blocks to avoid a single large write on small printer buffers.
+                    final int chunkSize = 8192;
+                    for (int offset = 0; offset < bytes.length; offset += chunkSize) {
+                        int count = Math.min(chunkSize, bytes.length - offset);
+                        output.write(bytes, offset, count);
+                    }
                     output.flush();
                 }
                 JSObject result = new JSObject();

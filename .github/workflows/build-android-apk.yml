@@ -83,7 +83,7 @@ jobs:
             ['Immediate locked onboarding on launch', 'document.body.classList.add("ak-license-locked")'],
             ['Explicit package selection', 'Package ရွေးပြီးမှ Google ချိတ်နိုင်သည်'],
             ['Google Gmail onboarding', 'id="akOnboardingGoogleButton"'],
-            ['Android native Google bridge', 'nativePromise("FirebaseAuthentication","signInWithGoogle"'],
+            ['Android native Google bridge with legacy sign-in fallback', 'nativePromise("FirebaseAuthentication","signInWithGoogle",{skipNativeAuth:true,useCredentialManager:false}'],
             ['Owner approval re-login action', 'function akReLoginAfterApproval()'],
             ['Owner payment review UI', 'id="akOwnerPaymentReview"'],
             ['Email login handler', 'async function firebaseLogin()'],

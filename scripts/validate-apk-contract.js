@@ -196,13 +196,15 @@ if ((functionsSource.match(/update\("KBZPay:" \+ normalizedReference\)/g) || [])
   console.error('KBZPay references must use the same whitespace/case normalization at submission and approval.');
   process.exitCode = 1;
 }
-const paymentRule = rules.match(/match \/paymentRequests\/\{requestId\} \{([\\s\\S]*?)\\n\\s*\\}/);
+const paymentRuleStart = rules.indexOf('match /paymentRequests/{requestId} {');
+const paymentRuleEnd = rules.indexOf('\n    match /paymentReferences', paymentRuleStart);
+const paymentRule = paymentRuleStart >= 0 ? rules.slice(paymentRuleStart, paymentRuleEnd > paymentRuleStart ? paymentRuleEnd : undefined) : '';
 if (!paymentRule ||
-    !/request\.resource\.data\.uid == request\.auth\.uid/.test(paymentRule[1]) ||
-    !/allow read: if isVerifiedOwner\(\)/.test(paymentRule[1]) ||
-    !/allow update: if isVerifiedOwner\(\)/.test(paymentRule[1]) ||
-    !/request\.resource\.data\.status == 'pending'/.test(paymentRule[1]) ||
-    !/existsAfter\([\\s\\S]*paymentReferences/.test(paymentRule[1])) {
+    !paymentRule.includes('request.resource.data.uid == request.auth.uid') ||
+    !paymentRule.includes('allow read: if isVerifiedOwner()') ||
+    !paymentRule.includes('allow update: if isVerifiedOwner()') ||
+    !paymentRule.includes("request.resource.data.status == 'pending'") ||
+    !paymentRule.includes('existsAfter(/databases/$(database)/documents/paymentReferences/')) {
   console.error('Payment requests must be owner-visible, customer-owned, pending-only on create, and protected by an atomic reference reservation.');
   process.exitCode = 1;
 }

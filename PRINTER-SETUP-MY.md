@@ -43,7 +43,17 @@
 
 မှတ်ချက်: Viber ကို တိုက်ရိုက် Auto-send မလုပ်ပါ။ ဖုန်း၏ Share Menu မှ Viber နှင့် လက်ခံမည့် Chat ကို ကိုယ်တိုင်ရွေးရသည်။ Browser တွင် File Share မရပါက PNG ပုံကို Download လုပ်ပေးမည်။ APK တွင် Share Menu မှ PNG ပုံတစ်ပုံတည်းကို ပို့နိုင်ရန် ပြင်ဆင်ထားသည်။
 
-## ၆။ လိုက်ဖက်မှု
+## ၆။ Thermer / USB OTG Thermal Printer ဖြင့် ထုတ်ရန်
+
+1. Android ဖုန်းတွင် Thermer (Bluetooth Thermal Printer App) ကို ထည့်သွင်းပြီး Thermer အတွင်း၌ Bluetooth သို့မဟုတ် USB OTG Printer ကို အရင်ချိတ်ဆက်ကာ Test Print လုပ်ပါ။
+2. AK Sale ၏ အရောင်းမှတ်တမ်းထဲမှ ဘောင်ချာတစ်ခုကို ရွေးပါ။
+3. **Thermer / Printer App သို့ပို့** ကိုနှိပ်ပါ။
+4. Android Share Menu ပွင့်လာလျှင် Thermer ကိုရွေးပါ။
+5. Thermer ထဲတွင် စာရွက်အကျယ်၊ ပုံချိန်ညှိမှုနှင့် Printer ကို စစ်ပြီး Print လုပ်ပါ။
+
+ဒီနည်းသည် ဘောင်ချာကို PNG ပုံအဖြစ် ပို့ခြင်းဖြစ်သည်။ ထို့ကြောင့် Myanmar စာသားကို ESC/POS စာလုံးကုဒ်အဖြစ်မဟုတ်ဘဲ ပုံအဖြစ် ထုတ်ပေးနိုင်သည်။ USB OTG အတွက် ဖုန်း၊ OTG ကြိုး၊ Printer နှင့် Thermer တို့ အပြန်အလှန် ပံ့ပိုးရမည်။ Thermer ရှိသည်ဆိုရုံဖြင့် Printer မော်ဒယ်အားလုံး အလုပ်လုပ်မည်ဟု မအာမခံနိုင်ပါ။
+
+## ၇။ လိုက်ဖက်မှု
 
 - အကြံပြုစံ: 58mm / 80mm ESC/POS Thermal Receipt Printer။
 - Bluetooth: Bluetooth Classic SPP ကို ထောက်ပံ့ရမည်။ BLE-only Printer များ မဖြစ်နိုင်ပါ။

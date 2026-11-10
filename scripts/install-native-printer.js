@@ -46,6 +46,8 @@ const permissions = [
   '    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />',
   '    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />',
   '    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />',
+  '    <uses-permission android:name="android.permission.CAMERA" />',
+  '    <uses-feature android:name="android.hardware.camera.any" android:required="false" />',
   '    <uses-feature android:name="android.hardware.bluetooth" android:required="false" />'
 ];
 for (const item of permissions) {

@@ -243,7 +243,8 @@ public class AkPrinterPlugin extends Plugin {
             sendIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             getActivity().runOnUiThread(() -> {
                 try {
-                    Intent chooser = Intent.createChooser(sendIntent, "ပုံနှင့်စာသားကို Viber / အခြား App သို့ မျှဝေရန်");
+                    String chooserTitle = call.getString("chooserTitle", "ပုံနှင့်စာသားကို Viber / အခြား App သို့ မျှဝေရန်");
+                    Intent chooser = Intent.createChooser(sendIntent, chooserTitle);
                     chooser.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                     getActivity().startActivity(chooser);
                     JSObject result = new JSObject();

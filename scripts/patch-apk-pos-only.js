@@ -56,7 +56,7 @@ html.ak-apk-pos-only #akSubscriptionPayment .ak-plan-option { min-height:64px; w
 html.ak-apk-pos-only #akSubscriptionPayment #akPaymentProofStep { margin-top:14px; }
 </style>
 `;
-const headEnd = html.lastIndexOf('</head>');
+const headEnd = html.indexOf('</head>');
 if (headEnd < 0) throw new Error('HTML head closing tag not found.');
 html = html.slice(0, headEnd) + css + '\n' + html.slice(headEnd);
 fs.writeFileSync(target, html);

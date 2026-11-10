@@ -20,7 +20,7 @@ const checks = [
   ['AI security panel removed', !html.includes('<h2>AI လုံခြုံရေးစစ်ဆေးမှု</h2>')],
   ['local ZXing scanner bundled', fs.existsSync(path.join(root, 'www', 'vendor', 'zxing.min.js')) && html.includes('s.src="./vendor/zxing.min.js";s.async=true;')],
   ['Thermer receipt sharing present', html.includes('Thermer / Printer App သို့ပို့') && html.includes('chooserTitle')],
-  ['native printer plugin installed', fs.existsSync(path.join(root, 'android', 'app', 'src', 'main', 'java', 'com', 'ak', 'hardware', 'sales', 'AkPrinterPlugin.java'))]
+  ['native printer plugin source and installer exist', fs.existsSync(path.join(root, 'native', 'android', 'AkPrinterPlugin.java')) && fs.existsSync(path.join(root, 'scripts', 'install-native-printer.js'))]
 ];
 const failed = checks.filter(([, ok]) => !ok).map(([name]) => name);
 for (const [name, ok] of checks) console.log((ok ? 'PASS ' : 'FAIL ') + name);

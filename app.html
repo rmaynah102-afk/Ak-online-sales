@@ -966,7 +966,7 @@ async function akShareProductToViber(){
   const native=window.Capacitor?.isNativePlatform?.() && window.Capacitor?.Plugins?.AkPrinter?.shareReceiptImage;
   if(native){
    const dataUrl=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result||""));r.onerror=()=>reject(Error("ပုံဖတ်မရပါ"));r.readAsDataURL(p.blob)});
-   await window.Capacitor.Plugins.AkPrinter.shareReceiptImage({data:dataUrl.split(",")[1],fileName:"AK-Product-"+Date.now()+".png"});
+   await window.Capacitor.Plugins.AkPrinter.shareReceiptImage({data:dataUrl.split(",")[1],fileName:"AK-Product-"+Date.now()+".png",text:p.caption});
    try{await navigator.clipboard.writeText(p.caption)}catch(_){}
    return;
   }
@@ -1009,7 +1009,7 @@ async function akStartBarcodeScanner(target="product"){
  try{
   const supported=await BarcodeDetector.getSupportedFormats();
   // Read every format implemented by this Android WebView, not just a short hard-coded subset.
-  const formats=supported.filter(x=>["aztec","code_128","code_39","code_93","codabar","data_matrix","ean_13","ean_8","itf","pdf417","qr_code","upc_a","upc_e","unknown"].includes(x));
+  const formats=supported; // Scan every format supported by this Android device, including newly supported formats.
   if(!formats.length)throw Error("ဒီဖုန်းမှာ ဖတ်နိုင်သော Barcode format မတွေ့ပါ");
   akBarcodeStream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:"environment"},width:{ideal:1920},height:{ideal:1080}}});
   const video=document.getElementById("akBarcodeVideo");video.srcObject=akBarcodeStream;await video.play();

@@ -192,6 +192,7 @@ public class AkPrinterPlugin extends Plugin {
     public void shareReceiptImage(PluginCall call) {
         String encoded = call.getString("data", "");
         String requestedName = call.getString("fileName", "AK-Receipt.png");
+        String shareText = call.getString("text", "");
         if (encoded.isEmpty()) {
             call.reject("ဘောင်ချာပုံ Data မရှိပါ။");
             return;
@@ -229,6 +230,7 @@ public class AkPrinterPlugin extends Plugin {
             Intent sendIntent = new Intent(Intent.ACTION_SEND);
             sendIntent.setType("image/png");
             sendIntent.putExtra(Intent.EXTRA_STREAM, imageUri);
+            if (shareText != null && !shareText.trim().isEmpty()) sendIntent.putExtra(Intent.EXTRA_TEXT, shareText);
             sendIntent.setClipData(ClipData.newUri(
                 getContext().getContentResolver(),
                 "AK Sale receipt image",

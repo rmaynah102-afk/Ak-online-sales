@@ -2029,11 +2029,7 @@ async function copyKpayNumber(){const number="09774033661";try{if(navigator.clip
 async function loadPaymentAccountSettings(){try{if(!fbAuth?.currentUser)return;const x={enabled:true,method:"KBZPay",bankName:"KBZPay",accountName:"NiNiWin",accountNumber:"09774033661",instructions:"KBZPay သို့ ငွေလွှဲပြီး Transaction ID နှင့် Screenshot တင်ပါ။ Owner က KBZPay ထဲတွင် ငွေဝင်မှုကို စစ်ဆေးပြီးမှ အတည်ပြုမည်။"};const info=$("paymentAccountInfo"),select=$("payMethod");if(info)info.innerHTML="<b>KBZPay</b><br>အကောင့်အမည်: <b>"+esc(x.accountName)+"</b><br>အကောင့်နံပါတ်: <b>"+esc(x.accountNumber)+"</b><br>"+esc(x.instructions);if(select)select.innerHTML="<option value=\"KBZPay\">KBZPay</option>"}catch(e){const info=$("paymentAccountInfo");if(info)info.textContent="အကောင့်အချက်အလက် ဖတ်မရပါ: "+e.message}}
 async function savePaymentAccountSettings(){if(!akIsPlatformOwner())throw Error("CEO Owner သာ ခွင့်ပြုသည်။");$("ownerPaymentSettingsStatus").textContent="KBZPay လက်ခံအကောင့်ကို လက်ရှိ Server သတ်မှတ်ချက်အတိုင်း အသုံးပြုနေသည်။"}
 function validateAndSubmitKPay(paymentData,screenshotFile){
- if(!screenshotFile){
-  alert("ကျေးဇူးပြု၍ KPay လွှဲငွေအတွက် Screenshot Proof (ပုံ) ကို ထည့်သွင်းပေးပါ။");
-  return false;
- }
- if(!/^image\/(jpeg|png|webp)$/.test(screenshotFile.type||"")||screenshotFile.size>2*1024*1024){
+ if(screenshotFile&&(!/^image\/(jpeg|png|webp)$/.test(screenshotFile.type||"")||screenshotFile.size>2*1024*1024)){
   alert("Screenshot ကို JPG, PNG သို့မဟုတ် WEBP ပုံဖြင့် 2MB အောက် တင်ပါ။");
   return false;
  }
@@ -2055,9 +2051,17 @@ async function submitPaymentRequest(){
   let screenshotUrl="";
   const file=$("payScreenshot").files[0];
   if(!validateAndSubmitKPay({method,amount,reference},file))return;
-  uploadedPath="paymentProofs/"+uid+"/"+Date.now()+"_"+file.name.replace(/[^a-zA-Z0-9._-]/g,"_");
-  const upload=await firebase.storage().ref(uploadedPath).put(file);
-  screenshotUrl=await upload.ref.getDownloadURL();
+  if(file){
+   try{
+    uploadedPath="paymentProofs/"+uid+"/"+Date.now()+"_"+file.name.replace(/[^a-zA-Z0-9._-]/g,"_");
+    const upload=await firebase.storage().ref(uploadedPath).put(file);
+    screenshotUrl=await upload.ref.getDownloadURL();
+   }catch(storageError){
+    console.warn("AK payment screenshot storage is not configured; submitting transaction reference without image.",storageError);
+    uploadedPath="";
+    screenshotUrl="";
+   }
+  }
   if(!fbAuth.currentUser||fbAuth.currentUser.uid!==uid)throw Error("Login အကောင့် ပြောင်းသွားပါသည်။ ပြန်ဝင်ပါ။");
   const referenceKey=reference;
   const requestRef=fbStore.collection("paymentRequests").doc();

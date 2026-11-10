@@ -137,11 +137,12 @@ if (!html.includes('akCloudConflict=false;akLocalDirty=false;')) {
   console.error('Explicit Cloud Load must clear conflict state only after replacing local data.');
   process.exitCode = 1;
 }
-if (!serverCallables.has('createPaymentRequest') || !clientCallables.has('createPaymentRequest')) {
-  console.error('Payment submissions must use the trusted createPaymentRequest callable.');
+if (!html.includes('batch.set(referenceRef') || !html.includes('batch.set(requestRef') ||
+    !html.includes('paymentRequests").where("status","==","pending")') ||
+    !html.includes('onSnapshot(()=>{void loadAdminPaymentRequests()}')) {
+  console.error('Payment requests must be submitted atomically to Firestore and delivered to the Owner through the live pending-payment queue.');
   process.exitCode = 1;
 }
-
 // Client and server must enforce the same owner-approved subscription prices.
 const expectedPlanMap = '{ 30: 30000, 90: 90000, 180: 180000, 365: 360000 }';
 if (!functionsSource.includes('db.collection("platformControls").doc("shopCapacity")') ||
@@ -195,9 +196,14 @@ if ((functionsSource.match(/update\("KBZPay:" \+ normalizedReference\)/g) || [])
   console.error('KBZPay references must use the same whitespace/case normalization at submission and approval.');
   process.exitCode = 1;
 }
-const paymentRule = rules.match(/match \/paymentRequests\/\{requestId\} \{([\s\S]*?)\n\s*\}/);
-if (!paymentRule || !/allow create, update, delete: if false/.test(paymentRule[1])) {
-  console.error('Clients must not write payment requests directly.');
+const paymentRule = rules.match(/match \/paymentRequests\/\{requestId\} \{([\\s\\S]*?)\\n\\s*\\}/);
+if (!paymentRule ||
+    !/request\.resource\.data\.uid == request\.auth\.uid/.test(paymentRule[1]) ||
+    !/allow read: if isVerifiedOwner\(\)/.test(paymentRule[1]) ||
+    !/allow update: if isVerifiedOwner\(\)/.test(paymentRule[1]) ||
+    !/request\.resource\.data\.status == 'pending'/.test(paymentRule[1]) ||
+    !/existsAfter\([\\s\\S]*paymentReferences/.test(paymentRule[1])) {
+  console.error('Payment requests must be owner-visible, customer-owned, pending-only on create, and protected by an atomic reference reservation.');
   process.exitCode = 1;
 }
 const invoiceChecks = [

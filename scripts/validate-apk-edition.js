@@ -17,7 +17,7 @@ for (const [label, condition] of [
   ['correct Android package ID', config.appId === expected.appId],
   ['correct launcher app name', config.appName === expected.appName],
   ['public Market mode hard-disabled', html.includes('const publicMode=false;')],
-  ['Market login panel no longer relocated', !html.includes('const publicMode=false;') || !html.includes('if(!publicMode)return;')],
+  ['Market mode returns before moving login panel', html.includes('const publicMode=false;') && html.includes('if(!publicMode)return;')],
   ['Merchant Code panel isolated by ID', html.includes('id="akMerchantJoinPanel"')],
   ['edition role guard', html.includes('const edition=document.documentElement.getAttribute("data-ak-apk-edition")')],
   ['AI ad composer removed', !html.includes('<h3>AI ကြော်ငြာစာသား</h3>')],

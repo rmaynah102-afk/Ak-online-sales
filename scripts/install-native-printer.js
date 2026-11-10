@@ -13,10 +13,10 @@ const javaDir = path.join(root, 'android', 'app', 'src', 'main', 'java', package
 fs.mkdirSync(javaDir, { recursive: true });
 const pluginSourcePath = path.join(root, 'native', 'android', 'AkPrinterPlugin.java');
 let pluginSource = fs.readFileSync(pluginSourcePath, 'utf8');
-if (!/^package\\s+[A-Za-z0-9_.]+;/m.test(pluginSource)) {
+if (!/^package\s+[A-Za-z0-9_.]+;/m.test(pluginSource)) {
   throw new Error('AkPrinterPlugin.java package declaration is missing or invalid.');
 }
-pluginSource = pluginSource.replace(/^package\\s+[A-Za-z0-9_.]+;/m, 'package ' + packageName + ';');
+pluginSource = pluginSource.replace(/^package\s+[A-Za-z0-9_.]+;/m, 'package ' + packageName + ';');
 fs.writeFileSync(path.join(javaDir, 'AkPrinterPlugin.java'), pluginSource);
 
 const javaMain = path.join(javaDir, 'MainActivity.java');

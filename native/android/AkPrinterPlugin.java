@@ -229,7 +229,13 @@ public class AkPrinterPlugin extends Plugin {
             );
             Intent sendIntent = new Intent(Intent.ACTION_SEND);
             sendIntent.setType("image/png");
+            String shareText = call.getString("text", "");
+            String shareTitle = call.getString("title", "AK Sale");
             sendIntent.putExtra(Intent.EXTRA_STREAM, imageUri);
+            if (shareText != null && !shareText.trim().isEmpty()) {
+                sendIntent.putExtra(Intent.EXTRA_TEXT, shareText);
+                sendIntent.putExtra(Intent.EXTRA_SUBJECT, shareTitle == null ? "AK Sale" : shareTitle);
+            }
             if (shareText != null && !shareText.trim().isEmpty()) sendIntent.putExtra(Intent.EXTRA_TEXT, shareText);
             sendIntent.setClipData(ClipData.newUri(
                 getContext().getContentResolver(),
@@ -239,7 +245,7 @@ public class AkPrinterPlugin extends Plugin {
             sendIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             getActivity().runOnUiThread(() -> {
                 try {
-                    Intent chooser = Intent.createChooser(sendIntent, "Viber သို့ ဘောင်ချာပုံပို့ရန်");
+                    Intent chooser = Intent.createChooser(sendIntent, "ပုံနှင့်စာသားကို Viber / အခြား App သို့ မျှဝေရန်");
                     chooser.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                     getActivity().startActivity(chooser);
                     JSObject result = new JSObject();

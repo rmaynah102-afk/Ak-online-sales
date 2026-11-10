@@ -507,6 +507,9 @@ exports.assignShopStaffRole = functions.https.onCall(async (data, context) => {
     }
     throw err;
   }
+  if (!staff.emailVerified) {
+    throw new functions.https.HttpsError("failed-precondition", "ဝန်ထမ်းသည် Gmail ကို အရင် Email အတည်ပြုထားရန် လိုအပ်သည်။");
+  }
   if (staff.uid === ownerUid || staff.customClaims?.platformAdmin === true) {
     throw new functions.https.HttpsError("permission-denied", "ဤအကောင့်ကို ဝန်ထမ်းအဖြစ် သတ်မှတ်ခွင့်မရှိပါ။");
   }
@@ -803,7 +806,8 @@ async function workspaceIdentity(context) {
   const email=String(context.auth.token.email||"").trim().toLowerCase();
   const isPlatformOwner=email===OWNER_EMAIL && context.auth.token.email_verified===true;
   if (isPlatformOwner) return {shopId:context.auth.uid,role:"owner",isOwner:true};
-  if (claims.shopId && WORKSPACE_READ_ROLES.includes(String(claims.shopRole||""))) {
+  if (claims.shopId && context.auth.token.email_verified === true &&
+      WORKSPACE_READ_ROLES.includes(String(claims.shopRole||""))) {
     return {shopId:String(claims.shopId),role:String(claims.shopRole),isOwner:false};
   }
   // Any paid, licensed account without a shopId claim is the owner of its own shop.

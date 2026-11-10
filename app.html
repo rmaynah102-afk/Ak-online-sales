@@ -2607,6 +2607,7 @@ body.ak-public footer{display:block}
  const publicMode=params.get("market")==="1" && params.get("app")!=="1";
  if(!publicMode)return;
  document.body.classList.add("ak-public");
+ const marketIsolationStyle=document.createElement("style");marketIsolationStyle.id="ak-public-market-account-isolation";marketIsolationStyle.textContent="body.ak-public #akFirebasePanel,body.ak-public #akOwnerStaffPanel,body.ak-public #akOwnerDashboardPanels,body.ak-public #ownerDashboard,body.ak-public #akOwnerPaymentQueue,body.ak-public #akCustomerPaymentPanel,body.ak-public #akStaffJoinPanel,body.ak-public #akStaffJoin,body.ak-public #akPlatformUserRows{display:none!important}";document.head.appendChild(marketIsolationStyle);
  document.title="Ak shopping markets · မြန်မာ့အွန်လိုင်းဈေး";
  const desc=document.querySelector('meta[name="description"]');
  if(desc)desc.content="မြန်မာနိုင်ငံတစ်ဝှမ်း ပစ္စည်းရှာဖွေ၊ ဈေးနှိုင်းယှဉ်၊ ဆိုင်များနှင့် တိုက်ရိုက်ဆက်သွယ်နိုင်သော Ak shopping markets";
@@ -2618,8 +2619,11 @@ body.ak-public footer{display:block}
   hero.innerHTML='<div><h2>မြန်မာ့ဈေးကွက်ကို တစ်နေရာတည်းမှာ ရှာဖွေပါ</h2><p>ကုန်မာ၊ လျှပ်စစ်၊ ဆောက်လုပ်ရေးနှင့် အိမ်သုံးပစ္စည်းများ · ဈေးနှိုင်းယှဉ် · ဆိုင်ကို တိုက်ရိုက်ဆက်သွယ်</p></div><a href="./download.html">AK Software · Web ဝင်ရန် / APK ရယူရန်</a>';
   market.prepend(hero);
   const authPanel=document.getElementById("akFirebasePanel");
+  // Public Market is catalog-only: never expose POS login, shop-owner registration,
+  // staff registration/Merchant Code, subscription payments, or Owner controls here.
+  if(authPanel){authPanel.hidden=true;authPanel.style.display="none";}
+  ["akOwnerStaffPanel","akOwnerDashboardPanels","ownerDashboard","akOwnerPaymentQueue","akCustomerPaymentPanel"].forEach(id=>{const el=document.getElementById(id);if(el){el.hidden=true;el.style.display="none";}});
   const marketForm=document.getElementById("marketForm");
-  if(authPanel&&marketForm?.parentElement)marketForm.parentElement.before(authPanel);
   const posLink=document.createElement("a");posLink.href="./download.html";posLink.className="ak-pos-use";posLink.textContent="AK POS အသုံးပြုရန် · APK";posLink.setAttribute("aria-label","AK POS APK အသုံးပြုရန်");
   hero.querySelector("a")?.replaceWith(posLink);
   const note=document.createElement("div");note.className="ak-public-note";

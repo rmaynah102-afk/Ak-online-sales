@@ -623,6 +623,105 @@ input,select,textarea,button{max-width:100%;box-sizing:border-box}
 
 
 <dialog id="akMarketDetailDialog" class="ak-market-detail-dialog" aria-labelledby="akMarketDetailTitle"><div class="ak-market-detail-head"><h2 id="akMarketDetailTitle">ပစ္စည်းအသေးစိတ်</h2><button type="button" class="alt" onclick="document.getElementById('akMarketDetailDialog').close()" aria-label="ပိတ်ရန်">✕</button></div><div id="akMarketDetailBody"></div></dialog>
+
+<!-- AK_MARKET_REBUILD_V1 -->
+<style>
+#akMarketFlow{display:flex;flex-direction:column;gap:4px}
+#akMarketFlow>.panel{scroll-margin-top:90px}
+#akMarketAdOrderForm .grid{grid-template-columns:repeat(auto-fit,minmax(210px,1fr))}
+#akMarketOwnerEntry{border:2px solid #d8b65b;background:linear-gradient(135deg,#fffdf6,#fff)}
+#akMarketOwnerEntry .muted{margin:5px 0}
+#akMarketAdOrderStatus{min-height:24px}
+</style>
+<script>
+(function(){
+function akInitMarketRebuild(){
+ const market=document.getElementById("market");
+ if(!market||document.getElementById("akMarketFlow"))return;
+ const flow=document.createElement("div");flow.id="akMarketFlow";
+ const hero=market.querySelector(".ak-market-hero");
+ const live=document.getElementById("akLiveAdsPanel");
+ const productForm=document.getElementById("marketForm");
+ const formPanel=productForm?.closest(".panel");
+ const sponsored=document.getElementById("akPublicSponsoredSection");
+ const shops=document.getElementById("akPublicShops")?.closest(".panel");
+ const orders=document.getElementById("myMarketOrders")?.closest(".panel");
+ const ownAds=document.getElementById("myMarketFeed")?.closest(".panel");
+ const productFeed=document.getElementById("marketFeed")?.closest(".panel");
+ const tiktok=document.getElementById("akPublicTikTokCard");
+ const ownerManager=document.getElementById("akOwnerAdManager");
+ const ownerEntry=document.createElement("div");
+ ownerEntry.className="panel";ownerEntry.id="akMarketOwnerEntry";
+ ownerEntry.innerHTML='<span class="pill">OWNER ONLY</span><h2>Owner Login · AK Market စီမံခန့်ခွဲမှု</h2><p class="muted">အများပြည်သူအသုံးပြုသူများအတွက် Login မလိုပါ။ Owner တစ်ဦးတည်းကသာ Login ဝင်ပြီး ကြော်ငြာ၊ ဆိုင်စာရင်းနှင့် အော်ဒါများကို ထိန်းချုပ်နိုင်သည်။</p><div class="actions"><button type="button" onclick="akOpenOwnerLogin()">Owner Login ဝင်ရန်</button></div>';
+ const adOrder=document.createElement("div");adOrder.className="panel";adOrder.id="akMarketAdOrderPanel";
+ adOrder.innerHTML='<span class="pill">ADVERTISING SERVICE</span><h2>ကြော်ငြာအော်ဒါ တင်ရန်</h2><p class="muted">ဆိုင် သို့မဟုတ် လုပ်ငန်းကြော်ငြာအတွက် အမျိုးအစားနှင့် ကာလရွေးပြီး အော်ဒါတင်ပါ။</p><form id="akMarketAdOrderForm"><div class="grid"><div><label>ကြော်ငြာအမျိုးအစား *</label><select id="akAdOrderType" required><option value="ဆိုင်ကြော်ငြာ">ဆိုင်ကြော်ငြာ</option><option value="Live ကြော်ငြာ">Live ကြော်ငြာ</option><option value="Sponsored Banner">Sponsored Banner</option><option value="ပစ္စည်းအထူးကြော်ငြာ">ပစ္စည်းအထူးကြော်ငြာ</option></select></div><div><label>ပြသမည့်ကာလ *</label><select id="akAdOrderDays" required><option value="7">၇ ရက်</option><option value="15">၁၅ ရက်</option><option value="30" selected>၃၀ ရက်</option></select></div><div><label>ဆိုင် / လုပ်ငန်းအမည် *</label><input id="akAdOrderShop" maxlength="100" required></div><div><label>ဆက်သွယ်ရန် ဖုန်း/Viber *</label><input id="akAdOrderPhone" maxlength="30" required inputmode="tel"></div><div><label>လုပ်ငန်းအမျိုးအစား</label><input id="akAdOrderCategory" maxlength="80" placeholder="ဥပမာ - ကုန်မာ၊ လျှပ်စစ်"></div><div><label>ခန့်မှန်းဘတ်ဂျက် (ကျပ်)</label><input id="akAdOrderBudget" type="number" min="0" step="1" placeholder="မသတ်မှတ်ရသေးလျှင် ချန်ထားပါ"></div></div><label>ကြော်ငြာအကြောင်း / လိုအပ်ချက်</label><textarea id="akAdOrderNote" maxlength="700" placeholder="ကြော်ငြာတင်လိုသည့်အကြောင်းအရာ၊ ပုံ/Link စသည်"></textarea><div class="actions"><button type="submit">ကြော်ငြာအော်ဒါ တင်မည်</button></div><p id="akMarketAdOrderStatus" class="muted" aria-live="polite">အော်ဒါတင်ရန် အချက်အလက်ဖြည့်ပါ။</p></form>';
+ const ownerOrders=document.createElement("div");ownerOrders.className="panel owner-only";ownerOrders.id="akMarketAdOrderAdmin";
+ ownerOrders.innerHTML='<h3>Owner · ကြော်ငြာအော်ဒါများ</h3><div class="actions"><button type="button" class="alt" onclick="akLoadMarketAdOrders()">အော်ဒါစာရင်းဖတ်မည်</button></div><p id="akMarketAdOrdersStatus" class="muted">Owner Login ဝင်ပြီး စာရင်းဖတ်ပါ။</p><div id="akMarketAdOrdersRows"></div>';
+ // Rebuild the marketplace content in the requested order while retaining existing form/data handlers.
+ market.insertBefore(flow,market.firstChild);
+ [hero,live,formPanel,sponsored,shops,adOrder,orders,ownAds,productFeed,ownerEntry,ownerOrders,ownerManager,tiktok]
+  .filter((el,i,arr)=>el&&arr.indexOf(el)===i)
+  .forEach(el=>flow.appendChild(el));
+ const sponsoredTitle=sponsored?.querySelector("h2");
+ if(sponsoredTitle)sponsoredTitle.textContent="ဆိုင်ကြော်ငြာ သီးသန့်စာရင်း";
+ const sponsoredDesc=sponsored?.querySelector(".muted");
+ if(sponsoredDesc)sponsoredDesc.textContent="အတည်ပြုထားသော ဆိုင်နှင့်လုပ်ငန်းများ၏ Sponsored ကြော်ငြာများကို သီးသန့်ကြည့်ရှုပါ။";
+ const ownerLoginButton=sponsored?.querySelector('button[onclick="akOpenOwnerLogin()"]');
+ if(ownerLoginButton)ownerLoginButton.remove();
+ const ownerNote=ownerManager?.querySelector("p");
+ if(ownerNote)ownerNote.textContent="Owner တစ်ဦးတည်းက Market ပစ္စည်းကြော်ငြာနှင့် Sponsored ကြော်ငြာများကို စစ်ဆေး၊ ဖျက်နိုင်သည်။";
+ const fbPanel=document.getElementById("akFirebasePanel");
+ if(fbPanel&&ownerEntry){
+  const jump=ownerEntry.querySelector("button");
+  if(jump)jump.addEventListener("click",()=>setTimeout(()=>{if(fbPanel)fbPanel.scrollIntoView({behavior:"smooth",block:"center"});},150));
+ }
+ const form=document.getElementById("akMarketAdOrderForm");
+ form?.addEventListener("submit",akSubmitMarketAdOrder);
+ if(ownerManager&&!ownerManager.querySelector("#akDeleteAllMarketAds")){
+  const controls=document.createElement("div");controls.className="actions";
+  controls.innerHTML='<button type="button" class="red" id="akDeleteAllMarketAds" onclick="akOwnerDeleteAllMarketAds()">Public ကြော်ငြာအားလုံး ဖျက်ရန်</button>';
+  ownerManager.appendChild(controls);
+ }
+}
+async function akSubmitMarketAdOrder(e){
+ e.preventDefault();const status=document.getElementById("akMarketAdOrderStatus");
+ const data={type:document.getElementById("akAdOrderType").value,days:Number(document.getElementById("akAdOrderDays").value),shopName:document.getElementById("akAdOrderShop").value.trim(),phone:document.getElementById("akAdOrderPhone").value.trim(),category:document.getElementById("akAdOrderCategory").value.trim(),budget:Number(document.getElementById("akAdOrderBudget").value||0),note:document.getElementById("akAdOrderNote").value.trim(),status:"new",createdAt:firebase.firestore.FieldValue.serverTimestamp()};
+ if(!data.shopName||data.phone.replace(/[^0-9]/g,"").length<7){status.textContent="ဆိုင်အမည်နှင့် ဖုန်းနံပါတ်ကို မှန်ကန်စွာ ဖြည့်ပါ။";return}
+ try{if(!window.fbStore)throw Error("Cloud database မချိတ်ဆက်ရသေးပါ။ နောက်မှ ထပ်ကြိုးစားပါ။");await fbStore.collection("marketAdOrders").add(data);document.getElementById("akMarketAdOrderForm").reset();status.textContent="အော်ဒါလက်ခံပြီးပါပြီ။ Owner က စစ်ဆေးပြီး ဆက်သွယ်ပါမည်။";}
+ catch(err){status.textContent="အော်ဒါမတင်နိုင်ပါ: "+(err.message||err);console.error("AK ad order submit",err)}
+}
+window.akLoadMarketAdOrders=async function(){
+ const status=document.getElementById("akMarketAdOrdersStatus"),host=document.getElementById("akMarketAdOrdersRows");
+ if(!window.fbAuth?.currentUser||!window.akIsPlatformOwner?.(fbAuth.currentUser)){if(status)status.textContent="Owner အတည်ပြု Login လိုအပ်သည်။";return}
+ try{const snap=await fbStore.collection("marketAdOrders").orderBy("createdAt","desc").limit(100).get();
+ status.textContent="အော်ဒါ "+snap.size+" ခု";
+ host.innerHTML=snap.empty?"<p>အော်ဒါမရှိသေးပါ။</p>":snap.docs.map(d=>{const x=d.data();return '<article class="notice" style="margin:8px 0"><b>'+String(x.shopName||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))+'</b><div>'+String(x.type||"")+' · '+String(x.days||"")+' ရက် · '+String(x.phone||"")+'</div><div>'+String(x.note||"")+'</div></article>'}).join("");
+ }catch(e){status.textContent="အော်ဒါစာရင်းဖတ်မရပါ: "+e.message}
+};
+window.akOwnerDeleteAllMarketAds=async function(){
+ const user=window.fbAuth?.currentUser;
+ if(!user||!window.akIsPlatformOwner?.(user)){alert("Verified Owner အကောင့်ဖြင့်သာ ဖျက်နိုင်သည်။");return}
+ if(!confirm("သတိပေးချက်။ Public Market ပစ္စည်းကြော်ငြာနှင့် Sponsored ကြော်ငြာအားလုံးကို အပြီးတိုင်ဖျက်မည်။ POS ပစ္စည်းစာရင်း၊ အရောင်းစာရင်း၊ ဆိုင်အကောင့်နှင့် Order များကို မဖျက်ပါ။ ဆက်လုပ်မလား။"))return;
+ if(!confirm("နောက်ဆုံးအတည်ပြုချက် — marketListings နှင့် sponsoredAds ထဲက မှတ်တမ်းအားလုံးကို ဖျက်မည်။ ပြန်ယူ၍မရပါ။"))return;
+ const btn=document.getElementById("akDeleteAllMarketAds");if(btn){btn.disabled=true;btn.textContent="ဖျက်နေသည်..."}
+ try{
+  let total=0;
+  for(const name of ["marketListings","sponsoredAds"]){
+   while(true){const snap=await fbStore.collection(name).limit(400).get();if(snap.empty)break;
+    const batch=fbStore.batch();snap.docs.forEach(d=>batch.delete(d.ref));await batch.commit();total+=snap.size;
+   }
+  }
+  if(typeof loadMarket==="function")await loadMarket(true);
+  if(typeof loadSponsoredAds==="function")await loadSponsoredAds();
+  if(typeof akLoadOwnerAds==="function")await akLoadOwnerAds();
+  alert("Public ကြော်ငြာ "+total+" ခုကို ဖျက်ပြီးပါပြီ။");
+ }catch(e){alert("အချို့ကြော်ငြာများ ဖျက်မရပါ: "+e.message)}
+ finally{if(btn){btn.disabled=false;btn.textContent="Public ကြော်ငြာအားလုံး ဖျက်ရန်"}}
+};
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",akInitMarketRebuild);else akInitMarketRebuild();
+})();
+</script>
+
 <div class="panel" id="akPublicTikTokCard" style="display:flex;align-items:center;gap:16px;flex-wrap:wrap"><img src="https://api.qrserver.com/v1/create-qr-code/?size=240x240&amp;data=https%3A%2F%2Fwww.tiktok.com%2F%40marketing.service38%3F_r%3D1%26_t%3DZS-9BG2TJBSslN" alt="TikTok QR Code @marketing.service38" width="140" height="140" style="background:#fff;padding:8px;border-radius:12px"><div><h2>AK TikTok Channel</h2><p>ကျွန်ုပ်တို့၏ TikTok အကောင့်ကို Follow လုပ်ရန် QR ကို Scan လုပ်ပါ။</p><b>@marketing.service38</b><p><a href="https://www.tiktok.com/@marketing.service38?_r=1&amp;_t=ZS-9BG2TJBSslN" target="_blank" rel="noopener noreferrer">TikTok Profile ဖွင့်ရန်</a></p></div></div>
 </section>
 

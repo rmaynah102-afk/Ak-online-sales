@@ -14,8 +14,13 @@ if (html.split(mainRead).length !== 2) throw new Error('Expected exactly one pri
 html = html.replace(mainRead, mainPatch);
 const centerRead = 'if(window.cmCloudLoad)await window.cmCloudLoad();';
 const centerPatch = 'if(window.cmCloudLoad){const akCenterTask=Promise.resolve().then(()=>window.cmCloudLoad());const akCenterReady=await Promise.race([akCenterTask.then(()=>true),new Promise(resolve=>setTimeout(()=>resolve(false),7000))]);if(!akCenterReady){console.warn("APK center-management Cloud read exceeded 7 seconds; continuing POS startup while it completes in background.");const akStatus=document.getElementById("fbStatus");if(akStatus)akStatus.textContent+=" · စင်တာ Cloud ဒေတာဖတ်ချိန်ကြာနေသဖြင့် နောက်ကွယ်တွင် ဆက်ဖတ်နေသည်။";akCenterTask.catch(error=>console.warn("APK center Cloud background read failed",error));}}';
-if (html.split(centerRead).length !== 2) throw new Error('Expected exactly one center Cloud read; refusing unsafe APK patch.');
-html = html.replace(centerRead, centerPatch);
+const centerAlreadyNonBlocking = html.includes('Center cloud load did not block Owner Dashboard:');
+if (html.includes(centerRead)) {
+  if (html.split(centerRead).length !== 2) throw new Error('Expected exactly one center Cloud read; refusing unsafe APK patch.');
+  html = html.replace(centerRead, centerPatch);
+} else if (!centerAlreadyNonBlocking) {
+  throw new Error('Center Cloud read sequence is neither the known original nor the verified non-blocking Owner Dashboard sequence; refusing unsafe APK patch.');
+}
 const bodyEnd = html.lastIndexOf('</body>');
 if (bodyEnd < 0) throw new Error('HTML body closing tag not found.');
 html = html.slice(0, bodyEnd) + '<script>/* AK_APK_CLOUD_STARTUP_GUARD_V1 */</script>\n' + html.slice(bodyEnd);

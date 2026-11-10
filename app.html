@@ -1069,10 +1069,10 @@ async function akStartBarcodeScanner(target="product"){
  if(!navigator.mediaDevices?.getUserMedia){alert("Camera permission သို့မဟုတ် HTTPS မရပါ။ Android Settings မှ Camera ခွင့်ပြုပါ။");return;}
  await akStopBarcodeScanner();
  const box=document.createElement("div");box.id="akBarcodeScanner";box.style.cssText="position:fixed;inset:0;background:#06152bee;z-index:99999;display:grid;place-items:center;padding:18px";
- box.innerHTML='<div style="background:white;border-radius:16px;padding:14px;width:min(100%,520px);color:#172820"><h3>နောက်ကင်မရာ · Multi Barcode / QR Scan</h3><video id="akBarcodeVideo" autoplay muted playsinline style="width:100%;border-radius:12px;background:#111;min-height:220px;object-fit:cover"></video><p id="akBarcodeStatus">နောက်ကင်မရာ စတင်နေသည်…</p><button type="button" id="akBarcodeClose">ပိတ်မည်</button></div>';
+ box.innerHTML='<div style="background:white;border-radius:16px;padding:14px;width:min(100%,520px);color:#172820"><h3>ရှေ့ကင်မရာ · Multi Barcode / QR Scan</h3><video id="akBarcodeVideo" autoplay muted playsinline style="width:100%;border-radius:12px;background:#111;min-height:220px;object-fit:cover"></video><p id="akBarcodeStatus">ရှေ့ကင်မရာ စတင်နေသည်…</p><button type="button" id="akBarcodeClose">ပိတ်မည်</button></div>';
  document.body.appendChild(box);document.getElementById("akBarcodeClose").onclick=akStopBarcodeScanner;
  try{
-  akBarcodeStream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{exact:"environment"},width:{ideal:1920},height:{ideal:1080}}}).catch(()=>navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:"environment"}}}));
+  akBarcodeStream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{exact:"user"},width:{ideal:1920},height:{ideal:1080}}}).catch(()=>navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:"user"}}}));
   const video=document.getElementById("akBarcodeVideo");video.srcObject=akBarcodeStream;await video.play();akBarcodeActive=true;
   const accept=async code=>{if(!akBarcodeActive||!code)return;await akStopBarcodeScanner();if(target==="sale")akAddScannedSaleProduct(code);else{const input=document.getElementById("pCode");if(input)input.value=code;document.getElementById("pName")?.focus();}};
   if("BarcodeDetector" in window){
@@ -1083,7 +1083,7 @@ async function akStartBarcodeScanner(target="product"){
   akBarcodeReader=new ZX.BrowserMultiFormatReader();
   const status=document.getElementById("akBarcodeStatus");if(status)status.textContent="Multi-format Scanner အသင့် · QR / EAN / UPC / Code128 စသည်";
   akBarcodeReader.decodeFromVideoElement(video,(result,error)=>{if(result&&result.getText)accept(result.getText());});
- }catch(e){await akStopBarcodeScanner();alert("နောက်ကင်မရာ Scan မရပါ။ Camera Permission နှင့် Internet ကိုစစ်ပါ။ "+(e.message||""));}
+ }catch(e){await akStopBarcodeScanner();alert("ရှေ့ကင်မရာ Scan မရပါ။ Camera Permission နှင့် Internet ကိုစစ်ပါ။ "+(e.message||""));}
 }
 document.getElementById("akScanBarcodeBtn")?.addEventListener("click",()=>akStartBarcodeScanner("product"));
 document.getElementById("akSaleScanBtn")?.addEventListener("click",()=>akStartBarcodeScanner("sale"));

@@ -6,7 +6,7 @@ const path = require('path');
 const target = path.resolve(__dirname, '..', 'www', 'index.html');
 if (!fs.existsSync(target)) throw new Error('APK web bundle missing: run npm run copy-web first.');
 let html = fs.readFileSync(target, 'utf8');
-const marker = '/* AK_APK_SUBSCRIPTION_UI_V2 */';
+const marker = '/* AK_APK_SUBSCRIPTION_UI_V3 */';
 if (html.includes(marker)) { console.log('APK subscription onboarding already applied.'); process.exit(0); }
 
 const required = [
@@ -89,6 +89,6 @@ html = html.replace(nativeOld, nativeNew);
 
 const bodyEnd = html.lastIndexOf('</body>');
 if (bodyEnd < 0) throw new Error('HTML body closing tag not found.');
-html = html.slice(0, bodyEnd) + '<script>/* AK_APK_SUBSCRIPTION_UI_V2 */</script>\n' + html.slice(bodyEnd);
+html = html.slice(0, bodyEnd) + '<script>document.body.classList.add("ak-license-locked");document.querySelectorAll(".view").forEach(view=>view.classList.toggle("active",view.id==="backup"));/* AK_APK_SUBSCRIPTION_UI_V3 */</script>\n' + html.slice(bodyEnd);
 fs.writeFileSync(target, html);
 console.log('APK onboarding V3 applied: explicit package selection -> native Google Gmail -> payment proof -> owner approval -> re-login -> POS.');

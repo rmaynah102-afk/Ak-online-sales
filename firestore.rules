@@ -147,7 +147,8 @@ service cloud.firestore {
     }
 
     match /marketListings/{listingId} {
-      allow read: if resource.data.status == 'published'
+      allow read: if isVerifiedOwner()
+        || resource.data.status == 'published'
         || (request.auth != null && resource.data.ownerUid == request.auth.uid);
       allow create: if (
         isVerifiedMarketplaceUser()
@@ -214,7 +215,7 @@ service cloud.firestore {
         && request.resource.data.currency == 'MMK'
         && request.resource.data.description is string
         && request.resource.data.description.size() <= 700;
-      allow delete: if isVerifiedMarketplaceUser() && resource.data.ownerUid == request.auth.uid;
+      allow delete: if isVerifiedOwner() || (isVerifiedMarketplaceUser() && resource.data.ownerUid == request.auth.uid);
     }
 
     match /marketListings/{listingId}/likes/{userId} {
@@ -335,7 +336,7 @@ service cloud.firestore {
             && request.resource.data.startsAt <= request.time
             && request.resource.data.endsAt > request.time
             && request.resource.data.endsAt <= request.time + duration.value(31, 'd')));
-      allow delete: if false;
+      allow delete: if isVerifiedOwner();
     }
 
     match /paymentRequests/{requestId} {

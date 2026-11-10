@@ -1,6 +1,6 @@
 /* AK Sale Software PWA cache.
    The app shell can open offline; Firebase login and cloud data still require internet. */
-const CACHE_NAME = "ak-sale-v21";
+const CACHE_NAME = "ak-sale-v22";
 const APP_SHELL = [
   "./",
   "./index.html",

@@ -80,6 +80,7 @@ jobs:
             ['Market product action removed', 'onclick="akSendProductToMarket()"'],
             ['Market deep-link disabled', 'public Market URL mode disabled'],
             ['Subscription payment UI', 'id="akSubscriptionPayment"'],
+            ['Immediate locked onboarding on launch', 'document.body.classList.add("ak-license-locked")'],
             ['Explicit package selection', 'Package ရွေးပြီးမှ Google ချိတ်နိုင်သည်'],
             ['Google Gmail onboarding', 'id="akOnboardingGoogleButton"'],
             ['Android native Google bridge', 'nativePromise("FirebaseAuthentication","signInWithGoogle"'],
@@ -101,7 +102,7 @@ jobs:
           // makes regex stop at embedded closing-script text rather than the real boundary.
           const scriptCount = (html.match(/<script\b/gi) || []).length;
           if (scriptCount < 5) throw new Error('Generated APK bundle is missing expected application scripts');
-          if (!html.includes('AK_APK_SUBSCRIPTION_UI_V2') || !html.includes('AK_APK_CLOUD_STARTUP_GUARD_V1')) {
+          if (!html.includes('AK_APK_SUBSCRIPTION_UI_V3') || !html.includes('AK_APK_CLOUD_STARTUP_GUARD_V1')) {
             throw new Error('Generated APK patch markers are missing');
           }
           if (!/id="payPlan"[\s\S]*?<option value="" selected disabled>Package ရွေးပါ<\/option>/.test(html)) {

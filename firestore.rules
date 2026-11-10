@@ -181,7 +181,9 @@ service cloud.firestore {
           request.resource.data.days == 90 ? 90000 :
           request.resource.data.days == 180 ? 180000 : 360000)
         && request.resource.data.reference is string
-        && request.resource.data.reference.matches('^[A-Z0-9_-]{3,100}        && request.resource.data.screenshotUrl is string
+        && request.resource.data.reference.matches('^[A-Z0-9_-]{3,100}$')
+        && request.resource.data.referenceKey == request.resource.data.reference
+        && request.resource.data.screenshotUrl is string
         && request.resource.data.screenshotUrl.size() <= 2500
         && request.resource.data.createdAt == request.time
         && existsAfter(/databases/$(database)/documents/paymentReferences/$(request.resource.data.referenceKey))

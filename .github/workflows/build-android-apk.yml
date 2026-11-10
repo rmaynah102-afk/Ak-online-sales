@@ -26,11 +26,7 @@ permissions:
 
 jobs:
   build:
-    name: Build ${{ matrix.edition }} APK
-    strategy:
-      fail-fast: false
-      matrix:
-        edition: [platform-owner, shop-owner, staff]
+    name: Build one universal AK Sale APK
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source
@@ -74,10 +70,8 @@ jobs:
         run: node scripts/patch-apk-subscription-ui.js
       - name: Apply APK-only POS isolation (Marketplace stays in website only)
         run: node scripts/patch-apk-pos-only.js
-      - name: Apply Platform Owner / Shop Owner / Staff APK edition
-        run: node scripts/patch-apk-edition.js
-        env:
-          AK_APK_EDITION: ${{ matrix.edition }}
+      - name: Apply one universal role-based APK
+        run: node scripts/patch-apk-universal.js
       - name: Validate generated APK POS bundle
         run: |
           node - <<'NODE'
@@ -85,7 +79,7 @@ jobs:
           const vm = require('vm');
           const html = fs.readFileSync('www/index.html', 'utf8');
           const checks = [
-            ['APK POS-only root and edition marker', html.includes('<html lang="my" class="ak-apk-pos-only"') && html.includes('data-ak-apk-edition=')],
+            ['APK POS-only universal root', html.includes('<html lang="my" class="ak-apk-pos-only"') && html.includes('data-ak-apk-edition="universal"')],
             ['Marketplace hidden', 'html.ak-apk-pos-only #market'],
             ['Market navigation hidden', 'html.ak-apk-pos-only #nav button[data-view="market"]'],
             ['Owner Market promotion panel hidden', 'html.ak-apk-pos-only #akOwnerPromoPanel'],
@@ -132,10 +126,8 @@ jobs:
           }
           console.log('Generated APK POS bundle validated:', scriptCount, 'script tags; Market isolated; login, payment and printer UI present.');
           NODE
-      - name: Validate selected APK edition
-        run: node scripts/validate-apk-edition.js
-        env:
-          AK_APK_EDITION: ${{ matrix.edition }}
+      - name: Validate universal APK role and feature isolation
+        run: node scripts/validate-apk-universal.js
       - name: Validate Firebase Functions
         run: |
           npm --prefix functions install --package-lock=false
@@ -147,8 +139,7 @@ jobs:
         run: node --check scripts/install-native-printer.js
       - name: Generate Android project
         run: npx cap add android
-      - name: Configure Firebase Android and Google Sign-In (Platform Owner package only)
-        if: matrix.edition == 'platform-owner'
+      - name: Configure Firebase Android and Google Sign-In
         run: |
           mkdir -p android/app
           cp google-services.json android/app/google-services.json
@@ -314,32 +305,32 @@ jobs:
           AK_RELEASE_KEY_PASSWORD: ${{ secrets.AK_RELEASE_KEY_PASSWORD }}
         run: ./gradlew assembleRelease bundleRelease --no-daemon
 
-      - name: Prepare edition-specific download files
+      - name: Prepare universal APK download files
         if: steps.signing.outputs.ready == 'true'
         run: |
-          cp android/app/build/outputs/apk/release/app-release.apk AK-${{ matrix.edition }}.apk
-          cp android/app/build/outputs/bundle/release/app-release.aab AK-${{ matrix.edition }}-PlayStore.aab
+          cp android/app/build/outputs/apk/release/app-release.apk AK-Sale-Software.apk
+          cp android/app/build/outputs/bundle/release/app-release.aab AK-Sale-Software-PlayStore.aab
 
-      - name: Publish signed Platform Owner APK to GitHub Release
-        if: steps.signing.outputs.ready == 'true' && matrix.edition == 'platform-owner' && vars.AK_PUBLIC_APK_RELEASE_APPROVED == 'true'
+      - name: Publish signed universal AK Sale APK to GitHub Release
+        if: steps.signing.outputs.ready == 'true' && vars.AK_PUBLIC_APK_RELEASE_APPROVED == 'true'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ak-platform-owner-v${{ github.run_number }}
-          name: AK Platform Owner v${{ github.run_number }}
+          tag_name: ak-sale-v${{ github.run_number }}
+          name: AK Sale Software v${{ github.run_number }}
           files: |
-            AK-platform-owner.apk
-            AK-platform-owner-PlayStore.aab
+            AK-Sale-Software.apk
+            AK-Sale-Software-PlayStore.aab
           generate_release_notes: true
           make_latest: true
 
-      - name: Upload signed edition APK
+      - name: Upload signed universal APK
         if: steps.signing.outputs.ready == 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: AK-${{ matrix.edition }}-signed-release-APK
+          name: AK-Sale-Software-universal-signed-release-APK
           path: |
-            AK-${{ matrix.edition }}.apk
-            AK-${{ matrix.edition }}-PlayStore.aab
+            AK-Sale-Software.apk
+            AK-Sale-Software-PlayStore.aab
           if-no-files-found: error
           retention-days: 30
 
@@ -352,13 +343,13 @@ jobs:
 
       - name: Prepare temporary test APK
         if: steps.signing.outputs.ready != 'true'
-        run: cp android/app/build/outputs/apk/debug/app-debug.apk AK-${{ matrix.edition }}-TEST-DEBUG.apk
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk AK-Sale-Software-TEST-DEBUG.apk
 
       - name: Upload temporary test APK
         if: steps.signing.outputs.ready != 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: AK-${{ matrix.edition }}-TEST-DEBUG-APK
-          path: AK-${{ matrix.edition }}-TEST-DEBUG.apk
+          name: AK-Sale-Software-TEST-DEBUG-APK
+          path: AK-Sale-Software-TEST-DEBUG.apk
           if-no-files-found: error
           retention-days: 30

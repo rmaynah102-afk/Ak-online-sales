@@ -672,7 +672,7 @@ function akInitMarketRebuild(){
  if(ownerNote)ownerNote.textContent="Owner တစ်ဦးတည်းက Market ပစ္စည်းကြော်ငြာနှင့် Sponsored ကြော်ငြာများကို စစ်ဆေး၊ ဖျက်နိုင်သည်။";
  const fbPanel=document.getElementById("akFirebasePanel");
  if(fbPanel&&ownerEntry){
-  if(new URLSearchParams(location.search).get("market")==="1"){flow.insertBefore(fbPanel,ownerOrders);const authTitle=fbPanel.querySelector("h2");if(authTitle)authTitle.textContent="Owner Login · လုံခြုံသော စီမံခန့်ခွဲမှု";const register=document.getElementById("akRegisterButton");if(register)register.style.display="none";fbPanel.querySelectorAll("button").forEach(b=>{if((b.getAttribute("onclick")||"").includes("firebaseGoogleLogin"))b.style.display="none";});}
+  if(new URLSearchParams(location.search).get("market")==="1"){flow.insertBefore(fbPanel,ownerOrders);const authTitle=fbPanel.querySelector("h2");if(authTitle)authTitle.textContent="Owner Login · လုံခြုံသော စီမံခန့်ခွဲမှု";const register=document.getElementById("akRegisterButton");if(register)register.style.display="none";const googleButton=fbPanel.querySelector('button[onclick="firebaseGoogleLogin()"]');if(googleButton){googleButton.style.display="inline-flex";googleButton.textContent="Google Account ဖြင့် ဝင်ရန်";googleButton.style.visibility="visible";googleButton.style.opacity="1";googleButton.style.minHeight="48px";googleButton.style.fontWeight="800";}}
   const jump=ownerEntry.querySelector("button");
   if(jump)jump.addEventListener("click",()=>setTimeout(()=>{if(fbPanel)fbPanel.scrollIntoView({behavior:"smooth",block:"center"});},150));
  }

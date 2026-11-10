@@ -831,7 +831,8 @@ async function verifyWorkspaceMember(context, identity) {
 }
 function workspaceCanWrite(role,key) {
   if (role==="owner" || role==="manager") return true;
-  if (role==="cashier" || role==="employee") return ["products","sales","payments"].includes(key);
+  if (role==="cashier") return ["products","sales","payments","people"].includes(key);
+  if (role==="employee") return ["products","sales","payments"].includes(key);
   return false;
 }
 function workspaceCanRead(role,key) {

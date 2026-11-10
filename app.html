@@ -2048,7 +2048,7 @@ async function submitPaymentRequest(){
  try{
   if(!fbAuth?.currentUser||!fbStore)throw Error("Gmail ဖြင့် Login ဝင်ပါ။");
   const uid=fbAuth.currentUser.uid,email=String(fbAuth.currentUser.email||"").trim();
-  const reference=$("payReference").value.trim(),method=$("payMethod").value,days=Number($("payPlan").value),amount=AK_PLAN_AMOUNTS[days];
+  const reference=$("payReference").value.trim().replace(/\s+/g,"").toUpperCase(),method=$("payMethod").value,days=Number($("payPlan").value),amount=AK_PLAN_AMOUNTS[days];
   if(method!=="KBZPay")throw Error("KBZPay တစ်ခုတည်းသာ အသုံးပြုနိုင်သည်။");
   if(reference.length<3||reference.length>100)throw Error("Transaction ID ကို 3 မှ 100 လုံးအတွင်း ထည့်ပါ။");
   if(!amount)throw Error("Package မမှန်ပါ။");
@@ -2059,8 +2059,7 @@ async function submitPaymentRequest(){
   const upload=await firebase.storage().ref(uploadedPath).put(file);
   screenshotUrl=await upload.ref.getDownloadURL();
   if(!fbAuth.currentUser||fbAuth.currentUser.uid!==uid)throw Error("Login အကောင့် ပြောင်းသွားပါသည်။ ပြန်ဝင်ပါ။");
-  const normalizedReference=reference.replace(/\s+/g,"").toUpperCase();
-  const referenceKey=encodeURIComponent(normalizedReference);
+  const referenceKey=reference;
   const requestRef=fbStore.collection("paymentRequests").doc();
   const referenceRef=fbStore.collection("paymentReferences").doc(referenceKey);
   const batch=fbStore.batch();

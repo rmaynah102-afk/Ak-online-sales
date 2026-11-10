@@ -27,9 +27,11 @@ replaceExactly(
 );
 replaceExactly('<button type="button" class="alt" onclick="akSendProductToMarket()">Market ကြော်ငြာတင်ရန်</button>', '');
 replaceExactly('Viber ကိုနှိပ်လျှင် ပုံနှင့်စာကို Share Menu မှတစ်ဆင့် ကိုယ့် Channel သို့ ရွေးပို့နိုင်သည်။ Market ကိုနှိပ်လျှင် အချက်အလက်များကို အလိုအလျောက်ဖြည့်ပေးမည်။','Viber ကိုနှိပ်လျှင် ပုံနှင့်စာကို Share Menu မှတစ်ဆင့် ကိုယ့် Channel သို့ ရွေးပို့နိုင်သည်။');
-replaceExactly('Myanmar shop POS, inventory, wholesale, retail, sales records and AK Shopping Markets.','Myanmar shop POS, inventory, wholesale, retail and sales records.');
-replaceExactly('AK Sale Software · AK Shopping Markets','AK Sale Software · Shop POS');
-replaceExactly('ဆိုင်အရောင်း၊ ကုန်ပစ္စည်း၊ စာရင်းနှင့် မြန်မာ့အွန်လိုင်းဈေးကွက်','ဆိုင်အရောင်း၊ ကုန်ပစ္စည်း၊ စာရင်းနှင့် အမြတ်အရှုံး စီမံခန့်ခွဲမှု');
+replaceExactly('<meta name="description" content="AK Market — မြန်မာနိုင်ငံတစ်ဝန်း ပစ္စည်းဝယ်ယူရောင်းချရန် အခမဲ့ Online Marketplace။ ပစ္စည်းပုံ၊ ကျပ်ဈေးနှုန်း၊ မြို့နယ်နှင့် ဖုန်း/Viber ဆက်သွယ်ရန် တစ်နေရာတည်း။">','<meta name="description" content="AK Sale Software — Hardware & Electrical ဆိုင်များအတွက် အရောင်း၊ ကုန်ပစ္စည်း၊ အကြွေးနှင့် အမြတ်စာရင်း စီမံခန့်ခွဲမှု။">');
+replaceExactly('<meta name="application-name" content="AK Market">','<meta name="application-name" content="AK Sale Software">');
+replaceExactly('<meta property="og:title" content="AK Market | မြန်မာ့ Online Shopping ဈေးကွက်">','<meta property="og:title" content="AK Sale Software | Hardware & Electrical POS">');
+replaceExactly('<meta property="og:description" content="ပစ္စည်းကြော်ငြာ အခမဲ့တင်ပါ။ မြို့နယ်အလိုက် ရှာဖွေပါ။ ဆိုင်နှင့် ရောင်းသူကို ဖုန်း/Viber ဖြင့် တိုက်ရိုက်ဆက်သွယ်ပါ။">','<meta property="og:description" content="Hardware & Electrical ဆိုင်များအတွက် အရောင်း၊ ကုန်ပစ္စည်း၊ အကြွေးနှင့် အမြတ်စာရင်း စီမံခန့်ခွဲမှု။">');
+replaceExactly('<title>AK Market | မြန်မာ့ Online Shopping ဈေးကွက်</title>','<title>AK Sale Software | Hardware & Electrical POS</title>');
 replaceExactly('<footer>Ak shopping markets · Myanmar Retail & Market Platform</footer>','<footer>AK Sale Software · Hardware & Electrical Shop POS</footer>');
 replaceExactly('ဆိုင်သုံး POS ကို အသုံးပြုရန် Login နှင့် အသုံးပြုခွင့်လိုအပ်သည်။ AK Market၊ အတည်ပြုဆိုင်စာရင်းနှင့် ကြော်ငြာများကို အများပြည်သူ ကြည့်ရှုနိုင်သည်။','ဆိုင်သုံး POS ကို အသုံးပြုရန် Gmail Login နှင့် အသုံးပြုခွင့်လိုအပ်သည်။ Package ရွေးချယ်ပြီး ငွေပေးချေမှု တင်ပြနိုင်ပါသည်။');
 replaceExactly('if(typeof loadMarket==="function")await loadMarket()', '/* APK POS-only: do not load public Marketplace listings. */', 2);

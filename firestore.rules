@@ -42,6 +42,7 @@ service cloud.firestore {
       return request.auth != null && (
         (request.auth.uid == shopId && (isVerifiedOwner() || activeShopLicense(shopId)))
         || (request.auth.token.shopId == shopId
+          && request.auth.token.email_verified == true
           && request.auth.token.shopRole in ['manager','cashier','employee']
           && activeShopLicense(shopId)
           && exists(/databases/$(database)/documents/shopMembers/$(request.auth.uid))

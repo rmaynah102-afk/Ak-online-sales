@@ -21,9 +21,10 @@ replaceExactly('const publicViews=["backup","market"];', 'const publicViews=["ba
 replaceExactly('if(new URLSearchParams(location.search).get("market")==="1")document.documentElement.classList.add("ak-public-market");','/* APK POS-only: public Market URL mode disabled. */');
 replaceExactly('id="market";', 'id="backup";');
 replaceExactly('name:"Ak shopping markets"','name:"AK Hardware & Electrical"');
+// Subscription onboarding patch already removes public shop/listing loaders from the APK auth listener.
 replaceExactly(
-  'if(typeof loadSponsoredAds==="function")void loadSponsoredAds();if(typeof loadPublicShops==="function")void loadPublicShops();if(typeof loadMyMarketListings==="function")void loadMyMarketListings();',
-  '/* APK POS-only: Marketplace background loaders disabled. */'
+  'if(typeof loadSponsoredAds==="function")void loadSponsoredAds();',
+  '/* APK POS-only: sponsored-ad and Marketplace loaders disabled. */'
 );
 replaceExactly('<button type="button" class="alt" onclick="akSendProductToMarket()">Market ကြော်ငြာတင်ရန်</button>', '');
 replaceExactly('Viber ကိုနှိပ်လျှင် ပုံနှင့်စာကို Share Menu မှတစ်ဆင့် ကိုယ့် Channel သို့ ရွေးပို့နိုင်သည်။ Market ကိုနှိပ်လျှင် အချက်အလက်များကို အလိုအလျောက်ဖြည့်ပေးမည်။','Viber ကိုနှိပ်လျှင် ပုံနှင့်စာကို Share Menu မှတစ်ဆင့် ကိုယ့် Channel သို့ ရွေးပို့နိုင်သည်။');

@@ -517,6 +517,12 @@ exports.assignShopStaffRole = functions.https.onCall(async (data, context) => {
   if (existingShop && existingShop !== ownerUid) {
     throw new functions.https.HttpsError("already-exists", "ဤ Gmail ကို အခြားဆိုင်တွင် ချိတ်ဆက်ထားပြီးဖြစ်သည်။");
   }
+  // Each shop has exactly three user accounts: one owner and up to two staff.
+  const membersSnap = await db.collection("shopMembers").where("shopId", "==", ownerUid).get();
+  const alreadyMember = membersSnap.docs.some(doc => doc.id === staff.uid);
+  if (!alreadyMember && membersSnap.size >= 2) {
+    throw new functions.https.HttpsError("resource-exhausted", "ဆိုင်တစ်ဆိုင်လျှင် ဆိုင်ရှင် ၁ ဦးနှင့် ဝန်ထမ်း ၂ ဦး၊ စုစုပေါင်း ၃ အကောင့်သာ ခွင့်ပြုထားသည်။");
+  }
   const claims = { ...(staff.customClaims || {}), shopId: ownerUid, shopRole: role };
   await admin.auth().setCustomUserClaims(staff.uid, claims);
   await db.collection("shopMembers").doc(staff.uid).set({
@@ -534,7 +540,7 @@ exports.assignShopStaffRole = functions.https.onCall(async (data, context) => {
 exports.listShopStaff = functions.https.onCall(async (data, context) => {
   const ownerUid = await requireActiveShop(context);
   const snap = await db.collection("shopMembers").where("shopId", "==", ownerUid).limit(100).get();
-  return { members: snap.docs.map(doc => {
+  return { maxStaff: 2, totalAccounts: 1 + snap.size, members: snap.docs.map(doc => {
     const x = doc.data();
     return { uid: doc.id, email: x.email || "", role: x.role || "employee", canPrint: x.canPrint === true };
   }) };

@@ -144,6 +144,19 @@ if (!serverCallables.has('createPaymentRequest') || !clientCallables.has('create
 
 // Client and server must enforce the same owner-approved subscription prices.
 const expectedPlanMap = '{ 30: 30000, 90: 90000, 180: 180000, 365: 360000 }';
+if (!functionsSource.includes('db.collection("platformControls").doc("shopCapacity")') ||
+    !functionsSource.includes('activeOwners.length >= 30') ||
+    !functionsSource.includes('db.collection("shops").doc(ownerUid).collection("controls").doc("staff")') ||
+    !functionsSource.includes('staffLimit: 2')) {
+  console.error('Backend must serialize the 30-shop capacity limit and two-staff-per-shop limit.');
+  process.exitCode = 1;
+}
+if (!html.includes('Thermer / Printer App သို့ပို့') ||
+    !html.includes('chooserTitle') ||
+    !printerSource.includes('Intent.createChooser(sendIntent, chooserTitle)')) {
+  console.error('Receipt sharing must offer the Thermer / external printer-app chooser.');
+  process.exitCode = 1;
+}
 if (!html.includes('const AK_PLAN_AMOUNTS={30:30000,90:90000,180:180000,365:360000};') ||
     (functionsSource.match(/const expectedAmounts = \{ 30: 30000, 90: 90000, 180: 180000, 365: 360000 \};/g) || []).length !== 2) {
   console.error('Subscription pricing must match: 1 month 30000, 3 months 90000, 6 months 180000, 1 year 360000 MMK.');

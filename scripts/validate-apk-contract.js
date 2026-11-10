@@ -89,6 +89,22 @@ if (!/request\.auth\.uid == uid/.test(rules)) {
   console.error('Private shop access must be bound to the authenticated UID.');
   process.exitCode = 1;
 }
+if (!html.includes('id="ownerDashboard" class="view shop-owner-only hidden"') ||
+    !html.includes('id="akOwnerStaffPanel"') ||
+    !html.includes('akWorkspaceMode=true') ||
+    !html.includes('httpsCallable("loadShopWorkspace")') ||
+    !html.includes('httpsCallable("saveShopWorkspace")')) {
+  console.error('Merchant Owner Dashboard and staff workspace integration must be present in the POS client.');
+  process.exitCode = 1;
+}
+if (!functionsSource.includes('async function workspaceIdentity(context)') ||
+    !functionsSource.includes('const identity=await workspaceIdentity(context)') ||
+    !functionsSource.includes('ဝန်ထမ်းသည် Gmail ကို အရင် Email အတည်ပြုထားရန် လိုအပ်သည်။') ||
+    !functionsSource.includes('လက်ကျန်ပမာဏသာ အရောင်းနှင့်အတူ ပြောင်းနိုင်သည်။') ||
+    !rules.includes('canReadShopWorkspaceMeta(shopId)')) {
+  console.error('Shop workspace must enforce owner/staff roles, verified email and stock-only staff product changes.');
+  process.exitCode = 1;
+}
 const cloudSyncStart = html.indexOf('function startAkCloudSync()');
 const cloudSyncEnd = html.indexOf('async function cloudLoad()', cloudSyncStart);
 const cloudSyncSource = cloudSyncStart >= 0 ? html.slice(cloudSyncStart, cloudSyncEnd) : '';

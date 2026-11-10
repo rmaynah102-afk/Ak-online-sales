@@ -314,6 +314,78 @@ exports.listPlatformUsers = functions.https.onCall(async (data, context) => {
   };
 });
 
+// A customer asks for access after registering. Payment is handled outside the app;
+// this callable only records the request and never grants POS access.
+exports.requestSubscriptionAccess = functions.https.onCall(async (data, context) => {
+  if (!context.auth || context.auth.token.email_verified !== true) {
+    throw new functions.https.HttpsError("unauthenticated", "Gmail ဖြင့် Login ဝင်ပြီး Email အတည်ပြုပါ။");
+  }
+  const uid = context.auth.uid;
+  const email = String(context.auth.token.email || "").trim().toLowerCase();
+  if (!email || email === OWNER_EMAIL) {
+    throw new functions.https.HttpsError("permission-denied", "ဤအကောင့်အတွက် Customer Access Request မလိုအပ်ပါ။");
+  }
+  const ref = db.collection("licenses").doc(uid);
+  const snap = await ref.get();
+  const license = snap.data() || {};
+  if (license.status === "suspended") {
+    throw new functions.https.HttpsError("permission-denied", "ဤအကောင့်ကို Owner က ရပ်ဆိုင်းထားသည်။ Owner ထံ ဆက်သွယ်ပါ။");
+  }
+  if (license.status === "active" && license.expiresAt &&
+      typeof license.expiresAt.toMillis === "function" && license.expiresAt.toMillis() > Date.now()) {
+    return { ok: true, status: "active", message: "အသုံးပြုခွင့် ရှိပြီးဖြစ်သည်။" };
+  }
+  await ref.set({
+    uid, email, status: "pending_payment", plan: "awaiting-owner-approval",
+    accessRequestedAt: admin.firestore.FieldValue.serverTimestamp(),
+    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+  }, { merge: true });
+  await db.collection("platformAuditLogs").add({
+    action: "subscription_access_requested", targetUid: uid, targetEmail: email,
+    createdAt: admin.firestore.FieldValue.serverTimestamp()
+  });
+  return { ok: true, status: "pending_payment", message: "Owner အတည်ပြုရန် တောင်းဆိုချက် ပို့ပြီးပါပြီ။" };
+});
+
+// Manual subscription activation: the Platform Owner verifies external payment
+// independently, then grants a fixed duration from the Owner Dashboard.
+exports.grantSubscription = functions.https.onCall(async (data, context) => {
+  const actor = requireAdmin(context);
+  const uid = String(data.uid || "").trim();
+  const days = Number(data.days);
+  if (!uid || uid.length > 128 || ![30, 90, 180, 365].includes(days)) {
+    throw new functions.https.HttpsError("invalid-argument", "Customer အကောင့် သို့မဟုတ် သက်တမ်းကာလ မမှန်ပါ။");
+  }
+  if (uid === context.auth.uid) {
+    throw new functions.https.HttpsError("permission-denied", "Platform Owner ကို Customer License မပေးနိုင်ပါ။");
+  }
+  const user = await admin.auth().getUser(uid);
+  const email = String(user.email || "").trim().toLowerCase();
+  if (!email || email === OWNER_EMAIL || !user.emailVerified || user.disabled) {
+    throw new functions.https.HttpsError("failed-precondition", "Customer Gmail အတည်ပြုထားပြီး အကောင့်ဖွင့်ထားရန် လိုအပ်သည်။");
+  }
+  const ref = db.collection("licenses").doc(uid);
+  const result = await db.runTransaction(async tx => {
+    const snap = await tx.get(ref);
+    const old = snap.data() || {};
+    const oldExpiry = old.expiresAt && typeof old.expiresAt.toMillis === "function"
+      ? old.expiresAt.toMillis() : 0;
+    const expiresAt = admin.firestore.Timestamp.fromMillis(Math.max(Date.now(), oldExpiry) + days * 86400000);
+    tx.set(ref, {
+      uid, email, status: "active", plan: days + "-days",
+      expiresAt, grantedBy: actor, grantedAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+    return expiresAt;
+  });
+  await db.collection("platformAuditLogs").add({
+    action: "subscription_manually_granted", targetUid: uid, targetEmail: email,
+    days, expiresAt: result, actor,
+    createdAt: admin.firestore.FieldValue.serverTimestamp()
+  });
+  return { ok: true, uid, email, days, expiresAt: result.toDate().toISOString() };
+});
+
 exports.setPlatformUserAccess = functions.https.onCall(async (data, context) => {
   const actor = requireAdmin(context);
   const uid = String(data.uid || "").trim();

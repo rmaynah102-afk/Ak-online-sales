@@ -684,7 +684,7 @@ function akInitMarketRebuild(){
   ownerManager.appendChild(controls);
  }
 }
-async let akAdOrderImageData="";
+let akAdOrderImageData="";
 function akHandleAdOrderPhoto(e){
  const file=e.target.files&&e.target.files[0];if(!file)return;
  if(!/^image\/(jpeg|png|webp)$/.test(file.type)||file.size>8*1024*1024){e.target.value="";akAdOrderImageData="";const p=document.getElementById("akAdOrderPhotoPreview");p.style.display="none";alert("JPG၊ PNG သို့မဟုတ် WebP ပုံ 8MB အောက်သာ ရွေးပါ။");return}

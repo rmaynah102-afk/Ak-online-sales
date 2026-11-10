@@ -141,7 +141,7 @@ service cloud.firestore {
     }
 
     match /subscriptionAccessRequests/{userId} {
-      allow create, update: if request.auth != null
+      allow create: if request.auth != null
         && request.auth.uid == userId
         && request.resource.data.uid == userId
         && request.resource.data.email == request.auth.token.email
@@ -151,11 +151,18 @@ service cloud.firestore {
         && request.resource.data.updatedAt == request.time;
       allow read: if isVerifiedOwner()
         || (request.auth != null && request.auth.uid == userId);
-      allow update: if isVerifiedOwner()
-        && resource.data.status == 'pending'
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','reviewedBy','reviewedAt'])
-        && request.resource.data.status == 'reviewed'
-        && request.resource.data.reviewedAt == request.time;
+      allow update: if (request.auth != null
+          && request.auth.uid == userId
+          && resource.data.status == 'pending'
+          && request.resource.data.uid == userId
+          && request.resource.data.status == 'pending'
+          && request.resource.data.days in [30, 90, 180, 365]
+          && request.resource.data.updatedAt == request.time)
+        || (isVerifiedOwner()
+          && resource.data.status == 'pending'
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','reviewedBy','reviewedAt'])
+          && request.resource.data.status == 'reviewed'
+          && request.resource.data.reviewedAt == request.time);
       allow delete: if false;
     }
 

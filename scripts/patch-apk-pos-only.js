@@ -6,7 +6,7 @@ const path = require('path');
 const target = path.resolve(__dirname, '..', 'www', 'index.html');
 if (!fs.existsSync(target)) throw new Error('APK web bundle missing: run npm run copy-web first.');
 let html = fs.readFileSync(target, 'utf8');
-const marker = '/* AK_APK_POS_ONLY_MARKET_ISOLATION_V4 */';
+const marker = '/* AK_APK_POS_ONLY_MARKET_ISOLATION_V5 */';
 if (html.includes(marker)) { console.log('APK POS-only isolation already applied.'); process.exit(0); }
 
 function replaceExactly(oldText, newText, expected = 1) {
@@ -45,7 +45,10 @@ const css = `
 /* AK_APK_POS_ONLY_MARKET_ISOLATION_V4 */
 html.ak-apk-pos-only #market,
 html.ak-apk-pos-only #nav button[data-view="market"],
-html.ak-apk-pos-only #akFirebasePanel { display:none!important; }
+html.ak-apk-pos-only #akFirebasePanel,
+html.ak-apk-pos-only #akOwnerPromoPanel,
+html.ak-apk-pos-only #akMarketReportsPanel,
+html.ak-apk-pos-only #akPublicSponsoredSection { display:none!important; }
 html.ak-apk-pos-only body.ak-license-locked #nav { display:none!important; }
 html.ak-apk-pos-only body.ak-license-locked main>#backup>.panel:not(#akPaywallNotice):not(#akSubscriptionPayment):not(#akLicensePanel) {
   display:none!important;

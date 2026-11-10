@@ -2195,11 +2195,18 @@ async function akGrantCustomerSubscription(uid){
 }
 async function akRequestSubscriptionAccess(){
  try{
-  if(!fbAuth?.currentUser)throw Error("Gmail ဖြင့် အရင် Login ဝင်ပါ။");
+  if(!fbAuth?.currentUser||!fbStore)throw Error("Gmail ဖြင့် အရင် Login ဝင်ပါ။");
   if(!fbAuth.currentUser.emailVerified)throw Error("Gmail ထဲမှ Email Verification Link ကို အရင်နှိပ်ပါ။");
-  const result=await firebase.functions().httpsCallable("requestSubscriptionAccess")({});
-  $("akAccessRequestStatus").textContent=result.data?.status==="active"?"အသုံးပြုခွင့် ရှိပြီးဖြစ်သည်။ Login ပြန်ဝင်ပါ။":"Owner ထံ Access Request ပို့ပြီးပါပြီ။ ငွေပေးချေမှုကို အပြင်တွင် စီစဉ်ပြီး Owner စစ်ဆေးအတည်ပြုသည်အထိ စောင့်ပါ။";
-  await refreshLicense();
+  const uid=fbAuth.currentUser.uid,email=String(fbAuth.currentUser.email||"").trim();
+  const days=Number($("payPlan")?.value||30);
+  if(![30,90,180,365].includes(days))throw Error("Package ရွေးချယ်မှု မမှန်ပါ။");
+  await fbStore.collection("subscriptionAccessRequests").doc(uid).set({
+   uid,email,days,status:"pending",
+   createdAt:firebase.firestore.FieldValue.serverTimestamp(),
+   updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+  },{merge:true});
+  $("akAccessRequestStatus").textContent="Access Request ကို Owner Dashboard ထဲသို့ ပို့ပြီးပါပြီ။ ငွေလွှဲမတင်ရသေးပါက POS ကို မဖွင့်သေးပါ။";
+  alert("Owner ထံ Access Request ပို့ပြီးပါပြီ။ Owner Dashboard မှာ မြင်နိုင်ပါပြီ။");
  }catch(e){$("akAccessRequestStatus").textContent="တောင်းဆိုမရပါ: "+(e.message||e)}
 }
 

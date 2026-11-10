@@ -27,26 +27,34 @@ exports.startTrial = functions.auth.user().onCreate(async (user) => {
 
 
 async function enforceCustomerShopCapacity(tx, uid, currentLicenseSnap) {
-  const current = currentLicenseSnap && currentLicenseSnap.exists ? currentLicenseSnap.data() || {} : {};
+  // A shared lock document serializes every new activation/renewal across shops.
+  // The active license query is re-counted inside the same transaction so expired
+  // and suspended shops release capacity automatically.
+  const capacityRef = db.collection("platformControls").doc("shopCapacity");
+  const activeQuery = db.collection("licenses").where("status", "==", "active");
+  const [capacitySnap, activeSnap] = await Promise.all([
+    tx.get(capacityRef),
+    tx.get(activeQuery)
+  ]);
   const now = Date.now();
-  const currentExpiry = current.expiresAt && typeof current.expiresAt.toMillis === "function"
-    ? current.expiresAt.toMillis() : 0;
-  const alreadyActive = current.status === "active" && currentExpiry > now;
-  if (alreadyActive) return;
-
-  const activeSnap = await tx.get(db.collection("licenses").where("status", "==", "active"));
-  const occupied = activeSnap.docs.filter(doc => {
-    if (doc.id === uid) return false;
+  const activeOwners = activeSnap.docs.filter(doc => {
     const item = doc.data() || {};
     const email = String(item.email || "").trim().toLowerCase();
     const expiry = item.expiresAt && typeof item.expiresAt.toMillis === "function"
       ? item.expiresAt.toMillis() : 0;
     return email !== OWNER_EMAIL && expiry > now;
-  }).length;
-  if (occupied >= 30) {
+  });
+  const targetAlreadyActive = activeOwners.some(doc => doc.id === uid);
+  if (!targetAlreadyActive && activeOwners.length >= 30) {
     throw new functions.https.HttpsError("resource-exhausted",
-      "Platform Owner က ခွင့်ပြုထားသော ဆိုင် ၃၀ ဆိုင် ပြည့်နေပါပြီ။ ဆိုင်ဟောင်းတစ်ဆိုင်ကို သက်တမ်းကုန်/ပိတ်ပြီးမှ အသစ်ဖွင့်နိုင်ပါမည်။");
+      "Platform Owner က ခွင့်ပြုထားသော ဆိုင် ၃၀ ဆိုင် ပြည့်နေပါပြီ။ ဆိုင်ဟောင်းတစ်ဆိုင်ကို Suspend လုပ်ခြင်း သို့မဟုတ် သက်တမ်းကုန်ပြီးမှ အသစ်ဖွင့်နိုင်ပါမည်။");
   }
+  tx.set(capacityRef, {
+    activeCount: activeOwners.length + (targetAlreadyActive ? 0 : 1),
+    limit: 30,
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    lastActivatedUid: uid
+  }, { merge: true });
 }
 
 function requireAdmin(context) {
@@ -618,9 +626,12 @@ exports.assignShopStaffRole = functions.https.onCall(async (data, context) => {
   }
   // Each shop has exactly three user accounts: one owner and up to two staff.
   const memberRef = db.collection("shopMembers").doc(staff.uid);
+  const membershipControlRef = db.collection("shops").doc(ownerUid).collection("controls").doc("staff");
   await db.runTransaction(async tx => {
     const membersQuery = db.collection("shopMembers").where("shopId", "==", ownerUid);
-    const [membersSnap, memberSnap] = await Promise.all([tx.get(membersQuery), tx.get(memberRef)]);
+    const [controlSnap, membersSnap, memberSnap] = await Promise.all([
+      tx.get(membershipControlRef), tx.get(membersQuery), tx.get(memberRef)
+    ]);
     if (memberSnap.exists && memberSnap.data().shopId !== ownerUid) {
       throw new functions.https.HttpsError("already-exists", "ဤ Gmail ကို အခြားဆိုင်တွင် ချိတ်ဆက်ထားပြီးဖြစ်သည်။");
     }
@@ -628,6 +639,11 @@ exports.assignShopStaffRole = functions.https.onCall(async (data, context) => {
     if (!alreadyMember && membersSnap.size >= 2) {
       throw new functions.https.HttpsError("resource-exhausted", "ဆိုင်တစ်ဆိုင်လျှင် ဆိုင်ရှင် ၁ ဦးနှင့် ဝန်ထမ်း ၂ ဦး၊ စုစုပေါင်း ၃ အကောင့်သာ ခွင့်ပြုထားသည်။");
     }
+    tx.set(membershipControlRef, {
+      staffCount: membersSnap.size,
+      staffLimit: 2,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
     tx.set(memberRef, {
       uid: staff.uid, shopId: ownerUid, email, role,
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -693,7 +709,10 @@ exports.claimShopInviteCode = functions.https.onCall(async (data, context) => {
     }
     const membersQuery = db.collection("shopMembers").where("shopId", "==", invite.shopId);
     const memberRef = db.collection("shopMembers").doc(uid);
-    const [membersSnap, memberSnap] = await Promise.all([tx.get(membersQuery), tx.get(memberRef)]);
+    const membershipControlRef = db.collection("shops").doc(invite.shopId).collection("controls").doc("staff");
+    const [controlSnap, membersSnap, memberSnap] = await Promise.all([
+      tx.get(membershipControlRef), tx.get(membersQuery), tx.get(memberRef)
+    ]);
     if (memberSnap.exists && memberSnap.data().shopId !== invite.shopId) {
       throw new functions.https.HttpsError("already-exists", "ဤ Gmail ကို အခြားဆိုင်တွင် ချိတ်ထားပြီးဖြစ်သည်။");
     }
@@ -701,6 +720,11 @@ exports.claimShopInviteCode = functions.https.onCall(async (data, context) => {
     if (!already && membersSnap.size >= 2) {
       throw new functions.https.HttpsError("resource-exhausted", "ဝန်ထမ်း ၂ ဦး ပြည့်နေပါပြီ။");
     }
+    tx.set(membershipControlRef, {
+      staffCount: membersSnap.size + (already ? 0 : 1),
+      staffLimit: 2,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
     tx.update(inviteRef, { status: "claimed", claimedBy: uid, claimedEmail: email, claimedAt: admin.firestore.FieldValue.serverTimestamp() });
     tx.set(memberRef, {
       uid, shopId: invite.shopId, email, role: invite.role,
@@ -798,10 +822,25 @@ exports.removeShopStaff = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError("invalid-argument", "ဝန်ထမ်းအကောင့် ID မမှန်ပါ။");
   }
   const ref = db.collection("shopMembers").doc(memberUid);
-  const snap = await ref.get();
-  if (!snap.exists || snap.data().shopId !== ownerUid) {
-    throw new functions.https.HttpsError("not-found", "ဤဆိုင်၏ ဝန်ထမ်းအကောင့် မတွေ့ပါ။");
-  }
+  const membershipControlRef = db.collection("shops").doc(ownerUid).collection("controls").doc("staff");
+  let removed = false;
+  await db.runTransaction(async tx => {
+    const membersQuery = db.collection("shopMembers").where("shopId", "==", ownerUid);
+    const [controlSnap, membersSnap, snap] = await Promise.all([
+      tx.get(membershipControlRef), tx.get(membersQuery), tx.get(ref)
+    ]);
+    if (!snap.exists || snap.data().shopId !== ownerUid) {
+      throw new functions.https.HttpsError("not-found", "ဤဆိုင်၏ ဝန်ထမ်းအကောင့် မတွေ့ပါ။");
+    }
+    tx.delete(ref);
+    tx.set(membershipControlRef, {
+      staffCount: Math.max(0, membersSnap.size - 1),
+      staffLimit: 2,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+    removed = true;
+  });
+  if (!removed) throw new functions.https.HttpsError("internal", "ဝန်ထမ်းအကောင့် ဖယ်ရှားမရပါ။");
   const staff = await admin.auth().getUser(memberUid);
   const claims = { ...(staff.customClaims || {}) };
   if (claims.shopId === ownerUid) {
@@ -810,7 +849,6 @@ exports.removeShopStaff = functions.https.onCall(async (data, context) => {
     delete claims.canPrint;
     await admin.auth().setCustomUserClaims(memberUid, claims);
   }
-  await ref.delete();
   await db.collection("users").doc(ownerUid).collection("auditLogs").add({
     action: "staff_removed", targetUid: memberUid, actorUid: ownerUid,
     createdAt: admin.firestore.FieldValue.serverTimestamp()

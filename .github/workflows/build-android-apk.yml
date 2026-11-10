@@ -82,6 +82,7 @@ jobs:
             ['Subscription payment UI', 'id="akSubscriptionPayment"'],
             ['Explicit package selection', 'Package ရွေးပြီးမှ Google ချိတ်နိုင်သည်'],
             ['Google Gmail onboarding', 'id="akOnboardingGoogleButton"'],
+            ['Android native Google bridge', 'nativePromise("FirebaseAuthentication","signInWithGoogle"'],
             ['Owner approval re-login action', 'function akReLoginAfterApproval()'],
             ['Owner payment review UI', 'id="akOwnerPaymentReview"'],
             ['Email login handler', 'async function firebaseLogin()'],

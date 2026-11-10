@@ -672,7 +672,7 @@ function akInitMarketRebuild(){
  if(ownerNote)ownerNote.textContent="Owner တစ်ဦးတည်းက Market ပစ္စည်းကြော်ငြာနှင့် Sponsored ကြော်ငြာများကို စစ်ဆေး၊ ဖျက်နိုင်သည်။";
  const fbPanel=document.getElementById("akFirebasePanel");
  if(fbPanel&&ownerEntry){
-  if(new URLSearchParams(location.search).get("market")==="1"){flow.insertBefore(fbPanel,ownerOrders);const authTitle=fbPanel.querySelector("h2");if(authTitle)authTitle.textContent="Owner Login · လုံခြုံသော စီမံခန့်ခွဲမှု";const register=document.getElementById("akRegisterButton");if(register)register.style.display="none";const googleButton=fbPanel.querySelector('button[onclick="firebaseGoogleLogin()"]');if(googleButton){googleButton.style.display="inline-flex";googleButton.textContent="Google Account ဖြင့် ဝင်ရန်";googleButton.style.visibility="visible";googleButton.style.opacity="1";googleButton.style.minHeight="48px";googleButton.style.fontWeight="800";}}
+  if(new URLSearchParams(location.search).get("market")==="1"){flow.insertBefore(fbPanel,ownerOrders);const authTitle=fbPanel.querySelector("h2");if(authTitle)authTitle.textContent="Owner Login · painglin102@gmail.com တစ်ခုတည်း";const authNote=fbPanel.querySelector(".notice");if(authNote)authNote.textContent="Owner စီမံခန့်ခွဲမှုကို painglin102@gmail.com အတည်ပြုထားသော Email/Password ဖြင့်သာ ဝင်နိုင်သည်။ Google Login နှင့် အခြားအကောင့်များကို ဤနေရာတွင် ပိတ်ထားသည်။";const register=document.getElementById("akRegisterButton");if(register)register.style.display="none";const googleButton=fbPanel.querySelector('button[onclick="firebaseGoogleLogin()"]');if(googleButton)googleButton.style.display="none";const emailInput=document.getElementById("fbEmail");if(emailInput){emailInput.value="painglin102@gmail.com";emailInput.readOnly=true;emailInput.autocomplete="username";}}
   const jump=ownerEntry.querySelector("button");
   if(jump)jump.addEventListener("click",()=>setTimeout(()=>{if(fbPanel)fbPanel.scrollIntoView({behavior:"smooth",block:"center"});},150));
  }
@@ -1514,23 +1514,20 @@ $("marketForm").addEventListener("submit",async e=>{
   const ref=marketEditId?fbStore.collection("marketListings").doc(marketEditId):fbStore.collection("marketListings").doc();
   let existing=null;
   if(marketEditId){const snap=await ref.get();if(!snap.exists||snap.data().ownerUid!==uid)throw Error("ဤကြော်ငြာကို ပြင်ခွင့်မရှိပါ။");existing=snap.data();}
-  let imageUrl=existing?.imageUrl||"",imagePath=verifiedUser?"market/"+uid+"/"+ref.id+"/photo":"";
+  let imageUrl=existing?.imageUrl||"",imagePath="";
   if(marketPhotoFile){
    if(!/^image\/(jpeg|png|webp)$/.test(marketPhotoFile.type)||marketPhotoFile.size>2*1024*1024)throw Error("JPG/PNG/WebP ပုံ 2MB အောက်သာ ရွေးပါ။");
-   if(verifiedUser){
-    imagePath="market/"+uid+"/"+ref.id+"/photo";uploadedPath=imagePath;
-    const upload=await firebase.storage().ref(imagePath).put(marketPhotoFile,{contentType:marketPhotoFile.type,cacheControl:"public,max-age=3600"});
-    imageUrl=await upload.ref.getDownloadURL();
-   }else{
-    const raw=await new Promise((resolve,reject)=>{const fr=new FileReader();fr.onload=()=>resolve(fr.result);fr.onerror=()=>reject(Error("ပုံဖတ်မရပါ။"));fr.readAsDataURL(marketPhotoFile);});
-    const pic=await new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(Error("ပုံဖွင့်မရပါ။"));im.src=raw;});
-    const cv=document.createElement("canvas"),scale=Math.min(1,720/Math.max(pic.width,pic.height));
-    cv.width=Math.max(1,Math.round(pic.width*scale));cv.height=Math.max(1,Math.round(pic.height*scale));
-    cv.getContext("2d").drawImage(pic,0,0,cv.width,cv.height);
-    let q=.62;imageUrl=cv.toDataURL("image/jpeg",q);
-    while(imageUrl.length>180000&&q>.30){q-=.05;imageUrl=cv.toDataURL("image/jpeg",q);}
-    if(imageUrl.length>180000)throw Error("ပုံဖိုင်ကြီးနေသေးသည်။ ပိုသေးသောပုံရွေးပါ။");
-   }
+   // Store a compressed image directly in the listing document. This avoids
+   // Firebase Storage setup/rules failures and keeps the image available to
+   // both guest and signed-in public listings.
+   const raw=await new Promise((resolve,reject)=>{const fr=new FileReader();fr.onload=()=>resolve(fr.result);fr.onerror=()=>reject(Error("ပုံဖတ်မရပါ။"));fr.readAsDataURL(marketPhotoFile);});
+   const pic=await new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(Error("ပုံဖွင့်မရပါ။"));im.src=raw;});
+   const cv=document.createElement("canvas"),scale=Math.min(1,720/Math.max(pic.width,pic.height));
+   cv.width=Math.max(1,Math.round(pic.width*scale));cv.height=Math.max(1,Math.round(pic.height*scale));
+   const ctx=cv.getContext("2d");if(!ctx)throw Error("ပုံပြင်ဆင်မရပါ။");ctx.drawImage(pic,0,0,cv.width,cv.height);
+   let q=.62;imageUrl=cv.toDataURL("image/jpeg",q);
+   while(imageUrl.length>180000&&q>.30){q=Math.max(.30,q-.05);imageUrl=cv.toDataURL("image/jpeg",q);}
+   if(imageUrl.length>180000)throw Error("ပုံဖိုင်ကြီးနေသေးသည်။ ပိုသေးသောပုံရွေးပါ။");
   }
   const payload={title,price,currency:"MMK",category:$("mCategory").value,city,township,address,phone,description,imageUrl,ownerUid:uid,status:"published",shopName};
   if(marketEditId)await ref.update({...payload,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
@@ -1835,7 +1832,7 @@ async function firebaseVerifyPhoneOtp(){
   console.error("AK phone OTP verify failed",e);
  }finally{if(button){button.disabled=false;button.textContent="OTP အတည်ပြု Login ဝင်ရန်"}}
 }
-async function firebaseLogin(){const button=[...document.querySelectorAll("#akFirebasePanel button")].find(b=>b.textContent.trim()==="Login ဝင်မည်");try{if(button){button.disabled=true;button.textContent="ဝင်နေသည်..."}if(!fbAuth||!fbStore)await firebaseConnect();if(!fbAuth)throw Error("Firebase မချိတ်နိုင်ပါ။ Internet ကိုစစ်ပါ။");const email=$("fbEmail").value.trim().toLowerCase(),pass=$("fbPassword").value;if(!email)throw Error("Gmail / Email ထည့်ပါ။");if(pass.length<6)throw Error("Password အနည်းဆုံး ၆ လုံးထည့်ပါ။");await fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);await fbAuth.signInWithEmailAndPassword(email,pass);$("fbStatus").textContent="Login အောင်မြင်ပါပြီ။ ဆိုင်ဒေတာနှင့် Subscription ကို စစ်ဆေးနေသည်...";}catch(e){const code=e.code||"";const messages={"auth/invalid-email":"Email လိပ်စာပုံစံ မမှန်ပါ။","auth/invalid-credential":"Email သို့မဟုတ် Password မမှန်ပါ။ Google နဲ့ဖွင့်ထားသောအကောင့်ဆို Google ဖြင့်ဝင်ပါ။","auth/user-not-found":"ဒီ Email အတွက် အကောင့်မရှိပါ။","auth/wrong-password":"Password မှားနေပါသည်။","auth/too-many-requests":"အကြိမ်များစွာ မှားယွင်းနေပါသည်။ ခဏစောင့်ပြီး ပြန်စမ်းပါ။","auth/network-request-failed":"Internet မချိတ်နိုင်ပါ။ အင်တာနက်စစ်ပြီး ပြန်စမ်းပါ။","auth/operation-not-allowed":"Firebase Console တွင် Email/Password Login ကို Enable လုပ်ရန်လိုသည်."};$("fbStatus").textContent="Login မအောင်မြင် ("+code+"): "+(messages[code]||e.message||"မသိသောအမှား");console.error("AK email login error",e)}finally{if(button){button.disabled=false;button.textContent="Login ဝင်မည်"}}}
+async function firebaseLogin(){const button=[...document.querySelectorAll("#akFirebasePanel button")].find(b=>b.textContent.trim()==="Login ဝင်မည်");try{if(button){button.disabled=true;button.textContent="ဝင်နေသည်..."}if(!fbAuth||!fbStore)await firebaseConnect();if(!fbAuth)throw Error("Firebase မချိတ်နိုင်ပါ။ Internet ကိုစစ်ပါ။");const email=$("fbEmail").value.trim().toLowerCase(),pass=$("fbPassword").value;if(new URLSearchParams(location.search).get("market")==="1"&&email!=="painglin102@gmail.com")throw Error("Owner အဖြစ် painglin102@gmail.com တစ်ခုတည်းသာ ဝင်နိုင်သည်။");if(!email)throw Error("Gmail / Email ထည့်ပါ။");if(pass.length<6)throw Error("Password အနည်းဆုံး ၆ လုံးထည့်ပါ။");await fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);await fbAuth.signInWithEmailAndPassword(email,pass);$("fbStatus").textContent="Login အောင်မြင်ပါပြီ။ ဆိုင်ဒေတာနှင့် Subscription ကို စစ်ဆေးနေသည်...";}catch(e){const code=e.code||"";const messages={"auth/invalid-email":"Email လိပ်စာပုံစံ မမှန်ပါ။","auth/invalid-credential":"Email သို့မဟုတ် Password မမှန်ပါ။ Google နဲ့ဖွင့်ထားသောအကောင့်ဆို Google ဖြင့်ဝင်ပါ။","auth/user-not-found":"ဒီ Email အတွက် အကောင့်မရှိပါ။","auth/wrong-password":"Password မှားနေပါသည်။","auth/too-many-requests":"အကြိမ်များစွာ မှားယွင်းနေပါသည်။ ခဏစောင့်ပြီး ပြန်စမ်းပါ။","auth/network-request-failed":"Internet မချိတ်နိုင်ပါ။ အင်တာနက်စစ်ပြီး ပြန်စမ်းပါ။","auth/operation-not-allowed":"Firebase Console တွင် Email/Password Login ကို Enable လုပ်ရန်လိုသည်."};$("fbStatus").textContent="Login မအောင်မြင် ("+code+"): "+(messages[code]||e.message||"မသိသောအမှား");console.error("AK email login error",e)}finally{if(button){button.disabled=false;button.textContent="Login ဝင်မည်"}}}
 async function firebaseRegister(){try{if(!fbAuth||!fbStore)await firebaseConnect();if(!fbAuth)return;const email=$("fbEmail").value.trim(),pass=$("fbPassword").value;if(!email||pass.length<6)throw Error("Email နှင့် Password အနည်းဆုံး 6 လုံးထည့်ပါ");const credential=await fbAuth.createUserWithEmailAndPassword(email,pass);await credential.user.sendEmailVerification();await fbAuth.signOut();$("fbStatus").textContent="Account ဖွင့်ပြီးပါပြီ။ "+email+" သို့ Verification Link ပို့ထားသည်။ Email ကိုအတည်ပြုပြီးမှ ပြန် Login ဝင်ပါ။"}catch(e){$("fbStatus").textContent="Account ဖွင့်မရပါ ("+(e.code||"")+"): "+e.message}}
 async function firebaseResetPassword(){try{if(!fbAuth||!fbStore)await firebaseConnect();if(!fbAuth)return;const email=$("fbEmail").value.trim();if(!email)throw Error("Password ပြန်သတ်မှတ်ရန် Email ထည့်ပါ");await fbAuth.sendPasswordResetEmail(email);$("fbStatus").textContent=email+" သို့ Password Reset Link ပို့ပြီးပါပြီ။ Inbox/Spam စစ်ပါ။"}catch(e){$("fbStatus").textContent="Password Reset မအောင်မြင် ("+(e.code||"")+"): "+e.message}}
 async function firebaseLogout(){try{if(!fbAuth)await firebaseConnect();if(fbAuth)await fbAuth.signOut();const pass=$("fbPassword");if(pass)pass.value="";$("fbStatus").textContent="အကောင့်မှ ထွက်ပြီးပါပြီ။ နောက်တစ်ကြိမ် Gmail ဖြင့် ပြန်ဝင်နိုင်ပါသည်။"}catch(e){$("fbStatus").textContent="Logout မအောင်မြင်: "+e.message}}
@@ -2405,6 +2402,8 @@ body.ak-public footer{display:block}
  const publicMode=params.get("market")==="1" && params.get("app")!=="1";
  if(!publicMode)return;
  document.body.classList.add("ak-public");
+ // Hide all existing promotional/sponsored placements from the public market feed.
+ document.querySelectorAll("#akPublicSponsoredSection,#akLiveAdsPanel,#akSponsoredPublicGrid,#akPublicTikTokCard").forEach(el=>{el.hidden=true;el.style.display="none";});
  document.title="Ak shopping markets · မြန်မာ့အွန်လိုင်းဈေး";
  const desc=document.querySelector('meta[name="description"]');
  if(desc)desc.content="မြန်မာနိုင်ငံတစ်ဝှမ်း ပစ္စည်းရှာဖွေ၊ ဈေးနှိုင်းယှဉ်၊ ဆိုင်များနှင့် တိုက်ရိုက်ဆက်သွယ်နိုင်သော Ak shopping markets";

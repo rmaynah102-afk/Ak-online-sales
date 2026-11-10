@@ -73,7 +73,7 @@ const ownerPanel = `<div class="panel owner-only" id="akOwnerPaymentReview">
 `;
 html = html.replace(ownerAnchor, ownerPanel + ownerAnchor);
 
-const authAnchor = 'checkUserRole(user);if(typeof akLoadOwnerAds==="function")void akLoadOwnerAds();if(typeof loadSponsoredAds==="function")void loadSponsoredAds();';
+const authAnchor = 'checkUserRole(user);if(typeof akLoadOwnerAds==="function")void akLoadOwnerAds();if(typeof akLoadMarketAdOrders==="function"&&akIsPlatformOwner(user))void akLoadMarketAdOrders();if(typeof loadSponsoredAds==="function")void loadSponsoredAds();';
 if (html.split(authAnchor).length !== 2) throw new Error('Unique auth-state payment initialization point not found.');
 const authPatch = 'checkUserRole(user);if(typeof akLoadOwnerAds==="function")void akLoadOwnerAds();const akPaymentPanel=document.getElementById("akSubscriptionPayment"),akProofStep=document.getElementById("akPaymentProofStep"),akOnboardingStatus=document.getElementById("akOnboardingStatus");if(akPaymentPanel)akPaymentPanel.style.display=akIsPlatformOwner(user)?"none":"";if(akProofStep)akProofStep.style.display=user&&!akIsPlatformOwner(user)?"block":"none";if(akOnboardingStatus)akOnboardingStatus.textContent=user?(akIsPlatformOwner(user)?"Owner Gmail ချိတ်ပြီးပါပြီ။ Owner Dashboard မှ ငွေလွှဲတောင်းဆိုချက်များကို စစ်ဆေးပါ။":"Gmail ချိတ်ပြီးပါပြီ။ အဆင့် ၃ တွင် ငွေလွှဲအထောက်အထားတင်ပါ။"):"Package ရွေးပြီး Google ချိတ်ပါ။";if(user){void loadPaymentAccountSettings();if(akIsPlatformOwner(user))void loadAdminPaymentRequests();}if(typeof loadSponsoredAds==="function")void loadSponsoredAds();';
 html = html.replace(authAnchor, authPatch);

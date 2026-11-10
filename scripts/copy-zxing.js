@@ -1,0 +1,10 @@
+'use strict';
+const fs = require('fs');
+const path = require('path');
+const root = path.resolve(__dirname, '..');
+const source = path.join(root, 'node_modules', '@zxing', 'library', 'umd', 'index.min.js');
+if (!fs.existsSync(source)) throw new Error('Local ZXing UMD file missing after npm install: ' + source);
+const targetDir = path.join(root, 'www', 'vendor');
+fs.mkdirSync(targetDir, { recursive: true });
+fs.copyFileSync(source, path.join(targetDir, 'zxing.min.js'));
+console.log('Bundled local ZXing multi-format barcode scanner for APK.');

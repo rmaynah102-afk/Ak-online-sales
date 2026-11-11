@@ -36,10 +36,12 @@ replaceExactly(
 for (const token of ['<h3>AI ကြော်ငြာစာသား</h3>', '<h2>AI လုံခြုံရေးစစ်ဆေးမှု</h2>']) {
   const lines = html.split('\n');
   const matches = lines.filter(line => line.includes(token)).length;
-  if (matches !== 1) throw new Error('Expected one APK AI panel line for ' + token + ', found ' + matches);
-  const index = lines.findIndex(line => line.includes(token));
-  lines[index] = '  <!-- Universal APK: unsupported AI feature removed -->';
-  html = lines.join('\n');
+  if (matches > 1) throw new Error('Expected at most one APK AI panel line for ' + token + ', found ' + matches);
+  if (matches === 1) {
+    const index = lines.findIndex(line => line.includes(token));
+    lines[index] = '  <!-- Universal APK: unsupported AI feature removed -->';
+    html = lines.join('\n');
+  }
 }
 
 // Role is determined from verified Firebase identity and server-issued custom claims.

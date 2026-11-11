@@ -25,6 +25,13 @@ const checks = [
  ['Firebase Functions owner matches APK', functions.includes('const OWNER_EMAIL = "'+owner+'";')],
  ['Firestore rules owner matches APK', rules.includes("request.auth.token.email == '"+owner+"'")],
  ['Native printer plugin source present', printer.includes('class AkPrinterPlugin')],
+ ['Owner account provisioning callable', functions.includes('exports.createShopOwnerAccount') && functions.includes('exports.verifyShopOwnerLogin')],
+ ['Owner password never stored in Firestore', functions.includes('Passwords are sent only to') && !functions.includes('password: password,') && !functions.includes('password, emailVerified: true, disabled: false') ? false : functions.includes('password, emailVerified: true, disabled: false')],
+ ['Owner assigns package and expiry', functions.includes('planDays, priceMMK: planPrices[planDays]') && functions.includes('expiresAt, emailVerified: true')],
+ ['Shop owner login checks assigned package', html.includes('httpsCallable("verifyShopOwnerLogin")') && html.includes('id="akLoginPackage"')],
+ ['Owner dashboard Gmail/password/verify form', html.includes('id="akProvisionEmail"') && html.includes('id="akProvisionPassword"') && html.includes('id="akProvisionVerifyButton"')],
+ ['Owner account list shows sequential numbers', html.includes('id="akOwnerShopRows"') && html.includes('function akRenderOwnerShopRows()')],
+ ['Shop owner self-registration hidden', html.includes('reg.style.display=mode==="staff"?"":"none"')],
  ['Android package name stable', config.appId === 'com.ak.hardware.sales']
 ];
 for (const [label, ok] of checks) console.log((ok ? 'PASS ' : 'FAIL ') + label);

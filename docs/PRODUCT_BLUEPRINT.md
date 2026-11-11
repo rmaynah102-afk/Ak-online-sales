@@ -40,7 +40,7 @@ Basic AK Market browsing and ordinary listings are intended to be free. Cloud st
 - Cashbook, bank/payment ledger, daily close and reconciliation.
 - Reports: sales, gross profit, expenses, inventory valuation and export/print.
 - Staff roles and audit history.
-- Subscription status, payment request and admin approval. Never store banking passwords, PINs, OTPs or wallet login credentials.
+- Subscription status and Owner-controlled manual activation after external payment is independently checked. Do not build in-app payment proof, transaction-ID submission or screenshot upload. Never store banking passwords, PINs, OTPs or wallet login credentials.
 
 ### AK Market (public listings, separate from private POS)
 - Public shop profile and published product listings only.
@@ -70,8 +70,8 @@ Basic AK Market browsing and ordinary listings are intended to be free. Cloud st
 - Firebase Authentication for identity; Firestore for structured records; Cloud Storage for images; Cloud Functions for privileged operations; App Check where supported.
 - Tenant-owned records must be scoped by authenticated UID/shop membership and enforced by Firestore/Storage rules. Never rely on client-side filters alone.
 - Public marketplace data must live in a separate, explicitly public collection containing only approved fields. Private shop data stays under private tenant paths.
-- Use server-side validation for price, ownership, listing status, payment approval and moderation. Admin actions must be auditable.
-- Use idempotent payment-request IDs and server-side verification workflow. Manual KPay proof review is not automatic KPay API settlement.
+- Use server-side validation for price, ownership, listing status, manual subscription activation and moderation. Admin actions must be auditable.
+- Keep payment outside the POS. The Platform Owner manually grants the selected subscription period after independently checking the external payment; record the grant in an auditable Owner log. Do not imply automatic wallet settlement.
 - Offline POS writes need a queue, conflict policy, stable IDs and visible sync status before being advertised as reliable.
 
 ## Security and privacy launch gates

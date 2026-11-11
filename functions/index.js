@@ -624,7 +624,7 @@ exports.assignShopStaffRole = functions.https.onCall(async (data, context) => {
   if (existingShop && existingShop !== ownerUid) {
     throw new functions.https.HttpsError("already-exists", "ဤ Gmail ကို အခြားဆိုင်တွင် ချိတ်ဆက်ထားပြီးဖြစ်သည်။");
   }
-  // Each shop has exactly two user accounts: one owner and one staff member.
+  // Each shop supports one owner plus up to three staff accounts.
   const memberRef = db.collection("shopMembers").doc(staff.uid);
   const membershipControlRef = db.collection("shops").doc(ownerUid).collection("controls").doc("staff");
   await db.runTransaction(async tx => {
@@ -636,12 +636,12 @@ exports.assignShopStaffRole = functions.https.onCall(async (data, context) => {
       throw new functions.https.HttpsError("already-exists", "ဤ Gmail ကို အခြားဆိုင်တွင် ချိတ်ဆက်ထားပြီးဖြစ်သည်။");
     }
     const alreadyMember = memberSnap.exists && memberSnap.data().shopId === ownerUid;
-    if (!alreadyMember && membersSnap.size >= 1) {
-      throw new functions.https.HttpsError("resource-exhausted", "ဆိုင်တစ်ဆိုင်လျှင် ဆိုင်ရှင် ၁ ဦးနှင့် ဝန်ထမ်း ၁ ဦး၊ စုစုပေါင်း ၂ အကောင့်သာ ခွင့်ပြုထားသည်။");
+    if (!alreadyMember && membersSnap.size >= 3) {
+      throw new functions.https.HttpsError("resource-exhausted", "ဆိုင်တစ်ဆိုင်လျှင် ဝန်ထမ်း ၃ ဦးအထိသာ ခွင့်ပြုထားသည်။");
     }
     tx.set(membershipControlRef, {
       staffCount: membersSnap.size,
-      staffLimit: 1,
+      staffLimit: 3,
       updatedAt: admin.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
     tx.set(memberRef, {
@@ -668,7 +668,7 @@ exports.createShopInviteCode = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError("invalid-argument", "ဝန်ထမ်းရာထူး မမှန်ပါ။");
   }
   const members = await db.collection("shopMembers").where("shopId", "==", ownerUid).get();
-  if (members.size >= 1) {
+  if (members.size >= 3) {
     throw new functions.https.HttpsError("resource-exhausted", "ဝန်ထမ်း ၁ ဦး ပြည့်နေပါပြီ။ စုစုပေါင်း အကောင့် ၂ ခုသာ ခွင့်ပြုထားသည်။");
   }
   const code = crypto.randomBytes(5).toString("hex").toUpperCase();
@@ -717,12 +717,12 @@ exports.claimShopInviteCode = functions.https.onCall(async (data, context) => {
       throw new functions.https.HttpsError("already-exists", "ဤ Gmail ကို အခြားဆိုင်တွင် ချိတ်ထားပြီးဖြစ်သည်။");
     }
     const already = memberSnap.exists && memberSnap.data().shopId === invite.shopId;
-    if (!already && membersSnap.size >= 1) {
-      throw new functions.https.HttpsError("resource-exhausted", "ဝန်ထမ်း ၁ ဦး ပြည့်နေပါပြီ။");
+    if (!already && membersSnap.size >= 3) {
+      throw new functions.https.HttpsError("resource-exhausted", "ဝန်ထမ်း ၃ ဦး ပြည့်နေပါပြီ။");
     }
     tx.set(membershipControlRef, {
       staffCount: membersSnap.size + (already ? 0 : 1),
-      staffLimit: 1,
+      staffLimit: 3,
       updatedAt: admin.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
     tx.update(inviteRef, { status: "claimed", claimedBy: uid, claimedEmail: email, claimedAt: admin.firestore.FieldValue.serverTimestamp() });
@@ -746,7 +746,7 @@ exports.claimShopInviteCode = functions.https.onCall(async (data, context) => {
 exports.listShopStaff = functions.https.onCall(async (data, context) => {
   const ownerUid = await requireActiveShop(context);
   const snap = await db.collection("shopMembers").where("shopId", "==", ownerUid).limit(100).get();
-  return { maxStaff: 1, totalAccounts: 1 + snap.size, members: snap.docs.map(doc => {
+  return { maxStaff: 3, totalAccounts: 1 + snap.size, members: snap.docs.map(doc => {
     const x = doc.data();
     return { uid: doc.id, email: x.email || "", role: x.role || "employee", canPrint: x.canPrint === true };
   }) };
@@ -835,7 +835,7 @@ exports.removeShopStaff = functions.https.onCall(async (data, context) => {
     tx.delete(ref);
     tx.set(membershipControlRef, {
       staffCount: Math.max(0, membersSnap.size - 1),
-      staffLimit: 1,
+      staffLimit: 3,
       updatedAt: admin.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
     removed = true;

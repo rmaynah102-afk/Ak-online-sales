@@ -26,10 +26,10 @@ function replaceExactly(oldText, newText, expected = 1) {
 const rootTag = '<html lang="my" class="ak-apk-pos-only">';
 replaceExactly(rootTag, '<html lang="my" class="ak-apk-pos-only" data-ak-apk-edition="universal">');
 
-// Keep the staff Merchant Code control in the POS login panel, never in the public Market.
+// Keep the staff Merchant Code login mode in the POS login panel, never in the public Market.
 replaceExactly(
-  '<div class="notice" style="margin-top:10px"><b>ဝန်ထမ်း Merchant Code ဖြင့် ဆိုင်ချိတ်ရန်</b>',
-  '<div class="notice" id="akMerchantJoinPanel" style="margin-top:10px"><b>ဝန်ထမ်း Merchant Code ဖြင့် ဆိုင်ချိတ်ရန်</b>'
+  '<div class="panel" style="margin:10px 0"><label for="akLoginMode">',
+  '<div class="panel" id="akMerchantJoinPanel" style="margin:10px 0"><label for="akLoginMode">'
 );
 
 // Remove unsupported AI panels from the APK while preserving ordinary ad sharing.

@@ -10,7 +10,6 @@
   "dependencies": {
     "@capacitor/android": "8.6.0",
     "@capacitor/core": "8.6.0",
-    "@capacitor-firebase/authentication": "^8.0.0",
     "@zxing/library": "0.21.3"
   },
   "devDependencies": {

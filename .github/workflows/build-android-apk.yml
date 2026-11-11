@@ -75,8 +75,10 @@ jobs:
             ['Package access request panel', 'id="akAccessRequestPanel"'],
             ['Immediate locked onboarding on launch', '<body class="ak-license-locked">'],
             ['Subscription package selector', 'id="payPlan"'],
-            ['Google Gmail login option', 'onclick="firebaseGoogleLogin()"'],
-            ['Android native Google bridge with legacy sign-in fallback', 'nativePromise("FirebaseAuthentication","signInWithGoogle",{skipNativeAuth:true,useCredentialManager:false}'],
+            ['Password-only Firebase login', 'signInWithEmailAndPassword(email,pass)'],
+            ['Owner and shop-owner password change', 'async function akOwnerChangePassword()'],
+            ['Owner-issued Merchant Code', 'async function akCreateStaffInvite()'],
+            ['Staff Merchant Code claim', 'httpsCallable("claimShopInviteCode")'],
             ['Owner manual package grant', 'async function akGrantCustomerSubscription(uid)'],
             ['Owner access request queue', 'id="akOwnerAccessQueue"'],
             ['Email login handler', 'async function firebaseLogin()'],
@@ -108,8 +110,11 @@ jobs:
           if (!html.includes('<option value="30">30 ရက်</option>') || !html.includes('<option value="365">365 ရက်</option>')) {
             throw new Error('APK subscription duration and amount options are missing');
           }
-          if (!html.includes('Owner က စစ်ဆေးပြီး Package အသုံးပြုခွင့်ကို ကိုယ်တိုင်ဖွင့်ပေးမည်')) {
-            throw new Error('APK is missing external-payment/manual-Owner-activation messaging');
+          if (html.includes('firebaseGoogleLogin') || html.includes('firebaseSendPhoneOtp') || html.includes('firebaseVerifyPhoneOtp')) {
+            throw new Error('Password-only APK must not expose Google or phone-OTP sign-in.');
+          }
+          if (!html.includes('async function akOwnerChangePassword()') || !html.includes('async function akCreateStaffInvite()')) {
+            throw new Error('APK is missing password-change or staff Merchant Code controls.');
           }
           console.log('Generated APK POS bundle validated:', scriptCount, 'script tags; isolated APK source; Market hidden; no in-app payment; login, manual package access and printer UI present.');
           NODE
@@ -126,46 +131,6 @@ jobs:
         run: node --check scripts/install-native-printer.js
       - name: Generate Android project
         run: npx cap add android
-      - name: Configure Firebase Android and Google Sign-In
-        run: |
-          mkdir -p android/app
-          cp google-services.json android/app/google-services.json
-          python3 - <<'PY'
-          from pathlib import Path
-          import re
-          root = Path("android/build.gradle")
-          app = Path("android/app/build.gradle")
-          if not root.exists() or not app.exists():
-              raise SystemExit("Generated Android Gradle files are missing")
-          rs = root.read_text()
-          if "com.google.gms:google-services" not in rs:
-              match = re.search(r'(dependencies\s*\{)', rs)
-              if not match:
-                  raise SystemExit("Root Gradle dependencies block not found")
-              rs = rs[:match.end()] + "\n        classpath 'com.google.gms:google-services:4.4.4'" + rs[match.end():]
-              root.write_text(rs)
-          aps = app.read_text()
-          if "com.google.gms.google-services" not in aps:
-              aps += "\n\napply plugin: 'com.google.gms.google-services'\n"
-              app.write_text(aps)
-          print("Firebase Android config and Google Services Gradle plugin configured")
-          variables = Path("android/variables.gradle")
-          if not variables.exists():
-              raise SystemExit("Capacitor variables.gradle is missing")
-          vs = variables.read_text()
-          required = {
-              "rgcfaIncludeGoogle": "true",
-              "androidxCredentialsVersion": "'1.3.0'",
-          }
-          for key, value in required.items():
-              if not re.search(r"\b" + re.escape(key) + r"\s*=", vs):
-                  match = re.search(r"(ext\s*\{)", vs)
-                  if not match:
-                      raise SystemExit("variables.gradle ext block not found")
-                  vs = vs[:match.end()] + "\n    " + key + " = " + value + vs[match.end():]
-          variables.write_text(vs)
-          print("Capacitor Firebase Google Sign-In Android dependencies enabled")
-          PY
       - name: Install AK native Bluetooth and Wi-Fi printer bridge
         run: node scripts/install-native-printer.js
       - name: Apply AK Sale branding and Android launcher icon

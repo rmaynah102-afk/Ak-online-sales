@@ -18,7 +18,8 @@ service cloud.firestore {
       return request.auth != null
         && request.auth.uid == uid
         && (isVerifiedOwner()
-          || (exists(/databases/$(database)/documents/freeBetaUsers/$(uid))
+          || (!exists(/databases/$(database)/documents/licenses/$(uid))
+            && exists(/databases/$(database)/documents/freeBetaUsers/$(uid))
             && get(/databases/$(database)/documents/freeBetaUsers/$(uid)).data.status == 'active')
           || ((request.auth.token.email_verified == true
               || (request.auth.token.phone_number is string
@@ -133,10 +134,15 @@ service cloud.firestore {
 
     match /licenses/{userId} {
       allow read: if request.auth != null && (request.auth.uid == userId || isVerifiedOwner());
-      // Only the verified Platform Owner may activate a license after checking payment.
-      allow create, update: if isVerifiedOwner()
+      // Only the verified Platform Owner may issue or suspend a license after manual payment review.
+      allow create: if isVerifiedOwner()
         && request.resource.data.uid == userId
         && request.resource.data.status == 'active'
+        && request.resource.data.expiresAt is timestamp
+        && request.resource.data.plan in ['30-days','90-days','180-days','365-days'];
+      allow update: if isVerifiedOwner()
+        && request.resource.data.uid == userId
+        && request.resource.data.status in ['active','suspended']
         && request.resource.data.expiresAt is timestamp
         && request.resource.data.plan in ['30-days','90-days','180-days','365-days'];
       allow delete: if false;

@@ -53,8 +53,6 @@ jobs:
         run: npm run copy-web
       - name: Apply APK-only Cloud startup guard (does not modify website source)
         run: node scripts/patch-apk-cloud-startup.js
-      - name: Apply APK-only subscription and payment UI (does not modify website source)
-        run: node scripts/patch-apk-subscription-ui.js
       - name: Apply APK-only POS isolation (Marketplace stays in website only)
         run: node scripts/patch-apk-pos-only.js
       - name: Apply one universal role-based APK
@@ -74,18 +72,20 @@ jobs:
             ['Sponsored ads section hidden', 'html.ak-apk-pos-only #akPublicSponsoredSection'],
             ['Market product action removed', 'onclick="akSendProductToMarket()"'],
             ['Market deep-link disabled', 'public Market URL mode disabled'],
-            ['Subscription payment UI', 'id="akCustomerPaymentPanel"'],
+            ['Package access request panel', 'id="akAccessRequestPanel"'],
             ['Immediate locked onboarding on launch', 'document.body.classList.add("ak-license-locked")'],
             ['Subscription package selector', 'id="payPlan"'],
             ['Google Gmail login option', 'onclick="firebaseGoogleLogin()"'],
             ['Android native Google bridge with legacy sign-in fallback', 'nativePromise("FirebaseAuthentication","signInWithGoogle",{skipNativeAuth:true,useCredentialManager:false}'],
-            ['Owner approval handler', 'async function adminApproveRequest(requestId)'],
-            ['Owner payment review UI', 'id="akOwnerPaymentQueue"'],
+            ['Owner manual package grant', 'async function akGrantCustomerSubscription(uid)'],
+            ['Owner access request queue', 'id="akOwnerAccessQueue"'],
             ['Email login handler', 'async function firebaseLogin()'],
             ['Email registration handler', 'async function firebaseRegister()'],
-            ['Payment submission handler', 'async function submitPaymentRequest()'],
             ['Native printer bridge', 'window.akPrintRawToDefault']
           ];
+          for (const marker of ['akCustomerPaymentPanel','akOwnerPaymentQueue','payScreenshot','submitPaymentRequest','paymentRequests','paymentReferences']) {
+            if (html.includes(marker)) throw new Error('Obsolete in-app payment flow remains in APK bundle: ' + marker);
+          }
           for (const [label, marker] of checks) {
             const present = html.includes(marker);
             if (label === 'Market product action removed') {
@@ -102,16 +102,16 @@ jobs:
           if (actualHeadClose < 0 || posOnlyStyle < 0 || posOnlyStyle > actualHeadClose) {
             throw new Error('APK POS-only CSS must be inserted inside the real document head, never inside the receipt print template');
           }
-          if (!html.includes('AK_APK_SUBSCRIPTION_UI_V3') || !html.includes('AK_APK_CLOUD_STARTUP_GUARD_V1')) {
+          if (!html.includes('AK_APK_POS_ONLY_MARKET_ISOLATION_V5') || !html.includes('AK_APK_CLOUD_STARTUP_GUARD_V1')) {
             throw new Error('Generated APK patch markers are missing');
           }
-          if (!html.includes('<option value="30">30 ရက် · 30,000 MMK</option>') || !html.includes('<option value="365">365 ရက် · 360,000 MMK</option>')) {
+          if (!html.includes('<option value="30">30 ရက်</option>') || !html.includes('<option value="365">365 ရက်</option>')) {
             throw new Error('APK subscription duration and amount options are missing');
           }
           if (!html.includes('Owner အတည်ပြုပြီးမှ Cloud POS အသုံးပြုခွင့်ရမည်')) {
             throw new Error('APK is missing owner-approved subscription gate messaging');
           }
-          console.log('Generated APK POS bundle validated:', scriptCount, 'script tags; Market isolated; login, payment and printer UI present.');
+          console.log('Generated APK POS bundle validated:', scriptCount, 'script tags; Market isolated; login, manual package access and printer UI present.');
           NODE
       - name: Validate universal APK role and feature isolation
         run: node scripts/validate-apk-universal.js

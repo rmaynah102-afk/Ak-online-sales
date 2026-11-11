@@ -2448,6 +2448,7 @@ function startAkCloudSync(){
 async function cloudSave(){
  if(!akSyncEnabled()||!navigator.onLine){akLocalDirty=true;$("fbStatus").textContent="Offline · ပြင်ဆင်ချက်များကို ဖုန်းထဲတွင် သိမ်းထားသည်။ Online ပြန်ရလျှင် Sync လုပ်ပါ။";akUpdateConnectionUI();return}
  if(akCloudSaveInFlight){akCloudSaveQueued=true;return}
+ akCloudSaveInFlight=true;
  try{
   if(!fbAuth||!fbAuth.currentUser)throw Error("Firebase Login အရင်ဝင်ပါ");
   if(!cloudReady)throw Error("Subscription သက်တမ်းကို စစ်ဆေးပါ။ သက်တမ်းမရှိပါက သက်တမ်းတိုးပါ။");
@@ -2457,7 +2458,7 @@ async function cloudSave(){
   const payload=JSON.stringify(akCloudDataWithoutPhotos(db));
   if(akWorkspaceMode){
    const workspaceData=JSON.parse(payload);
-   const result=await firebase.functions().httpsCallable("saveShopWorkspace")({data:workspaceData,expectedRevision:akWorkspaceRevision});
+   const result=await akWithTimeout(firebase.functions().httpsCallable("saveShopWorkspace")({data:workspaceData,expectedRevision:akWorkspaceRevision}),30000,"ဆိုင် Cloud သိမ်းဆည်းချိန် ကြာနေသည်။ Network ပြန်စစ်ပါ");
    if(!result.data?.ok)throw Error("ဆိုင် Workspace သိမ်းဆည်းမှု အတည်မပြုနိုင်ပါ");
    akWorkspaceRevision=Number(result.data.revision||akWorkspaceRevision+1);markLocalTransactionsSynced(uid,db.sales);akLocalDirty=false;
    $("fbStatus").textContent="ဆိုင် Cloud ဒေတာ သိမ်းပြီးပါပြီ · Revision "+akWorkspaceRevision;return;
@@ -2469,7 +2470,6 @@ async function cloudSave(){
   const centerRef=fbStore.collection("users").doc(uid).collection("private").doc("centerManagement");
   const backups=fbStore.collection("users").doc(uid).collection("backups");
   const backupRef=backups.doc();
-  akCloudSaveInFlight=true;
   let committedRevision=expectedRevision,createdBackup=false;
   await fbStore.runTransaction(async tx=>{
    const snap=await tx.get(ref);

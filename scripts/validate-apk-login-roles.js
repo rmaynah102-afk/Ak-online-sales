@@ -17,6 +17,7 @@ const checks = [
  ['Staff cannot use Platform Owner Gmail', html.includes('mode==="staff"&&email===ownerEmail')],
  ['Staff Merchant Code claim flow', html.includes('httpsCallable("claimShopInviteCode")')],
  ['Owner identity requires verified email', html.includes('emailVerified===true')],
+ ['Owner Gmail uses Google verification without password entry', html.includes('id="akOwnerGoogleLoginBtn"') && html.includes('async function akOwnerGoogleLogin()') && html.includes('if(mode==="owner")throw Error("Platform Owner သည် Google ဖြင့်သာ Login ဝင်ပါ။");') && html.includes('passwordWrap.classList.toggle("hidden",ownerMode)')],
  ['Role-based navigation', html.includes('function akApplyRoleNavigation()')],
  ['Shop owner staff management panel', html.includes('id="akOwnerStaffPanel"')],
  ['Separate Market website mode disabled', html.includes('const publicMode=false;') && !html.includes('document.documentElement.classList.add("ak-public-market");')],

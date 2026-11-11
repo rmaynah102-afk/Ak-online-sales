@@ -2255,9 +2255,10 @@ async function loadPlatformUsers(){
  try{
   if(!akIsPlatformOwner()||!fbStore)throw Error("အတည်ပြုထားသော Platform Owner Gmail ဖြင့် Login ဝင်ပါ။");
   $("akPlatformUserStatus").textContent="Free Beta နှင့် Subscription စာရင်းဖတ်နေသည်...";
-  const [betaSnap,licenseSnap]=await Promise.all([
+  const [betaSnap,licenseSnap,capacitySnap]=await Promise.all([
    fbStore.collection("freeBetaUsers").get(),
-   fbStore.collection("licenses").get()
+   fbStore.collection("licenses").get(),
+   fbStore.collection("freeBetaCapacity").doc("slots").get()
   ]);
   const rows=new Map();
   betaSnap.docs.forEach(doc=>{
@@ -2273,7 +2274,9 @@ async function loadPlatformUsers(){
    return rank(a)-rank(b)||String(a.email||"").localeCompare(String(b.email||""));
   });
   akRenderPlatformUsers();
-  $("akPlatformUserStatus").textContent="ဆိုင်အကောင့် "+akPlatformUserRows.length+" ခု · Free Beta နေရာ ၃၀ ခုအပါအဝင်။ ငွေလွှဲကို ကိုယ်တိုင်စစ်ပြီးမှ Subscription ပေးပါ။";
+  const betaUsed=capacitySnap.exists?Number((capacitySnap.data()||{}).count||0):betaSnap.size;
+  $("akOwnerUserCount").textContent=akPlatformUserRows.length+" ခု";
+  $("akPlatformUserStatus").textContent="ဆိုင်အကောင့် "+akPlatformUserRows.length+" ခု · Free Beta "+betaUsed+"/30 နေရာ အသုံးပြုပြီး။ ငွေလွှဲကို ကိုယ်တိုင်စစ်ပြီးမှ Subscription ပေးပါ။";
  }catch(e){$("akPlatformUserStatus").textContent="Customer စာရင်းဖတ်မရပါ: "+e.message}
 }
 async function akSetCustomerAccess(uid,action){

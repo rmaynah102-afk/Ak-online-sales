@@ -73,7 +73,7 @@ jobs:
             ['Market product action removed', 'onclick="akSendProductToMarket()"'],
             ['Market deep-link disabled', 'public Market URL mode disabled'],
             ['Package access request panel', 'id="akAccessRequestPanel"'],
-            ['Immediate locked onboarding on launch', 'document.body.classList.add("ak-license-locked")'],
+            ['Immediate locked onboarding on launch', '<body class="ak-license-locked">'],
             ['Subscription package selector', 'id="payPlan"'],
             ['Google Gmail login option', 'onclick="firebaseGoogleLogin()"'],
             ['Android native Google bridge with legacy sign-in fallback', 'nativePromise("FirebaseAuthentication","signInWithGoogle",{skipNativeAuth:true,useCredentialManager:false}'],

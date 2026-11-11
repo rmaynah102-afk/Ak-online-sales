@@ -137,12 +137,6 @@ if (!html.includes('akCloudConflict=false;akLocalDirty=false;')) {
   console.error('Explicit Cloud Load must clear conflict state only after replacing local data.');
   process.exitCode = 1;
 }
-if (!html.includes('batch.set(referenceRef') || !html.includes('batch.set(requestRef') ||
-    !html.includes('paymentRequests").where("status","==","pending")') ||
-    !html.includes('onSnapshot(()=>{void loadAdminPaymentRequests()}')) {
-  console.error('Payment requests must be submitted atomically to Firestore and delivered to the Owner through the live pending-payment queue.');
-  process.exitCode = 1;
-}
 // Client and server must enforce the same owner-approved subscription prices.
 const expectedPlanMap = '{ 30: 30000, 90: 90000, 180: 180000, 365: 360000 }';
 if (!functionsSource.includes('db.collection("platformControls").doc("shopCapacity")') ||
@@ -161,54 +155,27 @@ if (!html.includes('Thermer / Printer App သို့ပို့') ||
   console.error('Receipt sharing must offer the Thermer / external printer-app chooser.');
   process.exitCode = 1;
 }
-if (!html.includes('const AK_PLAN_AMOUNTS={30:30000,90:90000,180:180000,365:360000};') ||
-    (functionsSource.match(/const expectedAmounts = \{ 30: 30000, 90: 90000, 180: 180000, 365: 360000 \};/g) || []).length !== 2) {
-  console.error('Subscription pricing must match: 1 month 30000, 3 months 90000, 6 months 180000, 1 year 360000 MMK.');
-  process.exitCode = 1;
-}
 if (!html.includes('if(!user){akWorkspaceMode=false;akWorkspaceShopId="";akWorkspaceRevision=0;checkUserRole(null);akSetLicenseGate(false') ||
     html.includes('akSetLicenseGate(true,"Offline Local Mode') ||
     !html.includes('Cloud / License စစ်ဆေးမှု မအောင်မြင်ပါ')) {
   console.error('POS must remain locked until Gmail login and an owner-approved active subscription are verified online.');
   process.exitCode = 1;
 }
-// APK onboarding is injected into www/index.html by the APK-only build patch.
-const apkSubscriptionPatch = fs.readFileSync(path.join(__dirname, 'patch-apk-subscription-ui.js'), 'utf8');
-if (!apkSubscriptionPatch.includes('id="akPlanButtons"') ||
-    !apkSubscriptionPatch.includes('id="akOnboardingGoogleButton"') ||
-    !apkSubscriptionPatch.includes('id="akPaymentProofStep"') ||
-    !apkSubscriptionPatch.includes('function akStartSubscriptionGoogleLogin()') ||
-    !apkSubscriptionPatch.includes('AK_APK_SUBSCRIPTION_UI_V3') ||
-    !apkSubscriptionPatch.includes('nativePromise("FirebaseAuthentication","signInWithGoogle"') ||
-    !apkSubscriptionPatch.includes('document.body.classList.add("ak-license-locked")')) {
-  console.error('APK subscription onboarding patch must include Package -> Google Gmail -> payment proof.');
-  process.exitCode = 1;
+const obsoletePaymentMarkers = [
+  'id="akCustomerPaymentPanel"', 'id="akOwnerPaymentQueue"', 'id="payScreenshot"',
+  'function submitPaymentRequest()', 'paymentRequests', 'paymentReferences',
+  'KBZPay', 'validateAndSubmitKPay'
+];
+for (const marker of obsoletePaymentMarkers) {
+  if (html.includes(marker) || functionsSource.includes(marker) || rules.includes(marker)) {
+    console.error('Obsolete in-app payment flow must be removed:', marker);
+    process.exitCode = 1;
+  }
 }
-if (!functionsSource.includes('!screenshotUrl') || !html.includes('function validateAndSubmitKPay(paymentData,screenshotFile)')) {
-  console.error('Payment proof validation must remain present in client and trusted server.');
-  process.exitCode = 1;
-}
-if (!functionsSource.includes('paymentReferences') ||
-    !functionsSource.includes('status: "pending"') ||
-    !functionsSource.includes('paymentRequestId: requestRef.id')) {
-  console.error('Payment submission must atomically reserve a unique transaction reference.');
-  process.exitCode = 1;
-}
-if ((functionsSource.match(/update\("KBZPay:" \+ normalizedReference\)/g) || []).length < 2 ||
-    !functionsSource.includes('replace(/\\s+/g, "").toUpperCase()')) {
-  console.error('KBZPay references must use the same whitespace/case normalization at submission and approval.');
-  process.exitCode = 1;
-}
-const paymentRuleStart = rules.indexOf('match /paymentRequests/{requestId} {');
-const paymentRuleEnd = rules.indexOf('\n    match /paymentReferences', paymentRuleStart);
-const paymentRule = paymentRuleStart >= 0 ? rules.slice(paymentRuleStart, paymentRuleEnd > paymentRuleStart ? paymentRuleEnd : undefined) : '';
-if (!paymentRule ||
-    !paymentRule.includes('request.resource.data.uid == request.auth.uid') ||
-    !paymentRule.includes('allow read: if isVerifiedOwner()') ||
-    !paymentRule.includes('allow update: if isVerifiedOwner()') ||
-    !paymentRule.includes("request.resource.data.status == 'pending'") ||
-    !paymentRule.includes('existsAfter(/databases/$(database)/documents/paymentReferences/')) {
-  console.error('Payment requests must be owner-visible, customer-owned, pending-only on create, and protected by an atomic reference reservation.');
+if (!html.includes('id="akAccessRequestPanel"') ||
+    !html.includes('async function akRequestSubscriptionAccess()') ||
+    !html.includes('async function akGrantCustomerSubscription(uid)')) {
+  console.error('Package access request and Owner manual activation flow must remain available.');
   process.exitCode = 1;
 }
 const invoiceChecks = [
@@ -230,10 +197,6 @@ if (!process.exitCode) console.log('Multi-item invoice, stock, receipt and linke
 
 if (!process.exitCode) console.log('Firestore owner-only private data and trusted staff membership guards OK.');
 
-if (!functionsSource.includes('paymentReferences') || !functionsSource.includes('tx.create(referenceRef')) {
-  console.error('Subscription approval must prevent reuse of a KBZPay transaction reference.');
-  process.exitCode = 1;
-}
 const restoreStart = functionsSource.indexOf('exports.restoreCloudBackup =');
 const restoreEnd = functionsSource.indexOf('exports.publishGlobalAnnouncement =', restoreStart);
 const restoreSource = restoreStart >= 0 ? functionsSource.slice(restoreStart, restoreEnd > restoreStart ? restoreEnd : undefined) : '';

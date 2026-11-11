@@ -1,6 +1,5 @@
 'use strict';
 const fs = require('fs');
-const vm = require('vm');
 const html = fs.readFileSync('www/index.html', 'utf8');
 const functions = fs.readFileSync('functions/index.js', 'utf8');
 const rules = fs.readFileSync('firestore.rules', 'utf8');
@@ -31,7 +30,4 @@ const checks = [
 for (const [label, ok] of checks) console.log((ok ? 'PASS ' : 'FAIL ') + label);
 const failed = checks.filter(([,ok]) => !ok).map(([label]) => label);
 if (failed.length) throw new Error('AK APK role/login validation failed: ' + failed.join('; '));
-const scripts = [...html.matchAll(/<script\\b([^>]*)>([\\s\\S]*?)<\\/script>/gi)].filter(([,attrs]) => !/\\bsrc\\s*=/.test(attrs));
-if (!scripts.length) throw new Error('No inline JavaScript found in APK.');
-scripts.forEach((m,i)=>new vm.Script(m[2],{filename:'www/index.html:inline-'+(i+1)}));
-console.log('Validated', scripts.length, 'inline JavaScript blocks and', checks.length, 'APK role/security checks.');
+console.log('Validated', checks.length, 'APK role/security checks. Inline JavaScript syntax is checked against apk/app.html before packaging.')

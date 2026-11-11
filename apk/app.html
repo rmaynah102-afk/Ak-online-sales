@@ -1982,7 +1982,7 @@ function akSetLoginMode(){
  if(wrap)wrap.classList.toggle("hidden",mode!=="staff");
  if(packageWrap)packageWrap.classList.toggle("hidden",mode!=="shop");
  if(accountWrap)accountWrap.classList.toggle("hidden",mode!=="staff");
- if(reg){reg.style.display=mode==="staff"?"":"none";reg.textContent="ဝန်ထမ်း Gmail အကောင့်ဖွင့်ရန်"}
+ if(reg){reg.style.display=mode==="staff"?"":"none";reg.textContent="ဝန်ထမ်း Gmail အကောင့်ဖွင့်ရန်"}if(mode==="staff"&&$("akAccountType"))$("akAccountType").value="staff";
  if(hint)hint.textContent=mode==="owner"?"Platform Owner သည် painglin102@gmail.com နှင့် Owner Password ဖြင့် ဝင်ပါ။":mode==="staff"?"ဝန်ထမ်းသည် ကိုယ်ပိုင် Gmail ဖြင့် Register လုပ်ပြီး ပထမဆုံး Login တွင် Merchant Code ထည့်ပါ။":"ဆိုင်ရှင်သည် Package ရွေးပြီး Owner ပေးထားသော Gmail နှင့် Password ဖြင့် ဝင်ပါ။ Gmail ကို Owner က Verify လုပ်ပြီးမှ Login ရမည်။";
 }
 akSetLoginMode();

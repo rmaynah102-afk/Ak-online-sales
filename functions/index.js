@@ -907,10 +907,54 @@ exports.saveShopWorkspace = functions.https.onCall(async (data,context)=>{
           return {...product,cost:Number(beforeProduct.cost||0)};
         }
         if(!String(product.name||"").trim()||!Number.isFinite(Number(product.retail??product.price??0))||!Number.isFinite(Number(product.wholesale??product.price??0)))throw new functions.https.HttpsError("invalid-argument","ပစ္စည်းအမည်နှင့် ရောင်းဈေး ထည့်ပါ။");
-        return {...product,cost:0,costPrice:undefined,purchaseCost:undefined,purchasePrice:undefined,unitCost:undefined,costTotal:undefined,profit:undefined,grossProfit:undefined,netProfit:undefined,margin:undefined};
+        const safe={...product,cost:0};for(const key of ["costPrice","purchaseCost","purchasePrice","unitCost","costTotal","profit","grossProfit","netProfit","margin","averageCost","lastPurchaseCost"])delete safe[key];return safe;
       });
       for(const id of oldProducts.keys())if(!seen.has(id))throw new functions.https.HttpsError("permission-denied","ဝန်ထမ်းသည် ရှိပြီးသားပစ္စည်းကို ဖျက်ခွင့်မရှိပါ။");
       changed[key]=safeProducts;
+      continue;
+    }
+    if (key==="sales" && ["manager","cashier","employee"].includes(identity.role)) {
+      const oldVersion=pointers.sales;
+      const oldSnap=oldVersion?await db.collection("shops").doc(identity.shopId).collection("workspaceVersions").doc(oldVersion).collection("sales").get():null;
+      const oldSales=new Map((oldSnap?oldSnap.docs:[]).map(doc=>{const record=doc.data().record;return [String(record.id||doc.id),record]}));
+      if(input.sales.length<oldSales.size)throw new functions.https.HttpsError("permission-denied","ဝန်ထမ်းသည် ရှိပြီးသား အရောင်းမှတ်တမ်းကို ဖျက်ခွင့်မရှိပါ။");
+      const oldProductVersion=pointers.products;
+      const oldProductSnap=oldProductVersion?await db.collection("shops").doc(identity.shopId).collection("workspaceVersions").doc(oldProductVersion).collection("products").get():null;
+      const productCosts=new Map((oldProductSnap?oldProductSnap.docs:[]).map(doc=>{const record=doc.data().record;return [String(record.id||doc.id),Number(record.cost||0)]}));
+      for(const product of changed.products||[])productCosts.set(String(product.id),Number(product.cost||0));
+      const seenSales=new Set();
+      const signature=sale=>{
+        const copy={...(sale||{})};
+        for(const key of ["cost","paid","due","note","isSynced","profit","grossProfit","netProfit","margin"])delete copy[key];
+        if(Array.isArray(copy.lines))copy.lines=copy.lines.map(line=>{const item={...(line||{})};for(const key of ["cost","costPrice","purchaseCost","unitCost","profit","margin"])delete item[key];return item});
+        return JSON.stringify(copy);
+      };
+      const safeSales=input.sales.map(sale=>{
+        if(!sale||typeof sale!=="object"||Array.isArray(sale))throw new functions.https.HttpsError("invalid-argument","အရောင်းမှတ်တမ်း ပုံစံမမှန်ပါ။");
+        const id=String(sale.id||"");if(!id||seenSales.has(id))throw new functions.https.HttpsError("invalid-argument","အရောင်း ID မရှိပါ သို့မဟုတ် ထပ်နေသည်။");seenSales.add(id);
+        const previous=oldSales.get(id);
+        if(previous){
+          if(signature(previous)!==signature(sale))throw new functions.https.HttpsError("permission-denied","ဝန်ထမ်းသည် သိမ်းပြီးသား အရောင်းဘောင်ချာ၏ အချက်အလက်ကို မပြင်နိုင်ပါ။ ငွေလက်ခံမှတ်တမ်းကိုသာ ပြောင်းနိုင်သည်။");
+          const paid=Number(sale.paid||0),total=Number(previous.total||0);
+          if(!Number.isFinite(paid)||paid<0||paid>total)throw new functions.https.HttpsError("invalid-argument","လက်ခံငွေပမာဏ မမှန်ပါ။");
+          const previousLines=Array.isArray(previous.lines)?previous.lines:[];
+          const lines=Array.isArray(sale.lines)?sale.lines.map((line,index)=>({...line,cost:Number(previousLines[index]?.cost||0)})):sale.lines;
+          return {...sale,cost:Number(previous.cost||0),lines,due:Math.max(0,total-paid)};
+        }
+        const lines=Array.isArray(sale.lines)?sale.lines.map(line=>{
+          const productId=String(line.productId||"");
+          if(!productCosts.has(productId))throw new functions.https.HttpsError("failed-precondition","ရောင်းမည့်ပစ္စည်း၏ Cloud ဝယ်ဈေး မတွေ့ပါ။ Product Sync ပြန်လုပ်ပါ။");
+          const qty=Number(line.qty||0),cost=qty*Number(productCosts.get(productId)||0);
+          if(!Number.isFinite(qty)||qty<=0)throw new functions.https.HttpsError("invalid-argument","အရောင်းပစ္စည်းအရေအတွက် မမှန်ပါ။");
+          return {...line,cost};
+        }):[];
+        const totalCost=lines.reduce((sum,line)=>sum+Number(line.cost||0),0);
+        const paid=Number(sale.paid||0),total=Number(sale.total||0);
+        if(!Number.isFinite(total)||total<0||!Number.isFinite(paid)||paid<0||paid>total)throw new functions.https.HttpsError("invalid-argument","အရောင်းစုစုပေါင်း သို့မဟုတ် ပေးငွေ မမှန်ပါ။");
+        return {...sale,lines,cost:totalCost,due:Math.max(0,total-paid)};
+      });
+      for(const id of oldSales.keys())if(!seenSales.has(id))throw new functions.https.HttpsError("permission-denied","ဝန်ထမ်းသည် ရှိပြီးသား အရောင်းမှတ်တမ်းကို ဖျက်ခွင့်မရှိပါ။");
+      changed[key]=safeSales;
       continue;
     }
     changed[key]=input[key];

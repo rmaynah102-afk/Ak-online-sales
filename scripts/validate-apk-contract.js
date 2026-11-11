@@ -91,18 +91,24 @@ if (!/request\.auth\.uid == uid/.test(rules)) {
 }
 if (!html.includes('id="ownerDashboard" class="view shop-owner-only hidden"') ||
     !html.includes('id="akOwnerStaffPanel"') ||
-    !html.includes('akWorkspaceMode=true') ||
     !html.includes('httpsCallable("loadShopWorkspace")') ||
-    !html.includes('httpsCallable("saveShopWorkspace")')) {
-  console.error('Merchant Owner Dashboard and staff workspace integration must be present in the POS client.');
+    !html.includes('httpsCallable("saveShopWorkspace")') ||
+    !html.includes('async function firebaseLogin()') ||
+    !html.includes('fbAuth.signInWithEmailAndPassword(email,pass)') ||
+    !html.includes('async function akOwnerChangePassword()') ||
+    !html.includes('async function akCreateStaffInvite()')) {
+  console.error('Owner/User/Staff login, password management and Merchant workspace integration must be present in the APK source.');
   process.exitCode = 1;
 }
 if (!functionsSource.includes('async function workspaceIdentity(context)') ||
     !functionsSource.includes('const identity=await workspaceIdentity(context)') ||
-    !functionsSource.includes('ဝန်ထမ်းသည် Gmail ကို အရင် Email အတည်ပြုထားရန် လိုအပ်သည်။') ||
-    !functionsSource.includes('လက်ကျန်ပမာဏသာ အရောင်းနှင့်အတူ ပြောင်းနိုင်သည်။') ||
+    !functionsSource.includes('async function verifyWorkspaceMember(context, identity)') ||
+    !functionsSource.includes('member.data().shopId!==identity.shopId') ||
+    !functionsSource.includes('function workspaceCanWrite(role,key)') ||
+    !functionsSource.includes('function akStripStaffFinancialFields(record)') ||
+    !functionsSource.includes('ဝန်ထမ်းသည် ရှိပြီးသားပစ္စည်း၏ အချက်အလက်/ဈေးနှုန်းကို မပြင်နိုင်ပါ။') ||
     !rules.includes('canReadShopWorkspaceMeta(shopId)')) {
-  console.error('Shop workspace must enforce owner/staff roles, verified email and stock-only staff product changes.');
+  console.error('Shop workspace must enforce owner/staff roles, verified membership, restricted product edits and staff financial-field stripping.');
   process.exitCode = 1;
 }
 const cloudSyncStart = html.indexOf('function startAkCloudSync()');
@@ -137,8 +143,7 @@ if (!html.includes('akCloudConflict=false;akLocalDirty=false;')) {
   console.error('Explicit Cloud Load must clear conflict state only after replacing local data.');
   process.exitCode = 1;
 }
-// Client and server must enforce the same owner-approved subscription prices.
-const expectedPlanMap = '{ 30: 30000, 90: 90000, 180: 180000, 365: 360000 }';
+// The initial release is capped at 30 shops and three staff accounts per shop.
 if (!functionsSource.includes('db.collection("platformControls").doc("shopCapacity")') ||
     !functionsSource.includes('activeOwners.length >= 30') ||
     !functionsSource.includes('db.collection("shops").doc(ownerUid).collection("controls").doc("staff")') ||

@@ -323,6 +323,106 @@ exports.listPendingPayments = functions.https.onCall(async (data, context) => {
 
 
 
+// Platform Owner provisions shop-owner accounts directly. Passwords are sent only to
+// Firebase Authentication and are never written to Firestore or audit logs.
+exports.createShopOwnerAccount = functions.https.onCall(async (data, context) => {
+  const actor = requireAdmin(context);
+  const email = String(data.email || "").trim().toLowerCase();
+  const password = String(data.password || "");
+  const planDays = Number(data.planDays);
+  const expiryDate = String(data.expiryDate || "").trim();
+  const planPrices = { 30: 30000, 90: 90000, 180: 180000, 365: 360000 };
+  if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email) || email === OWNER_EMAIL) {
+    throw new functions.https.HttpsError("invalid-argument", "ဆိုင်ရှင် Gmail မမှန်ပါ။");
+  }
+  if (password.length < 8 || password.length > 128) {
+    throw new functions.https.HttpsError("invalid-argument", "Password အနည်းဆုံး ၈ လုံးနှင့် အများဆုံး ၁၂၈ လုံး ဖြစ်ရမည်။");
+  }
+  if (!Object.prototype.hasOwnProperty.call(planPrices, planDays) ||
+      !/^\\d{4}-\\d{2}-\\d{2}$/.test(expiryDate)) {
+    throw new functions.https.HttpsError("invalid-argument", "Package သို့မဟုတ် သက်တမ်းကုန်ရက် မမှန်ပါ။");
+  }
+  // AK subscriptions use Myanmar local date. Keep the selected date valid through 23:59:59 Myanmar time.
+  const expiryMillis = Date.parse(expiryDate + "T23:59:59.999+06:30");
+  if (!Number.isFinite(expiryMillis) || expiryMillis <= Date.now()) {
+    throw new functions.https.HttpsError("invalid-argument", "သက်တမ်းကုန်ရက်သည် ယနေ့ထက် နောက်ကျရမည်။");
+  }
+
+  let user = null;
+  let created = false;
+  try {
+    user = await admin.auth().getUserByEmail(email);
+    if (user.customClaims?.platformAdmin === true || user.customClaims?.shopId) {
+      throw new functions.https.HttpsError("already-exists", "ဤ Gmail သည် Owner သို့မဟုတ် ဝန်ထမ်းအကောင့်ဖြစ်ပြီးသား ဖြစ်သည်။");
+    }
+    user = await admin.auth().updateUser(user.uid, {
+      password, emailVerified: true, disabled: false
+    });
+  } catch (err) {
+    if (err instanceof functions.https.HttpsError) throw err;
+    if (err.code !== "auth/user-not-found") throw err;
+    user = await admin.auth().createUser({
+      email, password, emailVerified: true, disabled: false
+    });
+    created = true;
+  }
+
+  try {
+    const licenseRef = db.collection("licenses").doc(user.uid);
+    const expiresAt = admin.firestore.Timestamp.fromMillis(expiryMillis);
+    await db.runTransaction(async tx => {
+      const current = await tx.get(licenseRef);
+      await enforceCustomerShopCapacity(tx, user.uid, current);
+      tx.set(licenseRef, {
+        uid: user.uid, email, status: "active",
+        plan: planDays + "-days", planDays, priceMMK: planPrices[planDays],
+        expiresAt, emailVerified: true,
+        credentialManagedBy: "platform-owner", passwordConfigured: true,
+        provisionedBy: actor,
+        provisionedAt: current.exists && current.data().provisionedAt
+          ? current.data().provisionedAt : admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+    });
+    await db.collection("platformAuditLogs").add({
+      action: "shop_owner_account_provisioned", targetUid: user.uid,
+      targetEmail: email, planDays, expiresAt,
+      actor, createdAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+    return { ok: true, uid: user.uid, email, planDays, expiresAt: expiresAt.toDate().toISOString(), emailVerified: true };
+  } catch (err) {
+    if (created) await admin.auth().deleteUser(user.uid).catch(() => {});
+    throw err;
+  }
+});
+
+// The shop login screen asks the customer to select the package assigned by the Owner.
+exports.verifyShopOwnerLogin = functions.https.onCall(async (data, context) => {
+  if (!context.auth) throw new functions.https.HttpsError("unauthenticated", "Login ဝင်ပါ။");
+  const email = String(context.auth.token.email || "").trim().toLowerCase();
+  if (!email || email === OWNER_EMAIL || context.auth.token.email_verified !== true) {
+    throw new functions.https.HttpsError("permission-denied", "ဆိုင်ရှင်အကောင့် မဟုတ်ပါ။");
+  }
+  const user = await admin.auth().getUser(context.auth.uid);
+  if (user.customClaims?.shopId || user.customClaims?.platformAdmin) {
+    throw new functions.https.HttpsError("permission-denied", "ဤအကောင့်သည် ဝန်ထမ်းအကောင့် ဖြစ်သည်။");
+  }
+  const selectedDays = Number(data.planDays);
+  if (![30, 90, 180, 365].includes(selectedDays)) {
+    throw new functions.https.HttpsError("invalid-argument", "Package ရွေးချယ်ပါ။");
+  }
+  const snap = await db.collection("licenses").doc(context.auth.uid).get();
+  const license = snap.data() || {};
+  if (!snap.exists || license.status !== "active" || !license.expiresAt ||
+      license.expiresAt.toMillis() <= Date.now()) {
+    throw new functions.https.HttpsError("permission-denied", "အသုံးပြုခွင့် မရှိသေးပါ သို့မဟုတ် သက်တမ်းကုန်နေပါပြီ။ AK Owner ထံ ဆက်သွယ်ပါ။");
+  }
+  if (Number(license.planDays || String(license.plan || "").replace("-days", "")) !== selectedDays) {
+    throw new functions.https.HttpsError("failed-precondition", "ရွေးထားသော Package သည် Owner သတ်မှတ်ပေးထားသော Package နှင့် မကိုက်ညီပါ။");
+  }
+  return { ok: true, planDays: selectedDays, expiresAt: license.expiresAt.toDate().toISOString() };
+});
+
 // Owner-only customer account controls. Every Gmail other than the fixed verified
 // platform owner is a customer; client role labels never grant platform privileges.
 exports.listPlatformUsers = functions.https.onCall(async (data, context) => {

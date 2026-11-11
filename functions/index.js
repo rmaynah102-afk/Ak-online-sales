@@ -669,7 +669,7 @@ exports.createShopInviteCode = functions.https.onCall(async (data, context) => {
   }
   const members = await db.collection("shopMembers").where("shopId", "==", ownerUid).get();
   if (members.size >= 3) {
-    throw new functions.https.HttpsError("resource-exhausted", "ဝန်ထမ်း ၁ ဦး ပြည့်နေပါပြီ။ စုစုပေါင်း အကောင့် ၂ ခုသာ ခွင့်ပြုထားသည်။");
+    throw new functions.https.HttpsError("resource-exhausted", "ဝန်ထမ်း ၃ ဦး ပြည့်နေပါပြီ။");
   }
   const code = crypto.randomBytes(5).toString("hex").toUpperCase();
   const hash = crypto.createHash("sha256").update(code).digest("hex");

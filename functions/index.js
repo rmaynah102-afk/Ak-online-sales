@@ -1182,14 +1182,14 @@ exports.loadShopWorkspace = functions.https.onCall(async (data,context)=>{
   const meta=metaSnap.exists?metaSnap.data():{};
   const pointers=meta.collections||{};
   const result={shop:{},centerManagement:null};
-  for (const key of WORKSPACE_ARRAYS) {
-    if (!workspaceCanRead(identity.role,key)) continue;
+  const readableKeys=WORKSPACE_ARRAYS.filter(key=>workspaceCanRead(identity.role,key));
+  await Promise.all(readableKeys.map(async key=>{
     const version=pointers[key];
-    if (!version) { result[key]=[]; continue; }
+    if (!version) { result[key]=[]; return; }
     const snap=await db.collection("shops").doc(identity.shopId)
       .collection("workspaceVersions").doc(version).collection(key).get();
     result[key]=snap.docs.map(d=>d.data().record);
-  }
+  }));
   if (identity.role==="owner"||identity.role==="manager") {
     result.shop=meta.shop||{};
     result.centerManagement=meta.centerManagement||null;
@@ -1238,28 +1238,34 @@ exports.saveShopWorkspace = functions.https.onCall(async (data,context)=>{
   }
   if (!Object.keys(changed).length) throw new functions.https.HttpsError("permission-denied","ဤရာထူးတွင် ပြင်ဆင်သိမ်းဆည်းခွင့် မရှိပါ။");
   const version=Date.now().toString(36)+"_"+crypto.randomBytes(5).toString("hex");
-  for (const key of WORKSPACE_ARRAYS) {
-    if (!Object.prototype.hasOwnProperty.call(changed,key)) continue;
-    const rows=changed[key];
-    const versionRef=db.collection("shops").doc(identity.shopId).collection("workspaceVersions").doc(version);
-    for (let start=0;start<rows.length;start+=400) {
-      const batch=db.batch();
-      rows.slice(start,start+400).forEach((record,index)=>{
-        const absolute=start+index;
-        if (!record || typeof record!=="object" || Array.isArray(record)) {
-          throw new functions.https.HttpsError("invalid-argument",key+" ထဲတွင် မှတ်တမ်းပုံစံမမှန်ပါ။");
-        }
-        const serialized=JSON.stringify(record);
-        if (Buffer.byteLength(serialized,"utf8")>850000) {
-          throw new functions.https.HttpsError("resource-exhausted",key+" ထဲရှိ မှတ်တမ်းတစ်ခု အရွယ်အစားကြီးလွန်းသည်။ ဓာတ်ပုံကို Cloud Storage သို့ သီးခြားသိမ်းရန်လိုသည်။");
-        }
-        const id=workspaceDocId(record,absolute);
-        batch.set(versionRef.collection(key).doc(id),{record,recordId:id});
-      });
-      await batch.commit();
+  const changedKeys=WORKSPACE_ARRAYS.filter(key=>Object.prototype.hasOwnProperty.call(changed,key));
+  const versionRef=db.collection("shops").doc(identity.shopId).collection("workspaceVersions").doc(version);
+  let nextKeyIndex=0;
+  const writeWorker=async()=>{
+    while(true){
+      const index=nextKeyIndex++;
+      if(index>=changedKeys.length)return;
+      const key=changedKeys[index],rows=changed[key];
+      for(let start=0;start<rows.length;start+=400){
+        const batch=db.batch();
+        rows.slice(start,start+400).forEach((record,indexInBatch)=>{
+          const absolute=start+indexInBatch;
+          if(!record||typeof record!=="object"||Array.isArray(record)){
+            throw new functions.https.HttpsError("invalid-argument",key+" ထဲတွင် မှတ်တမ်းပုံစံမမှန်ပါ။");
+          }
+          const serialized=JSON.stringify(record);
+          if(Buffer.byteLength(serialized,"utf8")>850000){
+            throw new functions.https.HttpsError("resource-exhausted",key+" ထဲရှိ မှတ်တမ်းတစ်ခု အရွယ်အစားကြီးလွန်းသည်။ ဓာတ်ပုံကို Cloud Storage သို့ သီးခြားသိမ်းရန်လိုသည်။");
+          }
+          const id=workspaceDocId(record,absolute);
+          batch.set(versionRef.collection(key).doc(id),{record,recordId:id});
+        });
+        await batch.commit();
+      }
+      pointers[key]=version;
     }
-    pointers[key]=version;
-  }
+  };
+  await Promise.all(Array.from({length:Math.min(3,changedKeys.length)},()=>writeWorker()));
   const nextRevision=actual+1;
   await db.runTransaction(async tx=>{
     const latest=await tx.get(root);

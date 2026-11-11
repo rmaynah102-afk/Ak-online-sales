@@ -116,7 +116,7 @@ jobs:
           if (actualHeadClose < 0 || posOnlyStyle < 0 || posOnlyStyle > actualHeadClose) {
             throw new Error('APK POS-only CSS must be inserted inside the real document head, never inside the receipt print template');
           }
-          if (!html.includes('AK_APK_POS_ONLY_MARKET_ISOLATION_V5') || !html.includes('AK_APK_CLOUD_STARTUP_GUARD_V1')) {
+          if (!html.includes('AK_APK_POS_ONLY_MARKET_ISOLATION_V5') || !html.includes('AK_APK_CLOUD_STARTUP_GUARD_V2')) {
             throw new Error('Generated APK patch markers are missing');
           }
           if (!html.includes('<option value="30">30 ရက်</option>') || !html.includes('<option value="365">365 ရက်</option>')) {

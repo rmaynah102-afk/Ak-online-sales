@@ -4,7 +4,7 @@ const crypto = require("crypto");
 const { defineSecret } = require("firebase-functions/params");
 const OPENAI_API_KEY = defineSecret("OPENAI_API_KEY");
 // Sole platform owner; fixed allowlist, never client-configurable.
-const OWNER_EMAIL = "painglin102@gmail.com";
+const OWNER_EMAIL = "sannnlinpaing@gmail.com";
 
 admin.initializeApp();
 const db = admin.firestore();

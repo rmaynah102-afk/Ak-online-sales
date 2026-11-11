@@ -144,32 +144,11 @@ jobs:
         run: |
           echo "Firestore Rules or Indexes were not deployed. Grant the required Firestore Rules Admin and Cloud Datastore Index Admin permissions to the deployment service account, then rerun." >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Attempt Firebase Storage Rules deployment
-        id: storage
-        if: steps.auth.outputs.available == 'true'
-        continue-on-error: true
-        env:
-          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_AK_ONLIN_SALES }}
-        run: |
-          set -euo pipefail
-          umask 077
-          KEY_FILE="$RUNNER_TEMP/firebase-service-account-storage.json"
-          trap 'rm -f "$KEY_FILE"' EXIT
-          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$KEY_FILE"
-          export GOOGLE_APPLICATION_CREDENTIALS="$KEY_FILE"
-          firebase deploy --only storage --project ak-onlin-sales --non-interactive
-          echo "Firebase Storage Rules deployment succeeded." >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Record Storage Rules deployment limitation
-        if: steps.auth.outputs.available == 'true' && steps.storage.outcome == 'failure'
-        run: |
-          echo "Storage Rules were not deployed. Confirm the Firebase Storage bucket exists and grant the deployment service account Storage Admin permissions. This step does not enable billing." >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Record optional paid services as intentionally skipped
+      - name: Confirm free-tier deployment scope
         if: steps.auth.outputs.available == 'true'
         run: |
           {
-            echo "### Optional Firebase services"
-            echo "Cloud Functions were not deployed. They require an eligible Firebase billing plan and separate owner approval. Storage Rules are attempted separately; deployment does not enable billing."
-            echo "Product photo upload and trusted server-side subscription/payment actions remain unavailable until Storage/Functions are deliberately enabled."
+            echo "### Free-tier deployment scope"
+            echo "Only Firebase Hosting and Firestore Rules/Indexes are deployed."
+            echo "Firebase Storage and Cloud Functions are intentionally not deployed; no paid plan or billing is enabled by this workflow."
           } >> "$GITHUB_STEP_SUMMARY"

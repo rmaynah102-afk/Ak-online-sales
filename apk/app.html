@@ -2383,16 +2383,43 @@ function akMergeLocalProductPhotos(remote){
  merged.products=(merged.products||[]).map(p=>({...p,photo:localPhotos.get(p.id)||p.photo||""}));
  return merged;
 }
+let akWorkspaceRefreshPromise=null;
+let akWorkspaceRefreshPending=false;
+async function akRefreshWorkspaceFromCloud(shopId){
+ if(akWorkspaceRefreshPromise){akWorkspaceRefreshPending=true;return akWorkspaceRefreshPromise}
+ akWorkspaceRefreshPromise=(async()=>{
+  do{
+   akWorkspaceRefreshPending=false;
+   if(!fbAuth?.currentUser||akWorkspaceShopId!==shopId||!navigator.onLine||akLocalDirty||akApplyingRemote)return;
+   try{
+    const result=await akWithTimeout(firebase.functions().httpsCallable("loadShopWorkspace")({}),25000,"ဆိုင် Cloud ဒေတာဖတ်ချိန် ကြာနေသည်");
+    const ws=result.data||{};
+    if(!ws.ok||ws.shopId!==shopId||!fbAuth?.currentUser||akWorkspaceShopId!==shopId)return;
+    if(Number(ws.revision||0)<=akWorkspaceRevision)continue;
+    akApplyingRemote=true;
+    db=akMergeLocalProductPhotos({...fresh(),...(ws.data||{})});
+    akWorkspaceRevision=Number(ws.revision||0);
+    localStorage.setItem(userDBKey(fbAuth.currentUser.uid),JSON.stringify(db));
+    renderAll();
+    $("fbStatus").textContent="ဆိုင် Cloud ဒေတာ Sync ပြီးပါပြီ · Revision "+akWorkspaceRevision;
+   }catch(e){$("fbStatus").textContent="ဆိုင် Cloud Sync မအောင်မြင်: "+(e.message||e)}
+   finally{akApplyingRemote=false}
+  }while(akWorkspaceRefreshPending&&fbAuth?.currentUser&&akWorkspaceShopId===shopId&&!akLocalDirty);
+ })();
+ try{return await akWorkspaceRefreshPromise}finally{akWorkspaceRefreshPromise=null}
+}
 function startAkCloudSync(){
  if(akCloudUnsubscribe){akCloudUnsubscribe();akCloudUnsubscribe=null}
  if(!akSyncEnabled()||!navigator.onLine||!fbAuth?.currentUser||!cloudReady){akUpdateConnectionUI();return}
  if(akWorkspaceMode){
   const shopId=akWorkspaceShopId,metaRef=fbStore.collection("shops").doc(shopId).collection("workspace").doc("current");
-  akCloudUnsubscribe=metaRef.onSnapshot(async snap=>{
+  akCloudUnsubscribe=metaRef.onSnapshot(snap=>{
    if(!fbAuth?.currentUser||akWorkspaceShopId!==shopId||!snap.exists)return;
-   const revision=Number((snap.data()||{}).revision||0);if(revision<=akWorkspaceRevision||akLocalDirty||akApplyingRemote)return;
-   try{const result=await firebase.functions().httpsCallable("loadShopWorkspace")({});const ws=result.data||{};if(!ws.ok||ws.shopId!==shopId)return;akApplyingRemote=true;db=akMergeLocalProductPhotos({...fresh(),...(ws.data||{})});akWorkspaceRevision=Number(ws.revision||0);localStorage.setItem(userDBKey(fbAuth.currentUser.uid),JSON.stringify(db));renderAll();$("fbStatus").textContent="ဆိုင် Cloud ဒေတာအသစ်ကို Sync လုပ်ပြီးပါပြီ · Revision "+akWorkspaceRevision;}catch(e){$("fbStatus").textContent="ဆိုင် Cloud Sync မအောင်မြင်: "+(e.message||e)}finally{akApplyingRemote=false}
-  },err=>{$("fbStatus").textContent="ဆိုင် Cloud Sync ချိတ်ဆက်မှု ပြတ်တောက်: "+err.message});return;
+   const revision=Number((snap.data()||{}).revision||0);
+   if(revision<=akWorkspaceRevision||akLocalDirty||akApplyingRemote)return;
+   void akRefreshWorkspaceFromCloud(shopId);
+  },err=>{$("fbStatus").textContent="ဆိုင် Cloud Sync ချိတ်ဆက်မှု ပြတ်တောက်: "+err.message});
+  return;
  }
  const uid=fbAuth.currentUser.uid;
  const ref=fbStore.collection("users").doc(uid).collection("private").doc("appData");

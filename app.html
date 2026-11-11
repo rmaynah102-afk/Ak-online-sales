@@ -999,6 +999,7 @@ document.querySelector('#nav [data-view="ownerDashboard"]')?.classList.add("shop
  const style=document.createElement("style");
  style.textContent='body.ak-license-locked #nav button:not([data-view="market"]):not([data-view="backup"]):not([data-view="account"]):not([data-view="payment"]):not([data-view="staffJoin"]){display:none!important} body.ak-license-locked main>.view{display:none!important} body.ak-license-locked main>#market.view.active,body.ak-license-locked main>#account.view.active,body.ak-license-locked main>#payment.view.active,body.ak-license-locked main>#staffJoin.view.active{display:block!important} html.ak-public-market #nav,html.ak-public-market main>.view:not(#market){display:none!important}';
  document.head.appendChild(style);
+ if(document.body.classList.contains("ak-license-locked")){document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id==="account"));document.querySelectorAll("#nav button").forEach(b=>b.classList.toggle("active",b.dataset.view==="account"));}
 })();
 
 function akInitOwnerDashboard(){const host=document.getElementById("akOwnerDashboardPanels");if(!host)return;["akOwnerPromoPanel","akLicensePanel"].forEach(id=>{const el=document.getElementById(id);if(el&&el.parentElement!==host)host.appendChild(el)})}

@@ -88,7 +88,7 @@ jobs:
             ['Immediate locked onboarding on launch', '<body class="ak-license-locked">'],
             ['Subscription package selector', 'id="payPlan"'],
             ['Password-only Firebase login', 'signInWithEmailAndPassword(email,pass)'],
-            ['Owner and shop-owner password change', 'async function firebaseChangePassword()'],
+            ['Owner and shop-owner password change', 'async function akOwnerChangePassword()'],
             ['Owner-issued Merchant Code', 'async function akCreateMerchantCode()'],
             ['Staff Merchant Code claim', 'httpsCallable("claimShopInviteCode")'],
             ['Owner manual package grant', 'async function akGrantCustomerSubscription(uid)'],
@@ -125,7 +125,7 @@ jobs:
           if (html.includes('firebaseGoogleLogin') || html.includes('firebaseSendPhoneOtp') || html.includes('firebaseVerifyPhoneOtp')) {
             throw new Error('Password-only APK must not expose Google or phone-OTP sign-in.');
           }
-          if (!html.includes('async function firebaseChangePassword()') || !html.includes('async function akCreateMerchantCode()')) {
+          if (!html.includes('async function akOwnerChangePassword()') || !html.includes('async function akCreateMerchantCode()')) {
             throw new Error('APK is missing password-change or staff Merchant Code controls.');
           }
           console.log('Generated APK POS bundle validated:', scriptCount, 'script tags; isolated APK source; Market hidden; no in-app payment; login, manual package access and printer UI present.');

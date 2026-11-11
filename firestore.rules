@@ -84,6 +84,7 @@ service cloud.firestore {
           && request.auth.token.email_verified == true
           && request.resource.data.keys().hasOnly(['count','updatedAt'])
           && request.resource.data.count == 1
+          && request.resource.data.updatedAt == request.time
           && existsAfter(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid))
           && !exists(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid)));
       allow update: if (isVerifiedOwner()
@@ -97,6 +98,7 @@ service cloud.firestore {
           && resource.data.count is int
           && request.resource.data.count == resource.data.count + 1
           && request.resource.data.count <= 30
+          && request.resource.data.updatedAt == request.time
           && existsAfter(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid))
           && !exists(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid)));
       allow delete: if false;
@@ -109,7 +111,10 @@ service cloud.firestore {
         && request.auth.uid == userId
         && request.auth.token.email_verified == true
         && request.resource.data.uid == userId
+        && request.resource.data.email == request.auth.token.email
         && request.resource.data.status == 'active'
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.lastLoginAt == request.time
         && request.resource.data.keys().hasOnly(['uid','email','status','createdAt','lastLoginAt'])
         && !exists(/databases/$(database)/documents/freeBetaUsers/$(userId))
         && existsAfter(freeBetaCapacityPath())
@@ -123,6 +128,7 @@ service cloud.firestore {
           && request.auth.uid == userId
           && resource.data.status == 'active'
           && request.resource.data.status == 'active'
+          && request.resource.data.lastLoginAt == request.time
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastLoginAt']))
         || (request.auth != null
           && request.auth.uid == userId

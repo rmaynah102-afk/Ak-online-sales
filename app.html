@@ -2253,38 +2253,65 @@ async function setMarketReportStatus(id,statusValue){
 }
 async function loadPlatformUsers(){
  try{
-  if(!akIsPlatformOwner())throw Error("အတည်ပြုထားသော Platform Owner Gmail ဖြင့် Login ဝင်ပါ။");
-  $("akPlatformUserStatus").textContent="Customer Gmail နှင့် Subscription စာရင်းဖတ်နေသည်...";
-  const result=await firebase.functions().httpsCallable("listPlatformUsers")({});
-  akPlatformUserRows=(result.data?.users||[]).sort((a,b)=>{
+  if(!akIsPlatformOwner()||!fbStore)throw Error("အတည်ပြုထားသော Platform Owner Gmail ဖြင့် Login ဝင်ပါ။");
+  $("akPlatformUserStatus").textContent="Free Beta နှင့် Subscription စာရင်းဖတ်နေသည်...";
+  const [betaSnap,licenseSnap]=await Promise.all([
+   fbStore.collection("freeBetaUsers").get(),
+   fbStore.collection("licenses").get()
+  ]);
+  const rows=new Map();
+  betaSnap.docs.forEach(doc=>{
+   const x=doc.data()||{};
+   rows.set(doc.id,{uid:doc.id,email:x.email||"",emailVerified:true,status:x.status==="disabled"?"suspended":x.status||"active",plan:"free-beta",expiresAt:null});
+  });
+  licenseSnap.docs.forEach(doc=>{
+   const x=doc.data()||{},previous=rows.get(doc.id)||{};
+   rows.set(doc.id,{...previous,uid:doc.id,email:x.email||previous.email||"",emailVerified:true,status:x.status||previous.status||"pending",plan:x.plan||previous.plan||"",expiresAt:x.expiresAt&&x.expiresAt.toDate?x.expiresAt.toDate().toISOString():x.expiresAt||null});
+  });
+  akPlatformUserRows=[...rows.values()].sort((a,b)=>{
    const rank=x=>x.status==="pending_payment"||x.status==="pending"?0:x.status==="suspended"?1:2;
    return rank(a)-rank(b)||String(a.email||"").localeCompare(String(b.email||""));
   });
   akRenderPlatformUsers();
-  $("akPlatformUserStatus").textContent="Customer Account "+akPlatformUserRows.length+" ခု · ငွေပေးချေမှုကို အပြင်တွင် စစ်ပြီးမှ ကာလရွေး၍ အသုံးပြုခွင့်ပေးပါ။";
+  $("akPlatformUserStatus").textContent="ဆိုင်အကောင့် "+akPlatformUserRows.length+" ခု · Free Beta နေရာ ၃၀ ခုအပါအဝင်။ ငွေလွှဲကို ကိုယ်တိုင်စစ်ပြီးမှ Subscription ပေးပါ။";
  }catch(e){$("akPlatformUserStatus").textContent="Customer စာရင်းဖတ်မရပါ: "+e.message}
 }
 async function akSetCustomerAccess(uid,action){
  try{
-  if(!akIsPlatformOwner())throw Error("Owner Gmail ဖြင့်သာ လုပ်ဆောင်နိုင်သည်။");
+  if(!akIsPlatformOwner()||!fbStore)throw Error("Owner Gmail ဖြင့်သာ လုပ်ဆောင်နိုင်သည်။");
   if(!uid||!["suspend","reactivate"].includes(action))throw Error("လုပ်ဆောင်ချက် မမှန်ကန်ပါ။");
-  if(!confirm(action==="suspend"?"ဤ Customer ၏ POS အသုံးပြုခွင့်ကို ရပ်ဆိုင်းမလား။":"လက်ရှိ Subscription မကုန်သေးပါက ပြန်ဖွင့်မည်။ ဆက်လုပ်မလား။"))return;
-  const result=await firebase.functions().httpsCallable("setPlatformUserAccess")({uid,action});
+  if(!confirm(action==="suspend"?"ဤ Customer ၏ POS အသုံးပြုခွင့်ကို ရပ်ဆိုင်းမလား။":"ဤ Customer ၏ အသုံးပြုခွင့်ကို ပြန်ဖွင့်မလား။"))return;
+  const target=akPlatformUserRows.find(x=>x.uid===uid);
+  if(!target)throw Error("Customer အကောင့်ကို မတွေ့ပါ။");
+  const status=action==="suspend"?"suspended":"active";
+  if(target.plan==="free-beta"&&!target.expiresAt){
+   await fbStore.collection("freeBetaUsers").doc(uid).update({status:status==="active"?"active":"disabled"});
+  }else{
+   const ref=fbStore.collection("licenses").doc(uid);
+   await ref.update({status});
+  }
   $("akPlatformUserStatus").textContent=action==="suspend"?"Customer အသုံးပြုခွင့် ရပ်ဆိုင်းပြီးပါပြီ။":"Customer အသုံးပြုခွင့် ပြန်ဖွင့်ပြီးပါပြီ။";
   await loadPlatformUsers();
  }catch(e){$("akPlatformUserStatus").textContent="Owner လုပ်ဆောင်ချက် မအောင်မြင်ပါ: "+e.message}
 }
 async function akGrantCustomerSubscription(uid){
  try{
-  if(!akIsPlatformOwner())throw Error("Platform Owner သာ ခွင့်ပြုသည်။");
+  if(!akIsPlatformOwner()||!fbStore)throw Error("Platform Owner သာ ခွင့်ပြုသည်။");
   const select=$("akGrantDays_"+uid),days=Number(select?.value||0);
   if(![30,90,180,365].includes(days))throw Error("သက်တမ်းကာလ မမှန်ပါ။");
   const target=akPlatformUserRows.find(x=>x.uid===uid);
   if(!target)throw Error("Customer အကောင့်ကို စာရင်းထဲတွင် မတွေ့ပါ။");
   if(!target.emailVerified)throw Error("Customer Gmail ကို အရင်အတည်ပြုခိုင်းပါ။");
-  if(!confirm((target.email||uid)+" ကို "+days+" ရက် အသုံးပြုခွင့်ပေးမလား။ ငွေပေးချေမှုကို အပြင်တွင် စစ်ပြီးကြောင်း အတည်ပြုပြီးမှ ဆက်လုပ်ပါ။"))return;
-  const result=await firebase.functions().httpsCallable("grantSubscription")({uid,days});
-  alert("အသုံးပြုခွင့်ပေးပြီးပါပြီ။ သက်တမ်းကုန်မည့်ရက်: "+new Date(result.data.expiresAt).toLocaleString());
+  if(!confirm((target.email||uid)+" ကို "+days+" ရက် အသုံးပြုခွင့်ပေးမလား။ KBZPay ထဲတွင် ငွေဝင်ကြောင်း အရင်စစ်ဆေးပြီးကြောင်း အတည်ပြုပါ။"))return;
+  const ref=fbStore.collection("licenses").doc(uid);
+  const expiresAt=await fbStore.runTransaction(async tx=>{
+   const snap=await tx.get(ref),old=snap.exists?snap.data()||{}:{};
+   const oldExpiry=old.expiresAt&&old.expiresAt.toMillis?old.expiresAt.toMillis():0;
+   const next=firebase.firestore.Timestamp.fromMillis(Math.max(Date.now(),oldExpiry)+days*86400000);
+   tx.set(ref,{uid,email:target.email||"",status:"active",plan:days+"-days",expiresAt:next,grantedBy:fbAuth.currentUser.email,grantedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+   return next;
+  });
+  alert("Subscription အတည်ပြုပြီးပါပြီ။ သက်တမ်းကုန်မည့်ရက်: "+expiresAt.toDate().toLocaleString());
   await loadPlatformUsers();
  }catch(e){alert("အသုံးပြုခွင့်ပေးမရပါ: "+(e.message||e))}
 }

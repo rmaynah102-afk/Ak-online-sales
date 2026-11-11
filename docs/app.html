@@ -231,7 +231,7 @@ button.alt{background:#e9f1ff;color:#123b72;border:1px solid #c8d9f6;box-shadow:
 nav button{color:#17417a;border-color:#d5e2f4}
 input:focus,select:focus,textarea:focus{border-color:#2878d7;box-shadow:0 0 0 3px #2878d71b}
 .owner-only[style*="display: none"]{display:none!important}
-body.ak-owner-user-preview .owner-only{display:none!important} body.ak-owner-user-preview #akOwnerPreviewBanner{display:block!important}
+body.ak-owner-user-preview .owner-only,body.ak-owner-user-preview .shop-owner-only,body.ak-owner-user-preview #nav button[data-view="ownerDashboard"]{display:none!important} body.ak-owner-user-preview #akOwnerPreviewBanner{display:block!important}
 
 /* AK Sale 2026 — refined mobile-first navy / gold interface */
 :root{
@@ -329,7 +329,7 @@ footer{color:var(--ak-muted)}
 }
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{transition:none!important;animation:none!important}}
 
-</style>\n<style id="ak-google-only-cleanup">\n/* Google-only sign-in; hide paid/sponsored advertising surfaces while retaining the public shop listings. */\n#akFirebasePanel input,#akFirebasePanel label[for="fbEmail"],#akFirebasePanel label[for="fbPassword"]{display:none!important}\n#nav button[data-view="ads"],#ads,#akPublicSponsoredSection,#akLiveAdsPanel,#akSponsoredPublicGrid,#akPublicTikTokCard,#akMarketAdOrderPanel,#akMarketAdOrderAdmin,#akOwnerAdManager,#akAdForm{display:none!important}\nbody.ak-public #nav button:not([data-view="market"]):not([data-view="ownerDashboard"]){display:none!important}\n</style>\n
+</style>
 
 <script>
 if(new URLSearchParams(location.search).get("market")==="1")document.documentElement.classList.add("ak-public-market");
@@ -360,7 +360,8 @@ html.ak-public-market #market [id*="Login"]:not(#akFirebasePanel),
 html.ak-public-market #market [id*="login"]:not(#akFirebasePanel),
 html.ak-public-market #market [id*="Auth"]:not(#akFirebasePanel),
 html.ak-public-market #market [id*="auth"]:not(#akFirebasePanel){display:none!important}
-html.ak-public-market #akFirebasePanel{display:block!important;visibility:visible!important;}
+html.ak-public-market #akFirebasePanel,html.ak-public-market #akLicensePanel,html.ak-public-market #akPaywallNotice,html.ak-public-market #akMarketOwnerEntry,html.ak-public-market #akOwnerAdManager{display:none!important;visibility:hidden!important;}
+html.ak-public-market #akPublicSponsoredSection button[onclick="akOpenOwnerLogin()"]{display:none!important;visibility:hidden!important;}
 html.ak-public-market #akAdForm input[type="tel"]{display:block!important}
 html.ak-public-market .ak-sponsored-card-image{position:relative;overflow:hidden;border-radius:14px}
 html.ak-public-market .ak-sponsored-card-image img{display:block;width:100%;max-height:250px;object-fit:cover}
@@ -502,6 +503,62 @@ input,select,textarea,button{max-width:100%;box-sizing:border-box}
  header .actions>*{flex:1 1 auto}
 }
 </style>
+
+<style id="ak-compact-excel-ledgers-v1">
+/* Compact readable type across the POS */
+body{font-size:14px}
+header h1{font-size:clamp(17px,2.2vw,21px)}
+h2{font-size:17px;line-height:1.35}
+h3{font-size:14px}
+label{font-size:12px}
+.muted,.small{font-size:11px}
+button,.btn{font-size:13px}
+.panel{padding:13px}
+.view>.panel{margin:9px 0}
+/* Spreadsheet-style ledgers: Products and Sales only */
+#products .tablewrap,#sales .tablewrap{
+ border:1px solid #aebfd2;border-radius:8px;background:#fff;
+ box-shadow:inset 0 1px 0 #fff;
+}
+#products .tablewrap table,#sales .tablewrap table{
+ width:100%;min-width:690px;border-collapse:separate;border-spacing:0;
+ table-layout:auto;font-variant-numeric:tabular-nums;
+}
+#products .tablewrap thead th,#sales .tablewrap thead th{
+ position:sticky;top:0;z-index:2;
+ background:#e5edf6;color:#1d3e61;
+ border:1px solid #c5d2df;border-top:0;
+ font-size:11px;font-weight:750;letter-spacing:.1px;
+ padding:7px 8px;white-space:nowrap;
+}
+#products .tablewrap tbody td,#sales .tablewrap tbody td{
+ border-right:1px solid #d7e0e9;border-bottom:1px solid #d7e0e9;
+ padding:6px 8px;font-size:12px;line-height:1.35;
+ white-space:nowrap;vertical-align:middle;
+}
+#products .tablewrap tbody tr:nth-child(even),
+#sales .tablewrap tbody tr:nth-child(even){background:#f5f9fd}
+#products .tablewrap tbody tr:hover,
+#sales .tablewrap tbody tr:hover{background:#eaf3ff}
+#products .tablewrap tbody td:last-child,
+#sales .tablewrap tbody td:last-child{border-right:0}
+#products .tablewrap tbody tr:last-child td,
+#sales .tablewrap tbody tr:last-child td{border-bottom:0}
+#products .tablewrap .thumb{width:34px;height:34px;border-radius:4px}
+#products .tablewrap button,#sales .tablewrap button{
+ min-height:30px;padding:5px 8px;border-radius:6px;font-size:11px;
+}
+#products #productQuery{font-size:13px;min-height:38px}
+@media(max-width:650px){
+ body{font-size:13px}
+ h2{font-size:16px}
+ .panel{padding:11px}
+ #products .tablewrap table,#sales .tablewrap table{min-width:650px}
+ #products .tablewrap thead th,#sales .tablewrap thead th{font-size:10px;padding:6px}
+ #products .tablewrap tbody td,#sales .tablewrap tbody td{font-size:11px;padding:6px}
+ #products .tablewrap button,#sales .tablewrap button{font-size:10px}
+}
+</style>
 </head>
 <body class="ak-license-locked">
 <header><div class="brand-lockup"><img src="./ak-logo.svg" alt="AK Sale logo" width="48" height="48"><div><h1 id="brandTitle">AK Sale Software</h1><small>Multi-Business POS · ဆိုင်နှင့် လုပ်ငန်းအမျိုးမျိုးအတွက်</small></div></div><div class="actions no-print"><button id="akInstallBtn" class="alt" type="button" hidden>Install</button><button id="akShareBtn" class="alt" type="button">Share</button><button id="akOwnerUserPreviewBtn" class="alt owner-only" type="button" onclick="akToggleOwnerUserPreview()">User View</button><button id="akLanguageBtn" class="alt" type="button" aria-label="Switch language">English</button><span class="pill" id="saveState">ဖုန်းထဲသိမ်းဆည်းမည်</span><span class="pill" id="akStorageState" title="ဖုန်း/ကွန်ပျူတာ၏ local storage အခြေအနေ">Storage စစ်ဆေးနေသည်…</span></div></header>
@@ -510,13 +567,13 @@ input,select,textarea,button{max-width:100%;box-sizing:border-box}
 <nav id="nav" class="no-print"></nav>
 <section id="ownerDashboard" class="view shop-owner-only hidden">
 <div class="panel"><h2>AK Owner Dashboard</h2><p class="muted">မိမိဆိုင်၏ အရောင်းလုပ်ငန်း၊ ဝန်ထမ်းအကောင့်နှင့် ဝင်ခွင့်များကို ဒီနေရာမှ စီမံပါ။ Platform ထိန်းချုပ်မှုများကို Platform Owner သာ မြင်နိုင်သည်။</p>
-<div class="grid stats"><div class="panel"><div class="muted">Owner Account</div><div class="stat" style="font-size:18px">Verified</div></div><div class="panel"><div class="muted">Shop Staff</div><div class="stat" id="akOwnerStaffCount">—</div></div><div class="panel owner-only"><div class="muted">Platform Users</div><div class="stat" id="akOwnerUserCount">—</div></div></div>
-<div class="actions"><button type="button" onclick="go('home')">ဆိုင် POS ပင်မသို့</button><button type="button" class="alt owner-only" onclick="loadPlatformUsers()">Platform ဆိုင်အကောင့်များ စစ်ရန်</button><button type="button" class="alt" onclick="akLoadStaff()">ဝန်ထမ်းစာရင်းဖတ်ရန်</button></div></div>
-<div class="panel shop-owner-only" id="akOwnerStaffPanel"><h2>ဆိုင်ရှင် / ဝန်ထမ်း စီမံခန့်ခွဲမှု</h2><p class="muted">ဝန်ထမ်းသည် မိမိ Gmail ဖြင့် အရင် Account ဖွင့်ထားရမည်။ ထို့နောက် Gmail ထည့်ပြီး ရာထူးသတ်မှတ်ပါ။</p>
-<div class="grid"><div><label>ဝန်ထမ်း Gmail</label><input id="akStaffEmail" type="email" autocomplete="off" placeholder="staff@gmail.com"></div><div><label>ရာထူး</label><select id="akStaffRole"><option value="manager">မန်နေဂျာ</option><option value="cashier">ငွေကိုင်</option><option value="employee">ဝန်ထမ်း</option></select></div></div>
-<div class="actions"><button type="button" onclick="akAssignStaff()">ဝန်ထမ်းထည့် / ရာထူးသတ်မှတ်</button><button type="button" class="alt" onclick="akLoadStaff()">စာရင်းပြန်ဖတ်</button></div><p id="akStaffStatus" class="muted">Owner အကောင့်ဖြင့် Login ဝင်ပြီးမှ ဝန်ထမ်းစီမံနိုင်သည်။</p>
+<div class="grid stats"><div class="panel"><div class="muted">Owner Account</div><div class="stat" style="font-size:18px">Verified</div></div><div class="panel"><div class="muted">Shop Staff</div><div class="stat" id="akOwnerStaffCount">မဖွင့်သေး</div></div><div class="panel owner-only"><div class="muted">Platform Users</div><div class="stat" id="akOwnerUserCount">—</div></div></div>
+<div class="actions"><button type="button" onclick="go('home')">ဆိုင် POS ပင်မသို့</button><button type="button" class="alt owner-only" onclick="loadPlatformUsers()">Platform ဆိုင်အကောင့်များ စစ်ရန်</button><button type="button" class="alt" disabled>ဝန်ထမ်းစနစ် မဖွင့်သေး</button></div></div>
+<div class="panel shop-owner-only" id="akOwnerStaffPanel"><h2>ဆိုင်ရှင် / ဝန်ထမ်း စီမံခန့်ခွဲမှု</h2><p class="notice">အခမဲ့စနစ်တွင် Cloud Functions မသုံးသဖြင့် သီးခြားဝန်ထမ်းအကောင့်၊ Merchant Code နှင့် Role ခွဲခြားမှုကို မဖွင့်ထားပါ။ ဆိုင်ရှင်၏ ကိုယ်ပိုင်အကောင့်ဖြင့်သာ အသုံးပြုပါ။</p>
+<div class="grid"><div><label>ဝန်ထမ်းရာထူး</label><select id="akStaffRole"><option value="manager">မန်နေဂျာ</option><option value="cashier">ငွေကိုင်</option><option value="employee">ဝန်ထမ်း</option></select></div></div>
+<div class="actions"><button type="button" disabled>Merchant Code ထုတ်ပေးမှု မရသေး</button><button type="button" class="alt" disabled>ဝန်ထမ်းစာရင်း မရသေး</button></div><p class="muted">ဝန်ထမ်းအကောင့်နှင့် Merchant Code လုပ်ဆောင်ချက်များကို ယာယီပိတ်ထားသည်။</p><p id="akStaffStatus" class="muted">Owner အကောင့်ဖြင့် Login ဝင်ပြီးမှ ဝန်ထမ်းစီမံနိုင်သည်။</p>
 <div class="tablewrap"><table><thead><tr><th>ဝန်ထမ်း Gmail</th><th>ရာထူး</th><th>Print</th><th>လုပ်ဆောင်ချက်</th></tr></thead><tbody id="akStaffRows"><tr><td colspan="4">ဝန်ထမ်းစာရင်း မဖတ်ရသေးပါ။</td></tr></tbody></table></div>
-<p class="notice">ဝန်ထမ်း Login ဝင်သည်နှင့် မိမိရာထူးအလိုက် Cloud POS ဒေတာကိုသာ ဖတ်/သိမ်းနိုင်သည်။ Owner Dashboard နှင့် ဆိုင်ရှင်၏ ထိန်းချုပ်မှုများကို မမြင်နိုင်ပါ။</p></div>
+<p class="notice">ဝန်ထမ်း Role-based access ကို အခမဲ့ Cloud Functions မရှိသေးသဖြင့် မဖွင့်ထားပါ။</p></div>
 <div id="akOwnerDashboardPanels"></div></section>
 <section id="home" class="view">
 <div class="grid stats">
@@ -536,16 +593,16 @@ input,select,textarea,button{max-width:100%;box-sizing:border-box}
 <div class="panel"><h2>ပစ္စည်းထည့် / ပြင်</h2><form id="productForm"><input type="hidden" id="pId"><div class="grid">
 <div><label>ပစ္စည်းအမည် *</label><input id="pName" required></div><div><label>ပစ္စည်းကုဒ် / Barcode</label><div class="actions"><input id="pCode" autocomplete="off" style="flex:1;min-width:130px"><button type="button" class="alt" id="akScanBarcodeBtn">📷 Scan</button></div><small class="muted">Camera barcode scan သို့မဟုတ် Bluetooth/USB HID scanner ဖြင့် ဖတ်နိုင်သည်။</small></div><div><label>အမျိုးအစား</label><input id="pCat" placeholder="အမျိုးအစား ဥပမာ - အစားအသောက် / အဝတ်အထည် / ကုန်မာ"></div><div><label>ယူနစ်</label><input id="pUnit" value="ခု"></div><div><label>ဝယ်ဈေး</label><input id="pCost" type="number" min="0" step="any" value="0"></div><div><label>လက်လီဈေး</label><input id="pRetail" type="number" min="0" step="any" value="0"></div><div><label>လက်ကားဈေး</label><input id="pWholesale" type="number" min="0" step="any" value="0"></div><div><label>လက်ကျန်</label><input id="pStock" type="number" min="0" step="any" value="0"></div><div><label>အနည်းဆုံးထားရမည့်လက်ကျန် (Alert)</label><input id="pMinStock" type="number" min="0" step="any" value="0"><small class="muted">ဒီပမာဏအောက်ရောက်ရင် ပြန်မှာရန် သတိပေးမည်။</small></div><div><label>ပစ္စည်းဓာတ်ပုံ</label><input id="pPhoto" type="file" accept="image/*"><small class="muted">ဓာတ်ပုံကို အရွယ်အစားလျှော့ပြီး ဒီဖုန်းထဲတွင် သိမ်းမည်။ အခြားဖုန်းသို့ ပုံပါပြောင်းလိုပါက Backup JSON ကို အသုံးပြုပါ။</small></div>
 </div><img id="photoPreview" class="thumb hidden" alt="preview"><div class="actions"><button>သိမ်းမည်</button><button type="button" class="alt" onclick="akShareProductToViber()">Viber Channel ကြော်ငြာတင်ရန်</button><button type="button" class="alt" onclick="akSendProductToMarket()">Market ကြော်ငြာတင်ရန်</button><button type="button" class="alt" onclick="resetProduct()">ရှင်းမည်</button></div><p class="muted">Viber ကိုနှိပ်လျှင် ပုံနှင့်စာကို Share Menu မှတစ်ဆင့် ကိုယ့် Channel သို့ ရွေးပို့နိုင်သည်။ Market ကိုနှိပ်လျှင် အချက်အလက်များကို အလိုအလျောက်ဖြည့်ပေးမည်။</p></form></div>
-<div class="panel"><div class="split"><h2>ပစ္စည်းစာရင်း</h2><div class="actions"><button type="button" class="alt" onclick="exportProductsCsv()">CSV ထုတ်ရန်</button><input style="max-width:220px" id="productQuery" placeholder="ရှာရန်" oninput="renderProducts()"></div></div><div class="tablewrap"><table><thead><tr><th>ပုံ</th><th>ပစ္စည်း</th><th>ကုဒ်</th><th>လက်ကျန်</th><th>ဝယ်ဈေး</th><th>လက်လီ</th><th>လက်ကား</th><th>လုပ်ဆောင်ချက်</th></tr></thead><tbody id="productRows"></tbody></table></div></div>
+<div class="panel"><div class="split"><h2>ပစ္စည်းစာရင်း</h2><div class="actions"><button type="button" class="alt" onclick="downloadProductCsvTemplate()">ပစ္စည်း CSV နမူနာ</button><button type="button" class="alt" onclick="document.getElementById('productCsvInput').click()">CSV အစုလိုက်ထည့်ရန်</button><input id="productCsvInput" type="file" accept=".csv,text/csv" hidden onchange="importProductsCsv(event)"><button type="button" class="alt" onclick="exportProductsCsv()">CSV ထုတ်ရန်</button><input style="max-width:220px" id="productQuery" placeholder="ရှာရန်" oninput="renderProducts()"></div></div><div class="tablewrap"><table><thead><tr><th>ပုံ</th><th>ပစ္စည်း</th><th>ကုဒ်</th><th>လက်ကျန်</th><th>ဝယ်ဈေး</th><th>လက်လီ</th><th>လက်ကား</th><th>လုပ်ဆောင်ချက်</th></tr></thead><tbody id="productRows"></tbody></table></div></div>
 </section>
 
 <section id="sales" class="view">
 <div class="panel"><h2>အရောင်းတင်ရန်</h2><form id="saleForm"><div class="grid">
 <div class="sale-scan-tools"><label>Barcode / SKU Scan ဖြင့် အရောင်းထည့်ရန်</label><div class="actions"><input id="saleBarcodeInput" autocomplete="off" inputmode="none" placeholder="Scanner ဖတ်ပါ သို့မဟုတ် ကုဒ်ရိုက်ပြီး Enter နှိပ်ပါ" style="flex:1;min-width:180px"><button type="button" class="alt" id="akSaleScanBtn">📷 Camera Scan</button></div><small class="muted">Barcode Scanner စက်ကိုလည်း Bluetooth / USB HID ဖြင့် ချိတ်ပြီး ဒီအကွက်ထဲ Scan ဖတ်နိုင်သည်။</small></div><div id="saleLines"><div class="sale-line grid"><div><label>ပစ္စည်း</label><select id="sProduct" class="sale-product" required></select></div><div><label>ဈေးနှုန်းအမျိုးအစား</label><select id="sType" class="sale-type"><option value="retail">လက်လီ</option><option value="wholesale">လက်ကား</option><option value="custom">ကိုယ်တိုင်သတ်မှတ်</option></select></div><div><label>အရေအတွက်</label><input id="sQty" class="sale-qty" type="number" min=".001" step="any" value="1" required></div><div><label>တစ်ခုဈေး</label><input id="sPrice" class="sale-price" type="number" min="0" step="any" value="0" required></div><div><button type="button" class="red" onclick="removeSaleLine(this)">ဖယ်ရှား</button></div></div></div><div class="actions"><button type="button" class="alt" onclick="addSaleLine()">+ ပစ္စည်းတစ်မျိုး ထပ်ထည့်</button></div><div><label>ဖောက်သည်</label><input id="sCustomer" placeholder="အမည် / ဖုန်း"></div><div><label>ပေးချေမှု</label><select id="sPayType"><option value="full">ငွေအပြည့်</option><option value="partial">တစ်စိတ်တစ်ပိုင်း</option><option value="credit">အကြွေး</option></select></div><div><label>ပေးငွေ</label><input id="sPaid" type="number" min="0" step="any" value="0"></div><div><label>မှတ်ချက်</label><input id="sNote"></div>
-</div><div class="actions"><button>အရောင်းသိမ်းမည်</button></div></form></div>
+</div><div class="actions"><button type="submit" id="akCompleteSaleBtn">အရောင်းသိမ်းမည်</button><button type="button" class="alt" onclick="startNextCustomer(true)">နောက်ဖောက်သည် / အရောင်းအသစ်</button></div><p class="muted" id="akNextCustomerStatus">အရောင်းအသစ်အတွက် အသင့်ဖြစ်နေပါပြီ။ ဘောင်ချာတစ်ခုချင်းစီကို သီးခြားသိမ်းဆည်းမည်။</p></form></div>
 <div class="panel"><div class="split"><h2>အရောင်းမှတ်တမ်း</h2><div class="actions no-print"><button type="button" class="alt" onclick="printSalesLedger()">အရောင်းစာရင်း Print</button></div></div><div class="tablewrap"><table><thead><tr><th>ရက်စွဲ</th><th>ဘောင်ချာ</th><th>ဖောက်သည်</th><th>စုစုပေါင်း</th><th>ပေးငွေ</th><th>အကြွေး</th><th></th></tr></thead><tbody id="saleRows"></tbody></table></div></div>
-<div class="panel" id="akPrinterManager"><h2>Printer အများအပြား စီမံရန်</h2><p class="muted">Printer တစ်လုံးချင်းစီ၏ အမည်နှင့် ချိတ်ဆက်မှုကို မှတ်သားထားနိုင်သည်။ Print နှိပ်လျှင် ဖုန်း/ကွန်ပျူတာ၏ Print Service မှ Printer ကို ရွေးပါ။</p><div class="grid"><div><label>Printer အမည်</label><input id="akPrinterName" maxlength="60" placeholder="ဥပမာ - ကောင်တာ ၁ Printer"></div><div><label>Printer ရာထူး / အသုံးပြုမည့်နေရာ</label><select id="akPrinterPurpose"><option value="receipt">ဘောင်ချာ Printer</option><option value="general">အထွေထွေ Print</option></select></div><div><label>ချိတ်ဆက်မှုအမျိုးအစား</label><select id="akPrinterType" onchange="akPrinterTypeChanged()"><option value="system">Android / System Print</option><option value="wifi">Wi-Fi Direct (TCP 9100)</option><option value="bluetooth">Bluetooth Classic ESC/POS</option><option value="usb">USB (Android Print Service)</option></select></div><div id="akPrinterBluetoothControls"><label>Pair လုပ်ထားသော Bluetooth Printer</label><div class="actions"><select id="akPrinterBluetoothDevice" style="flex:1"><option value="">Printer စက်ရှာရန် နှိပ်ပါ</option></select><button type="button" class="alt" onclick="akLoadBluetoothPrinters()">Paired စက်ရှာရန်</button></div></div><div id="akPrinterWifiControls"><label>Wi-Fi Printer IP / Host နှင့် Port</label><div class="actions"><input id="akPrinterHost" placeholder="ဥပမာ 192.168.1.100" style="flex:1"><input id="akPrinterPort" type="number" min="1" max="65535" value="9100" style="max-width:100px"></div></div><div><label>ဘောင်ချာ စာရွက်အကျယ်</label><select id="akPrinterPaper" onchange="akSetPrinterPaper(this.value)"><option value="58mm">58mm Thermal</option><option value="80mm" selected>80mm Thermal</option><option value="A4">A4 စာရွက်</option></select></div></div><p class="muted">Bluetooth Printer ကို Android Settings မှာ အရင် Pair လုပ်ပါ။ Wi-Fi Printer ကို ဖုန်းနှင့် တူညီသော Wi-Fi Network ချိတ်ပြီး Printer IP နှင့် RAW TCP Port (ပုံမှန် 9100) ထည့်ပါ။ Direct Print သည် APK ထဲတွင်သာ အလုပ်လုပ်ပြီး Website သည် System Print ကို သုံးမည်။</p><div class="actions"><button type="button" onclick="akSavePrinter()">Printer ထည့်မည်</button><button type="button" class="alt" onclick="akPrintTest()">စမ်းသပ် Print</button></div><div class="tablewrap"><table><thead><tr><th>Printer</th><th>ရာထူး</th><th>ချိတ်ဆက်မှု</th><th>Default</th><th>လုပ်ဆောင်ချက်</th></tr></thead><tbody id="akPrinterRows"><tr><td colspan="5">Printer မထည့်ရသေးပါ</td></tr></tbody></table></div><p class="muted" id="akPrinterStatus">Printer Profile ကို ဒီဖုန်းထဲတွင် သိမ်းထားသည်။ APK မှ Bluetooth Classic ESC/POS နှင့် Wi-Fi RAW TCP 9100 တိုက်ရိုက်ပို့နိုင်သည်။ Website မှာ Android/System Print ကို သုံးပါ။</p>
-<p class="muted">Bluetooth သည် Classic SPP/ESC-POS၊ Wi-Fi သည် Printer နှင့် ဖုန်းတစ်ခုတည်း Local Network မှ RAW TCP Port 9100 ကို ထောက်ပံ့ရမည်။ Printer အမျိုးအစားမတူလျှင် စမ်းသပ် Print ဖြင့် အရင်စစ်ပါ။</p></div>
+<div class="panel" id="akPrinterManager"><h2>Printer အများအပြား စီမံရန်</h2><p class="muted">Printer တစ်လုံးချင်းစီ၏ အမည်နှင့် ချိတ်ဆက်မှုကို မှတ်သားထားနိုင်သည်။ Bluetooth / Wi-Fi ကို APK မှ တိုက်ရိုက်ထုတ်နိုင်ပြီး USB သို့မဟုတ် အခြား Printer များအတွက် ဘောင်ချာစာရင်းရှိ Thermer / Printer App သို့ပို့ ခလုတ်မှ Share Menu ကိုဖွင့်ပါ။</p><div class="grid"><div><label>Printer အမည်</label><input id="akPrinterName" maxlength="60" placeholder="ဥပမာ - ကောင်တာ ၁ Printer"></div><div><label>Printer ရာထူး / အသုံးပြုမည့်နေရာ</label><select id="akPrinterPurpose"><option value="receipt">ဘောင်ချာ Printer</option><option value="general">အထွေထွေ Print</option></select></div><div><label>ချိတ်ဆက်မှုအမျိုးအစား</label><select id="akPrinterType" onchange="akPrinterTypeChanged()"><option value="system">Android / System Print</option><option value="wifi">Wi-Fi Direct (TCP 9100)</option><option value="bluetooth">Bluetooth Classic ESC/POS</option><option value="usb">USB (Android Print Service)</option></select></div><div id="akPrinterBluetoothControls"><label>Pair လုပ်ထားသော Bluetooth Printer</label><div class="actions"><select id="akPrinterBluetoothDevice" style="flex:1"><option value="">Printer စက်ရှာရန် နှိပ်ပါ</option></select><button type="button" class="alt" onclick="akLoadBluetoothPrinters()">Paired စက်ရှာရန်</button></div></div><div id="akPrinterWifiControls"><label>Wi-Fi Printer IP / Host နှင့် Port</label><div class="actions"><input id="akPrinterHost" placeholder="ဥပမာ 192.168.1.100" style="flex:1"><input id="akPrinterPort" type="number" min="1" max="65535" value="9100" style="max-width:100px"></div></div><div><label>ဘောင်ချာ စာရွက်အကျယ်</label><select id="akPrinterPaper" onchange="akSetPrinterPaper(this.value)"><option value="58mm">58mm Thermal</option><option value="80mm" selected>80mm Thermal</option><option value="A4">A4 စာရွက်</option></select></div><div><label>အရောင်းသိမ်းပြီး Auto Print</label><select id="akAutoPrintAfterSale" onchange="akSetAutoPrintAfterSale(this.value)"><option value="off">ပိတ်ထားမည်</option><option value="on">အရောင်းသိမ်းတိုင်း ဘောင်ချာထုတ်မည်</option></select></div></div><p class="muted">Bluetooth Printer ကို Android Settings မှာ အရင် Pair လုပ်ပါ။ Wi-Fi Printer ကို ဖုန်းနှင့် တူညီသော Wi-Fi Network ချိတ်ပြီး Printer IP နှင့် RAW TCP Port (ပုံမှန် 9100) ထည့်ပါ။ Direct Print သည် APK ထဲတွင်သာ အလုပ်လုပ်ပြီး Website သည် System Print ကို သုံးမည်။</p><div class="actions"><button type="button" onclick="akSavePrinter()">Printer ထည့်မည်</button><button type="button" class="alt" onclick="akPrintTest()">စမ်းသပ် Print</button></div><div class="tablewrap"><table><thead><tr><th>Printer</th><th>ရာထူး</th><th>ချိတ်ဆက်မှု</th><th>Default</th><th>လုပ်ဆောင်ချက်</th></tr></thead><tbody id="akPrinterRows"><tr><td colspan="5">Printer မထည့်ရသေးပါ</td></tr></tbody></table></div><p class="muted" id="akPrinterStatus">Printer Profile ကို ဒီဖုန်းထဲတွင် သိမ်းထားသည်။ APK မှ Bluetooth Classic ESC/POS နှင့် Wi-Fi RAW TCP 9100 တိုက်ရိုက်ပို့နိုင်သည်။ Website မှာ Android/System Print ကို သုံးပါ။</p>
+<p class="muted">Bluetooth သည် Classic SPP/ESC-POS၊ Wi-Fi သည် Printer နှင့် ဖုန်းတစ်ခုတည်း Local Network မှ RAW TCP Port 9100 ကို ထောက်ပံ့ရမည်။ Printer အမျိုးအစားမတူလျှင် စမ်းသပ် Print ဖြင့် အရင်စစ်ပါ။ Thermer အသုံးပြုရန် ဘောင်ချာပုံကို Share လုပ်ပြီး Android Share Menu မှ Thermer ကို ရွေးပါ။ Thermer ထဲတွင် Bluetooth သို့မဟုတ် USB OTG Printer ကို သတ်မှတ်ပြီး ထုတ်နိုင်သည်။</p></div>
 </section>
 
 <section id="purchases" class="view">
@@ -578,7 +635,7 @@ input,select,textarea,button{max-width:100%;box-sizing:border-box}
  <div><label>ဓာတ်ပုံ</label><input id="adPhoto" type="file" accept="image/*"></div>
  </div>
  <div class="actions"><button onclick="makeAd()">ကြော်ငြာပုံဖန်တီးမည်</button><button onclick="shareAd()">Social အားလုံးသို့ ပုံ+စာ Share</button><button class="alt" onclick="shareAdTo('facebook')">Facebook</button><button class="alt" onclick="shareAdTo('telegram')">Telegram</button><button class="alt" onclick="shareAdTo('viber')">Viber</button><button class="alt" onclick="shareAdTo('tiktok')">TikTok</button><button class="alt" onclick="shareAdTo('whatsapp')">WhatsApp</button><button class="alt" onclick="shareAdTo('messenger')">Messenger</button><button class="alt" onclick="shareAdTo('instagram')">Instagram</button><button class="alt" onclick="shareAdTo('copy')">Caption/Link Copy</button><button class="alt" onclick="downloadAd()">ပုံသိမ်းမည်</button></div>
-  <div class="panel" style="margin-top:12px"><h3>AI ကြော်ငြာစာသား</h3><p class="muted">ပစ္စည်းအချက်အလက်ကိုသာ AI သို့ပို့ပြီး မြန်မာဘာသာကြော်ငြာစာသား ရေးပေးမည်။ AI စာသားကို စစ်ဆေးပြီးမှ အသုံးပြုပါ။</p><div class="actions"><button type="button" onclick="akGenerateAdCopy()">AI ဖြင့် ကြော်ငြာစာသားရေးမည်</button><button type="button" class="alt" onclick="akOpenChatGPT()">ChatGPT ဖြင့် မေးရန်</button></div><textarea id="adAiCaption" maxlength="1200" placeholder="AI ရေးပေးသော ကြော်ငြာစာသား ဒီမှာပေါ်မည်။ ပြင်ဆင်နိုင်သည်။"></textarea><p id="adAiStatus" class="muted">AI API Key ချိတ်ဆက်ပြီးမှ AI ကြော်ငြာရေးနိုင်မည်။</p></div>
+  <div class="panel" style="margin-top:12px"><h3>အခမဲ့ ကြော်ငြာစာသား</h3><p class="muted">AI API မသုံးဘဲ ဒီဖုန်းထဲမှာပဲ ပစ္စည်းအချက်အလက်အပေါ်မူတည်ပြီး မြန်မာစာသား Template ဖန်တီးပေးမည်။</p><div class="actions"><button type="button" onclick="akGenerateAdCopy()">အခမဲ့ ကြော်ငြာစာသားဖန်တီးမည်</button><button type="button" class="alt" onclick="akOpenChatGPT()">ChatGPT ဖွင့်ရန်</button></div><textarea id="adAiCaption" maxlength="1200" placeholder="ဖန်တီးထားသော ကြော်ငြာစာသားကို ပြင်ဆင်နိုင်သည်။"></textarea><p id="adAiStatus" class="muted">Local Template · API Key မလိုပါ။</p></div>
  <canvas id="adCanvas" width="1080" height="1080" class="preview" style="width:min(100%,420px);margin-top:12px;background:white"></canvas>
  <p class="muted">အကောင်းဆုံးနည်းမှာ ပုံနှင့် Caption ကို Android Share Menu မှ တစ်ခါတည်းရွေးပို့ခြင်းဖြစ်သည်။ Platform တစ်ခုချင်းစီ Shortcut သည် ပုံကိုသိမ်း၊ Caption ကို Copy လုပ်ပြီး သက်ဆိုင်ရာ App ဖွင့်ပေးမည်။ App ထဲတွင် ပုံကိုရွေးပြီး Post တင်ပါ။ Auto-post အတွက် သက်ဆိုင်ရာ Platform API/OAuth ခွင့်ပြုချက်လိုအပ်သည်။</p>
  </div>
@@ -654,7 +711,7 @@ function akInitMarketRebuild(){
  ownerEntry.className="panel";ownerEntry.id="akMarketOwnerEntry";
  ownerEntry.innerHTML='<span class="pill">OWNER ONLY</span><h2>Owner Login · AK Market စီမံခန့်ခွဲမှု</h2><p class="muted">အများပြည်သူအသုံးပြုသူများအတွက် Login မလိုပါ။ Owner တစ်ဦးတည်းကသာ Login ဝင်ပြီး ကြော်ငြာ၊ ဆိုင်စာရင်းနှင့် အော်ဒါများကို ထိန်းချုပ်နိုင်သည်။</p><div class="actions"><button type="button" onclick="akOpenOwnerLogin()">Owner Login ဝင်ရန်</button></div>';
  const adOrder=document.createElement("div");adOrder.className="panel";adOrder.id="akMarketAdOrderPanel";
- adOrder.innerHTML='<span class="pill">ADVERTISING SERVICE</span><h2>ကြော်ငြာအော်ဒါ တင်ရန်</h2><p class="muted">ဆိုင် သို့မဟုတ် လုပ်ငန်းကြော်ငြာအတွက် အမျိုးအစားနှင့် ကာလရွေးပြီး အော်ဒါတင်ပါ။</p><form id="akMarketAdOrderForm"><div class="grid"><div><label>ကြော်ငြာအမျိုးအစား *</label><select id="akAdOrderType" required><option value="ဆိုင်ကြော်ငြာ">ဆိုင်ကြော်ငြာ</option><option value="Live ကြော်ငြာ">Live ကြော်ငြာ</option><option value="Sponsored Banner">Sponsored Banner</option><option value="ပစ္စည်းအထူးကြော်ငြာ">ပစ္စည်းအထူးကြော်ငြာ</option></select></div><div><label>ပြသမည့်ကာလ *</label><select id="akAdOrderDays" required><option value="7">၇ ရက်</option><option value="15">၁၅ ရက်</option><option value="30" selected>၃၀ ရက်</option></select></div><div><label>ဆိုင် / လုပ်ငန်းအမည် *</label><input id="akAdOrderShop" maxlength="100" required></div><div><label>ဆက်သွယ်ရန် ဖုန်း/Viber *</label><input id="akAdOrderPhone" maxlength="30" required inputmode="tel"></div><div><label>လုပ်ငန်းအမျိုးအစား</label><input id="akAdOrderCategory" maxlength="80" placeholder="ဥပမာ - ကုန်မာ၊ လျှပ်စစ်"></div><div><label>ခန့်မှန်းဘတ်ဂျက် (ကျပ်)</label><input id="akAdOrderBudget" type="number" min="0" step="1" placeholder="မသတ်မှတ်ရသေးလျှင် ချန်ထားပါ"></div></div><label>ကြော်ငြာအကြောင်း / လိုအပ်ချက်</label><textarea id="akAdOrderNote" maxlength="700" placeholder="ကြော်ငြာတင်လိုသည့်အကြောင်းအရာ၊ Link စသည်"></textarea><label>ဆိုင်ကြော်ငြာပုံ (Album မှရွေးရန် / ကင်မရာဖြင့်ရိုက်ရန်)</label><div class="grid"><div><span class="muted">Album ထဲမှပုံရွေးရန်</span><input id="akAdOrderPhoto" type="file" accept="image/jpeg,image/png,image/webp"></div><div><span class="muted">ကင်မရာဖြင့် ပုံရိုက်ရန်</span><input id="akAdOrderCamera" type="file" accept="image/*" capture="environment"></div></div><p class="muted">JPG / PNG / WebP · ပုံတစ်ပုံ · အလိုအလျောက် အရွယ်လျှော့သိမ်းမည်။</p><img id="akAdOrderPhotoPreview" alt="ဆိုင်ကြော်ငြာပုံ နမူနာ" style="display:none;width:min(100%,360px);max-height:260px;object-fit:contain;border-radius:12px;border:1px solid #d8e2db"><div class="actions"><button type="submit">ကြော်ငြာအော်ဒါ တင်မည်</button></div><p id="akMarketAdOrderStatus" class="muted" aria-live="polite">အော်ဒါတင်ရန် အချက်အလက်ဖြည့်ပါ။</p></form>';
+ adOrder.innerHTML='<span class="pill">ADVERTISING SERVICE</span><h2>ကြော်ငြာအော်ဒါ တင်ရန်</h2><p class="muted">ဆိုင် သို့မဟုတ် လုပ်ငန်းကြော်ငြာအတွက် အမျိုးအစားနှင့် ကာလရွေးပြီး အော်ဒါတင်ပါ။</p><form id="akMarketAdOrderForm"><div class="grid"><div><label>ကြော်ငြာအမျိုးအစား *</label><select id="akAdOrderType" required><option value="ဆိုင်ကြော်ငြာ">ဆိုင်ကြော်ငြာ</option><option value="Live ကြော်ငြာ">Live ကြော်ငြာ</option><option value="Sponsored Banner">Sponsored Banner</option><option value="ပစ္စည်းအထူးကြော်ငြာ">ပစ္စည်းအထူးကြော်ငြာ</option></select></div><div><label>ပြသမည့်ကာလ *</label><select id="akAdOrderDays" required><option value="7">၇ ရက်</option><option value="15">၁၅ ရက်</option><option value="30" selected>၃၀ ရက်</option></select></div><div><label>ဆိုင် / လုပ်ငန်းအမည် *</label><input id="akAdOrderShop" maxlength="100" required></div><div><label>ဆက်သွယ်ရန် ဖုန်း/Viber *</label><input id="akAdOrderPhone" maxlength="30" required inputmode="tel"></div><div><label>လုပ်ငန်းအမျိုးအစား</label><input id="akAdOrderCategory" maxlength="80" placeholder="ဥပမာ - ကုန်မာ၊ လျှပ်စစ်"></div><div><label>ခန့်မှန်းဘတ်ဂျက် (ကျပ်)</label><input id="akAdOrderBudget" type="number" min="0" step="1" placeholder="မသတ်မှတ်ရသေးလျှင် ချန်ထားပါ"></div></div><label>ကြော်ငြာအကြောင်း / လိုအပ်ချက်</label><textarea id="akAdOrderNote" maxlength="700" placeholder="ကြော်ငြာတင်လိုသည့်အကြောင်းအရာ၊ ပုံ/Link စသည်"></textarea><div class="actions"><button type="submit">ကြော်ငြာအော်ဒါ တင်မည်</button></div><p id="akMarketAdOrderStatus" class="muted" aria-live="polite">အော်ဒါတင်ရန် အချက်အလက်ဖြည့်ပါ။</p></form>';
  const ownerOrders=document.createElement("div");ownerOrders.className="panel owner-only";ownerOrders.id="akMarketAdOrderAdmin";
  ownerOrders.innerHTML='<h3>Owner · ကြော်ငြာအော်ဒါများ</h3><div class="actions"><button type="button" class="alt" onclick="akLoadMarketAdOrders()">အော်ဒါစာရင်းဖတ်မည်</button></div><p id="akMarketAdOrdersStatus" class="muted">Owner Login ဝင်ပြီး စာရင်းဖတ်ပါ။</p><div id="akMarketAdOrdersRows"></div>';
  // Rebuild the marketplace content in the requested order while retaining existing form/data handlers.
@@ -672,7 +729,7 @@ function akInitMarketRebuild(){
  if(ownerNote)ownerNote.textContent="Owner တစ်ဦးတည်းက Market ပစ္စည်းကြော်ငြာနှင့် Sponsored ကြော်ငြာများကို စစ်ဆေး၊ ဖျက်နိုင်သည်။";
  const fbPanel=document.getElementById("akFirebasePanel");
  if(fbPanel&&ownerEntry){
-  if(new URLSearchParams(location.search).get("market")==="1"){flow.insertBefore(fbPanel,ownerOrders);const authTitle=fbPanel.querySelector("h2");if(authTitle)authTitle.textContent="Owner Login · painglin102@gmail.com တစ်ခုတည်း";const authNote=fbPanel.querySelector(".notice");if(authNote)authNote.textContent="Owner စီမံခန့်ခွဲမှုကို painglin102@gmail.com အတည်ပြုထားသော Email/Password ဖြင့်သာ ဝင်နိုင်သည်။ Google Login နှင့် အခြားအကောင့်များကို ဤနေရာတွင် ပိတ်ထားသည်။";const register=document.getElementById("akRegisterButton");if(register)register.style.display="none";const googleButton=fbPanel.querySelector('button[onclick="firebaseGoogleLogin()"]');if(googleButton){googleButton.style.display="inline-flex";googleButton.textContent="Google Account ဖြင့် Owner ဝင်ရန်";googleButton.style.visibility="visible";googleButton.style.opacity="1";googleButton.style.minHeight="48px";googleButton.style.fontWeight="800";}const emailInput=document.getElementById("fbEmail");if(emailInput){emailInput.value="painglin102@gmail.com";emailInput.readOnly=true;emailInput.autocomplete="username";}}
+  if(false){flow.insertBefore(fbPanel,ownerOrders);const authTitle=fbPanel.querySelector("h2");if(authTitle)authTitle.textContent="Owner Login · လုံခြုံသော စီမံခန့်ခွဲမှု";const register=document.getElementById("akRegisterButton");if(register)register.style.display="none";const googleButton=fbPanel.querySelector('button[onclick="firebaseGoogleLogin()"]');if(googleButton){googleButton.style.display="inline-flex";googleButton.textContent="Google Account ဖြင့် ဝင်ရန်";googleButton.style.visibility="visible";googleButton.style.opacity="1";googleButton.style.minHeight="48px";googleButton.style.fontWeight="800";}}
   const jump=ownerEntry.querySelector("button");
   if(jump)jump.addEventListener("click",()=>setTimeout(()=>{if(fbPanel)fbPanel.scrollIntoView({behavior:"smooth",block:"center"});},150));
  }
@@ -684,29 +741,11 @@ function akInitMarketRebuild(){
   ownerManager.appendChild(controls);
  }
 }
-let akAdOrderImageData="";
-function akHandleAdOrderPhoto(e){
- const file=e.target.files&&e.target.files[0];if(!file)return;
- if(!/^image\/(jpeg|png|webp)$/.test(file.type)||file.size>8*1024*1024){e.target.value="";akAdOrderImageData="";const p=document.getElementById("akAdOrderPhotoPreview");p.style.display="none";alert("JPG၊ PNG သို့မဟုတ် WebP ပုံ 8MB အောက်သာ ရွေးပါ။");return}
- const reader=new FileReader();reader.onload=()=>{
-  const img=new Image();img.onload=()=>{
-   const scale=Math.min(1,1000/Math.max(img.width,img.height)),canvas=document.createElement("canvas");
-   canvas.width=Math.max(1,Math.round(img.width*scale));canvas.height=Math.max(1,Math.round(img.height*scale));
-   canvas.getContext("2d").drawImage(img,0,0,canvas.width,canvas.height);
-   let quality=.72;akAdOrderImageData=canvas.toDataURL("image/jpeg",quality);
-   while(akAdOrderImageData.length>260000&&quality>.35){quality-=.07;akAdOrderImageData=canvas.toDataURL("image/jpeg",quality)}
-   if(akAdOrderImageData.length>280000){akAdOrderImageData="";alert("ပုံအရွယ်အစား လျှော့မရပါ။ ပိုသေးသောပုံကို ရွေးပါ။");return}
-   const preview=document.getElementById("akAdOrderPhotoPreview");preview.src=akAdOrderImageData;preview.style.display="block";
-  };img.onerror=()=>alert("ပုံဖွင့်မရပါ။ အခြားပုံရွေးပါ။");img.src=reader.result;
- };reader.onerror=()=>alert("ပုံဖတ်မရပါ။ ထပ်ရွေးပါ။");reader.readAsDataURL(file);
-}
-document.getElementById("akAdOrderPhoto")?.addEventListener("change",akHandleAdOrderPhoto);
-document.getElementById("akAdOrderCamera")?.addEventListener("change",akHandleAdOrderPhoto);
 async function akSubmitMarketAdOrder(e){
  e.preventDefault();const status=document.getElementById("akMarketAdOrderStatus");
- const data={type:document.getElementById("akAdOrderType").value,days:Number(document.getElementById("akAdOrderDays").value),shopName:document.getElementById("akAdOrderShop").value.trim(),phone:document.getElementById("akAdOrderPhone").value.trim(),category:document.getElementById("akAdOrderCategory").value.trim(),budget:Number(document.getElementById("akAdOrderBudget").value||0),note:document.getElementById("akAdOrderNote").value.trim(),imageDataUrl:akAdOrderImageData||"",status:"new",createdAt:firebase.firestore.FieldValue.serverTimestamp()};
+ const data={type:document.getElementById("akAdOrderType").value,days:Number(document.getElementById("akAdOrderDays").value),shopName:document.getElementById("akAdOrderShop").value.trim(),phone:document.getElementById("akAdOrderPhone").value.trim(),category:document.getElementById("akAdOrderCategory").value.trim(),budget:Number(document.getElementById("akAdOrderBudget").value||0),note:document.getElementById("akAdOrderNote").value.trim(),status:"new",createdAt:firebase.firestore.FieldValue.serverTimestamp()};
  if(!data.shopName||data.phone.replace(/[^0-9]/g,"").length<7){status.textContent="ဆိုင်အမည်နှင့် ဖုန်းနံပါတ်ကို မှန်ကန်စွာ ဖြည့်ပါ။";return}
- try{if(!fbStore)throw Error("Cloud database မချိတ်ဆက်ရသေးပါ။ နောက်မှ ထပ်ကြိုးစားပါ။");await fbStore.collection("marketAdOrders").add(data);document.getElementById("akMarketAdOrderForm").reset();akAdOrderImageData="";const preview=document.getElementById("akAdOrderPhotoPreview");if(preview){preview.removeAttribute("src");preview.style.display="none"}status.textContent="အော်ဒါလက်ခံပြီးပါပြီ။ ပုံပါ Owner ထံရောက်ရှိပါပြီ။ စစ်ဆေးပြီး ဆက်သွယ်ပါမည်။";}
+ try{if(!fbStore)throw Error("Cloud database မချိတ်ဆက်ရသေးပါ။ နောက်မှ ထပ်ကြိုးစားပါ။");await fbStore.collection("marketAdOrders").add(data);document.getElementById("akMarketAdOrderForm").reset();status.textContent="အော်ဒါလက်ခံပြီးပါပြီ။ Owner က စစ်ဆေးပြီး ဆက်သွယ်ပါမည်။";}
  catch(err){status.textContent="အော်ဒါမတင်နိုင်ပါ: "+(err.message||err);console.error("AK ad order submit",err)}
 }
 window.akLoadMarketAdOrders=async function(){
@@ -714,7 +753,7 @@ window.akLoadMarketAdOrders=async function(){
  if(!fbAuth?.currentUser||!akIsPlatformOwner(fbAuth.currentUser)){if(status)status.textContent="Owner အတည်ပြု Login လိုအပ်သည်။";return}
  try{const snap=await fbStore.collection("marketAdOrders").orderBy("createdAt","desc").limit(100).get();
  status.textContent="အော်ဒါ "+snap.size+" ခု";
- host.innerHTML=snap.empty?"<p>အော်ဒါမရှိသေးပါ။</p>":snap.docs.map(d=>{const x=d.data();return '<article class="notice" style="margin:8px 0"><b>'+String(x.shopName||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))+'</b><div>'+String(x.type||"")+' · '+String(x.days||"")+" ရက် · "+String(x.phone||"")+'</div><div>'+String(x.note||"")+'</div>'+(x.imageDataUrl?'<img src="'+x.imageDataUrl+'" alt="ဆိုင်ကြော်ငြာပုံ" style="display:block;width:min(100%,420px);max-height:280px;object-fit:contain;margin-top:10px;border-radius:10px">':'<div class="muted">ပုံမပါ</div>')+'</article>'}).join("");
+ host.innerHTML=snap.empty?"<p>အော်ဒါမရှိသေးပါ။</p>":snap.docs.map(d=>{const x=d.data();return '<article class="notice" style="margin:8px 0"><b>'+String(x.shopName||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))+'</b><div>'+String(x.type||"")+' · '+String(x.days||"")+' ရက် · '+String(x.phone||"")+'</div><div>'+String(x.note||"")+'</div></article>'}).join("");
  }catch(e){status.textContent="အော်ဒါစာရင်းဖတ်မရပါ: "+e.message}
 };
 window.akOwnerDeleteAllMarketAds=async function(){
@@ -745,26 +784,34 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
 </section>
 
 <section id="backup" class="view active">
-<div id="akPaywallNotice" class="panel notice"><h2>AK Sale Free Beta</h2><p id="akPaywallDetail">Gmail ဖြင့် Login ဝင်ပြီး Email ကို အတည်ပြုပါ။ Free Beta ဆိုင်အကောင့် ၃၀ အထိသာ လက်ခံမည်။ Owner က အကောင့်အသုံးပြုခွင့်ကို စီမံနိုင်သည်။</p></div>
-<div class="panel"><h2>AI လုံခြုံရေးစစ်ဆေးမှု</h2><p class="muted">ဆိုင် Cloud audit မှတ်တမ်းများကိုသာ စစ်ဆေးမည်။ Password၊ ငွေစာရင်းနှင့် Customer အချက်အလက်များကို AI သို့ မပို့ပါ။ Login မအောင်မြင်မှုနှင့် IP မှတ်တမ်းများ မရှိသေးပါက အဲဒီအမျိုးအစားကို မစစ်နိုင်ပါ။</p><div class="actions"><button type="button" onclick="akRunSecurityReview()">AI လုံခြုံရေး စစ်ဆေးမည်</button><button type="button" class="alt" onclick="akOpenChatGPT()">ChatGPT နဲ့ မေးမြန်းရန်</button></div><p id="akSecurityStatus" class="muted">Login ဝင်ထားသော ဆိုင်အကောင့်ဖြင့် အသုံးပြုပါ။</p><div id="akSecurityResult" style="white-space:pre-wrap;overflow-wrap:anywhere"></div></div>
+<div id="akPaywallNotice" class="panel notice"><h2>AK Sale Software · အသုံးပြုခွင့်တောင်းရန်</h2><p id="akPaywallDetail">Gmail ဖြင့် Register / Login ဝင်ပြီး Email ကို အတည်ပြုပါ။ ငွေပေးချေမှုကို App ပြင်ပတွင် ဆောင်ရွက်ပါ။ Owner က ငွေလက်ခံရရှိကြောင်း စစ်ဆေးပြီး ၃၀ / ၉၀ / ၁၈၀ / ၃၆၅ ရက် သတ်မှတ်ကာ အသုံးပြုခွင့်ဖွင့်ပေးမည်။</p><div class="actions"><button type="button" onclick="akRequestSubscriptionAccess()">အသုံးပြုခွင့် တောင်းမည်</button></div><p id="akAccessRequestStatus" class="muted">Login ဝင်ပြီး Gmail အတည်ပြုထားမှ တောင်းဆိုနိုင်သည်။</p></div>
+<div class="panel"><h2>အခမဲ့စနစ် · လုံခြုံရေးအချက်အလက်</h2><p class="muted">AI API နှင့် အခပေး Cloud Functions မသုံးပါ။ အောက်ပါအချက်များသည် လုပ်ဆောင်ချက်ကန့်သတ်ချက်များကို ရှင်းပြထားခြင်းဖြစ်ပြီး Live Security Audit မဟုတ်ပါ။</p><div class="actions"><button type="button" onclick="akRunSecurityReview()">လုံခြုံရေးအချက်အလက် ပြရန်</button><button type="button" class="alt" onclick="akOpenChatGPT()">ChatGPT ဖွင့်ရန်</button></div><p id="akSecurityStatus" class="muted">Local အချက်အလက်များကို ပြရန်နှိပ်ပါ။</p><div id="akSecurityResult" style="white-space:pre-wrap;overflow-wrap:anywhere"></div></div>
 <div class="panel"><h2>Online / Offline အသုံးပြုမှု</h2><div class="grid"><div><label>အလုပ်လုပ်မည့်စနစ်</label><select id="akSyncModeSelect" onchange="akSetSyncMode(this.value)"><option value="auto">အလိုအလျောက် (Online ရှိလျှင် Cloud Sync)</option><option value="offline">Offline သီးသန့် · ဖုန်းထဲသိမ်း</option><option value="online">Online သီးသန့် · Cloud Sync</option></select></div><div><label>ချိတ်ဆက်မှုအခြေအနေ</label><p id="akConnectionStatus" class="pill">စစ်ဆေးနေသည်…</p></div></div><p class="muted">အရောင်း၊ ပစ္စည်း၊ ဝယ်ယူမှုနှင့် ဓာတ်ပုံများကို အရင်ဆုံး ဒီဖုန်း/ကွန်ပျူတာထဲတွင် သိမ်းသည်။ Offline ရွေးထားလျှင် Cloud သို့ အလိုအလျောက်မပို့ပါ။ Online ပြန်ဖွင့်ပြီး Internet ရှိလျှင် ပြန် Sync လုပ်နိုင်သည်။ ပထမဆုံး Login နှင့် အကောင့်/အသုံးပြုခွင့် စစ်ဆေးရန် Internet လိုအပ်သည်။</p><div class="actions"><button type="button" onclick="akSyncNow()">Cloud သို့ ယခုပြန် Sync လုပ်မည်</button><button type="button" class="alt" onclick="akCheckBrowserStorage()">ဖုန်း Storage စစ်မည်</button></div></div><div class="panel"><h2>Backup / Restore</h2><p class="muted">ပစ္စည်းဓာတ်ပုံများအပါအဝင် ပစ္စည်း၊ အရောင်း၊ အဝယ်၊ Customer/Supplier၊ အကြွေး၊ အသုံးစရိတ်နှင့် ကောင်တာ/ဝန်ထမ်းစာရင်းတို့ကို JSON မိတ္တူတစ်ခုတည်းဖြင့် ထုတ်နိုင်သည်။ ဒီ JSON ဖိုင်ကို ဖုန်းထဲ Files/Downloads တွင် သိမ်းထားပါ။ ဖုန်းပြောင်းလျှင် အဲဒီဖိုင်ကို Restore လုပ်ပါ။ Restore မလုပ်မီ လက်ရှိဒေတာကိုလည်း Pre-restore snapshot အဖြစ် သိမ်းပေးမည်။</p><div class="actions"><button onclick="backup()">ဓာတ်ပုံနှင့်စာရင်း Backup ထုတ်မည်</button><label class="btn">Backup ပြန်ယူမည်<input type="file" accept=".json,application/json" id="restoreInput" hidden onchange="restore(event)"></label><button class="alt" onclick="csvExport()">အရောင်း CSV ထုတ်မည်</button></div><p id="akBackupStatus" class="muted">Backup ဖိုင်ထုတ်ပြီး ဖုန်းထဲသိမ်းထားပါ။</p></div>
 <div class="panel owner-only" id="akOwnerPromoPanel">
 <h2>AK ကြော်ငြာစီမံခန့်ခွဲမှု</h2><p class="muted">Owner အကောင့်ဖြင့် AK Sale APK နှင့် AK Website ကြော်ငြာ ၂ ခုကို ပုံနှင့်စာသားပါအောင် Public Marketplace တွင် တင်နိုင်သည်။ တစ်ခုချင်း ၃၀ ရက် Live ပြသမည်။</p>
 <div class="notice">အောက်ပါခလုတ်ကိုနှိပ်လျှင် AK APK ကြော်ငြာနှင့် AK Website ကြော်ငြာကို Cloud ထဲ တင်မည်။</div>
 <div class="actions"><button type="button" onclick="akPublishDefaultPromos()">AK APK + Website ကြော်ငြာ ၂ ခု တင်မည်</button><button type="button" class="alt" onclick="loadSponsoredAds()">ကြော်ငြာစာရင်း ပြန်ဖတ်မည်</button></div>
 <p id="akOwnerPromoStatus" class="muted">Owner Gmail အတည်ပြုပြီး Login ဝင်ထားပါ။</p><div id="akOwnerPromoRows" class="muted">တင်ထားသော AK ကြော်ငြာစာရင်း မဖတ်ရသေးပါ။</div></div><div class="panel" id="akLicensePanel"><h2>Owner Dashboard · အကောင့်ထိန်းချုပ်မှု</h2>
-<div class="owner-only"><p class="muted">အတည်ပြုထားသော Owner Gmail တစ်ခုတည်းမှ Free Beta ဆိုင်အကောင့် ၃၀ အထိ စီမံနိုင်သည်။</p>
+<div class="owner-only"><p class="muted">Customer Gmail များကို စစ်ဆေးပါ။ ငွေပေးချေမှုကို App ပြင်ပတွင် စစ်ဆေးပြီးနောက် သက်တမ်းကာလရွေး၍ အသုံးပြုခွင့်ပေးနိုင်သည်။ ၃၀ / ၉၀ / ၁၈၀ / ၃၆၅ ရက်။</p>
 <div class="actions"><button type="button" onclick="loadPlatformUsers()">User စာရင်းပြန်ဖတ်မည်</button></div>
 <p id="akPlatformUserStatus" class="muted">User စာရင်း မဖတ်ရသေးပါ။</p>
-<div class="tablewrap"><table><thead><tr><th>Gmail</th><th>အကောင့်အခြေအနေ</th><th>နောက်ဆုံးဝင်ချိန်</th><th>Owner လုပ်ဆောင်ချက်</th></tr></thead><tbody id="akPlatformUserRows"><tr><td colspan="4">စာရင်းမဖတ်ရသေးပါ</td></tr></tbody></table></div>
+<div class="panel" id="akOwnerAccessQueue" style="margin-top:12px">
+<h3>အသုံးပြုခွင့် တောင်းဆိုချက်များ</h3>
+<p class="muted">Gmail ဖြင့် Login ဝင်ပြီး POS အသုံးပြုခွင့် တောင်းထားသော User များကို ဒီစာရင်းတွင် မြင်နိုင်သည်။ Owner အတည်ပြုရန်သော Request ဖြစ်ပြီး Approve မလုပ်သေးပါနှင့်။</p>
+<div class="actions"><button type="button" onclick="loadAdminAccessRequests()">Access Request ပြန်ဖတ်မည်</button></div>
+<p id="adminAccessStatus" class="muted">စာရင်း မဖတ်ရသေးပါ။</p>
+<div class="tablewrap"><table><thead><tr><th>တင်သည့်အချိန်</th><th>User Gmail</th><th>Package</th><th>အခြေအနေ</th><th>လုပ်ဆောင်ချက်</th></tr></thead><tbody id="adminAccessRows"><tr><td colspan="5">စာရင်းမဖတ်ရသေးပါ။</td></tr></tbody></table></div>
+</div>
+<div class="tablewrap"><table><thead><tr><th>Gmail</th><th>Subscription အခြေအနေ</th><th>သက်တမ်းကုန်မည့်ရက်</th><th>အသုံးပြုခွင့် / ထိန်းချုပ်မှု</th></tr></thead><tbody id="akPlatformUserRows"><tr><td colspan="4">စာရင်းမဖတ်ရသေးပါ</td></tr></tbody></table></div>
 <div class="panel" id="akMarketReportsPanel" style="margin-top:12px">
 <h3>AK Market · တိုင်ကြားချက်စစ်ဆေးရန်</h3>
 <p class="muted">အများပြည်သူတိုင်ကြားထားသော ကြော်ငြာများကို Owner သာမြင်နိုင်သည်။ စစ်ဆေးပြီးပါက အခြေအနေပြောင်းပါ။</p>
 <div class="actions"><button type="button" onclick="loadMarketReports()">တိုင်ကြားချက်စာရင်းဖတ်မည်</button></div>
 <p id="akMarketReportsStatus" class="muted">စာရင်း မဖတ်ရသေးပါ။</p>
 <div id="akMarketReportsRows"><p class="muted">တိုင်ကြားချက်များ မဖတ်ရသေးပါ။</p></div>
-</div></div></div><div class="panel" id="akFirebasePanel"><h2>Google Login · AK Sale</h2><div class="notice">Google Account တစ်ခုတည်းဖြင့် Login ဝင်ပါ။ Owner စီမံခန့်ခွဲခွင့်မှာ <b>painglin102@gmail.com</b> တစ်ခုတည်းသာ ဖြစ်သည်။ အခြား Google အကောင့်များသည် Owner ခွင့်မရပါ။</div><div class="actions"><button type="button" onclick="firebaseGoogleLogin()">Google ဖြင့် ဝင်မည်</button><button class="alt" type="button" onclick="firebaseLogout()">Logout ထွက်မည်</button></div><p class="muted">Email/Password၊ အကောင့်အသစ်ဖွင့်ခြင်းနှင့် OTP Login ကို ပိတ်ထားသည်။</p><p class="muted" id="fbStatus">Google Login ဖြင့် ဝင်ပါ။</p></div>
-<div class="panel"><h2>အရောင်ဒီဇိုင်း ပြောင်းရန်</h2><p class="muted">ဒီဖုန်း / Browser အတွက် ဆော့ဖ်ဝဲလ် Theme အရောင်ကို ရွေးပါ။</p><label>အရောင် Theme</label><select id="akThemeSelect" onchange="localStorage.setItem('ak_sale_theme_v1',this.value);applyAkTheme()"><option value="green">အစိမ်း</option><option value="blue">အပြာ</option><option value="purple">ခရမ်း</option><option value="orange">လိမ္မော်</option></select></div><div class="panel"><h2>လုပ်ငန်းအမှတ်တံဆိပ်နှင့် တည်နေရာ</h2><div class="grid"><div><label>လုပ်ငန်း / AK အမည်</label><input id="shopName" placeholder="ဥပမာ - AK Hardware"></div><div><label>ငွေကြေး</label><input id="currency" value="MMK"></div><div><label>မြို့</label><input id="shopCity" placeholder="ဥပမာ - မန္တလေး"></div><div><label>မြို့နယ်</label><input id="shopTownship" placeholder="မြို့နယ်အမည်"></div><div><label>ဆိုင်လိပ်စာ</label><input id="shopAddress" placeholder="လမ်း၊ ရပ်ကွက်၊ အဆောက်အအုံ"></div><div><label>ဆက်သွယ်ရန်ဖုန်း</label><input id="shopPhone" inputmode="tel" placeholder="09xxxxxxxxx"></div><div><label>Logo ပုံ URL (မဖြစ်မနေမဟုတ်)</label><input id="shopLogo" type="url" placeholder="https://..."></div></div><div class="actions"><button onclick="saveShop()">အချက်အလက် သိမ်းမည်</button><button class="red" onclick="clearAll()">ဒေတာအားလုံးဖျက်ရန်</button></div><p class="muted">ဆိုင်ခွဲတစ်ခုချင်းစီ၏ လိပ်စာကို Shopping Center ထဲတွင် သီးခြားသတ်မှတ်နိုင်သည်။</p></div>
+</div></div></div><div class="panel" id="akFirebasePanel"><h2>အကောင့်ဝင်ရန် · Cloud စနစ်</h2><div class="notice">Gmail / Email ဖြင့် Register လုပ်ပြီး Email အတည်ပြုပါ။ ပထမဆုံး ဆိုင်အကောင့် ၃၀ ခုကို Free Beta အဖြစ် အခမဲ့ဖွင့်ပေးမည်။ ထိုအကောင့်များ၏ ဒေတာကို ကိုယ်ပိုင် UID အောက်တွင် Cloud Sync လုပ်မည်။ ၃၀ ပြည့်ပါက Subscription လိုအပ်သည်။</div><div class="panel" style="margin:10px 0"><label for="akAccountType">ဖွင့်မည့်အကောင့်အမျိုးအစား</label><select id="akAccountType" onchange="akUpdateAccountTypeHint()"><option value="shop-owner">ဆိုင်ရှင်အကောင့် (ဆိုင်ကို စီမံမည်)</option><option value="staff" disabled>ဝန်ထမ်းအကောင့် (အခမဲ့ဗားရှင်းတွင် မရသေး)</option></select><p id="akAccountTypeHint" class="muted">ဆိုင်ရှင်အကောင့်ဖြင့် Register လုပ်ပြီး Email အတည်ပြုပါ။ ထို့နောက် Package ဝယ်ယူပြီး Owner အတည်ပြုချက်ရယူပါ။</p></div><div class="grid"><div><label>အကောင့် Gmail / Email</label><input id="fbEmail" type="email" value="" autocomplete="username" inputmode="email" onkeydown="if(event.key==='Enter')firebaseLogin()"></div><div><label>Password</label><div class="actions" style="gap:6px;flex-wrap:nowrap"><input id="fbPassword" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')firebaseLogin()" style="min-width:0;flex:1"><button type="button" class="alt" aria-label="Password ပြရန်/ဖျောက်ရန်" onclick="const p=document.getElementById('fbPassword');p.type=p.type==='password'?'text':'password';this.textContent=p.type==='password'?'ပြရန်':'ဖျောက်ရန်'">ပြရန်</button></div></div></div><div class="actions"><button type="button" onclick="firebaseLogin()">Login ဝင်မည်</button><button type="button" id="akRegisterButton" class="alt" onclick="firebaseRegister()">User အကောင့်အသစ်ဖွင့်ရန်</button><button type="button" onclick="firebaseGoogleLogin()">Google ဖြင့် ဝင်မည်</button><button class="alt" type="button" onclick="firebaseResetPassword()">Password မေ့နေပါက</button><button class="alt" type="button" onclick="firebaseLogout()">Logout ထွက်မည်</button></div><p class="muted">Gmail / Email နှင့် Password ကို လုံခြုံစွာ သိမ်းထားပါ။ Password ကို မည်သူ့ကိုမျှ မပေးပါနှင့်။</p><p class="muted" id="fbStatus">Cloud စနစ် အဆင်သင့်ဖြစ်သည်။ Gmail ဖြင့် ဝင်ပါ။</p>
+<div class="panel" id="akAccessRequestPanel" style="margin-top:12px"><h3>Package / အသုံးပြုခွင့်တောင်းရန်</h3><p class="muted">App အတွင်း ငွေပေးချေမှု၊ Transaction ID သို့မဟုတ် Screenshot တင်စနစ် မရှိပါ။ ငွေပေးချေမှုကို App အပြင်တွင် သီးခြားဆောင်ရွက်ပါ။ Platform Owner က စစ်ဆေးပြီး Package အသုံးပြုခွင့်ကို ကိုယ်တိုင်ဖွင့်ပေးမည်။</p><div class="grid"><div><label>အသုံးပြုခွင့်ကာလ</label><select id="payPlan"><option value="30">30 ရက်</option><option value="90">90 ရက်</option><option value="180">180 ရက်</option><option value="365">365 ရက်</option></select></div></div><div class="actions"><button type="button" onclick="akRequestSubscriptionAccess()">အသုံးပြုခွင့်တောင်းမည်</button></div><p id="akAccessRequestStatusPayment" class="muted">Gmail အတည်ပြုပြီး Login ဝင်ထားပါ။ Owner က စစ်ဆေးပြီးမှ POS ကို ဖွင့်ပေးမည်။</p></div><div class="notice" style="margin-top:10px"><b>ဝန်ထမ်း Merchant Code</b><p>အခမဲ့ဗားရှင်းတွင် Cloud Functions မသုံးသဖြင့် ဝန်ထမ်းအကောင့်ချိတ်ဆက်မှုကို ယာယီပိတ်ထားသည်။ လုံခြုံရေးအတွက် Owner Gmail Password ကို ဝန်ထမ်းနှင့် မမျှဝေပါနှင့်။</p><div class="actions"><input id="akMerchantJoinCode" maxlength="10" placeholder="ယာယီပိတ်ထားသည်" style="flex:1;text-transform:uppercase" disabled><button type="button" disabled>မရသေးပါ</button></div></div></div>
+<div class="panel"><h2>အရောင်ဒီဇိုင်း ပြောင်းရန်</h2><p class="muted">ဒီဖုန်း / Browser အတွက် ဆော့ဖ်ဝဲလ် Theme အရောင်ကို ရွေးပါ။</p><label>အရောင် Theme</label><select id="akThemeSelect" onchange="localStorage.setItem('ak_sale_theme_v1',this.value);applyAkTheme()"><option value="green">အစိမ်း</option><option value="blue">အပြာ</option><option value="purple">ခရမ်း</option><option value="orange">လိမ္မော်</option></select></div><div class="panel"><h2>လုပ်ငန်းအမှတ်တံဆိပ်နှင့် တည်နေရာ</h2><div class="grid"><div><label>လုပ်ငန်းအမည် (စနစ်အတွင်း)</label><input id="shopName" placeholder="ဥပမာ - AK Hardware"></div><div><label>ဘောင်ချာပေါ်ပြမည့် ဆိုင်ရှင် / ဆိုင်အမည်</label><input id="receiptName" maxlength="80" placeholder="ဥပမာ - ကိုအောင် / Aung Store"><small class="muted">ဘောင်ချာခေါင်းစီးတွင် AK Hardware အစား ဒီအမည်ကို ပြမည်။</small></div><div><label>ငွေကြေး</label><input id="currency" value="MMK"></div><div><label>မြို့</label><input id="shopCity" placeholder="ဥပမာ - မန္တလေး"></div><div><label>မြို့နယ်</label><input id="shopTownship" placeholder="မြို့နယ်အမည်"></div><div><label>ဆိုင်လိပ်စာ</label><input id="shopAddress" placeholder="လမ်း၊ ရပ်ကွက်၊ အဆောက်အအုံ"></div><div><label>ဆက်သွယ်ရန်ဖုန်း</label><input id="shopPhone" inputmode="tel" placeholder="09xxxxxxxxx"></div><div><label>Logo ပုံ URL (မဖြစ်မနေမဟုတ်)</label><input id="shopLogo" type="url" placeholder="https://..."></div></div><div class="actions"><button onclick="saveShop()">အချက်အလက် သိမ်းမည်</button><button class="red" onclick="clearAll()">ဒေတာအားလုံးဖျက်ရန်</button></div><p class="muted">ဆိုင်ခွဲတစ်ခုချင်းစီ၏ လိပ်စာကို Shopping Center ထဲတွင် သီးခြားသတ်မှတ်နိုင်သည်။</p></div>
 
 </section>
 
@@ -833,11 +880,11 @@ function checkUserRole(user){
 }
 function akApplyRoleNavigation(){
  const role=akUserRole,staff=["manager","cashier","employee"].includes(role);
- const allowed=role==="employee"?["home","sales"]:role==="cashier"?["home","sales","people"]:role==="manager"?["home","products","sales","purchases","people","expenses","reports"]:null;
+ const allowed=role==="employee"?["home","sales"]:role==="cashier"?["home","sales","ads"]:role==="manager"?["home","reports"]:null;
  document.querySelectorAll("#nav button[data-view]").forEach(btn=>{btn.hidden=staff&&!allowed.includes(btn.dataset.view)});
  const ownerBtn=document.querySelector('#nav button[data-view="ownerDashboard"]');if(ownerBtn)ownerBtn.hidden=!["shop-owner","platform-owner"].includes(role);
 }
-function akSetLicenseGate(allowed,message){const locked=!allowed;document.body.classList.toggle("ak-license-locked",locked);const notice=document.getElementById("akPaywallNotice");if(notice){notice.classList.toggle("hidden",!locked);const detail=document.getElementById("akPaywallDetail");if(detail&&message)detail.textContent=message}if(document.body.classList.contains("ak-public")&&!akIsPlatformOwner()){document.querySelectorAll(".view").forEach(x=>x.classList.toggle("active",x.id==="market"));return}if(locked){document.querySelectorAll(".view").forEach(x=>x.classList.toggle("active",x.id==="backup"))}else if(document.getElementById("backup")?.classList.contains("active")){document.querySelectorAll(".view").forEach(x=>x.classList.toggle("active",x.id==="home"));document.querySelectorAll("#nav button").forEach(b=>b.classList.toggle("active",b.dataset.view==="home"))}}
+function akSetLicenseGate(allowed,message){const locked=!allowed;document.body.classList.toggle("ak-license-locked",locked);const notice=document.getElementById("akPaywallNotice");if(notice){notice.classList.toggle("hidden",!locked);const detail=document.getElementById("akPaywallDetail");if(detail&&message)detail.textContent=message}if(document.body.classList.contains("ak-public")){document.querySelectorAll(".view").forEach(x=>x.classList.toggle("active",x.id==="market"));return}if(locked){document.querySelectorAll(".view").forEach(x=>x.classList.toggle("active",x.id==="account"))}else if(document.getElementById("backup")?.classList.contains("active")){document.querySelectorAll(".view").forEach(x=>x.classList.toggle("active",x.id==="home"));document.querySelectorAll("#nav button").forEach(b=>b.classList.toggle("active",b.dataset.view==="home"))}}
 function akApplyAnnouncementAdminVisibility(){const el=document.getElementById("globalAnnouncementAdmin");if(el)el.classList.toggle("hidden",!akIsPlatformOwner())}
 
 function akOfflineSalesKey(){const ownerId=fbAuth?.currentUser?.uid||fbUser?.uid||"guest";return "offline_sales_"+ownerId}
@@ -897,9 +944,41 @@ function persist(){
   akCheckBrowserStorage();akUpdateConnectionUI();
  }catch(e){$("saveState").textContent="သိမ်းဆည်းမှု မအောင်မြင်";alert("ဖုန်းထဲသိမ်းမရပါ။ Storage ပြည့်နေနိုင်သည်။ Backup JSON ထုတ်ပြီး ဓာတ်ပုံ/မလိုအပ်သောဖိုင်များ လျှော့ပါ။");console.error("AK local save failed",e)}
 }
-const pages=[["ownerDashboard","Owner Dashboard"],["home","ပင်မ"],["products","ပစ္စည်း"],["sales","အရောင်း"],["purchases","အဝယ်"],["people","Customer/Supplier"],["expenses","အသုံးစရိတ်"],["reports","အစီရင်ခံစာ"],["ads","ကြော်ငြာ"],["market","AK Market"],["centerManagement","စင်တာထိန်းချုပ်မှု"],["backup","Backup / Settings"]];
+const pages=[["ownerDashboard","Owner Dashboard"],["account","Login / Register"],["payment","ငွေပေးချေမှု"],["staffJoin","Merchant Code"],["staffManagement","ဝန်ထမ်းစီမံမှု"],["home","ပင်မ"],["products","ပစ္စည်း"],["sales","အရောင်း"],["purchases","အဝယ်"],["people","Customer/Supplier"],["expenses","အသုံးစရိတ်"],["reports","အစီရင်ခံစာ"],["ads","ကြော်ငြာ"],["market","AK Market"],["centerManagement","စင်တာထိန်းချုပ်မှု"],["backup","Backup / Settings"]];
 $("nav").innerHTML=pages.map(([id,n])=>'<button type="button" data-view="'+id+'" aria-label="'+n+'" title="'+n+'" onclick="go(\''+id+'\')">'+n+'</button>').join("");
 document.querySelector('#nav [data-view="ownerDashboard"]')?.classList.add("shop-owner-only","hidden");
+/* AK_ACCOUNT_SEPARATION_V2 — keep login, package access, staff join and owner controls in separate views. */
+(function(){
+ const main=document.querySelector("main"),nav=document.getElementById("nav");
+ if(!main||!nav||document.getElementById("account"))return;
+ function view(id,title,cls=""){const el=document.createElement("section");el.id=id;el.className="view "+cls;el.innerHTML='<div class="panel"><h2>'+title+'</h2></div>';main.insertBefore(el,main.querySelector("#home"));return el}
+ const account=view("account","အကောင့်ဝင်ရန် / Register");
+ const payment=view("payment","Package / Access");
+ const staffJoin=view("staffJoin","ဝန်ထမ်း Merchant Code ချိတ်ဆက်ရန်");
+ const staffManagement=view("staffManagement","ဆိုင်ရှင် · ဝန်ထမ်းစီမံခန့်ခွဲမှု","shop-owner-only");
+ 
+ const fb=document.getElementById("akFirebasePanel");
+ if(fb){
+  const customerPay=document.getElementById("akAccessRequestPanel");
+  const join=document.getElementById("akMerchantJoinCode")?.closest(".notice");
+  if(customerPay)payment.appendChild(customerPay);
+  if(join)staffJoin.appendChild(join);
+  account.appendChild(fb);
+ }
+ const staff=document.getElementById("akOwnerStaffPanel");
+ if(staff)staffManagement.appendChild(staff);
+
+ /* Navigation entries are created once from the POS page registry above. */
+ const ownerBtn=nav.querySelector('[data-view="ownerDashboard"]');
+ if(ownerBtn)ownerBtn.classList.add("shop-owner-only");
+ const staffBtn=nav.querySelector('[data-view="staffManagement"]');if(staffBtn)staffBtn.classList.add("shop-owner-only");
+
+ const style=document.createElement("style");
+ style.textContent='body.ak-license-locked #nav button:not([data-view="market"]):not([data-view="backup"]):not([data-view="account"]):not([data-view="payment"]):not([data-view="staffJoin"]){display:none!important} body.ak-license-locked main>.view{display:none!important} body.ak-license-locked main>#market.view.active,body.ak-license-locked main>#account.view.active,body.ak-license-locked main>#payment.view.active,body.ak-license-locked main>#staffJoin.view.active{display:block!important} html.ak-public-market #nav,html.ak-public-market main>.view:not(#market){display:none!important}';
+ document.head.appendChild(style);
+ if(document.body.classList.contains("ak-license-locked")){document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id==="account"));document.querySelectorAll("#nav button").forEach(b=>b.classList.toggle("active",b.dataset.view==="account"));}
+})();
+
 function akInitOwnerDashboard(){const host=document.getElementById("akOwnerDashboardPanels");if(!host)return;["akOwnerPromoPanel","akLicensePanel"].forEach(id=>{const el=document.getElementById(id);if(el&&el.parentElement!==host)host.appendChild(el)})}
 akInitOwnerDashboard();
 const AK_I18N_MY_EN={
@@ -933,9 +1012,11 @@ $("akLanguageBtn").addEventListener("click",()=>{akLanguage=akLanguage==="en"?"m
 /* Avoid observing every DOM mutation: large POS tables caused repeated full-page translation scans. */
 akApplyLanguage();
 function go(id){
- if(id==="ownerDashboard"&&!["shop-owner","platform-owner"].includes(akUserRole)){alert("ဆိုင်ရှင်အကောင့်ဖြင့်သာ ဝင်နိုင်သည်။");id="home"}
- if(["manager","cashier","employee"].includes(akUserRole)){const allowed=akUserRole==="employee"?["home","sales"]:akUserRole==="cashier"?["home","sales","people"]:["home","products","sales","purchases","people","expenses","reports"];if(!allowed.includes(id)){alert("ဤလုပ်ဆောင်ချက်ကို သင့်ရာထူးအတွက် ခွင့်မပြုထားပါ။");id="home"}}
- const publicViews=["backup","market"];
+ if(["staffManagement"].includes(id)&&akUserRole!=="shop-owner"){alert("ဝန်ထမ်းစီမံမှုကို ဆိုင်ရှင်သာ အသုံးပြုနိုင်သည်။");id="account"}
+ 
+ if(id==="ownerDashboard"&&!["shop-owner","platform-owner"].includes(akUserRole)){alert("ဆိုင်ရှင်အကောင့်ဖြင့်သာ ဝင်နိုင်သည်။");id="account"}
+ if(["manager","cashier","employee"].includes(akUserRole)){const allowed=akUserRole==="employee"?["home","sales"]:akUserRole==="cashier"?["home","sales","ads"]:["home","reports"];if(!allowed.includes(id)){alert("ဤလုပ်ဆောင်ချက်ကို သင့်ရာထူးအတွက် ခွင့်မပြုထားပါ။");id="home"}}
+ const publicViews=["backup","market","account","payment","staffJoin"];
  if(document.body.classList.contains("ak-license-locked")&&!publicViews.includes(id)){
   alert("ဆိုင်သုံး POS ကို အသုံးပြုရန် Login နှင့် အသုံးပြုခွင့်လိုအပ်သည်။ AK Market၊ အတည်ပြုဆိုင်စာရင်းနှင့် ကြော်ငြာများကို အများပြည်သူ ကြည့်ရှုနိုင်သည်။");
   id="market";
@@ -954,6 +1035,8 @@ function go(id){
  const activeNav=document.querySelector('#nav button[data-view="'+id+'"]');
  if(activeNav&&window.matchMedia("(max-width: 650px)").matches)activeNav.scrollIntoView({block:"nearest",inline:"nearest",behavior:"smooth"});
  renderAll();
+ if(id==="ownerDashboard"&&akIsPlatformOwner()){loadAdminAccessRequests();loadPlatformUsers();}
+ if(id==="ownerDashboard"&&akUserRole==="shop-owner"){akLoadStaff();}
  if(id==="sales"){
   const scanInput=document.getElementById("saleBarcodeInput");
   if(scanInput)requestAnimationFrame(()=>scanInput.focus());
@@ -980,10 +1063,18 @@ async function akBuildProductPromo(){
 async function akShareProductToViber(){
  try{
   const p=await akBuildProductPromo(),file=new File([p.blob],"AK-Product-"+Date.now()+".png",{type:"image/png"});
+  // Native Android share sheet reliably exposes the generated image to Viber and other installed apps.
+  const native=window.Capacitor?.isNativePlatform?.() && window.Capacitor?.Plugins?.AkPrinter?.shareReceiptImage;
+  if(native){
+   const dataUrl=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result||""));r.onerror=()=>reject(Error("ပုံဖတ်မရပါ"));r.readAsDataURL(p.blob)});
+   await window.Capacitor.Plugins.AkPrinter.shareReceiptImage({data:dataUrl.split(",")[1],fileName:"AK-Product-"+Date.now()+".png",text:p.caption,title:p.name});
+   try{await navigator.clipboard.writeText(p.caption)}catch(_){}
+   return;
+  }
   if(navigator.canShare?.({files:[file]})){await navigator.share({files:[file],title:p.name,text:p.caption});return}
   const url=URL.createObjectURL(p.blob),a=document.createElement("a");a.href=url;a.download="AK-Product-Ad.png";a.click();setTimeout(()=>URL.revokeObjectURL(url),2000);
   try{await navigator.clipboard.writeText(p.caption)}catch(_){}
-  alert("ကြော်ငြာပုံကို သိမ်းပြီး စာသားကို Copy လုပ်ထားပါပြီ။ Viber ဖွင့်ပြီး ကိုယ့် Channel ထဲတွင် ပုံနှင့်စာကို Post တင်ပါ။");
+  alert("ကြော်ငြာပုံကို သိမ်းပြီး စာသားကို Copy လုပ်ထားပါပြီ။ Viber Channel ထဲသို့ Share Sheet မှတစ်ဆင့် တင်ပါ။");
  }catch(e){if(e.name!=="AbortError")alert("Viber ကြော်ငြာပြင်ဆင်မရပါ: "+e.message)}
 }
 async function akSendProductToMarket(){
@@ -1004,29 +1095,51 @@ function resetProduct(){ $("productForm").reset();$("pId").value="";$("pUnit").v
 let akBarcodeStream=null,akBarcodeActive=false;
 async function akStopBarcodeScanner(){
  akBarcodeActive=false;
+ if(akBarcodeReader){try{akBarcodeReader.reset()}catch(e){}akBarcodeReader=null;}
  if(akBarcodeStream){akBarcodeStream.getTracks().forEach(t=>t.stop());akBarcodeStream=null;}
  const box=document.getElementById("akBarcodeScanner");if(box)box.remove();
 }
-async function akStartBarcodeScanner(target="product"){
- if(!navigator.mediaDevices?.getUserMedia||typeof window.BarcodeDetector==="undefined"){
-  alert("ဒီ Browser တွင် Camera Barcode API မရသေးပါ။ Chrome ကို Update လုပ်ပြီး HTTPS link မှဖွင့်ပါ။ Bluetooth/USB HID Scanner ကိုလည်း Scan အကွက်တွင် သုံးနိုင်သည်။");
-  return;
- }
+let akBarcodeReader=null;
+async function akLoadZxingFallback(){
+ if(window.ZXing?.BrowserMultiFormatReader)return window.ZXing;
+ if(window.akZxingLoadPromise)return window.akZxingLoadPromise;
+ window.akZxingLoadPromise=new Promise((resolve,reject)=>{
+  const s=document.createElement("script");s.src="https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js";s.async=true;
+  s.onload=()=>window.ZXing?.BrowserMultiFormatReader?resolve(window.ZXing):reject(Error("ZXing Scanner library မရပါ"));
+  s.onerror=()=>reject(Error("Scanner library အတွက် Internet မရပါ။"));document.head.appendChild(s);
+ });
+ return window.akZxingLoadPromise;
+}
+async function akStartBarcodeScanner(target="product",cameraId=""){
+ if(!navigator.mediaDevices?.getUserMedia){alert("ဒီဖုန်း Browser မှာ Camera API မရပါ။ App ကို update လုပ်ပြီး Camera Permission ဖွင့်ပါ။");return;}
  await akStopBarcodeScanner();
- const box=document.createElement("div");box.id="akBarcodeScanner";box.style.cssText="position:fixed;inset:0;background:#06152bee;z-index:99999;display:grid;place-items:center;padding:18px";
- box.innerHTML='<div style="background:white;border-radius:16px;padding:14px;width:min(100%,520px);color:#172820"><h3>Barcode / QR Scanner</h3><video id="akBarcodeVideo" autoplay muted playsinline style="width:100%;border-radius:12px;background:#111;min-height:220px"></video><p id="akBarcodeStatus">ကင်မရာကို စတင်နေသည်…</p><button type="button" id="akBarcodeClose">ပိတ်မည်</button></div>';
+ const box=document.createElement("div");box.id="akBarcodeScanner";box.style.cssText="position:fixed;inset:0;background:#06152bee;z-index:99999;display:grid;place-items:center;padding:12px;overflow:auto";
+ box.innerHTML='<div style="background:white;border-radius:16px;padding:14px;width:min(100%,560px);color:#172820"><h3>ဖုန်းကင်မရာအားလုံး · Barcode / QR Scanner</h3><label for="akCameraSelect">အသုံးပြုမည့် ကင်မရာ</label><select id="akCameraSelect" style="width:100%;padding:10px;margin:6px 0 10px"><option value="">အလိုအလျောက်ရွေးရန်</option></select><video id="akBarcodeVideo" autoplay muted playsinline style="width:100%;border-radius:12px;background:#111;min-height:220px;object-fit:contain"></video><p id="akBarcodeStatus">ကင်မရာစတင်နေသည်…</p><small>QR · EAN · UPC · Code 128 · Code 39 · ITF · Data Matrix (ဖုန်း/Browser ပံ့ပိုးမှုအလိုက်)</small><br><button type="button" id="akBarcodeClose">ပိတ်မည်</button></div>';
  document.body.appendChild(box);document.getElementById("akBarcodeClose").onclick=akStopBarcodeScanner;
  try{
-  const supported=await BarcodeDetector.getSupportedFormats();
-  const wanted=["ean_13","ean_8","upc_a","upc_e","code_128","code_39","qr_code","itf","codabar"];
-  const formats=wanted.filter(x=>supported.includes(x));
-  if(!formats.length)throw Error("ဒီဖုန်းမှာ ဖတ်နိုင်သော Barcode format မတွေ့ပါ");
-  akBarcodeStream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:"environment"}}});
-  const video=document.getElementById("akBarcodeVideo");video.srcObject=akBarcodeStream;await video.play();
-  const detector=new BarcodeDetector({formats});akBarcodeActive=true;
-  const scan=async()=>{if(!akBarcodeActive)return;try{const codes=await detector.detect(video);if(codes.length&&codes[0].rawValue){const code=codes[0].rawValue;await akStopBarcodeScanner();if(target==="sale")akAddScannedSaleProduct(code);else{document.getElementById("pCode").value=code;document.getElementById("pName").focus();}return;}}catch(e){}if(akBarcodeActive)requestAnimationFrame(scan);};
-  requestAnimationFrame(scan);
- }catch(e){await akStopBarcodeScanner();alert("ကင်မရာဖွင့်/Scan မရပါ။ Camera Permission ခွင့်ပြုပါ။ "+(e.message||""));}
+  const constraints={audio:false,video:cameraId?{deviceId:{exact:cameraId},width:{ideal:1920},height:{ideal:1080}}:{facingMode:{ideal:"environment"},width:{ideal:1920},height:{ideal:1080}}};
+  akBarcodeStream=await navigator.mediaDevices.getUserMedia(constraints);
+  const video=document.getElementById("akBarcodeVideo");video.srcObject=akBarcodeStream;await video.play();akBarcodeActive=true;
+  const select=document.getElementById("akCameraSelect");
+  const devices=await navigator.mediaDevices.enumerateDevices();
+  const cameras=devices.filter(d=>d.kind==="videoinput");
+  select.innerHTML="";
+  cameras.forEach((d,i)=>{const o=document.createElement("option");o.value=d.deviceId;o.textContent=d.label||("Camera "+(i+1));select.appendChild(o)});
+  if(cameraId)select.value=cameraId;
+  else if(cameras.length){const track=akBarcodeStream.getVideoTracks()[0];const current=track?.getSettings?.().deviceId;if(current)select.value=current;}
+  select.onchange=()=>{const id=select.value;if(id)akStartBarcodeScanner(target,id);};
+  const accept=async code=>{if(!akBarcodeActive||!code)return;await akStopBarcodeScanner();if(target==="sale"){akAddScannedSaleProduct(code);return;}const clean=String(code).trim();const existing=db.products.find(p=>String(p.code||"").trim().toLowerCase()===clean.toLowerCase());if(existing){editProduct(existing.id);alert("ဒီ Barcode ရှိပြီးသားဖြစ်သည်။ ပစ္စည်းအချက်အလက်ကို ဖွင့်ထားပါပြီ။");return;}const input=document.getElementById("pCode");if(input)input.value=clean;document.getElementById("pName")?.focus();};
+  if("BarcodeDetector" in window){
+   const supported=await BarcodeDetector.getSupportedFormats();
+   const wanted=["qr_code","ean_13","ean_8","upc_a","upc_e","code_128","code_39","itf","data_matrix","codabar","pdf417","aztec"];
+   const formats=wanted.filter(x=>supported.includes(x));
+   if(formats.length){const detector=new BarcodeDetector({formats});const scan=async()=>{if(!akBarcodeActive)return;try{const codes=await detector.detect(video);if(codes.length&&codes[0].rawValue){await accept(codes[0].rawValue);return;}}catch(e){}if(akBarcodeActive)requestAnimationFrame(scan);};const status=document.getElementById("akBarcodeStatus");if(status)status.textContent="ကင်မရာအသင့် · ဖုန်းက ပံ့ပိုးသော "+formats.length+" မျိုး Scan ဖတ်နေသည်";requestAnimationFrame(scan);return;}
+  }
+  const ZX=await akLoadZxingFallback();if(!akBarcodeActive)return;
+  akBarcodeReader=new ZX.BrowserMultiFormatReader();
+  const status=document.getElementById("akBarcodeStatus");if(status)status.textContent="Multi-format Scanner အသင့် · QR / EAN / UPC / Code128 / Code39 စသည်";
+  akBarcodeReader.decodeFromVideoElement(video,(result,error)=>{if(result&&result.getText)accept(result.getText());});
+ }catch(e){await akStopBarcodeScanner();alert("ဖုန်းကင်မရာဖွင့်မရပါ။ Camera Permission ဖွင့်ပြီး အခြား App များက ကင်မရာသုံးနေပါက ပိတ်ပါ။ "+(e.message||""));}
 }
 document.getElementById("akScanBarcodeBtn")?.addEventListener("click",()=>akStartBarcodeScanner("product"));
 document.getElementById("akSaleScanBtn")?.addEventListener("click",()=>akStartBarcodeScanner("sale"));
@@ -1078,7 +1191,52 @@ function editProduct(id){let p=db.products.find(x=>x.id===id);if(!p)return;for(l
 function removeProduct(id){if(confirm("ဒီပစ္စည်းကို ဖျက်မလား။")){db.products=db.products.filter(x=>x.id!==id);persist()}}
 function renderProducts(){let q=($("productQuery").value||"").toLowerCase();$("productRows").innerHTML=db.products.filter(p=>(p.name+" "+p.code+" "+p.category).toLowerCase().includes(q)).map(p=>`<tr><td>${p.photo?`<img class="thumb" src="${p.photo}">`:"-"}</td><td>${esc(p.name)}<div class="muted">${esc(p.category)}</div></td><td>${esc(p.code)}</td><td>${p.stock} ${esc(p.unit)} ${Number(p.minStock)>0&&Number(p.stock)<=Number(p.minStock)?"⚠ လက်ကျန်နည်း":""}</td><td>${money(p.cost)}</td><td>${money(p.retail??p.price)}</td><td>${money(p.wholesale??p.price)}</td><td><button onclick="editProduct('${p.id}')">ပြင်</button> <button class="red" onclick="removeProduct('${p.id}')">ဖျက်</button></td></tr>`).join("")}
 
+function downloadProductCsvTemplate(){const headers=["Product","SKU / Barcode","Category","Unit","Cost","Retail Price","Wholesale Price","Stock","Minimum Stock"];const blob=new Blob([String.fromCharCode(65279)+headers.join(",")+String.fromCharCode(13,10)],{type:"text/csv;charset=utf-8"});const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="AK-Product-Import-Template.csv";a.click();setTimeout(()=>URL.revokeObjectURL(url),1500);alert("CSV Template ကို Excel / Google Sheets ဖြင့်ဖွင့်ပြီး ပစ္စည်းအချက်အလက်၊ Barcode၊ Category၊ ဝယ်ဈေး၊ လက်လီ/လက်ကားဈေးနှုန်းနှင့် လက်ကျန်ကို တစ်ကြိမ်ဖြည့်ပါ။ ပြီးလျှင် CSV အစုလိုက်ထည့်ရန်မှ Import လုပ်ပါ။ နောက်ပိုင်း Barcode Scan ဖတ်ရုံဖြင့် ဒီစာရင်းမှ အချက်အလက်နှင့် ဈေးနှုန်းကို အလိုအလျောက်ယူမည်။")}
 function exportProductsCsv(){if(!db.products.length){alert("ပစ္စည်းစာရင်း မရှိသေးပါ");return}const fields=["name","code","category","unit","cost","retail","wholesale","stock","minStock"];const headers=["Product","SKU / Barcode","Category","Unit","Cost","Retail Price","Wholesale Price","Stock","Minimum Stock"];const cell=v=>'"'+String(v??"").replace(/"/g,'""')+'"';const rows=[headers.map(cell).join(","),...db.products.map(p=>fields.map(k=>cell(p[k]??((k==="retail"||k==="wholesale")?p.price??"": ""))).join(","))];const blob=new Blob(["\uFEFF"+rows.join("\r\n")],{type:"text/csv;charset=utf-8"});const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="AK-Products-"+dateKey(dateNow())+".csv";a.click();setTimeout(()=>URL.revokeObjectURL(url),1500)}
+function akParseCsv(text){
+ const rows=[];let row=[],field="",quoted=false;
+ text=String(text||"").replace(/^\\uFEFF/,"");
+ for(let i=0;i<text.length;i++){
+  const ch=text[i],next=text[i+1];
+  if(quoted){if(ch==='"'&&next==='"'){field+='"';i++}else if(ch==='"')quoted=false;else field+=ch}
+  else if(ch==='"'&&field==="")quoted=true;
+  else if(ch===","){row.push(field);field=""}
+  else if(ch==="\\n"){row.push(field);if(row.some(v=>String(v).trim()!==""))rows.push(row);row=[];field=""}
+  else if(ch!=="\\r")field+=ch;
+ }
+ if(quoted)throw Error("CSV ထဲတွင် Quote ပိတ်မထားသော အကွက်ရှိသည်။");
+ row.push(field);if(row.some(v=>String(v).trim()!==""))rows.push(row);
+ return rows;
+}
+async function importProductsCsv(ev){
+ const file=ev.target.files?.[0];if(!file)return;
+ try{
+  if(file.size>8*1024*1024)throw Error("CSV ဖိုင် 8MB အောက်သာ ထည့်နိုင်သည်။");
+  const rows=akParseCsv(await file.text());if(rows.length<2)throw Error("Header နှင့် ပစ္စည်းစာရင်း အနည်းဆုံး တစ်ကြောင်း လိုအပ်သည်။");
+  const headers=rows[0].map(v=>String(v||"").trim().toLowerCase().replace(/[\\s_]+/g," "));
+  const aliases={name:["product","product name","name","ပစ္စည်း","ပစ္စည်းအမည်"],code:["sku / barcode","barcode","sku","code","product code","ကုဒ်","ဘားကုဒ်"],category:["category","type","အမျိုးအစား"],unit:["unit","ယူနစ်"],cost:["cost","buy price","purchase price","ဝယ်ဈေး"],retail:["retail price","retail","sale price","price","လက်လီဈေး"],wholesale:["wholesale price","wholesale","လက်ကားဈေး"],stock:["stock","qty","quantity","လက်ကျန်"],minStock:["minimum stock","min stock","reorder level","အနည်းဆုံးလက်ကျန်"]};
+  const index={};for(const [key,names] of Object.entries(aliases)){index[key]=headers.findIndex(h=>names.includes(h))}
+  if(index.name<0)throw Error("Product / Product Name အမည်ကော်လံ မတွေ့ပါ။ CSV ထုတ်ရန်ခလုတ်မှ Sample Header ကို အသုံးပြုပါ။");
+  const seen=new Set(),incoming=[];
+  const num=(v,label)=>{const raw=String(v??"").trim().replace(/,/g,"");if(!raw)return 0;const n=Number(raw);if(!Number.isFinite(n)||n<0)throw Error(label+" တန်ဖိုး မမှန်ပါ: "+raw);return n};
+  for(let ri=1;ri<rows.length;ri++){
+   const cells=rows[ri],get=k=>index[k]>=0?String(cells[index[k]]??"").trim():"";
+   const name=get("name");if(!name)continue;
+   const code=get("code"),key=code.toLowerCase();if(key&&seen.has(key))throw Error("CSV ထဲတွင် Barcode ထပ်နေသည်: "+code);if(key)seen.add(key);
+   incoming.push({name,code,category:get("category"),unit:get("unit")||"ခု",cost:num(get("cost"),"ဝယ်ဈေး"),retail:num(get("retail"),"လက်လီဈေး"),wholesale:num(get("wholesale"),"လက်ကားဈေး"),stock:num(get("stock"),"လက်ကျန်"),minStock:num(get("minStock"),"အနည်းဆုံးလက်ကျန်")});
+  }
+  if(!incoming.length)throw Error("ထည့်သွင်းနိုင်သော ပစ္စည်းအချက်အလက် မတွေ့ပါ။");
+  const matches=incoming.filter(x=>x.code&&db.products.some(p=>String(p.code||"").trim().toLowerCase()===x.code.toLowerCase())).length;
+  if(!confirm("CSV မှ ပစ္စည်း "+incoming.length+" မျိုး ဖတ်ပြီးပါပြီ။ Barcode တူပြီးသား "+matches+" မျိုးကို Update လုပ်မည်၊ ကျန် "+(incoming.length-matches)+" မျိုးကို အသစ်ထည့်မည်။ ဆက်လုပ်မလား။"))return;
+  for(const item of incoming){
+   const existing=item.code?db.products.find(p=>String(p.code||"").trim().toLowerCase()===item.code.toLowerCase()):null;
+   if(existing)Object.assign(existing,item,{retail:item.retail,wholesale:item.wholesale,price:item.retail});
+   else db.products.push({id:uid(),...item,price:item.retail,photo:""});
+  }
+  persist();ev.target.value="";
+  alert("CSV အစုလိုက်ထည့်သွင်းပြီးပါပြီ။ စုစုပေါင်း "+incoming.length+" မျိုး · Barcode တူပြီးသား "+matches+" မျိုး Update လုပ်ပြီးပါပြီ။");
+ }catch(e){alert("CSV ထည့်သွင်းမရပါ: "+(e.message||e));ev.target.value=""}
+}
 function productOptions(){let opts=db.products.map(p=>`<option value="${p.id}">${esc(p.name)} · ${p.stock} ${esc(p.unit)}</option>`).join("");$("sProduct").innerHTML=opts;$("bProduct").innerHTML=opts}
 $("sProduct").addEventListener("change",setSalePrice);$("sType").addEventListener("change",setSalePrice);
 function setSalePrice(){let p=db.products.find(x=>x.id===$("sProduct").value);if(p)$("sPrice").value=$("sType").value==="wholesale"?(p.wholesale??p.price):(p.retail??p.price)}
@@ -1086,8 +1244,9 @@ $("saleLines").addEventListener("change",e=>{const row=e.target.closest(".sale-l
 $("sPayType").addEventListener("change",()=>{let total=+$("sQty").value*+$("sPrice").value;$("sPaid").value=$("sPayType").value==="full"?total:0});
 function addSaleLine(){const root=$("saleLines"),first=root.querySelector(".sale-line"),row=first.cloneNode(true);row.querySelectorAll("[id]").forEach(x=>x.removeAttribute("id"));row.querySelectorAll("input").forEach(x=>x.value=x.classList.contains("sale-qty")?"1":"0");row.querySelectorAll("select").forEach(x=>x.selectedIndex=0);root.appendChild(row)}
 function removeSaleLine(btn){const root=$("saleLines"),rows=root.querySelectorAll(".sale-line");if(rows.length<=1){alert("အနည်းဆုံး ပစ္စည်းတစ်မျိုး လိုအပ်သည်။");return}btn.closest(".sale-line").remove();const first=root.querySelector(".sale-line");if(!$("sProduct")){first.querySelector(".sale-product").id="sProduct";first.querySelector(".sale-type").id="sType";first.querySelector(".sale-qty").id="sQty";first.querySelector(".sale-price").id="sPrice"}}
-$("saleForm").addEventListener("submit",e=>{e.preventDefault();const lines=[];for(const row of $("saleLines").querySelectorAll(".sale-line")){const productId=row.querySelector(".sale-product").value,p=db.products.find(x=>x.id===productId),qty=Number(row.querySelector(".sale-qty").value),price=Number(row.querySelector(".sale-price").value);if(!p)return alert("ပစ္စည်းအရင်ထည့်ပါ");if(!Number.isFinite(qty)||qty<=0||qty>Number(p.stock))return alert(p.name+" လက်ကျန်မလုံလောက်ပါ");if(!Number.isFinite(price)||price<0)return alert("ရောင်းဈေး မှန်ကန်စွာထည့်ပါ");lines.push({productId:p.id,productName:p.name,qty,price,total:qty*price,cost:qty*Number(p.cost||0)})}if(!lines.length)return alert("ပစ္စည်းထည့်ပါ");const quantities={};for(const line of lines)quantities[line.productId]=(quantities[line.productId]||0)+line.qty;for(const [id,qty] of Object.entries(quantities)){const p=db.products.find(x=>x.id===id);if(!p||qty>Number(p.stock))return alert((p?.name||"ပစ္စည်း")+" စုစုပေါင်းလက်ကျန် မလုံလောက်ပါ");}const total=lines.reduce((a,x)=>a+x.total,0),cost=lines.reduce((a,x)=>a+x.cost,0),paid=$("sPayType").value==="full"?total:($("sPayType").value==="credit"?0:Number($("sPaid").value));if(!Number.isFinite(paid)||paid<0||paid>total)return alert("ပေးငွေမှန်ကန်စွာထည့်ပါ");for(const line of lines){const p=db.products.find(x=>x.id===line.productId);p.stock-=line.qty}const first=lines[0];const transaction={id:uid(),date:dateNow(),invoice:"AK-"+Date.now().toString().slice(-8),lines,productId:first.productId,productName:lines.map(x=>x.productName).join(", "),qty:lines.reduce((a,x)=>a+x.qty,0),price:first.price,total,cost,customer:$("sCustomer").value.trim(),paid,due:total-paid,note:$("sNote").value.trim(),isSynced:false};db.sales.unshift(transaction);saveLocalTransaction(transaction);persist();$("saleForm").reset();$("sQty").value=1;$("sPaid").value=0;const root=$("saleLines");while(root.querySelectorAll(".sale-line").length>1)root.lastElementChild.remove();alert("အရောင်းဘောင်ချာ သိမ်းပြီးပါပြီ")});
-function renderSales(){$("saleRows").innerHTML=db.sales.map(s=>`<tr><td>${new Date(s.date).toLocaleString()}</td><td>${esc(s.invoice)}</td><td>${esc(s.customer)}</td><td>${money(s.total)}</td><td>${money(s.paid)}</td><td>${money(s.due)}</td><td><div class="actions"><button onclick="receipt('${s.id}')">ဘောင်ချာ Print</button><button type="button" class="alt" onclick="shareReceiptImage('${s.id}')">ဘောင်ချာပုံ Viber ပို့</button></div></td></tr>`).join("")}
+$("saleForm").addEventListener("submit",e=>{e.preventDefault();const lines=[];for(const row of $("saleLines").querySelectorAll(".sale-line")){const productId=row.querySelector(".sale-product").value,p=db.products.find(x=>x.id===productId),qty=Number(row.querySelector(".sale-qty").value),price=Number(row.querySelector(".sale-price").value);if(!p)return alert("ပစ္စည်းအရင်ထည့်ပါ");if(!Number.isFinite(qty)||qty<=0||qty>Number(p.stock))return alert(p.name+" လက်ကျန်မလုံလောက်ပါ");if(!Number.isFinite(price)||price<0)return alert("ရောင်းဈေး မှန်ကန်စွာထည့်ပါ");lines.push({productId:p.id,productName:p.name,qty,price,total:qty*price,cost:qty*Number(p.cost||0)})}if(!lines.length)return alert("ပစ္စည်းထည့်ပါ");const quantities={};for(const line of lines)quantities[line.productId]=(quantities[line.productId]||0)+line.qty;for(const [id,qty] of Object.entries(quantities)){const p=db.products.find(x=>x.id===id);if(!p||qty>Number(p.stock))return alert((p?.name||"ပစ္စည်း")+" စုစုပေါင်းလက်ကျန် မလုံလောက်ပါ");}const total=lines.reduce((a,x)=>a+x.total,0),cost=lines.reduce((a,x)=>a+x.cost,0),paid=$("sPayType").value==="full"?total:($("sPayType").value==="credit"?0:Number($("sPaid").value));if(!Number.isFinite(paid)||paid<0||paid>total)return alert("ပေးငွေမှန်ကန်စွာထည့်ပါ");for(const line of lines){const p=db.products.find(x=>x.id===line.productId);p.stock-=line.qty}const first=lines[0];const transaction={id:uid(),date:dateNow(),invoice:"AK-"+Date.now().toString().slice(-8),lines,productId:first.productId,productName:lines.map(x=>x.productName).join(", "),qty:lines.reduce((a,x)=>a+x.qty,0),price:first.price,total,cost,customer:$("sCustomer").value.trim(),paid,due:total-paid,note:$("sNote").value.trim(),isSynced:false};db.sales.unshift(transaction);saveLocalTransaction(transaction);persist();if(localStorage.getItem("ak_sale_auto_print_after_sale")==="on"){try{receipt(transaction.id,localStorage.getItem("ak_sale_printer_paper")||"80mm")}catch(printError){console.error("Auto receipt print failed",printError);const printStatus=document.getElementById("akPrinterStatus");if(printStatus)printStatus.textContent="Auto Print မအောင်မြင်ပါ: "+(printError.message||printError)}}$("saleForm").reset();$("sQty").value=1;$("sPaid").value=0;const root=$("saleLines");while(root.querySelectorAll(".sale-line").length>1)root.lastElementChild.remove();alert("အရောင်းဘောင်ချာ သိမ်းပြီးပါပြီ။ နောက်ဖောက်သည်အတွက် အသင့်ဖြစ်ပါပြီ။");startNextCustomer(false)});
+function startNextCustomer(confirmDiscard=true){const form=$("saleForm");if(!form)return;if(confirmDiscard){const hasItems=Array.from($("saleLines").querySelectorAll(".sale-line")).some(row=>row.querySelector(".sale-product").value||Number(row.querySelector(".sale-qty").value)>1||Number(row.querySelector(".sale-price").value)>0);const hasCustomer=$("sCustomer").value.trim()||$("sNote").value.trim();if((hasItems||hasCustomer)&&!confirm("လက်ရှိမသိမ်းရသေးသော အရောင်းစာရင်းကို ရှင်းပြီး နောက်ဖောက်သည်အတွက် အသစ်စမလား။"))return;}form.reset();const root=$("saleLines");while(root.querySelectorAll(".sale-line").length>1)root.lastElementChild.remove();const first=root.querySelector(".sale-line");first.querySelector(".sale-qty").value="1";first.querySelector(".sale-price").value="0";$("sPaid").value="0";$("sPayType").value="full";$("saleBarcodeInput").value="";$("akNextCustomerStatus").textContent="နောက်ဖောက်သည်အတွက် အရောင်းအသစ် အသင့်ဖြစ်ပါပြီ။";const scan=$("saleBarcodeInput");if(scan)setTimeout(()=>scan.focus(),80)}
+function renderSales(){$("saleRows").innerHTML=db.sales.map(s=>`<tr><td>${new Date(s.date).toLocaleString()}</td><td>${esc(s.invoice)}</td><td>${esc(s.customer)}</td><td>${money(s.total)}</td><td>${money(s.paid)}</td><td>${money(s.due)}</td><td><div class="actions"><button onclick="receipt('${s.id}')">ဘောင်ချာ Print</button><button type="button" class="alt" onclick="shareReceiptImage('${s.id}','viber')">Viber ဘောင်ချာ</button><button type="button" class="alt" onclick="shareReceiptImage('${s.id}','facebook')">Facebook ဘောင်ချာ</button><button type="button" class="alt" onclick="shareReceiptImage('${s.id}','telegram')">Telegram ဘောင်ချာ</button><button type="button" class="alt" onclick="shareReceiptImage('${s.id}','thermer')">Thermer / Printer</button></div></td></tr>`).join("")}
 function akCreatePrintWindow(){try{const frame=document.createElement("iframe");frame.setAttribute("aria-hidden","true");frame.style.cssText="position:fixed;right:0;bottom:0;width:1px;height:1px;border:0;opacity:0";document.body.appendChild(frame);const win=frame.contentWindow;if(!win)return null;return {document:win.document,print:()=>{try{win.focus();win.print()}catch(e){alert("ဒီ Android WebView မှာ Print Service မရသေးပါ။ Chrome သို့မဟုတ် Android Print Service ကို သုံးပါ။")}}}}catch(e){return null}}
 function akBuildReceiptEscPos(s,paper="80mm"){
  const width=paper==="58mm"?384:576,pad=18,contentWidth=width-pad*2;
@@ -1097,7 +1256,7 @@ function akBuildReceiptEscPos(s,paper="80mm"){
  const push=(text,size=20,bold=false,align="left")=>lines.push({text:String(text??""),size,bold,align});
  const wrap=(text,size,bold=false)=>{ctx.font=(bold?"bold ":"")+size+"px 'Noto Sans Myanmar',Arial,sans-serif";const value=String(text??"");const parts=typeof Intl.Segmenter==="function"?Array.from(new Intl.Segmenter("my",{granularity:"grapheme"}).segment(value),x=>x.segment):Array.from(value);let line="";for(const part of parts){if(line&&ctx.measureText(line+part).width>contentWidth){push(line,size,bold);line=part}else line+=part}if(line)push(line,size,bold)};
  const shop=db.shop||{},date=new Date(s.date);
- push(shop.name||"AK Sale",28,true,"center");
+ push(shop.receiptName||shop.name||"AK Sale",28,true,"center");
  [ [shop.city,shop.township].filter(Boolean).join(" · "),shop.address,shop.phone?"ဖုန်း: "+shop.phone:"" ].filter(Boolean).forEach(x=>wrap(x,18));
  push("--------------------------------",17,false,"center");
  wrap("ဘောင်ချာ: "+(s.invoice||""),19,true);
@@ -1147,7 +1306,7 @@ function receipt(id,paper="80mm"){
  @media print{body{padding:0}.receipt{max-width:none;width:100%}.actions{display:none}@page{size:${paper==="A4"?"A4":(paper==="58mm"?"58mm auto":"80mm auto")};margin:${paper==="A4"?"10mm":"2mm"}}}
  </style></head><body><main class="receipt">
  ${safeLogo?'<img class="logo" src="'+esc(safeLogo)+'" alt="Shop logo">':""}
- <header class="center"><h1>${esc(shop.name||"AK Sale")}</h1>
+ <header class="center"><h1>${esc(shop.receiptName||shop.name||"AK Sale")}</h1>
  ${shop.city||shop.township?'<p class="muted">'+esc([shop.city,shop.township].filter(Boolean).join(" · "))+'</p>':""}
  ${shop.address?'<p class="muted">'+esc(shop.address)+'</p>':""}
  ${shop.phone?'<p class="muted">ဖုန်း: '+esc(shop.phone)+'</p>':""}</header>
@@ -1180,63 +1339,50 @@ function receipt(id,paper="80mm"){
 }
 function akBuildViberReceiptCanvas(s){
  const shop=db.shop||{},date=new Date(s.date),items=Array.isArray(s.lines)&&s.lines.length?s.lines:[{productName:s.productName,qty:s.qty,price:s.price,total:s.total}];
- const width=1240,pad=70,inner=width-pad*2,headerH=420,rowH=112,tableTop=450,footerH=470;
- const canvas=document.createElement("canvas");canvas.width=width;canvas.height=tableTop+Math.max(items.length,1)*rowH+footerH;
- const ctx=canvas.getContext("2d");if(!ctx)throw Error("ဘောင်ချာ Canvas မရနိုင်ပါ");
- ctx.fillStyle="#fff";ctx.fillRect(0,0,width,canvas.height);
- const blue="#1689c7",dark="#155b86",line="#8abbd3";
+ const width=1240,pad=64,inner=width-pad*2,blue="#1769aa",navy="#123653",pale="#edf5fc",muted="#60758a",border="#d6e3ef";
+ const canvas=document.createElement("canvas"),ctx=canvas.getContext("2d");if(!ctx)throw Error("ဘောင်ချာ Canvas မရနိုင်ပါ");
  const font=(size,bold=false)=>ctx.font=(bold?"700 ":"400 ")+size+"px 'Noto Sans Myanmar',Arial,sans-serif";
- const center=(txt,y,size,bold=false,color="#183b55")=>{font(size,bold);ctx.fillStyle=color;ctx.textAlign="center";ctx.fillText(String(txt||""),width/2,y)};
- const left=(txt,x,y,size,bold=false,color="#183b55")=>{font(size,bold);ctx.fillStyle=color;ctx.textAlign="left";ctx.fillText(String(txt||""),x,y)};
- const right=(txt,x,y,size,bold=false,color="#183b55")=>{font(size,bold);ctx.fillStyle=color;ctx.textAlign="right";ctx.fillText(String(txt||""),x,y)};
- const wrap=(txt,maxWidth,size,bold=false)=>{font(size,bold);const words=String(txt||"").split(/\s+/);const out=[];let line="";for(const word of words){const test=line?line+" "+word:word;if(line&&ctx.measureText(test).width>maxWidth){out.push(line);line=word}else line=test}if(line)out.push(line);return out};
- const shopName=String(shop.name||"ဆိုင်အမည် မသတ်မှတ်ရသေးပါ");
- center(shopName,105,58,true,dark);
- center([shop.city,shop.township].filter(Boolean).join(" · "),165,29,false);
- center(shop.address||"",210,27,false);
- center(shop.phone?"ဖုန်း: "+shop.phone:"",255,27,false);
- ctx.strokeStyle=blue;ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(pad,300);ctx.lineTo(width-pad,300);ctx.stroke();
- left("Customer:",pad,350,29,true);left(s.customer||"လက်ငင်း",pad+190,350,29);
- right("Date: "+date.toLocaleDateString(),width-pad,350,29,true);
- left("Remark:",pad,405,27,true);left(s.note||"",pad+190,405,27);
- const cols=[pad,pad+inner*.55,pad+inner*.69,pad+inner*.84,width-pad];
- const headerY=tableTop,headerH2=76;
- ctx.fillStyle=blue;ctx.fillRect(pad,headerY,inner,headerH2);
- const headers=["Description","Qty","Price","Amount"];
- ctx.fillStyle="#fff";font(28,true);ctx.textAlign="center";
- for(let i=0;i<4;i++)ctx.fillText(headers[i],(cols[i]+cols[i+1])/2,headerY+49);
- let y=headerY+headerH2;
- items.forEach((item,index)=>{
-  const desc=String(item.productName||"ပစ္စည်း");
-  const descLines=wrap(desc,cols[1]-cols[0]-28,27,true);
-  const detail=wrap(String(item.description||""),cols[1]-cols[0]-28,21,false);
-  const lines=Math.max(1,descLines.length+detail.length);
-  const h=Math.max(rowH,lines*38+28);
-  ctx.fillStyle=index%2?"#f2f8fc":"#fff";ctx.fillRect(pad,y,inner,h);
-  ctx.strokeStyle=line;ctx.lineWidth=2;ctx.strokeRect(pad,y,inner,h);
-  for(let c=1;c<4;c++){ctx.beginPath();ctx.moveTo(cols[c],y);ctx.lineTo(cols[c],y+h);ctx.stroke()}
-  let ty=y+43;descLines.forEach(t=>{left(t,cols[0]+15,ty,27,true);ty+=35});
-  detail.forEach(t=>{left(t,cols[0]+15,ty,21,false);ty+=30});
-  const qty=Number(item.qty||0).toLocaleString();
-  const price=Number(item.price||0).toLocaleString("en-US");
-  const amount=Number(item.total??(Number(item.qty||0)*Number(item.price||0))).toLocaleString("en-US");
-  ctx.fillStyle="#183b55";font(27,false);ctx.textAlign="center";ctx.fillText(qty,(cols[1]+cols[2])/2,y+Math.min(h-20,Math.max(48,h/2+10)));
-  ctx.textAlign="right";ctx.fillText(price,cols[3]-14,y+Math.min(h-20,Math.max(48,h/2+10)));
-  ctx.font="700 27px 'Noto Sans Myanmar',Arial,sans-serif";ctx.fillText(amount,cols[4]-14,y+Math.min(h-20,Math.max(48,h/2+10)));
+ const wrap=(txt,maxWidth,size,bold=false)=>{font(size,bold);const parts=typeof Intl.Segmenter==="function"?Array.from(new Intl.Segmenter("my",{granularity:"grapheme"}).segment(String(txt||"")),x=>x.segment):Array.from(String(txt||""));const out=[];let line="";for(const part of parts){if(line&&ctx.measureText(line+part).width>maxWidth){out.push(line);line=part}else line+=part}if(line)out.push(line);return out};
+ const rowData=items.map(item=>({item,lines:wrap(item.productName||"ပစ္စည်း",inner*.48-24,27,true)}));
+ const rowHeights=rowData.map(x=>Math.max(94,x.lines.length*38+32));
+ const top=350,headH=78,tableH=headH+rowHeights.reduce((a,b)=>a+b,0),footer=360;
+ canvas.width=width;canvas.height=top+tableH+footer+60;
+ const c=canvas.getContext("2d");c.fillStyle="#f2f6fb";c.fillRect(0,0,width,canvas.height);
+ const round=(x,y,w,h,r,color)=>{c.fillStyle=color;c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();c.fill()};
+ round(28,24,width-56,canvas.height-48,28,"#ffffff");
+ round(28,24,width-56,270,28,blue);
+ c.fillStyle="#ffffff";c.textAlign="center";font(55,true);c.fillText(String(shop.receiptName||shop.name||"မိမိဆိုင်"),width/2,105);
+ c.fillStyle="#e7f3ff";font(25);c.fillText([shop.city,shop.township].filter(Boolean).join(" · ")||"အရောင်းဘောင်ချာ",width/2,155);
+ c.fillText(shop.address||"",width/2,198);c.fillText(shop.phone?"ဖုန်း: "+shop.phone:"",width/2,238);
+ c.textAlign="left";c.fillStyle=navy;font(25,true);c.fillText("ဘောင်ချာအမှတ်",pad+20,330);
+ c.textAlign="right";font(28,true);c.fillText(String(s.invoice||"-"),width-pad-20,330);
+ c.textAlign="left";c.fillStyle=muted;font(24);c.fillText("ရက်စွဲ: "+date.toLocaleString(),pad+20,top+38);
+ c.textAlign="right";c.fillText("ဖောက်သည်: "+(s.customer||"လက်ငင်း"),width-pad-20,top+38);
+ const ty=top+65,cols=[pad,pad+inner*.52,pad+inner*.67,pad+inner*.84,width-pad];
+ round(pad,ty,inner,headH,12,navy);
+ const headers=["ပစ္စည်းအမည်","အရေအတွက်","တစ်ခုဈေး","ကျသင့်ငွေ"];
+ c.fillStyle="#fff";font(25,true);c.textAlign="center";for(let i=0;i<4;i++)c.fillText(headers[i],(cols[i]+cols[i+1])/2,ty+49);
+ let y=ty+headH;
+ rowData.forEach(({item,lines},idx)=>{
+  const h=rowHeights[idx];round(pad,y,inner,h,8,idx%2?pale:"#ffffff");
+  c.strokeStyle=border;c.lineWidth=2;c.strokeRect(pad,y,inner,h);
+  c.fillStyle=navy;c.textAlign="left";font(26,true);lines.forEach((line,n)=>c.fillText(line,cols[0]+16,y+38+n*36));
+  c.textAlign="center";font(25);c.fillText(Number(item.qty||0).toLocaleString(),(cols[1]+cols[2])/2,y+h/2+9);
+  c.textAlign="right";c.fillText(Number(item.price||0).toLocaleString("en-US"),cols[3]-14,y+h/2+9);
+  font(25,true);c.fillText(Number(item.total??(Number(item.qty||0)*Number(item.price||0))).toLocaleString("en-US"),cols[4]-14,y+h/2+9);
   y+=h;
  });
- const totalY=y+85;
- ctx.fillStyle="#e9f5fb";ctx.fillRect(width-530,totalY-58,460,110);
- ctx.fillStyle=blue;ctx.fillRect(width-530,totalY-58,320,110);
- ctx.fillStyle="#fff";font(30,true);ctx.textAlign="center";ctx.fillText("Total Amount",width-370,totalY+10);
- right(Number(s.total||0).toLocaleString("en-US")+" "+(shop.currency||"MMK"),width-pad,totalY+12,39,true,dark);
- let footY=totalY+130;
- [["Paid",s.paid],["Balance",s.due]].forEach(([label,value])=>{right(label+": "+Number(value||0).toLocaleString("en-US")+" "+(shop.currency||"MMK"),width-pad,footY,27,true);footY+=48});
- center("အားပေးမှုအတွက် ကျေးဇူးတင်ပါသည်",canvas.height-75,29,true,dark);
- center(shop.name||"AK Sale Software",canvas.height-32,22,false,"#557184");
+ y+=26;round(width-570,y,500,205,18,pale);
+ c.textAlign="left";c.fillStyle=muted;font(25,true);c.fillText("စုစုပေါင်း",width-535,y+48);
+ c.textAlign="right";c.fillStyle=blue;font(38,true);c.fillText(Number(s.total||0).toLocaleString("en-US")+" "+(shop.currency||"MMK"),width-95,y+53);
+ c.fillStyle=navy;font(26,true);c.fillText("ပေးချေပြီး: "+Number(s.paid||0).toLocaleString("en-US"),width-95,y+112);
+ c.fillText("ကျန်ငွေ: "+Number(s.due||0).toLocaleString("en-US"),width-95,y+160);
+ if(s.note){c.textAlign="left";c.fillStyle=muted;font(22);c.fillText("မှတ်ချက်: "+String(s.note).slice(0,100),pad+12,y+60)}
+ c.textAlign="center";c.fillStyle=blue;font(28,true);c.fillText("အားပေးမှုအတွက် ကျေးဇူးတင်ပါသည်",width/2,canvas.height-86);
+ c.fillStyle=muted;font(19);c.fillText("Digital Receipt · "+String(shop.name||"AK Sale Software"),width/2,canvas.height-52);
  return canvas;
 }
-async function shareReceiptImage(id){
+async function shareReceiptImage(id,destination="share"){
  // Sharing a receipt image is independent from printer permission.
 
  const s=db.sales.find(x=>x.id===id);if(!s)return;
@@ -1250,10 +1396,10 @@ async function shareReceiptImage(id){
   if(api?.shareReceiptImage&&window.Capacitor?.isNativePlatform?.()){
    const bytes=new Uint8Array(await blob.arrayBuffer());let binary="";
    for(let i=0;i<bytes.length;i+=0x8000)binary+=String.fromCharCode(...bytes.subarray(i,Math.min(i+0x8000,bytes.length)));
-   await api.shareReceiptImage({data:btoa(binary),fileName});return;
+   const targets={viber:["Viber ဘောင်ချာ","Viber ကိုရွေးပြီး ဘောင်ချာပုံပို့ပါ။","Viber ကို ရွေးပါ"],facebook:["Facebook ဘောင်ချာ","Facebook သို့ ဘောင်ချာပုံမျှဝေပါ။","Facebook ကို ရွေးပါ"],telegram:["Telegram ဘောင်ချာ","Telegram ကိုရွေးပြီး ဘောင်ချာပုံပို့ပါ။","Telegram ကို ရွေးပါ"],thermer:["Thermer Printer","Thermer ကိုရွေးပြီး Bluetooth / USB Thermal Printer မှ ဘောင်ချာထုတ်ပါ။","Thermer / Printer App ကို ရွေးပါ"]};const target=targets[destination]||["AK Sale · Receipt","AK Sale အရောင်းဘောင်ချာ","Viber / Facebook / Telegram ကို ရွေးပါ"];await api.shareReceiptImage({data:btoa(binary),fileName,title:"AK Sale · "+target[0],text:target[1],chooserTitle:target[2]});return;
   }
   const file=new File([blob],fileName,{type:"image/png"});
-  if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:"အရောင်းဘောင်ချာ"});return;}
+  const targets={viber:["Viber ဘောင်ချာ","Viber ကိုရွေးပြီး ဘောင်ချာပုံပို့ပါ။"],facebook:["Facebook ဘောင်ချာ","Facebook သို့ ဘောင်ချာပုံမျှဝေပါ။"],telegram:["Telegram ဘောင်ချာ","Telegram ကိုရွေးပြီး ဘောင်ချာပုံပို့ပါ။"],thermer:["Thermer Printer","Thermer ကိုရွေးပြီး Printer မှထုတ်ပါ။"]};const target=targets[destination]||["AK Sale · Receipt","AK Sale အရောင်းဘောင်ချာ"];if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:"AK Sale · "+target[0],text:target[1]});return;}
   const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=fileName;a.click();setTimeout(()=>URL.revokeObjectURL(url),2000);
   alert("ဘောင်ချာ PNG ပုံ သိမ်းပြီးပါပြီ။ Viber ထဲတွင် ပုံအဖြစ် ရွေးပြီး ပို့နိုင်ပါပြီ။");
  }catch(e){if(e?.name!=="AbortError")alert("ဘောင်ချာပုံ မျှဝေနိုင်ပါ: "+(e?.message||e))}
@@ -1263,27 +1409,7 @@ function printSalesLedger(){
  const rows=db.sales||[];if(!rows.length){alert("အရောင်းမှတ်တမ်း မရှိသေးပါ");return}
  const w=akCreatePrintWindow();if(!w){alert("Print စာမျက်နှာ မဖွင့်နိုင်ပါ");return}
  const shop=db.shop||{},total=rows.reduce((a,x)=>a+Number(x.total||0),0),paid=rows.reduce((a,x)=>a+Number(x.paid||0),0),due=rows.reduce((a,x)=>a+Number(x.due||0),0);
- w.document.write('<!doctype html><html lang="my"><head><meta charset="utf-8"><title>အရောင်းစာရင်း</title><style>body{font-family:Arial,"Noto Sans Myanmar",sans-serif;padding:12px;color:#111}h2{text-align:center}table{width:100%;border-collapse:collapse;font-size:12px}th,td{border:1px solid #777;padding:6px;text-align:left}td.num,th.num{text-align:right}.tot{margin-top:12px;text-align:right;line-height:1.8}@media print{.actions{display:none}@page{size:A4 landscape;margin:10mm}}</style><style id="ak-market-visible-fix-20261110">
-/* Final public-market visibility rules: hide unsolicited/live sponsored feeds,
-   but keep the shop advertising order form and its album/camera controls visible. */
-html.ak-public-market #akLiveAdsPanel,
-html.ak-public-market #akPublicSponsoredSection,
-html.ak-public-market #akSponsoredPublicGrid,
-html.ak-public-market #akPublicTikTokCard,
-html.ak-public-market #akOwnerAdManager,
-html.ak-public-market #akAdForm,
-html.ak-public-market #akMarketAdOrderAdmin {display:none!important}
-html.ak-public-market #akMarketAdOrderPanel {display:block!important;visibility:visible!important}
-html.ak-public-market #akMarketAdOrderPanel input[type="file"] {
- display:block!important;visibility:visible!important;opacity:1!important;
- position:static!important;width:100%!important;height:auto!important;
- clip:auto!important;overflow:visible!important
-}
-#akFirebasePanel button:not([onclick="firebaseGoogleLogin()"]):not([onclick="firebaseLogout()"]) {
- display:none!important
-}
-</style>
-</head><body><h2>'+esc(shop.name||"AK Sale")+'</h2><p style="text-align:center">အရောင်းမှတ်တမ်း · '+new Date().toLocaleString()+'</p><table><thead><tr><th>စဉ်</th><th>ဘောင်ချာ</th><th>ရက်စွဲ</th><th>ဖောက်သည်</th><th>ပစ္စည်း</th><th class="num">အရေအတွက်</th><th class="num">စုစုပေါင်း</th><th class="num">ပေးငွေ</th><th class="num">အကြွေး</th></tr></thead><tbody>'+rows.map((x,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(x.invoice)+'</td><td>'+esc(new Date(x.date).toLocaleString())+'</td><td>'+esc(x.customer||"")+'</td><td>'+esc(x.productName||"")+'</td><td class="num">'+Number(x.qty||0).toLocaleString()+'</td><td class="num">'+money(x.total)+'</td><td class="num">'+money(x.paid)+'</td><td class="num">'+money(x.due)+'</td></tr>').join("")+'</tbody></table><div class="tot"><b>စုစုပေါင်း: '+money(total)+'<br>ပေးချေပြီး: '+money(paid)+'<br>ကျန်ငွေ: '+money(due)+'</b></div><p class="actions"><button onclick="window.print()">Print / PDF သိမ်းရန်</button></p></body></html>');
+ w.document.write('<!doctype html><html lang="my"><head><meta charset="utf-8"><title>အရောင်းစာရင်း</title><style>body{font-family:Arial,"Noto Sans Myanmar",sans-serif;padding:12px;color:#111}h2{text-align:center}table{width:100%;border-collapse:collapse;font-size:12px}th,td{border:1px solid #777;padding:6px;text-align:left}td.num,th.num{text-align:right}.tot{margin-top:12px;text-align:right;line-height:1.8}@media print{.actions{display:none}@page{size:A4 landscape;margin:10mm}}</style></head><body><h2>'+esc(shop.name||"AK Sale")+'</h2><p style="text-align:center">အရောင်းမှတ်တမ်း · '+new Date().toLocaleString()+'</p><table><thead><tr><th>စဉ်</th><th>ဘောင်ချာ</th><th>ရက်စွဲ</th><th>ဖောက်သည်</th><th>ပစ္စည်း</th><th class="num">အရေအတွက်</th><th class="num">စုစုပေါင်း</th><th class="num">ပေးငွေ</th><th class="num">အကြွေး</th></tr></thead><tbody>'+rows.map((x,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(x.invoice)+'</td><td>'+esc(new Date(x.date).toLocaleString())+'</td><td>'+esc(x.customer||"")+'</td><td>'+esc(x.productName||"")+'</td><td class="num">'+Number(x.qty||0).toLocaleString()+'</td><td class="num">'+money(x.total)+'</td><td class="num">'+money(x.paid)+'</td><td class="num">'+money(x.due)+'</td></tr>').join("")+'</tbody></table><div class="tot"><b>စုစုပေါင်း: '+money(total)+'<br>ပေးချေပြီး: '+money(paid)+'<br>ကျန်ငွေ: '+money(due)+'</b></div><p class="actions"><button onclick="window.print()">Print / PDF သိမ်းရန်</button></p></body></html>');
  w.document.close();setTimeout(()=>w.print(),350);
 }
 $("purchaseForm").addEventListener("submit",e=>{e.preventDefault();let p=db.products.find(x=>x.id===$("bProduct").value),qty=+$("bQty").value,cost=+$("bCost").value,total=qty*cost,paid=+$("bPaid").value;if(!p||!Number.isFinite(qty)||qty<=0||!Number.isFinite(cost)||cost<0||!Number.isFinite(paid)||paid<0||paid>total)return alert("အချက်အလက်စစ်ဆေးပါ");const oldStock=Number(p.stock)||0,oldCost=Number(p.cost)||0,newStock=oldStock+qty;p.cost=newStock>0?((oldStock*oldCost)+(qty*cost))/newStock:cost;p.stock=newStock;db.purchases.unshift({id:uid(),date:dateNow(),productId:p.id,productName:p.name,qty,cost,total,paid,due:total-paid,supplier:$("bSupplier").value.trim()});persist();$("purchaseForm").reset();$("bQty").value=1;alert("အဝယ်သိမ်းပြီးပါပြီ")});
@@ -1300,8 +1426,8 @@ $("expenseForm").addEventListener("submit",e=>{e.preventDefault();db.expenses.un
 function renderExpenses(){$("expenseRows").innerHTML=db.expenses.map(x=>`<tr><td>${new Date(x.date).toLocaleDateString()}</td><td>${esc(x.name)}</td><td>${money(x.amount)}</td><td>${esc(x.note)}</td></tr>`).join("")}
 function renderReport(){let f=$("fromDate").value||"0000-01-01",t=$("toDate").value||"9999-12-31",within=x=>dateKey(x.date)>=f&&dateKey(x.date)<=t;let ss=db.sales.filter(within),ee=db.expenses.filter(within),pp=db.purchases.filter(within);let rev=ss.reduce((a,x)=>a+x.total,0),gross=ss.reduce((a,x)=>a+x.total-x.cost,0),exp=ee.reduce((a,x)=>a+x.amount,0);$("reportOutput").innerHTML=`<div class="grid"><div class="panel">အရောင်းစုစုပေါင်း<br><b>${money(rev)}</b></div><div class="panel">ရောင်းကုန်အမြတ် (ခန့်မှန်း)<br><b>${money(gross)}</b></div><div class="panel">အသုံးစရိတ်<br><b>${money(exp)}</b></div><div class="panel">အသားတင်အမြတ် (ခန့်မှန်း)<br><b>${money(gross-exp)}</b></div><div class="panel">အဝယ်စုစုပေါင်း<br><b>${money(pp.reduce((a,x)=>a+x.total,0))}</b></div></div><p class="muted">အမြတ်သည် ရောင်းချချိန်ရှိ သိမ်းထားသော ဝယ်ဈေးအပေါ် အခြေခံသည်။ အကြွေးဆပ်မှတ်တမ်းများကို သီးခြားမှတ်တမ်းတင်ထားပြီး ဤအစီရင်ခံစာတွင် Invoice အကြွေးလက်ကျန်ကို အလိုအလျောက် မလျှော့သေးပါ။</p>`}
 function renderHome(){let d=dateKey(dateNow()),s=db.sales.filter(x=>dateKey(x.date)===d),e=db.expenses.filter(x=>dateKey(x.date)===d),low=db.products.filter(p=>Number(p.minStock)>0&&Number(p.stock)<=Number(p.minStock));$("kSales").textContent=money(s.reduce((a,x)=>a+x.total,0));$("kProfit").textContent=money(s.reduce((a,x)=>a+x.total-x.cost,0)-e.reduce((a,x)=>a+x.amount,0));$("kProducts").textContent=db.products.length;$("kReceivable").textContent=money(db.sales.reduce((a,x)=>a+x.due,0));$("kPayable").textContent=money(db.purchases.reduce((a,x)=>a+x.due,0));$("kLowStock").textContent=low.length;const rows=$("lowStockRows");if(rows)rows.innerHTML=low.length?low.map(p=>"<tr><td>"+esc(p.name)+"</td><td>"+p.stock+" "+esc(p.unit)+"</td><td>"+p.minStock+" "+esc(p.unit)+"</td></tr>").join(""):"<tr><td colspan=\"3\">ပြန်မှာရန် သတ်မှတ်ထားသောပစ္စည်းမရှိသေးပါ။ ပစ္စည်းတစ်ခုချင်းတွင် Alert ပမာဏထည့်နိုင်သည်။</td></tr>"}
-function renderAll(){renderHome();renderProducts();renderSales();renderPurchases();renderPeople();renderPayments();renderExpenses();productOptions();fillAdProducts();if(typeof renderMarket==="function")renderMarket();$("brandTitle").textContent=db.shop.name;$("shopName").value=db.shop.name;$("currency").value=db.shop.currency;$("shopCity").value=db.shop.city||"";$("shopTownship").value=db.shop.township||"";$("shopAddress").value=db.shop.address||"";$("shopPhone").value=db.shop.phone||"";$("shopLogo").value=db.shop.logo||"";if(typeof akApplyLanguage==="function")akApplyLanguage()}
-function saveShop(){db.shop={...db.shop,name:$("shopName").value.trim()||"Ak shopping markets",currency:$("currency").value.trim()||"MMK",city:$("shopCity").value.trim(),township:$("shopTownship").value.trim(),address:$("shopAddress").value.trim(),phone:$("shopPhone").value.trim(),logo:$("shopLogo").value.trim()};persist();alert("လုပ်ငန်းအမည်နှင့် တည်နေရာ သိမ်းပြီးပါပြီ") }
+function renderAll(){renderHome();renderProducts();renderSales();renderPurchases();renderPeople();renderPayments();renderExpenses();productOptions();fillAdProducts();if(typeof renderMarket==="function")renderMarket();$("brandTitle").textContent=db.shop.name;$("shopName").value=db.shop.name;$("receiptName").value=db.shop.receiptName||"";$("currency").value=db.shop.currency;$("shopCity").value=db.shop.city||"";$("shopTownship").value=db.shop.township||"";$("shopAddress").value=db.shop.address||"";$("shopPhone").value=db.shop.phone||"";$("shopLogo").value=db.shop.logo||"";if(typeof akApplyLanguage==="function")akApplyLanguage()}
+function saveShop(){db.shop={...db.shop,name:$("shopName").value.trim()||"Ak shopping markets",receiptName:$("receiptName").value.trim(),currency:$("currency").value.trim()||"MMK",city:$("shopCity").value.trim(),township:$("shopTownship").value.trim(),address:$("shopAddress").value.trim(),phone:$("shopPhone").value.trim(),logo:$("shopLogo").value.trim()};persist();alert("လုပ်ငန်းအမည်နှင့် တည်နေရာ သိမ်းပြီးပါပြီ") }
 async function backup(){
  const status=$("akBackupStatus");
  try{
@@ -1365,32 +1491,34 @@ function selectAdProduct(){let p=db.products.find(x=>x.id===$("adProduct").value
 function openAkTikTok(){window.open("https://www.tiktok.com/@marketing.service38?_r=1&_t=ZS-9BG2TJBSslN","_blank","noopener,noreferrer")}
 function downloadAd(){let c=$("adCanvas");c.toBlob(blob=>{if(!blob)return;let a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="AK-Product-Ad.png";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500)},"image/png")}
 function adCaption(){const aiCaption=$("adAiCaption")?.value.trim();if(aiCaption)return aiCaption;let shop=db.shop?.name||"မိမိဆိုင် / လုပ်ငန်း";let name=$("adName").value.trim()||"ကုန်ပစ္စည်း";let price=$("adPrice").value.trim();let contact=$("adContact").value.trim();return "သင့်ဆိုင်အတွက် အကောင်းဆုံး POS စနစ် — AK Sale ကို အသုံးပြုပါ။\nဆိုင်အရောင်း၊ ကုန်ပစ္စည်း၊ အကြွေးနှင့် အမြတ်စာရင်းများကို တစ်နေရာတည်းမှာ စီမံခန့်ခွဲပါ။\n\n"+shop+"\n"+name+(price?"\nဈေးနှုန်း: "+price:"")+"\n"+(contact?"ဆက်သွယ်ရန်: "+contact:"အသေးစိတ်မေးမြန်းနိုင်ပါသည်။")+"\nTikTok: @marketing.service38\nhttps://www.tiktok.com/@marketing.service38\n\n#MyanmarBusiness #Promotion #Sale"}
-async function akGenerateAdCopy(){
+function akGenerateAdCopy(){
  const status=$("adAiStatus"),out=$("adAiCaption");
- try{
-  if(!fbAuth?.currentUser)throw Error("Gmail Login ဝင်ပါ။");
-  if(!cloudReady||!await refreshLicense())throw Error("သက်တမ်းရှိသော ဆိုင်အကောင့်လိုအပ်သည်။");
-  const productName=$("adName").value.trim(),price=$("adPrice").value.trim(),contact=$("adContact").value.trim();
-  if(productName.length<2)throw Error("ပစ္စည်းအမည် အရင်ထည့်ပါ။");
-  status.textContent="AI ကြော်ငြာစာသား ရေးနေသည်...";
-  const result=await firebase.functions().httpsCallable("akAiGenerateAd")({shopName:String(db.shop?.name||"မိမိဆိုင် / လုပ်ငန်း").slice(0,90),productName:productName.slice(0,100),price:price.slice(0,80),contact:contact.slice(0,100),language:"Burmese"});
-  out.value=String(result.data?.text||"").slice(0,1200);
-  if(!out.value)throw Error("AI စာသားမရရှိပါ။");
-  status.textContent="AI စာသားရပါပြီ။ မှန်ကန်မှုစစ်ပြီးမှ Share လုပ်ပါ။";
- }catch(e){status.textContent="AI ကြော်ငြာ မရသေးပါ: "+(e.message||e)}
+ const productName=String($("adName")?.value||"").trim();
+ const price=String($("adPrice")?.value||"").trim();
+ const contact=String($("adContact")?.value||"").trim();
+ if(productName.length<2){if(status)status.textContent="ပစ္စည်းအမည် အရင်ထည့်ပါ။";return}
+ const shop=String(db.shop?.name||"မိမိဆိုင်").trim().slice(0,90);
+ out.value=[
+  shop+" မှ အရည်အသွေးကောင်းသော "+productName+" ကို ရောင်းချပေးနေပါသည်။",
+  price?"ဈေးနှုန်း: "+price+" MMK":"ဈေးနှုန်းနှင့် လက်ကျန်ကို ဆက်သွယ်မေးမြန်းနိုင်ပါသည်။",
+  contact?"ဆက်သွယ်ရန်: "+contact:"အသေးစိတ်သိရှိရန် ဆိုင်သို့ ဆက်သွယ်ပါ။",
+  "လက်လီ / လက်ကား ဝယ်ယူနိုင်ပါသည်။",
+  "#MyanmarBusiness #Hardware #Electrical #AKSale"
+ ].join("\n");
+ if(status)status.textContent="အခမဲ့ Local Template ဖြင့် စာသားဖန်တီးပြီးပါပြီ။ AI API သို့ ဒေတာမပို့ပါ။";
 }
 function akOpenChatGPT(){window.open("https://chatgpt.com/","_blank","noopener,noreferrer")}
-async function akRunSecurityReview(){
+function akRunSecurityReview(){
  const status=$("akSecurityStatus"),box=$("akSecurityResult");
- try{
-  if(!fbAuth?.currentUser)throw Error("Gmail Login ဝင်ပါ။");
-  if(!cloudReady||!await refreshLicense())throw Error("သက်တမ်းရှိသော ဆိုင်အကောင့်လိုအပ်သည်။");
-  status.textContent="Cloud လုံခြုံရေးမှတ်တမ်းများကို AI ဖြင့် စစ်ဆေးနေသည်...";
-  box.textContent="";
-  const result=await firebase.functions().httpsCallable("akAiSecurityReview")({});
-  box.textContent=String(result.data?.text||"စစ်ဆေးချက် မရရှိပါ။");
-  status.textContent="စစ်ဆေးမှု ပြီးပါပြီ။ အကြံပြုချက်များကို ဖတ်ရှုပါ။";
- }catch(e){status.textContent="လုံခြုံရေးစစ်ဆေးမှု မအောင်မြင်ပါ: "+(e.message||e)}
+ if(status)status.textContent="အခမဲ့စနစ် · AI API နှင့် Cloud Functions မခေါ်ပါ။";
+ if(box)box.textContent=[
+  "၁။ ဆိုင်ဒေတာကို Firebase UID အလိုက် သီးခြားသိမ်းသည်။",
+  "၂။ Free Beta အကောင့်သည် Owner က ပိတ်နိုင်သည်။",
+  "၃။ ဝန်ထမ်း Merchant Code နှင့် Role sharing ကို မဖွင့်ထားပါ။",
+  "၄။ Product Photo များသည် ဒီစက်ထဲတွင်သာရှိပြီး JSON Backup ဖြင့်သာ ပြောင်းရွှေ့နိုင်သည်။",
+  "၅။ အရေးကြီးဒေတာများကို ပုံမှန် JSON Backup ထုတ်ပါ။",
+  "မှတ်ချက်: ဤစာရင်းသည် လမ်းညွှန်ချက်သာဖြစ်ပြီး live security audit မဟုတ်ပါ။"
+ ].join("\n");
 }
 function adBlob(){return new Promise(resolve=>$("adCanvas").toBlob(resolve,"image/png"))}
 async function saveAdAndCopyCaption(){let blob=await adBlob();if(!blob)throw Error("ကြော်ငြာပုံဖန်တီးမရပါ");let url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="AK-Product-Ad.png";a.click();setTimeout(()=>URL.revokeObjectURL(url),2000);try{await navigator.clipboard.writeText(adCaption())}catch(e){}return true}
@@ -1534,20 +1662,23 @@ $("marketForm").addEventListener("submit",async e=>{
   const ref=marketEditId?fbStore.collection("marketListings").doc(marketEditId):fbStore.collection("marketListings").doc();
   let existing=null;
   if(marketEditId){const snap=await ref.get();if(!snap.exists||snap.data().ownerUid!==uid)throw Error("ဤကြော်ငြာကို ပြင်ခွင့်မရှိပါ။");existing=snap.data();}
-  let imageUrl=existing?.imageUrl||"",imagePath="";
+  let imageUrl=existing?.imageUrl||"",imagePath=verifiedUser?"market/"+uid+"/"+ref.id+"/photo":"";
   if(marketPhotoFile){
    if(!/^image\/(jpeg|png|webp)$/.test(marketPhotoFile.type)||marketPhotoFile.size>2*1024*1024)throw Error("JPG/PNG/WebP ပုံ 2MB အောက်သာ ရွေးပါ။");
-   // Store a compressed image directly in the listing document. This avoids
-   // Firebase Storage setup/rules failures and keeps the image available to
-   // both guest and signed-in public listings.
-   const raw=await new Promise((resolve,reject)=>{const fr=new FileReader();fr.onload=()=>resolve(fr.result);fr.onerror=()=>reject(Error("ပုံဖတ်မရပါ။"));fr.readAsDataURL(marketPhotoFile);});
-   const pic=await new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(Error("ပုံဖွင့်မရပါ။"));im.src=raw;});
-   const cv=document.createElement("canvas"),scale=Math.min(1,720/Math.max(pic.width,pic.height));
-   cv.width=Math.max(1,Math.round(pic.width*scale));cv.height=Math.max(1,Math.round(pic.height*scale));
-   const ctx=cv.getContext("2d");if(!ctx)throw Error("ပုံပြင်ဆင်မရပါ။");ctx.drawImage(pic,0,0,cv.width,cv.height);
-   let q=.62;imageUrl=cv.toDataURL("image/jpeg",q);
-   while(imageUrl.length>180000&&q>.30){q=Math.max(.30,q-.05);imageUrl=cv.toDataURL("image/jpeg",q);}
-   if(imageUrl.length>180000)throw Error("ပုံဖိုင်ကြီးနေသေးသည်။ ပိုသေးသောပုံရွေးပါ။");
+   if(verifiedUser){
+    imagePath="market/"+uid+"/"+ref.id+"/photo";uploadedPath=imagePath;
+    const upload=await firebase.storage().ref(imagePath).put(marketPhotoFile,{contentType:marketPhotoFile.type,cacheControl:"public,max-age=3600"});
+    imageUrl=await upload.ref.getDownloadURL();
+   }else{
+    const raw=await new Promise((resolve,reject)=>{const fr=new FileReader();fr.onload=()=>resolve(fr.result);fr.onerror=()=>reject(Error("ပုံဖတ်မရပါ။"));fr.readAsDataURL(marketPhotoFile);});
+    const pic=await new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(Error("ပုံဖွင့်မရပါ။"));im.src=raw;});
+    const cv=document.createElement("canvas"),scale=Math.min(1,720/Math.max(pic.width,pic.height));
+    cv.width=Math.max(1,Math.round(pic.width*scale));cv.height=Math.max(1,Math.round(pic.height*scale));
+    cv.getContext("2d").drawImage(pic,0,0,cv.width,cv.height);
+    let q=.62;imageUrl=cv.toDataURL("image/jpeg",q);
+    while(imageUrl.length>180000&&q>.30){q-=.05;imageUrl=cv.toDataURL("image/jpeg",q);}
+    if(imageUrl.length>180000)throw Error("ပုံဖိုင်ကြီးနေသေးသည်။ ပိုသေးသောပုံရွေးပါ။");
+   }
   }
   const payload={title,price,currency:"MMK",category:$("mCategory").value,city,township,address,phone,description,imageUrl,ownerUid:uid,status:"published",shopName};
   if(marketEditId)await ref.update({...payload,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
@@ -1680,8 +1811,32 @@ async function revokeShopDevice(id){if(!id||!confirm("ဒီစက်ကို �
 async function publishGlobalAnnouncement(){try{if(!akIsPlatformOwner())throw Error("CEO Owner အကောင့်သာ ကြေညာချက်ပို့နိုင်သည်။");const title=$("globalAnnouncementTitle").value.trim(),message=$("globalAnnouncementMessage").value.trim();if(title.length<2||message.length<2)throw Error("ခေါင်းစဉ်နှင့် စာသားထည့်ပါ။");$("globalAnnouncementStatus").textContent="ပို့နေသည်...";await firebase.functions().httpsCallable("publishGlobalAnnouncement")({title,message});$("globalAnnouncementTitle").value="";$("globalAnnouncementMessage").value="";$("globalAnnouncementStatus").textContent="ကြေညာချက် ပို့ပြီးပါပြီ။";await loadGlobalAnnouncements()}catch(e){$("globalAnnouncementStatus").textContent="ပို့မရပါ: "+(e.message||e)}}
 async function loadGlobalAnnouncements(){try{if(!fbAuth?.currentUser)return;const result=await firebase.functions().httpsCallable("listGlobalAnnouncements")({});const rows=result.data.announcements||[];const box=$("globalAnnouncementFeed"),target=$("globalAnnouncementRows");if(!box||!target)return;box.classList.toggle("hidden",!rows.length);target.innerHTML=rows.map(x=>'<article style="padding:10px 0;border-bottom:1px solid var(--line)"><b>'+esc(x.title)+'</b><p style="margin:5px 0;white-space:pre-wrap">'+esc(x.message)+'</p><small class="muted">'+(x.createdAt?new Date(x.createdAt).toLocaleString():"")+'</small></article>').join("")}catch(e){const el=document.getElementById("globalAnnouncementStatus");if(el)el.textContent="ကြေညာချက်ဖတ်မရပါ: "+e.message}}
 async function akSetStaffPrint(memberUid,canPrint){try{await firebase.functions().httpsCallable("setShopStaffPrintPermission")({memberUid,canPrint});$("akStaffStatus").textContent="Print ခွင့်ပြုချက် ပြောင်းပြီးပါပြီ။ ဝန်ထမ်းက ပြန် Login ဝင်ရန် လိုအပ်သည်။";await akLoadStaff()}catch(e){$("akStaffStatus").textContent="Print ခွင့်ပြုချက် ပြောင်းမရပါ: "+(e.message||e)}}
-async function akAssignStaff(){try{if(!fbAuth?.currentUser||!["shop-owner","platform-owner"].includes(akUserRole))throw Error("ဆိုင်ရှင် Gmail ဖြင့် Login ဝင်ပါ");const email=$("akStaffEmail").value.trim().toLowerCase();const role=$("akStaffRole").value;if(!email)throw Error("ဝန်ထမ်း Gmail ထည့်ပါ");$("akStaffStatus").textContent="Server တွင် ရာထူးသတ်မှတ်နေသည်...";const call=firebase.functions().httpsCallable("assignShopStaffRole");const result=await call({email,role});$("akStaffStatus").textContent="အောင်မြင်သည်: "+result.data.email+" ကို "+result.data.role+" အဖြစ် သတ်မှတ်ပြီးပါပြီ။ ဝန်ထမ်းသည် အရင်ဆုံး မိမိ Gmail ဖြင့် Account ဖွင့်ထားရမည်။";$("akStaffEmail").value="";await akLoadStaff()}catch(e){$("akStaffStatus").textContent="ရာထူးသတ်မှတ်မရပါ: "+(e.message||e)}} 
-async function akLoadStaff(){try{if(!fbAuth?.currentUser||!["shop-owner","platform-owner"].includes(akUserRole))throw Error("ဆိုင်ရှင် Gmail ဖြင့် Login ဝင်ပါ");$("akStaffStatus").textContent="ဝန်ထမ်းစာရင်း ဖတ်နေသည်...";const call=firebase.functions().httpsCallable("listShopStaff");const result=await call({});const rows=result.data.members||[];$("akStaffRows").innerHTML=rows.map(x=>'<tr><td>'+esc(x.email)+'</td><td>'+esc(({manager:"မန်နေဂျာ",cashier:"ငွေကိုင်",employee:"ဝန်ထမ်း"})[x.role]||x.role)+'</td><td>'+(x.canPrint?'<span class="pill">ခွင့်ပြုထား</span>':'<span class="muted">မပြုရသေး</span>')+'</td><td><button class="alt" onclick="akSetStaffPrint(\''+esc(x.uid)+'\','+(!x.canPrint)+')">'+(x.canPrint?"Print ပိတ်မည်":"Print ခွင့်ပြုမည်")+'</button> <button class="red" onclick="akRemoveStaff(\''+esc(x.uid)+'\')">ဖယ်ရှားမည်</button></td></tr>').join("")||'<tr><td colspan="4">ဝန်ထမ်းမရှိသေးပါ</td></tr>';$("akStaffStatus").textContent="ဝန်ထမ်း "+rows.length+" ဦး";const staffCountEl=document.getElementById("akOwnerStaffCount");if(staffCountEl)staffCountEl.textContent=rows.length+" ဦး"}catch(e){$("akStaffStatus").textContent="ဝန်ထမ်းစာရင်းဖတ်မရပါ: "+(e.message||e)}}async function akRemoveStaff(uid){if(!uid||!confirm("ဤဝန်ထမ်းကို ဆိုင်မှ ဖယ်ရှားမလား။"))return;try{const call=firebase.functions().httpsCallable("removeShopStaff");await call({memberUid:uid});await akLoadStaff()}catch(e){$("akStaffStatus").textContent="ဖယ်ရှားမရပါ: "+(e.message||e)}}
+async function akCreateMerchantCode(){
+ try{
+  if(!fbAuth?.currentUser||!["shop-owner","platform-owner"].includes(akUserRole))throw Error("ဆိုင်ရှင်အကောင့်ဖြင့် Login ဝင်ပါ");
+  const role=$("akStaffRole").value;
+  $("akStaffStatus").textContent="Merchant Code ထုတ်နေသည်...";
+  const result=await firebase.functions().httpsCallable("createShopInviteCode")({role});
+  const code=result.data.code;
+  $("akStaffStatus").innerHTML="Merchant Code: <b style='font-size:22px;letter-spacing:3px'>"+esc(code)+"</b> · ၂၄ နာရီအတွင်း တစ်ကြိမ်သာ သုံးနိုင်သည်။ ဝန်ထမ်းထံ ပေးပါ။";
+  try{await navigator.clipboard.writeText(code)}catch(_){}
+  await akLoadStaff();
+ }catch(e){$("akStaffStatus").textContent="Code ထုတ်မရပါ: "+(e.message||e)}
+}
+async function akClaimMerchantCode(){
+ try{
+  if(!fbAuth?.currentUser)throw Error("ဝန်ထမ်း၏ ကိုယ်ပိုင် Gmail ဖြင့် အရင် Login ဝင်ပါ");
+  const code=String($("akMerchantJoinCode")?.value||"").trim().toUpperCase();
+  if(!code)throw Error("Merchant Code ထည့်ပါ");
+  $("fbStatus").textContent="ဆိုင်အကောင့်နှင့် ချိတ်ဆက်နေသည်...";
+  await firebase.functions().httpsCallable("claimShopInviteCode")({code});
+  await fbAuth.currentUser.getIdToken(true);
+  $("fbStatus").textContent="ဆိုင်နှင့် ချိတ်ဆက်ပြီးပါပြီ။ App ကို ပြန်ဖွင့်နေသည်...";
+  location.reload();
+ }catch(e){$("fbStatus").textContent="ဆိုင်ချိတ်မရပါ: "+(e.message||e)}
+}
+async function akAssignStaff(){try{if(!fbAuth?.currentUser||!["shop-owner","platform-owner"].includes(akUserRole))throw Error("ဆိုင်ရှင် Gmail ဖြင့် Login ဝင်ပါ");const email=$("akStaffEmail").value.trim().toLowerCase();const role=$("akStaffRole").value;if(!email)throw Error("ဝန်ထမ်း Gmail ထည့်ပါ");$("akStaffStatus").textContent="Server တွင် ရာထူးသတ်မှတ်နေသည်...";const call=firebase.functions().httpsCallable("assignShopStaffRole");const result=await call({email,role});$("akStaffStatus").textContent="အောင်မြင်သည်: "+result.data.email+" ကို "+result.data.role+" အဖြစ် သတ်မှတ်ပြီးပါပြီ။ ဆိုင်ရှင် ၁ + ဝန်ထမ်း ၁ = စုစုပေါင်း ၂ အကောင့်သာ အသုံးပြုနိုင်သည်။";$("akStaffEmail").value="";await akLoadStaff()}catch(e){$("akStaffStatus").textContent="ရာထူးသတ်မှတ်မရပါ: "+(e.message||e)}} 
+async function akLoadStaff(){const status=$("akStaffStatus");if(status)status.textContent="အခမဲ့စနစ်တွင် သီးခြားဝန်ထမ်းအကောင့်နှင့် Merchant Code မဖွင့်ထားပါ။";const rows=$("akStaffRows");if(rows)rows.innerHTML='<tr><td colspan="4">ဝန်ထမ်းစနစ် မဖွင့်ထားပါ။</td></tr>';const count=$("akOwnerStaffCount");if(count)count.textContent="မဖွင့်သေး";}async function akRemoveStaff(uid){if(!uid||!confirm("ဤဝန်ထမ်းကို ဆိုင်မှ ဖယ်ရှားမလား။"))return;try{const call=firebase.functions().httpsCallable("removeShopStaff");await call({memberUid:uid});await akLoadStaff()}catch(e){$("akStaffStatus").textContent="ဖယ်ရှားမရပါ: "+(e.message||e)}}
 let akPublicShopCache=[];
 async function loadPublicShops(){try{if(!fbStore)return;const snap=await fbStore.collection("publicShops").where("status","==","approved").limit(250).get();akPublicShopCache=snap.docs.map(d=>({id:d.id,...d.data()}));renderPublicShops()}catch(e){$("akShopCount").textContent="ဆိုင်စာရင်း ဖတ်မရပါ: "+e.message}}
 function renderPublicShops(){const host=$("akPublicShops");if(!host)return;const q=($("akShopSearch")?.value||"").toLowerCase().trim(),cat=$("akShopCategory")?.value||"";const rows=akPublicShopCache.filter(x=>(!cat||x.category===cat)&&[x.shopName,x.city,x.township,x.about,x.address].join(" ").toLowerCase().includes(q));$("akShopCount").textContent="အတည်ပြုထားသော ဆိုင် "+rows.length+" ဆိုင်";host.innerHTML=rows.length?rows.map(x=>{const link=akSafeAdUrl(x.link);const phone=String(x.phone||"").replace(/[^0-9+]/g,"");const map="https://www.google.com/maps/search/?api=1&query="+encodeURIComponent([x.address,x.township,x.city].filter(Boolean).join(", "));const n=marketNormalizePhone(x.phone);return '<article class="panel" style="margin:0"><span class="pill">AK Shopping Center · ဆိုင်</span><h3>'+esc(x.shopName)+'</h3><p class="muted">'+esc(x.category||"အခြား")+' · '+esc([x.township,x.city].filter(Boolean).join(", "))+'</p><p>'+esc(x.address||"")+'</p><p>'+esc(x.about||"")+'</p><div class="actions">'+(phone?'<a class="btn" href="tel:'+esc(phone)+'">ဖုန်းဆက်ရန်</a>':'')+(n?'<a class="btn alt" href="viber://chat?number='+encodeURIComponent(n)+'">Viber</a>':'')+(x.address||x.city?'<a class="btn alt" href="'+esc(map)+'" target="_blank" rel="noopener noreferrer">မြေပုံ / လမ်းညွှန်</a>':'')+(link?'<a class="btn alt" href="'+esc(link)+'" target="_blank" rel="noopener noreferrer">ဆိုင် Website</a>':'')+'</div></article>'}).join(""):'<p class="muted">ရှာဖွေမှုနှင့်ကိုက်ညီသော အတည်ပြုဆိုင် မရှိသေးပါ။ ဆိုင်များစာရင်းတင်လာသည်နှင့် ဒီနေရာမှာ ပေါ်လာမည်။</p>'}
@@ -1774,8 +1929,8 @@ async function loadPendingAds(){try{const admin=fbAuth?.currentUser;if(!admin||S
 const AK_SPONSORED_ADS_FREE_BETA=true;async function approveSponsoredAd(id){let reference="FREE_BETA";if(!AK_SPONSORED_ADS_FREE_BETA){const paidReference=prompt("ငွေလက်ခံပြီးကြောင်း Payment Reference ထည့်ပါ။");if(!paidReference||paidReference.trim().length<3)return;reference=paidReference.trim().slice(0,100)}if(!confirm(AK_SPONSORED_ADS_FREE_BETA?"ယာယီအခမဲ့ကာလအတွင်း ဤကြော်ငြာကို ရက် ၃၀ အတည်ပြုမလား။":"ငွေပေးချေမှု စစ်ပြီးပါက ဤကြော်ငြာကို ရက် ၃၀ အတည်ပြုမလား။"))return;try{const admin=fbAuth?.currentUser;if(!admin||String(admin.email||"").trim().toLowerCase()!=="painglin102@gmail.com"||!admin.emailVerified)throw Error("Owner ခွင့်ပြုချက်မရှိပါ။");await fbStore.collection("sponsoredAds").doc(id).update({status:"approved",paymentReference:reference,reviewedAt:firebase.firestore.FieldValue.serverTimestamp(),startsAt:firebase.firestore.FieldValue.serverTimestamp(),endsAt:firebase.firestore.Timestamp.fromDate(new Date(Date.now()+30*24*60*60*1000))});await loadPendingAds();await loadSponsoredAds()}catch(e){alert("အတည်ပြုမရပါ: "+e.message)}}
 async function rejectSponsoredAd(id){if(!confirm("ဤကြော်ငြာကို ပယ်ဖျက်မလား။"))return;try{const admin=fbAuth?.currentUser;if(!admin||String(admin.email||"").trim().toLowerCase()!=="painglin102@gmail.com"||!admin.emailVerified)throw Error("Owner ခွင့်ပြုချက်မရှိပါ။");await fbStore.collection("sponsoredAds").doc(id).update({status:"rejected",reviewedAt:firebase.firestore.FieldValue.serverTimestamp()});await loadPendingAds()}catch(e){alert("ပယ်ဖျက်မရပါ: "+e.message)}}
 let akFirebaseSdkPromise=null;function akLoadFirebaseSDK(){if(window.firebase&&firebase.auth&&firebase.firestore)return Promise.resolve();if(akFirebaseSdkPromise)return akFirebaseSdkPromise;akFirebaseSdkPromise=(async()=>{const base="https://www.gstatic.com/firebasejs/10.12.2/";const load=name=>new Promise((resolve,reject)=>{const script=document.createElement("script");script.src=base+name;script.async=true;script.onload=resolve;script.onerror=()=>reject(new Error("Firebase SDK မရနိုင်ပါ: "+name));document.head.appendChild(script)});await load("firebase-app-compat.js");await Promise.all(["firebase-auth-compat.js","firebase-firestore-compat.js","firebase-functions-compat.js","firebase-storage-compat.js"].map(load))})().catch(error=>{akFirebaseSdkPromise=null;throw error});return akFirebaseSdkPromise}
-async function firebaseConnect(){try{let rawConfig=window.AK_FIREBASE_PUBLIC_CONFIG||localStorage.getItem("ak_firebase_config");if(!rawConfig)throw Error("Firebase Web App Config ထည့်ပါ။");let cfg=typeof rawConfig==="string"?JSON.parse(rawConfig):rawConfig;if(!cfg||typeof cfg!=="object"||!cfg.apiKey||!cfg.projectId||!cfg.appId)throw Error("Firebase Web App Config မပြည့်စုံပါ။");if(window.AK_FIREBASE_PUBLIC_CONFIG){cfg=window.AK_FIREBASE_PUBLIC_CONFIG;}localStorage.setItem("ak_firebase_config",JSON.stringify(cfg));/* Always prefer the current project config over stale browser settings. */await akLoadFirebaseSDK();if(!window.firebase)throw Error("Firebase SDK မတင်နိုင်ပါ။ Internet စစ်ပါ။");if(!firebase.apps.length)fbApp=firebase.initializeApp(cfg);else fbApp=firebase.app();fbAuth=firebase.auth();fbStore=firebase.firestore();await Promise.all([fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL),fbStore.enablePersistence({synchronizeTabs:true}).catch(error=>{if(!["failed-precondition","unimplemented"].includes(error.code))console.warn("Firestore offline cache unavailable",error)})]);fbAuth.languageCode="my";if(!akRedirectResultChecked){akRedirectResultChecked=true;fbAuth.getRedirectResult().then(async result=>{if(result&&result.user){const email=String(result.user.email||"").trim().toLowerCase();if(new URLSearchParams(location.search).get("market")==="1"&&email!=="painglin102@gmail.com"){await fbAuth.signOut();$("fbStatus").textContent="Owner နေရာတွင် painglin102@gmail.com တစ်ခုတည်းသာ ဝင်နိုင်သည်။";return;}$("fbStatus").textContent=email==="painglin102@gmail.com"?"Owner Gmail Google Redirect Login ပြီးပါပြီ။ Cloud ဒေတာစစ်ဆေးနေသည်...":"Google Redirect Login ပြီးပါပြီ။ Subscription ကို စစ်ဆေးနေသည်...";}}).catch(error=>{const code=error.code||"";const detail=code==="auth/unauthorized-domain"?"Firebase Authorized domains ထဲတွင် rmaynah102-afk.github.io ထည့်ရန်လိုသည်။":code==="auth/operation-not-allowed"?"Firebase Authentication ထဲတွင် Google Provider ကို Enable လုပ်ရန်လိုသည်.":(error.message||String(error));$("fbStatus").textContent="Google Redirect ပြန်ဝင်မှု မအောင်မြင် ("+code+"): "+detail;console.error("AK Google redirect result error",error);});}if(!fbAuthListenerReady){fbAuthListenerReady=true;fbAuth.onAuthStateChanged(async user=>{const authGeneration=++akAuthGeneration;if(user&&new URLSearchParams(location.search).get("market")==="1"&&!akIsPlatformOwner(user)){await fbAuth.signOut();const status=document.getElementById("fbStatus");if(status)status.textContent="Owner ခွင့်မရှိပါ။ painglin102@gmail.com တစ်ခုတည်းဖြင့် Google Login ဝင်ပါ။";return}if(akCloudUnsubscribe){akCloudUnsubscribe();akCloudUnsubscribe=null}if(akFreeBetaAccessUnsubscribe){akFreeBetaAccessUnsubscribe();akFreeBetaAccessUnsubscribe=null}akLocalDirty=false;akCloudConflict=false;akCloudRevision=0;akCloudSaveInFlight=false;akCloudSaveQueued=false;cloudReady=false;fbUser=user||null;akUserClaims={};akSetLicenseGate(false,"အကောင့်နှင့် Free Beta အသုံးပြုခွင့်ကို စစ်ဆေးနေသည်...");if(user){try{const token=await user.getIdTokenResult();akUserClaims=token.claims||{}}catch(claimError){console.warn("Custom claims unavailable",claimError)}if(authGeneration!==akAuthGeneration)return}checkUserRole(user);if(typeof akLoadOwnerAds==="function")void akLoadOwnerAds();if(typeof akLoadMarketAdOrders==="function"&&akIsPlatformOwner(user))void akLoadMarketAdOrders();if(typeof loadSponsoredAds==="function")void loadSponsoredAds();if(typeof loadPublicShops==="function")void loadPublicShops();if(typeof loadMyMarketListings==="function")void loadMyMarketListings();if(window.cmLoadLocal)window.cmLoadLocal();if(!user){akWorkspaceMode=false;akWorkspaceShopId="";akWorkspaceRevision=0;checkUserRole(null);akSetLicenseGate(false,"Gmail ဖြင့် Login ဝင်ပါ။ Subscription နှင့် Owner ခွင့်ပြုချက် စစ်ဆေးပြီးမှ ပင်မ POS ကို ဖွင့်ပေးမည်။");akUserClaims={};const announcementBox=document.getElementById("globalAnnouncementFeed");if(announcementBox)announcementBox.classList.add("hidden");if(akCloudUnsubscribe){akCloudUnsubscribe();akCloudUnsubscribe=null}db=readDB(DBKEY);$("saveState").textContent="ဖုန်းထဲသိမ်းဆည်းမည်";$("fbStatus").textContent="Logout ဝင်ထားသည်";renderAll();return}try{const key=userDBKey(user.uid);db=readDB(key);renderAll();$("shopUid").textContent=user.uid;$("fbStatus").textContent="ဆိုင်အကောင့်နှင့် Cloud ဒေတာ စစ်ဆေးနေသည်: "+user.email;const normalizedEmail=String(user.email||"").trim().toLowerCase();const isOwnerAccount=normalizedEmail==="painglin102@gmail.com"&&user.emailVerified===true;const isStaff=!!akUserClaims.shopId&&!isOwnerAccount;akApplyAnnouncementAdminVisibility();if(isStaff){const staffRole=String(akUserClaims.shopRole||"").toLowerCase();const memberSnap=await fbStore.collection("shopMembers").doc(user.uid).get();if(authGeneration!==akAuthGeneration)return;const member=memberSnap.exists?memberSnap.data():null;if(!member||member.shopId!==akUserClaims.shopId||member.role!==staffRole||!["manager","cashier","employee"].includes(staffRole))throw Error("ဝန်ထမ်းအကောင့် ခွင့်ပြုချက် မမှန်ကန်ပါ။ ဆိုင်ရှင်ထံ ဆက်သွယ်ပါ။");akWorkspaceMode=true;akWorkspaceShopId=String(akUserClaims.shopId);const workspace=await firebase.functions().httpsCallable("loadShopWorkspace")({});if(authGeneration!==akAuthGeneration)return;const ws=workspace.data||{};if(!ws.ok||ws.shopId!==akWorkspaceShopId)throw Error("ဝန်ထမ်းဆိုင် Workspace မဖတ်နိုင်ပါ");akWorkspaceRevision=Number(ws.revision||0);db=akMergeLocalProductPhotos({...fresh(),...(ws.data||{})});localStorage.setItem(key,JSON.stringify(db));cloudReady=true;currentLicense={uid:akWorkspaceShopId,status:"active"};akSetLicenseGate(true,"ဝန်ထမ်းအကောင့် · "+({manager:"မန်နေဂျာ",cashier:"ငွေကိုင်",employee:"ဝန်ထမ်း"}[staffRole]||staffRole));$("deviceStatus").textContent="ဝန်ထမ်းအကောင့် · "+staffRole;renderAll();startAkCloudSync();go("home");$("fbStatus").textContent="ဆိုင်ရှင်၏ Cloud POS နှင့် ချိတ်ဆက်ပြီးပါပြီ။ သင့်ရာထူးခွင့်ပြုချက်အတိုင်းသာ အသုံးပြုနိုင်သည်။";return}let licenseReady=isOwnerAccount?true:await refreshLicense();if(authGeneration!==akAuthGeneration)return;if(!isOwnerAccount&&(!licenseReady||!currentLicense||currentLicense.status!=="active"||!currentLicense.expiresAt||((currentLicense.expiresAt.toDate?currentLicense.expiresAt.toDate():new Date(currentLicense.expiresAt))<=new Date()))){akSetLicenseGate(false,"Subscription မရှိသေးပါ။ Package ရွေးချယ်ပြီး ငွေပေးချေပါ။ Owner အတည်ပြုပြီးမှ POS ကို ဖွင့်ပေးမည်။");cloudReady=false;$("fbStatus").textContent="Offline Local Mode — ဒေတာကို ဤဖုန်းထဲတွင်သာ သိမ်းဆည်းမည်။";renderAll();return}if(isOwnerAccount){$("deviceStatus").textContent="Platform Owner · Device Function မလိုအပ်ပါ။"}else{$("deviceStatus").textContent="Subscription အတည်ပြုပြီးပါပြီ။"}if(authGeneration!==akAuthGeneration)return;akWorkspaceMode=true;akWorkspaceShopId=user.uid;const workspaceResult=await firebase.functions().httpsCallable("loadShopWorkspace")({});if(authGeneration!==akAuthGeneration)return;let ws=workspaceResult.data||{};if(!ws.ok||ws.shopId!==user.uid)throw Error("ဆိုင်ရှင် Workspace မဖတ်နိုင်ပါ");akWorkspaceRevision=Number(ws.revision||0);if(akWorkspaceRevision===0){const legacy=await fbStore.collection("users").doc(user.uid).collection("private").doc("appData").get();if(legacy.exists&&legacy.data()?.data){const legacyData=legacy.data().data;const migrated=await firebase.functions().httpsCallable("saveShopWorkspace")({data:legacyData,expectedRevision:0});akWorkspaceRevision=Number(migrated.data?.revision||1);const refreshed=await firebase.functions().httpsCallable("loadShopWorkspace")({});ws=refreshed.data||ws;}else{const initial={...akCloudDataWithoutPhotos(db),shop:db.shop||{}};const saved=await firebase.functions().httpsCallable("saveShopWorkspace")({data:initial,expectedRevision:0});akWorkspaceRevision=Number(saved.data?.revision||1);const refreshed=await firebase.functions().httpsCallable("loadShopWorkspace")({});ws=refreshed.data||ws;}}db=akMergeLocalProductPhotos({...fresh(),...(ws.data||{}),shop:ws.data?.shop||db.shop||{}});localStorage.setItem(key,JSON.stringify(db));akCloudConflict=false;akLocalDirty=false;cloudReady=true;akSetLicenseGate(true,isOwnerAccount?"Platform Owner အတည်ပြုပြီးပါပြီ။":"ဆိုင် Subscription အတည်ပြုပြီးပါပြီ။");if(!isOwnerAccount)akWatchFreeBetaAccess(user.uid);startAkCloudSync();renderAll();if(["shop-owner","platform-owner"].includes(akUserRole)){if(isOwnerAccount)akInitOwnerDashboard();go("ownerDashboard");void akLoadStaff();if(isOwnerAccount)void loadPlatformUsers()}if(window.cmCloudLoad){try{await window.cmCloudLoad()}catch(cmError){console.warn("Center cloud load did not block Owner Dashboard:",cmError)}}if(authGeneration!==akAuthGeneration)return;}catch(e){if(authGeneration!==akAuthGeneration)return;cloudReady=false;console.error("AK workspace startup failed",e);if(isOwnerAccount){akSetLicenseGate(true,"Platform Owner · Cloud Workspace ချိတ်ဆက်မှု မရသေးပါ။ Dashboard ကို ဆက်ဖွင့်ထားသည်။");renderAll();akInitOwnerDashboard();go("ownerDashboard");$("fbStatus").textContent="Owner Dashboard ဖွင့်ပြီးပါပြီ။ Cloud POS Sync မရသေးပါ: "+(e.message||e)+" · ဝန်ထမ်းစီမံမှုအတွက် Server Functions ချိတ်ဆက်မှု လိုအပ်သည်။";void akLoadStaff();void loadPlatformUsers()}else{akSetLicenseGate(false,"Cloud / License စစ်ဆေးမှု မအောင်မြင်ပါ။ Internet ပြန်ချိတ်ပြီး Gmail နှင့် Subscription ကို ပြန်စစ်ပါ။ လုံခြုံရေးအတွက် POS ကို ပိတ်ထားသည်။");$("fbStatus").textContent="Offline Local Mode — Cloud ချိတ်ဆက်မှု မရပါ: "+e.message;renderAll()}}})}$("fbStatus").textContent="Firebase ချိတ်ပြီးပါပြီ။ Email နှင့် Password ဖြင့် Login ဝင်ပါ။";if(typeof loadMarket==="function")await loadMarket()}catch(e){akSetLicenseGate(false,"Firebase ချိတ်ဆက်မှု မရပါ။ Gmail / Internet ကို စစ်ပြီး ပြန်ချိတ်ပါ။ လုံခြုံရေးအတွက် POS ကို ပိတ်ထားသည်။");cloudReady=false;$("fbStatus").textContent="Offline Local Mode — Firebase ချိတ်ဆက်မှု မအောင်မြင်: "+e.message;console.error(e);renderAll()}}
-async function firebaseGoogleLogin(){try{if(!fbAuth||!fbStore)await firebaseConnect();if(!fbAuth)return;const provider=new firebase.auth.GoogleAuthProvider();provider.addScope("email");provider.setCustomParameters({prompt:"select_account"});$("fbStatus").textContent="Google အကောင့်ရွေးချယ်ရန် ဖွင့်နေသည်...";const isAndroid=/Android/i.test(navigator.userAgent||"");const isNativeApp=!!(window.Capacitor&&typeof window.Capacitor.isNativePlatform==="function"&&window.Capacitor.isNativePlatform());if(isNativeApp){await fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);const nativeAuth=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.FirebaseAuthentication;if(!nativeAuth||typeof nativeAuth.signInWithGoogle!=="function")throw Error("Native Google Login Plugin မတွေ့ပါ။ APK အသစ်ကို Install လုပ်ပါ။");$("fbStatus").textContent="Google အကောင့်ရွေးချယ်ရန် ဖွင့်နေသည်...";const nativeResult=await nativeAuth.signInWithGoogle({skipNativeAuth:true});const idToken=nativeResult&&nativeResult.credential&&nativeResult.credential.idToken;if(!idToken)throw Error("Google ID Token မရပါ။ Firebase Android SHA-1 နှင့် Google Provider ကို စစ်ဆေးပါ။");const webCredential=firebase.auth.GoogleAuthProvider.credential(idToken);const webResult=await fbAuth.signInWithCredential(webCredential);const nativeUser=webResult&&webResult.user;if(!nativeUser)throw Error("Firebase Web Session မတည်ဆောက်နိုင်ပါ။");const nativeEmail=String(nativeUser.email||"").trim().toLowerCase();if(new URLSearchParams(location.search).get("market")==="1"&&nativeEmail!=="painglin102@gmail.com"){await fbAuth.signOut();throw Error("Owner နေရာတွင် painglin102@gmail.com တစ်ခုတည်းသာ Google ဖြင့် ဝင်နိုင်သည်။")}if(nativeEmail==="painglin102@gmail.com"&&!nativeUser.emailVerified){await fbAuth.signOut();throw Error("Owner Gmail ကို Verified အဖြစ် မအတည်ပြုနိုင်ပါ။")}$("fbStatus").textContent=nativeEmail==="painglin102@gmail.com"?"Owner Gmail အတည်ပြုပြီးပါပြီ။ Cloud ဒေတာစစ်ဆေးနေသည်...":"Google Login ဝင်ပြီးပါပြီ။ Subscription ကို စစ်ဆေးနေသည်...";return}if(isAndroid){await fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);$("fbStatus").textContent="Google Login ဖွင့်နေသည်...";await fbAuth.signInWithRedirect(provider);return}const result=await fbAuth.signInWithPopup(provider);const user=result&&result.user;if(!user)throw Error("Google မှ အကောင့်အချက်အလက် မရရှိပါ။");const email=String(user.email||"").trim().toLowerCase();if(new URLSearchParams(location.search).get("market")==="1"&&email!=="painglin102@gmail.com"){await fbAuth.signOut();throw Error("Owner နေရာတွင် painglin102@gmail.com တစ်ခုတည်းသာ Google ဖြင့် ဝင်နိုင်သည်။")}if(email==="painglin102@gmail.com"&&!user.emailVerified){await fbAuth.signOut();throw Error("Owner Gmail ကို Google မှ Verified အဖြစ် မပြန်ပေးပါ။ Firebase Authentication ထဲတွင် Google Provider နှင့် အကောင့်အခြေအနေ စစ်ဆေးပါ။")}if(email==="painglin102@gmail.com")$("fbStatus").textContent="Owner Gmail အတည်ပြုပြီးပါပြီ။ Cloud ဒေတာစစ်ဆေးနေသည်...";else $("fbStatus").textContent="Google Login ဝင်ပြီးပါပြီ။ Subscription ကို စစ်ဆေးနေသည်..."}catch(e){const code=e.code||"";let detail=code==="auth/unauthorized-domain"?"Firebase Authorized domains ထဲတွင် rmaynah102-afk.github.io ကို ထည့်ပါ။":code==="auth/operation-not-allowed"?"Firebase Authentication ထဲတွင် Google Provider ကို Enable လုပ်ပါ။":code==="auth/account-exists-with-different-credential"?"ဤ Gmail ကို အခြား Login နည်းဖြင့် ဖွင့်ထားသည်။ ထိုနည်းလမ်းဖြင့် ဝင်ပါ။":code==="auth/network-request-failed"?"Internet သို့မဟုတ် Firebase Auth server ကို ချိတ်မရပါ။":code==="auth/popup-blocked"?"Chrome Settings ထဲတွင် Pop-ups ကို ခွင့်ပြုပြီး ပြန်စမ်းပါ။":code==="auth/popup-closed-by-user"?"Google Login ပေါ်လာသော ဝင်းဒိုးကို မပိတ်ဘဲ အကောင့်ရွေးပါ။":(e.message||String(e));$("fbStatus").textContent="Google Login မအောင်မြင် ("+code+"): "+detail;console.error("AK Google sign-in error",e)}}let akPhoneConfirmation=null;
+async function firebaseConnect(){try{let rawConfig=window.AK_FIREBASE_PUBLIC_CONFIG||localStorage.getItem("ak_firebase_config");if(!rawConfig)throw Error("Firebase Web App Config ထည့်ပါ။");let cfg=typeof rawConfig==="string"?JSON.parse(rawConfig):rawConfig;if(!cfg||typeof cfg!=="object"||!cfg.apiKey||!cfg.projectId||!cfg.appId)throw Error("Firebase Web App Config မပြည့်စုံပါ။");if(window.AK_FIREBASE_PUBLIC_CONFIG){cfg=window.AK_FIREBASE_PUBLIC_CONFIG;}localStorage.setItem("ak_firebase_config",JSON.stringify(cfg));/* Always prefer the current project config over stale browser settings. */await akLoadFirebaseSDK();if(!window.firebase)throw Error("Firebase SDK မတင်နိုင်ပါ။ Internet စစ်ပါ။");if(!firebase.apps.length)fbApp=firebase.initializeApp(cfg);else fbApp=firebase.app();fbAuth=firebase.auth();fbStore=firebase.firestore();await Promise.all([fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL),fbStore.enablePersistence({synchronizeTabs:true}).catch(error=>{if(!["failed-precondition","unimplemented"].includes(error.code))console.warn("Firestore offline cache unavailable",error)})]);fbAuth.languageCode="my";if(!akRedirectResultChecked){akRedirectResultChecked=true;fbAuth.getRedirectResult().then(result=>{if(result&&result.user){const email=String(result.user.email||"").trim().toLowerCase();$("fbStatus").textContent=email==="painglin102@gmail.com"?"Owner Gmail Google Redirect Login ပြီးပါပြီ။ Cloud ဒေတာစစ်ဆေးနေသည်...":"Google Redirect Login ပြီးပါပြီ။ Subscription ကို စစ်ဆေးနေသည်...";}}).catch(error=>{const code=error.code||"";const detail=code==="auth/unauthorized-domain"?"Firebase Authorized domains ထဲတွင် rmaynah102-afk.github.io ထည့်ရန်လိုသည်။":code==="auth/operation-not-allowed"?"Firebase Authentication ထဲတွင် Google Provider ကို Enable လုပ်ရန်လိုသည်.":(error.message||String(error));$("fbStatus").textContent="Google Redirect ပြန်ဝင်မှု မအောင်မြင် ("+code+"): "+detail;console.error("AK Google redirect result error",error);});}if(!fbAuthListenerReady){fbAuthListenerReady=true;fbAuth.onAuthStateChanged(async user=>{const authGeneration=++akAuthGeneration;if(akCloudUnsubscribe){akCloudUnsubscribe();akCloudUnsubscribe=null}if(akFreeBetaAccessUnsubscribe){akFreeBetaAccessUnsubscribe();akFreeBetaAccessUnsubscribe=null}if(akPaymentQueueUnsubscribe){akPaymentQueueUnsubscribe();akPaymentQueueUnsubscribe=null}if(akAccessQueueUnsubscribe){akAccessQueueUnsubscribe();akAccessQueueUnsubscribe=null}akLocalDirty=false;akCloudConflict=false;akCloudRevision=0;akCloudSaveInFlight=false;akCloudSaveQueued=false;cloudReady=false;fbUser=user||null;akUserClaims={};akSetLicenseGate(false,"အကောင့်နှင့် Free Beta အသုံးပြုခွင့်ကို စစ်ဆေးနေသည်...");if(user){void try{const token=await user.getIdTokenResult();akUserClaims=token.claims||{}}catch(claimError){console.warn("Custom claims unavailable",claimError)}if(authGeneration!==akAuthGeneration)return}checkUserRole(user);if(akIsPlatformOwner(user)){akSetLicenseGate(true,"Platform Owner · Dashboard ကို ဖွင့်ထားပြီး Cloud ဒေတာကို နောက်ကွယ်တွင် စစ်ဆေးနေသည်။");akInitOwnerDashboard();go("ownerDashboard");}if(typeof akLoadOwnerAds==="function")void akLoadOwnerAds();if(typeof akLoadMarketAdOrders==="function"&&akIsPlatformOwner(user))void akLoadMarketAdOrders();if(typeof loadSponsoredAds==="function")void loadSponsoredAds();if(typeof loadPublicShops==="function")void loadPublicShops();if(typeof loadMyMarketListings==="function")void loadMyMarketListings();if(window.cmLoadLocal)window.cmLoadLocal();if(!user){akWorkspaceMode=false;akWorkspaceShopId="";akWorkspaceRevision=0;checkUserRole(null);akSetLicenseGate(false,"Gmail ဖြင့် Login ဝင်ပါ။ Subscription နှင့် Owner ခွင့်ပြုချက် စစ်ဆေးပြီးမှ ပင်မ POS ကို ဖွင့်ပေးမည်။");akUserClaims={};const announcementBox=document.getElementById("globalAnnouncementFeed");if(announcementBox)announcementBox.classList.add("hidden");if(akCloudUnsubscribe){akCloudUnsubscribe();akCloudUnsubscribe=null}db=readDB(DBKEY);$("saveState").textContent="ဖုန်းထဲသိမ်းဆည်းမည်";$("fbStatus").textContent="Logout ဝင်ထားသည်";renderAll();return}try{const key=userDBKey(user.uid);db=readDB(key);renderAll();$("shopUid").textContent=user.uid;$("fbStatus").textContent="ဆိုင်အကောင့်နှင့် Cloud ဒေတာ စစ်ဆေးနေသည်: "+user.email;const normalizedEmail=String(user.email||"").trim().toLowerCase();const isOwnerAccount=normalizedEmail==="painglin102@gmail.com"&&user.emailVerified===true;const isStaff=!!akUserClaims.shopId&&!isOwnerAccount;akApplyAnnouncementAdminVisibility();if(isStaff)throw Error("အခမဲ့ဗားရှင်းတွင် သီးခြားဝန်ထမ်း Cloud POS မဖွင့်ထားပါ။ ဆိုင်ရှင်ထံ ဆက်သွယ်ပါ။");let licenseReady=isOwnerAccount?true:await refreshLicense();if(authGeneration!==akAuthGeneration)return;const isFreeBeta=currentLicense?.plan==="free-beta"&&currentLicense.status==="active";if(!isOwnerAccount&&(!licenseReady||!currentLicense||currentLicense.status!=="active"||(!isFreeBeta&&(!currentLicense.expiresAt||((currentLicense.expiresAt.toDate?currentLicense.expiresAt.toDate():new Date(currentLicense.expiresAt))<=new Date()))))){akSetLicenseGate(false,"Subscription မရှိသေးပါ။ Package ရွေးချယ်ပြီး ငွေပေးချေပါ။ Owner အတည်ပြုပြီးမှ POS ကို ဖွင့်ပေးမည်။");cloudReady=false;$("fbStatus").textContent="Offline Local Mode — ဒေတာကို ဤဖုန်းထဲတွင်သာ သိမ်းဆည်းမည်။";renderAll();return}if(isOwnerAccount){$("deviceStatus").textContent="Platform Owner · Free Firestore Mode"}else{$("deviceStatus").textContent=currentLicense?.plan==="free-beta"?"Free Beta · Cloud Sync":"Subscription အတည်ပြုပြီးပါပြီ။"}if(authGeneration!==akAuthGeneration)return;akWorkspaceMode=false;akWorkspaceShopId=user.uid;akWorkspaceRevision=0;const privateRef=fbStore.collection("users").doc(user.uid).collection("private").doc("appData");const privateSnap=await privateRef.get();if(authGeneration!==akAuthGeneration)return;if(privateSnap.exists){const remote=privateSnap.data()||{};if(remote.data&&Array.isArray(remote.data.products)&&Array.isArray(remote.data.sales)){db=akMergeLocalProductPhotos(remote.data);akCloudRevision=Number.isSafeInteger(remote.revision)&&remote.revision>=0?remote.revision:0;}}else{akCloudRevision=0;}localStorage.setItem(key,JSON.stringify(db));akCloudConflict=false;akLocalDirty=false;cloudReady=true;akSetLicenseGate(true,isOwnerAccount?"Platform Owner · Free Firestore Mode":currentLicense?.plan==="free-beta"?"Free Beta · ကိုယ်ပိုင်ဆိုင်ဒေတာ":"ဆိုင် Subscription အတည်ပြုပြီးပါပြီ။");if(!isOwnerAccount&&currentLicense?.plan==="free-beta")akWatchFreeBetaAccess(user.uid);startAkCloudSync();renderAll();if(["shop-owner","platform-owner"].includes(akUserRole)){if(isOwnerAccount)akInitOwnerDashboard();go("ownerDashboard");void akLoadStaff();if(isOwnerAccount){void loadPlatformUsers();void akWatchAdminAccessRequests()}}if(window.cmCloudLoad){try{await window.cmCloudLoad()}catch(cmError){console.warn("Center cloud load did not block Owner Dashboard:",cmError)}}if(authGeneration!==akAuthGeneration)return;}catch(e){if(authGeneration!==akAuthGeneration)return;cloudReady=false;console.error("AK workspace startup failed",e);if(isOwnerAccount){akSetLicenseGate(true,"Platform Owner · Cloud Workspace ချိတ်ဆက်မှု မရသေးပါ။ Dashboard ကို ဆက်ဖွင့်ထားသည်။");renderAll();akInitOwnerDashboard();go("ownerDashboard");$("fbStatus").textContent="Owner Dashboard ဖွင့်ပြီးပါပြီ။ Cloud POS Sync မရသေးပါ: "+(e.message||e)+" · ဝန်ထမ်းစီမံမှုအတွက် Server Functions ချိတ်ဆက်မှု လိုအပ်သည်။";void akLoadStaff();void loadPlatformUsers();void akWatchAdminAccessRequests()}else{akSetLicenseGate(false,"Cloud / License စစ်ဆေးမှု မအောင်မြင်ပါ။ Internet ပြန်ချိတ်ပြီး Gmail နှင့် Subscription ကို ပြန်စစ်ပါ။ လုံခြုံရေးအတွက် POS ကို ပိတ်ထားသည်။");$("fbStatus").textContent="Offline Local Mode — Cloud ချိတ်ဆက်မှု မရပါ: "+e.message;renderAll()}}})}$("fbStatus").textContent="Firebase ချိတ်ပြီးပါပြီ။ Email နှင့် Password ဖြင့် Login ဝင်ပါ။";if(typeof loadMarket==="function")await loadMarket()}catch(e){akSetLicenseGate(false,"Firebase ချိတ်ဆက်မှု မရပါ။ Gmail / Internet ကို စစ်ပြီး ပြန်ချိတ်ပါ။ လုံခြုံရေးအတွက် POS ကို ပိတ်ထားသည်။");cloudReady=false;$("fbStatus").textContent="Offline Local Mode — Firebase ချိတ်ဆက်မှု မအောင်မြင်: "+e.message;console.error(e);renderAll()}}
+async function firebaseGoogleLogin(){try{if(!fbAuth||!fbStore)await firebaseConnect();if(!fbAuth)return;const provider=new firebase.auth.GoogleAuthProvider();provider.addScope("email");provider.setCustomParameters({prompt:"select_account"});$("fbStatus").textContent="Google အကောင့်ရွေးချယ်ရန် ဖွင့်နေသည်...";const isAndroid=/Android/i.test(navigator.userAgent||"");const isNativeApp=!!(window.Capacitor&&typeof window.Capacitor.isNativePlatform==="function"&&window.Capacitor.isNativePlatform());if(isNativeApp){await fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);const nativeAuth=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.FirebaseAuthentication;if(!nativeAuth||typeof nativeAuth.signInWithGoogle!=="function")throw Error("Native Google Login Plugin မတွေ့ပါ။ APK အသစ်ကို Install လုပ်ပါ။");$("fbStatus").textContent="Google အကောင့်ရွေးချယ်ရန် ဖွင့်နေသည်...";const nativeResult=await nativeAuth.signInWithGoogle({skipNativeAuth:true});const idToken=nativeResult&&nativeResult.credential&&nativeResult.credential.idToken;if(!idToken)throw Error("Google ID Token မရပါ။ Firebase Android SHA-1 နှင့် Google Provider ကို စစ်ဆေးပါ။");const webCredential=firebase.auth.GoogleAuthProvider.credential(idToken);const webResult=await fbAuth.signInWithCredential(webCredential);const nativeUser=webResult&&webResult.user;if(!nativeUser)throw Error("Firebase Web Session မတည်ဆောက်နိုင်ပါ။");const nativeEmail=String(nativeUser.email||"").trim().toLowerCase();if(nativeEmail==="painglin102@gmail.com"&&!nativeUser.emailVerified){await fbAuth.signOut();throw Error("Owner Gmail ကို Verified အဖြစ် မအတည်ပြုနိုင်ပါ။")}$("fbStatus").textContent=nativeEmail==="painglin102@gmail.com"?"Owner Gmail အတည်ပြုပြီးပါပြီ။ Cloud ဒေတာစစ်ဆေးနေသည်...":"Google Login ဝင်ပြီးပါပြီ။ Subscription ကို စစ်ဆေးနေသည်...";return}if(isAndroid){await fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);$("fbStatus").textContent="Google Login ဖွင့်နေသည်...";await fbAuth.signInWithRedirect(provider);return}const result=await fbAuth.signInWithPopup(provider);const user=result&&result.user;if(!user)throw Error("Google မှ အကောင့်အချက်အလက် မရရှိပါ။");const email=String(user.email||"").trim().toLowerCase();if(email==="painglin102@gmail.com"&&!user.emailVerified){await fbAuth.signOut();throw Error("Owner Gmail ကို Google မှ Verified အဖြစ် မပြန်ပေးပါ။ Firebase Authentication ထဲတွင် Google Provider နှင့် အကောင့်အခြေအနေ စစ်ဆေးပါ။")}if(email==="painglin102@gmail.com")$("fbStatus").textContent="Owner Gmail အတည်ပြုပြီးပါပြီ။ Cloud ဒေတာစစ်ဆေးနေသည်...";else $("fbStatus").textContent="Google Login ဝင်ပြီးပါပြီ။ Subscription ကို စစ်ဆေးနေသည်..."}catch(e){const code=e.code||"";let detail=code==="auth/unauthorized-domain"?"Firebase Authorized domains ထဲတွင် rmaynah102-afk.github.io ကို ထည့်ပါ။":code==="auth/operation-not-allowed"?"Firebase Authentication ထဲတွင် Google Provider ကို Enable လုပ်ပါ။":code==="auth/account-exists-with-different-credential"?"ဤ Gmail ကို အခြား Login နည်းဖြင့် ဖွင့်ထားသည်။ ထိုနည်းလမ်းဖြင့် ဝင်ပါ။":code==="auth/network-request-failed"?"Internet သို့မဟုတ် Firebase Auth server ကို ချိတ်မရပါ။":code==="auth/popup-blocked"?"Chrome Settings ထဲတွင် Pop-ups ကို ခွင့်ပြုပြီး ပြန်စမ်းပါ။":code==="auth/popup-closed-by-user"?"Google Login ပေါ်လာသော ဝင်းဒိုးကို မပိတ်ဘဲ အကောင့်ရွေးပါ။":(e.message||String(e));$("fbStatus").textContent="Google Login မအောင်မြင် ("+code+"): "+detail;console.error("AK Google sign-in error",e)}}let akPhoneConfirmation=null;
 let akPhoneVerificationId="";
 let akPhoneRecaptcha=null;
 let akNativePhoneListeners=[];
@@ -1852,11 +2007,32 @@ async function firebaseVerifyPhoneOtp(){
   console.error("AK phone OTP verify failed",e);
  }finally{if(button){button.disabled=false;button.textContent="OTP အတည်ပြု Login ဝင်ရန်"}}
 }
-async function firebaseLogin(){const status=$("fbStatus");if(status)status.textContent="Email/Password Login ကို ပိတ်ထားသည်။ Google ဖြင့်သာ ဝင်ပါ။";}
-async function firebaseRegister(){const status=$("fbStatus");if(status)status.textContent="အကောင့်အသစ်ဖွင့်ခြင်းကို ပိတ်ထားသည်။ Google ဖြင့်သာ ဝင်ပါ။"}
-async function firebaseResetPassword(){const status=$("fbStatus");if(status)status.textContent="Google Login ကို အသုံးပြုပါ။ Password Reset မလိုအပ်ပါ။"}
+async function firebaseLogin(){const button=[...document.querySelectorAll("#akFirebasePanel button")].find(b=>b.textContent.trim()==="Login ဝင်မည်");try{if(button){button.disabled=true;button.textContent="ဝင်နေသည်..."}if(!fbAuth||!fbStore)await firebaseConnect();if(!fbAuth)throw Error("Firebase မချိတ်နိုင်ပါ။ Internet ကိုစစ်ပါ။");const email=$("fbEmail").value.trim().toLowerCase(),pass=$("fbPassword").value;if(!email)throw Error("Gmail / Email ထည့်ပါ။");if(pass.length<6)throw Error("Password အနည်းဆုံး ၆ လုံးထည့်ပါ။");await fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);await fbAuth.signInWithEmailAndPassword(email,pass);$("fbStatus").textContent="Login အောင်မြင်ပါပြီ။ ဆိုင်ဒေတာနှင့် Subscription ကို စစ်ဆေးနေသည်...";}catch(e){const code=e.code||"";const messages={"auth/invalid-email":"Email လိပ်စာပုံစံ မမှန်ပါ။","auth/invalid-credential":"Email သို့မဟုတ် Password မမှန်ပါ။ Google နဲ့ဖွင့်ထားသောအကောင့်ဆို Google ဖြင့်ဝင်ပါ။","auth/user-not-found":"ဒီ Email အတွက် အကောင့်မရှိပါ။","auth/wrong-password":"Password မှားနေပါသည်။","auth/too-many-requests":"အကြိမ်များစွာ မှားယွင်းနေပါသည်။ ခဏစောင့်ပြီး ပြန်စမ်းပါ။","auth/network-request-failed":"Internet မချိတ်နိုင်ပါ။ အင်တာနက်စစ်ပြီး ပြန်စမ်းပါ။","auth/operation-not-allowed":"Firebase Console တွင် Email/Password Login ကို Enable လုပ်ရန်လိုသည်."};$("fbStatus").textContent="Login မအောင်မြင် ("+code+"): "+(messages[code]||e.message||"မသိသောအမှား");console.error("AK email login error",e)}finally{if(button){button.disabled=false;button.textContent="Login ဝင်မည်"}}}
+function akUpdateAccountTypeHint(){const type=$("akAccountType")?.value||"shop-owner";const hint=$("akAccountTypeHint");if(hint)hint.textContent=type==="staff"?"ဝန်ထမ်းအကောင့်ကို အခမဲ့ဗားရှင်းတွင် မဖွင့်ထားပါ။":"ဆိုင်ရှင် Gmail ဖြင့် Register လုပ်ပြီး Email အတည်ပြုပါ။ Free Beta နေရာရှိပါက အလိုအလျောက်ဖွင့်ပေးမည်။"}
+async function firebaseRegister(){try{if(!fbAuth||!fbStore)await firebaseConnect();if(!fbAuth)return;const email=$("fbEmail").value.trim(),pass=$("fbPassword").value,type=$("akAccountType")?.value||"shop-owner";if(type==="staff")throw Error("ဝန်ထမ်းအကောင့်ကို အခမဲ့ဗားရှင်းတွင် မဖွင့်ထားပါ။");if(!email||pass.length<6)throw Error("Email နှင့် Password အနည်းဆုံး 6 လုံးထည့်ပါ");const credential=await fbAuth.createUserWithEmailAndPassword(email,pass);await credential.user.sendEmailVerification();await fbAuth.signOut();$("fbStatus").textContent="ဆိုင်ရှင်အကောင့် ဖွင့်ပြီးပါပြီ။ "+email+" သို့ Verification Link ပို့ထားသည်။ Email အတည်ပြုပြီး Login ပြန်ဝင်ပါ။ Free Beta နေရာရှိပါက POS ကို အခမဲ့အသုံးပြုနိုင်ပါမည်။"}catch(e){$("fbStatus").textContent="Account ဖွင့်မရပါ ("+(e.code||"")+"): "+e.message}}
+async function firebaseResetPassword(){try{if(!fbAuth||!fbStore)await firebaseConnect();if(!fbAuth)return;const email=$("fbEmail").value.trim();if(!email)throw Error("Password ပြန်သတ်မှတ်ရန် Email ထည့်ပါ");await fbAuth.sendPasswordResetEmail(email);$("fbStatus").textContent=email+" သို့ Password Reset Link ပို့ပြီးပါပြီ။ Inbox/Spam စစ်ပါ။"}catch(e){$("fbStatus").textContent="Password Reset မအောင်မြင် ("+(e.code||"")+"): "+e.message}}
 async function firebaseLogout(){try{if(!fbAuth)await firebaseConnect();if(fbAuth)await fbAuth.signOut();const pass=$("fbPassword");if(pass)pass.value="";$("fbStatus").textContent="အကောင့်မှ ထွက်ပြီးပါပြီ။ နောက်တစ်ကြိမ် Gmail ဖြင့် ပြန်ဝင်နိုင်ပါသည်။"}catch(e){$("fbStatus").textContent="Logout မအောင်မြင်: "+e.message}}
 function renderLicenseCalendar(expiry,status){const dateEl=$("licenseExpiryDate"),daysEl=$("licenseRemainingDays"),stateEl=$("licenseCalendarState");if(!dateEl||!daysEl||!stateEl)return;const valid=expiry instanceof Date&&!Number.isNaN(expiry.getTime());dateEl.value=valid?expiry.toISOString().slice(0,10):"";if(!valid){daysEl.textContent="—";stateEl.textContent="သက်တမ်းရက် မသတ်မှတ်ရသေးပါ";return}const remaining=Math.max(0,Math.ceil((expiry.getTime()-Date.now())/86400000));daysEl.textContent=String(remaining)+" ရက်";stateEl.textContent=status==="active"&&remaining>0?"အသုံးပြုခွင့် ဖွင့်ထားသည်": "သက်တမ်းကုန် / ပိတ်ထားသည်"}
+async function akEnsureFreeBetaAccess(user){
+ const profileRef=fbStore.collection("freeBetaUsers").doc(user.uid);
+ const capacityRef=fbStore.collection("freeBetaCapacity").doc("slots");
+ return fbStore.runTransaction(async tx=>{
+  const profile=await tx.get(profileRef);
+  if(profile.exists){
+   const existing=profile.data()||{};
+   if(existing.status!=="active")return false;
+   tx.update(profileRef,{lastLoginAt:firebase.firestore.FieldValue.serverTimestamp()});
+   return true;
+  }
+  const capacity=await tx.get(capacityRef);
+  const current=capacity.exists?Number((capacity.data()||{}).count):0;
+  if(!Number.isInteger(current)||current<0||current>=30)return false;
+  tx.set(profileRef,{uid:user.uid,email:String(user.email||""),status:"active",createdAt:firebase.firestore.FieldValue.serverTimestamp(),lastLoginAt:firebase.firestore.FieldValue.serverTimestamp()});
+  if(capacity.exists)tx.update(capacityRef,{count:current+1,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+  else tx.set(capacityRef,{count:1,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+  return true;
+ });
+}
 async function refreshLicense(){
  try{
   if(!fbAuth||!fbAuth.currentUser){
@@ -1874,9 +2050,18 @@ async function refreshLicense(){
   }
   const licenseSnap=await fbStore.collection("licenses").doc(user.uid).get();
   if(!licenseSnap.exists){
+   const betaActive=await akEnsureFreeBetaAccess(user);
+   if(betaActive){
+    currentLicense={uid:user.uid,status:"active",plan:"free-beta",expiresAt:null};
+    $("shopUid").textContent=user.uid;
+    renderLicenseCalendar(null,"active");
+    $("licenseStatus").textContent="Free Beta · ပထမဆုံး ဆိုင်အကောင့် ၃၀ ခုအတွင်း ပါဝင်သည်။";
+    akSetLicenseGate(true,"Free Beta အသုံးပြုခွင့် ဖွင့်ထားသည်။ ဆိုင်ဒေတာကို ကိုယ်ပိုင် Gmail အကောင့်အောက်တွင် သီးခြားသိမ်းမည်။");
+    return true;
+   }
    currentLicense=null;renderLicenseCalendar(null,"pending");
-   $("licenseStatus").textContent="Subscription တောင်းဆိုချက် မရှိသေးပါ။ Package ရွေးပြီး ငွေပေးချေမှု တင်ပြပါ။";
-   akSetLicenseGate(false,"Package ရွေးချယ်ပြီး ငွေလွှဲအထောက်အထား တင်ပါ။ Owner အတည်ပြုပြီးမှ POS ဖွင့်ပေးမည်။");
+   $("licenseStatus").textContent="Free Beta ဆိုင်အကောင့် ၃၀ ခု ပြည့်သွားပါပြီ။";
+   akSetLicenseGate(false,"Free Beta နေရာပြည့်နေပါသည်။ Subscription အတွက် Owner ထံ ဆက်သွယ်ပါ။");
    return false;
   }
   const license=licenseSnap.data()||{};
@@ -1901,9 +2086,6 @@ async function refreshLicense(){
   return false;
  }
 }
-const AK_PLAN_AMOUNTS={30:30000,90:90000,180:180000,365:360000};
-function updatePaymentAmount(){const days=Number($("payPlan").value),amount=AK_PLAN_AMOUNTS[days]||0;$("paymentAmountLabel").textContent="ပေးချေရမည့်ငွေ: "+amount.toLocaleString()+" MMK"}
-function selectAkPlan(days){if(!Object.prototype.hasOwnProperty.call(AK_PLAN_AMOUNTS,days))return;const select=$("payPlan");select.value=String(days);document.querySelectorAll(".ak-plan-option").forEach(button=>{const active=Number(button.dataset.days)===days;button.classList.toggle("active",active);button.classList.toggle("alt",!active)});updatePaymentAmount()}
 
 function akCheckSubscriptionExpiry(){
  if(!fbUser||akIsPlatformOwner()||(currentLicense&&currentLicense.plan==="free-beta"))return;
@@ -1919,38 +2101,40 @@ function akCheckSubscriptionExpiry(){
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)akCheckSubscriptionExpiry()});
 setInterval(akCheckSubscriptionExpiry,30000);
 
-async function copyKpayNumber(){const number="09774033661";try{if(navigator.clipboard&&navigator.clipboard.writeText){await navigator.clipboard.writeText(number)}else{const field=document.createElement("textarea");field.value=number;document.body.appendChild(field);field.select();document.execCommand("copy");field.remove()}alert("KPay ဖုန်းနံပါတ် ကူးယူပြီးပါပြီ။")}catch(e){prompt("KPay ဖုန်းနံပါတ်ကို ကူးယူပါ",number)}}
-async function loadPaymentAccountSettings(){try{if(!fbAuth?.currentUser)return;const result=await firebase.functions().httpsCallable("getPaymentAccountSettings")({});const x=result.data||{},info=$("paymentAccountInfo"),select=$("payMethod");if(x.enabled){select.innerHTML="<option value=\"KBZPay\">KBZPay</option>";info.innerHTML="<b>KBZPay</b><br>အကောင့်အမည်: <b>"+esc(x.accountName||"NiNiWin")+"</b><br>အကောင့်နံပါတ်: <b>"+esc(x.accountNumber||"09774033661")+"</b><br>"+esc(x.instructions||"KPay မှ ငွေလွှဲပြီး Transaction ID နှင့် Screenshot တင်ပါ။")}else{select.innerHTML="<option value=\"\">KPay လက်ခံမှု ယာယီပိတ်ထားသည်</option>";info.textContent="KPay လက်ခံမှု ယာယီပိတ်ထားသည်။ Owner ကို ဆက်သွယ်ပါ။"}if(akIsPlatformOwner()){const box=$("paymentOwnerSettings");box.classList.remove("hidden");$("ownerPaymentSettingsStatus").textContent="KPay လက်ခံအကောင့်ကို Server မှ ဖတ်ပြီးပါပြီ။"}}catch(e){$("paymentAccountInfo").textContent="အကောင့်အချက်အလက် ဖတ်မရပါ: "+e.message}}
-async function savePaymentAccountSettings(){try{if(!akIsPlatformOwner())throw Error("CEO Owner သာ ခွင့်ပြုသည်။");const result=await firebase.functions().httpsCallable("setPaymentAccountSettings")({});$("ownerPaymentSettingsStatus").textContent=result.data?.ok?"KBZPay လက်ခံအကောင့်ကို Server မှ အတည်ပြုပြီးပါပြီ။ လက်ရှိတွင် အကောင့်အသေးစိတ်ပြောင်းလဲခြင်းကို လုံခြုံရေးအတွက် ပိတ်ထားသည်။":"Server အတည်ပြုချက် မရပါ။";await loadPaymentAccountSettings()}catch(e){$("ownerPaymentSettingsStatus").textContent="စစ်မရပါ: "+e.message}}
-function validateAndSubmitKPay(paymentData,screenshotFile){
- if(!screenshotFile){
-  alert("ကျေးဇူးပြု၍ KPay လွှဲငွေအတွက် Screenshot Proof (ပုံ) ကို ထည့်သွင်းပေးပါ။");
-  return false;
- }
- if(!/^image\/(jpeg|png|webp)$/.test(screenshotFile.type||"")||screenshotFile.size>2*1024*1024){
-  alert("Screenshot ကို JPG, PNG သို့မဟုတ် WEBP ပုံဖြင့် 2MB အောက် တင်ပါ။");
-  return false;
- }
- if(!paymentData||paymentData.method!=="KBZPay"||!paymentData.amount||!paymentData.reference){
-  alert("KPay ငွေပေးချေမှု အချက်အလက် မပြည့်စုံပါ။");
-  return false;
- }
- return true;
+let akAccessQueueUnsubscribe=null;
+async function loadAdminAccessRequests(){
+ try{
+  if(!akIsPlatformOwner()||!fbStore)throw Error("Platform Owner Gmail ဖြင့် Login ဝင်ပါ။");
+  $("adminAccessStatus").textContent="Access Request များ ဖတ်နေသည်...";
+  const snap=await fbStore.collection("subscriptionAccessRequests").where("status","==","pending").orderBy("createdAt","desc").limit(100).get();
+  const rows=snap.docs.map(doc=>{const x=doc.data()||{};return{uid:doc.id,email:x.email||"",days:Number(x.days||30),createdAt:x.createdAt&&x.createdAt.toDate?x.createdAt.toDate().toLocaleString():""}});
+  $("adminAccessRows").innerHTML=rows.length?rows.map(x=>"<tr><td>"+esc(x.createdAt)+"</td><td>"+esc(x.email)+"</td><td>"+x.days+" ရက်</td><td>Owner အတည်ပြုရန်</td><td><button class=\"alt\" data-uid=\""+esc(x.uid)+"\" onclick=\"reviewAdminAccessRequest(this.dataset.uid)\">ကြည့်ပြီး မှတ်သားမည်</button></td></tr>").join(""):"<tr><td colspan=\"5\">Pending Access Request မရှိပါ။</td></tr>";
+  $("adminAccessStatus").textContent="Owner ကြည့်ရန် Access Request "+rows.length+" ခု ရှိသည်။";
+ }catch(e){$("adminAccessStatus").textContent="Access Request ဖတ်မရပါ: "+e.message}
 }
-async function submitPaymentRequest(){let uploadedPath="";try{if(!fbAuth?.currentUser)throw Error("Login အရင်ဝင်ပါ");const uid=fbAuth.currentUser.uid,reference=$("payReference").value.trim(),method=$("payMethod").value,days=Number($("payPlan").value),amount=AK_PLAN_AMOUNTS[days];if(method!=="KBZPay")throw Error("KBZPay တစ်ခုတည်းသာ အသုံးပြုနိုင်သည်");if(reference.length<3||reference.length>100)throw Error("Transaction ID ကို 3 မှ 100 လုံးအတွင်း ထည့်ပါ");if(!amount)throw Error("Package မမှန်ပါ");let screenshotUrl="";const file=$("payScreenshot").files[0];if(!validateAndSubmitKPay({method,amount,reference},file))return;if(file){uploadedPath="paymentProofs/"+uid+"/"+Date.now()+"_"+file.name.replace(/[^a-zA-Z0-9._-]/g,"_");const upload=await firebase.storage().ref(uploadedPath).put(file);screenshotUrl=await upload.ref.getDownloadURL()}if(!fbAuth.currentUser||fbAuth.currentUser.uid!==uid)throw Error("Login အကောင့် ပြောင်းသွားပါသည်။ ပြန်ဝင်ပါ");const result=await firebase.functions().httpsCallable("createPaymentRequest")({days,amount,method,reference,screenshotUrl});$("licenseStatus").textContent="ငွေပေးချေမှုအထောက်အထား ပို့ပြီးပါပြီ။ Owner စစ်ဆေးအတည်ပြုရန် စောင့်ပါ။";$("payReference").value="";$("payScreenshot").value="";alert("တောင်းဆိုချက် ပို့ပြီးပါပြီ။ Owner က KBZPay ထဲတွင် ငွေဝင်မှုကို စစ်ဆေးပြီးမှ Subscription ဖွင့်ပေးမည်။")}catch(e){if(uploadedPath){try{await firebase.storage().ref(uploadedPath).delete()}catch(cleanupError){console.warn("Could not remove unused payment proof",cleanupError)}}$("licenseStatus").textContent="တင်မရပါ: "+e.message;alert("တင်မရပါ: "+e.message)}}
-async function loadAdminPaymentRequests(){try{if(!fbAuth?.currentUser)throw Error("Admin Login အရင်ဝင်ပါ");$("adminStatus").textContent="စာရင်းဖတ်နေသည်...";const result=await firebase.functions().httpsCallable("listPendingPayments")({});const rows=result.data.requests||[];$("adminPaymentRows").innerHTML=rows.length?rows.map(x=>"<tr><td>"+esc(x.createdAt||"")+"</td><td>"+esc(x.email||x.uid)+"</td><td>"+x.days+" ရက် · "+Number(x.amount||0).toLocaleString()+" MMK</td><td>"+esc(x.method||"")+" · "+esc(x.bankName||"")+"<br>"+esc(x.reference)+(x.screenshotUrl?"<br><a href=\""+esc(x.screenshotUrl)+"\" target=\"_blank\" rel=\"noopener\">ငွေလွှဲ Screenshot ကြည့်ရန်</a>":"")+"</td><td>"+esc(x.status)+"</td><td><button onclick=\"adminApproveRequest(this.dataset.paymentId)\" data-payment-id=\""+esc(x.id)+"\">ငွေဝင်စစ်ပြီး Approve</button> <button class=\"red\" onclick=\"adminRejectRequest(this.dataset.paymentId)\" data-payment-id=\""+esc(x.id)+"\">ပယ်ချမည်</button></td></tr>").join(""):"<tr><td colspan=\"6\">Pending တောင်းဆိုချက် မရှိပါ။</td></tr>";$("adminStatus").textContent="Pending စာရင်း: "+rows.length+" ခု"}catch(e){$("adminStatus").textContent="Admin စာရင်းဖတ်မရပါ: "+e.message}}
-async function adminApproveRequest(requestId){if(!requestId||!confirm("ဘဏ် / Wallet ထဲတွင် ငွေလွှဲကို အမှန်တကယ်စစ်ပြီးပြီလား။ စစ်ပြီးမှ အတည်ပြုပါ။"))return;try{const fn=firebase.functions().httpsCallable("approveSubscription");const result=await fn({requestId});alert("Subscription အတည်ပြုပြီးပါပြီ။ သက်တမ်းကုန်မည့်ရက်: "+new Date(result.data.expiresAt).toLocaleString());await loadAdminPaymentRequests();if(result.data.uid===fbAuth.currentUser.uid)await refreshLicense()}catch(e){alert("အတည်ပြုမရပါ: "+e.message)}}
-async function adminRejectRequest(requestId){if(!requestId||!confirm("ဤငွေပေးချေမှုတောင်းဆိုချက်ကို ပယ်ချမလား။ KBZPay ထဲတွင် ငွေမဝင်ကြောင်း စစ်ဆေးပြီးမှ ဆက်လုပ်ပါ။"))return;const reason=prompt("ပယ်ချရသည့်အကြောင်း (မဖြည့်လည်းရသည်)","");if(reason===null)return;try{await firebase.functions().httpsCallable("rejectPaymentRequest")({requestId,reason});alert("Payment တောင်းဆိုချက်ကို ပယ်ချပြီးပါပြီ။");await loadAdminPaymentRequests()}catch(e){alert("ပယ်ချမရပါ: "+e.message)}}
+async function reviewAdminAccessRequest(uid){
+ if(!uid||!akIsPlatformOwner()||!fbStore)return;
+ try{await fbStore.collection("subscriptionAccessRequests").doc(uid).update({status:"reviewed",reviewedBy:fbAuth.currentUser.email,reviewedAt:firebase.firestore.FieldValue.serverTimestamp()});await loadAdminAccessRequests();}
+ catch(e){alert("Request အခြေအနေ မပြောင်းနိုင်ပါ: "+e.message)}
+}
+function akWatchAdminAccessRequests(){
+ if(akAccessQueueUnsubscribe){akAccessQueueUnsubscribe();akAccessQueueUnsubscribe=null}
+ if(!akIsPlatformOwner()||!fbStore)return;
+ akAccessQueueUnsubscribe=fbStore.collection("subscriptionAccessRequests").where("status","==","pending").orderBy("createdAt","desc").limit(100).onSnapshot(()=>{void loadAdminAccessRequests()},error=>{const status=$("adminAccessStatus");if(status)status.textContent="Live Access Request အသိပေးမှု ချိတ်မရပါ: "+error.message});
+}
 let akPlatformUserPageToken="",akPlatformUserRows=[];
 function akRenderPlatformUsers(){
  const body=$("akPlatformUserRows");if(!body)return;
  body.innerHTML=akPlatformUserRows.length?akPlatformUserRows.map(u=>{
-  const status=u.status==="disabled"?"ပိတ်ထားသည်":"အသုံးပြုခွင့်ရှိ";
-  const action=u.status==="disabled"?"enable":"disable";
-  const label=u.status==="disabled"?"ပြန်ဖွင့်မည်":"ရပ်ဆိုင်းမည်";
-  const color=u.status==="disabled"?"":"red";
-  return "<tr><td>"+esc(u.email||u.uid)+"</td><td>"+status+"</td><td>"+esc(u.lastLoginAt?new Date(u.lastLoginAt).toLocaleString():"-")+"</td><td><button type=\"button\" class=\""+color+"\" onclick=\"akSetCustomerAccess('"+esc(u.uid)+"','"+action+"')\">"+label+"</button></td></tr>";
- }).join(""):"<tr><td colspan=\"4\">Free Beta User မရှိသေးပါ။</td></tr>";
+  const exp=u.expiresAt?new Date(u.expiresAt):null;
+  const expired=exp&&Number.isFinite(exp.getTime())&&exp.getTime()<=Date.now();
+  const state=u.disabled?"Login ပိတ်ထားသည်":u.status==="suspended"?"Owner ရပ်ဆိုင်းထားသည်":u.status==="active"&&!expired?"အသုံးပြုခွင့်ရှိ":expired?"သက်တမ်းကုန်နေသည်":"ခွင့်ပြုရန် စောင့်နေသည်";
+  const action=u.status==="suspended"?"reactivate":"suspend";
+  const label=u.status==="suspended"?"ပြန်ဖွင့်မည်":"ရပ်ဆိုင်းမည်";
+  const color=u.status==="suspended"?"":"red";
+  const uid=esc(u.uid);
+  return "<tr><td>"+esc(u.email||u.uid)+(u.emailVerified?"":"<br><small>Email မအတည်ပြုရသေး</small>")+"</td><td>"+state+"<br><small>"+esc(u.plan||"-")+"</small></td><td>"+(exp&&Number.isFinite(exp.getTime())?esc(exp.toLocaleString()):"သတ်မှတ်မထား")+"</td><td><select id=\"akGrantDays_"+uid+"\" aria-label=\"Subscription ကာလ\"><option value=\"30\">30 ရက်</option><option value=\"90\">90 ရက်</option><option value=\"180\">180 ရက်</option><option value=\"365\">365 ရက်</option></select><button type=\"button\" onclick=\"akGrantCustomerSubscription('"+uid+"')\">အသုံးပြုခွင့်ပေးမည်</button><button type=\"button\" class=\""+color+"\" onclick=\"akSetCustomerAccess('"+uid+"','"+action+"')\">"+label+"</button></td></tr>";
+ }).join(""):"<tr><td colspan=\"4\">Gmail Account မရှိသေးပါ။ User ကို အရင် Register လုပ်ခိုင်းပါ။</td></tr>";
 }
 async function loadMarketReports(){
  const status=$("akMarketReportsStatus"),host=$("akMarketReportsRows");
@@ -1980,42 +2164,87 @@ async function setMarketReportStatus(id,statusValue){
 }
 async function loadPlatformUsers(){
  try{
-  if(!akIsPlatformOwner())throw Error("Owner Gmail ဖြင့် Login ဝင်ပါ");
-  $("akPlatformUserStatus").textContent="Free Beta User စာရင်းဖတ်နေသည်...";
-  // Avoid orderBy(lastLoginAt): legacy profiles may not contain that field.
-  // Read the full owner-only collection so older accounts are counted too.
-  const snap=await fbStore.collection("freeBetaUsers").get();
-  akPlatformUserRows=snap.docs.map(d=>({uid:d.id,...d.data()})).sort((a,b)=>{
-   const dateValue=v=>v&&typeof v.toDate==="function"?v.toDate().getTime():v?new Date(v).getTime():0;
-   return dateValue(b.lastLoginAt)-dateValue(a.lastLoginAt);
+  if(!akIsPlatformOwner()||!fbStore)throw Error("အတည်ပြုထားသော Platform Owner Gmail ဖြင့် Login ဝင်ပါ။");
+  $("akPlatformUserStatus").textContent="Free Beta နှင့် Subscription စာရင်းဖတ်နေသည်...";
+  const [betaSnap,licenseSnap,capacitySnap]=await Promise.all([
+   fbStore.collection("freeBetaUsers").get(),
+   fbStore.collection("licenses").get(),
+   fbStore.collection("freeBetaCapacity").doc("slots").get()
+  ]);
+  const rows=new Map();
+  betaSnap.docs.forEach(doc=>{
+   const x=doc.data()||{};
+   rows.set(doc.id,{uid:doc.id,email:x.email||"",emailVerified:true,status:x.status==="disabled"?"suspended":x.status||"active",plan:"free-beta",expiresAt:null});
+  });
+  licenseSnap.docs.forEach(doc=>{
+   const x=doc.data()||{},previous=rows.get(doc.id)||{};
+   rows.set(doc.id,{...previous,uid:doc.id,email:x.email||previous.email||"",emailVerified:true,status:x.status||previous.status||"pending",plan:x.plan||previous.plan||"",expiresAt:x.expiresAt&&x.expiresAt.toDate?x.expiresAt.toDate().toISOString():x.expiresAt||null});
+  });
+  akPlatformUserRows=[...rows.values()].sort((a,b)=>{
+   const rank=x=>x.status==="pending_payment"||x.status==="pending"?0:x.status==="suspended"?1:2;
+   return rank(a)-rank(b)||String(a.email||"").localeCompare(String(b.email||""));
   });
   akRenderPlatformUsers();
-  const capRef=fbStore.collection("freeBetaCapacity").doc("slots");
-  const cap=await capRef.get();
-  let used=cap.exists?Number((cap.data()||{}).count||0):0;
-  if(!Number.isInteger(used)||used<0)throw Error("Free Beta capacity counter မမှန်ကန်ပါ။");
-  // Reconcile legacy profiles only when the Firestore rules' 30-user cap permits it.
-  if(!cap.exists||used<snap.size){
-   used=Math.max(used,snap.size);
-   if(used<=30)await capRef.set({count:used,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
-  }
-  $("akPlatformUserStatus").textContent="အသုံးပြုသူ "+used+" / 30 · Owner က အကောင့်တစ်ခုချင်းစီကို ရပ်ဆိုင်း/ပြန်ဖွင့်နိုင်သည်။"+(used>30?" · Legacy အကောင့်များ ၃၀ ကျော်နေသည်၊ အပိုအကောင့်များကို Owner က ရပ်ဆိုင်းရန်လိုသည်။":"");
- }catch(e){$("akPlatformUserStatus").textContent="User စာရင်းဖတ်မရပါ: "+e.message}
+  const betaUsed=capacitySnap.exists?Number((capacitySnap.data()||{}).count||0):betaSnap.size;
+  $("akOwnerUserCount").textContent=akPlatformUserRows.length+" ခု";
+  $("akPlatformUserStatus").textContent="ဆိုင်အကောင့် "+akPlatformUserRows.length+" ခု · Free Beta "+betaUsed+"/30 နေရာ အသုံးပြုပြီး။ App အပြင်တွင် သီးခြားစစ်ဆေးပြီး Owner က Package သက်တမ်းကို ကိုယ်တိုင်ပေးပါ။";
+ }catch(e){$("akPlatformUserStatus").textContent="Customer စာရင်းဖတ်မရပါ: "+e.message}
 }
 async function akSetCustomerAccess(uid,action){
  try{
-  if(!akIsPlatformOwner())throw Error("Owner Gmail ဖြင့်သာ လုပ်ဆောင်နိုင်သည်။");
-  if(!uid||!["disable","enable"].includes(action))throw Error("လုပ်ဆောင်ချက် မမှန်ကန်ပါ။");
-  const ref=fbStore.collection("freeBetaUsers").doc(uid);
-  const snap=await ref.get();
-  if(!snap.exists)throw Error("User အကောင့်ကို မတွေ့ပါ။");
-  const nextStatus=action==="disable"?"disabled":"active";
-  const promptText=action==="disable"?"ဤ User ကို ရပ်ဆိုင်းမှာ သေချာပါသလား။":"ဤ User ကို ပြန်ဖွင့်မှာ သေချာပါသလား။";
-  if(!confirm(promptText))return;
-  await ref.update({status:nextStatus});
-  $("akPlatformUserStatus").textContent=action==="disable"?"User အကောင့်ကို ရပ်ဆိုင်းပြီးပါပြီ။":"User အကောင့်ကို ပြန်ဖွင့်ပြီးပါပြီ။";
+  if(!akIsPlatformOwner()||!fbStore)throw Error("Owner Gmail ဖြင့်သာ လုပ်ဆောင်နိုင်သည်။");
+  if(!uid||!["suspend","reactivate"].includes(action))throw Error("လုပ်ဆောင်ချက် မမှန်ကန်ပါ။");
+  if(!confirm(action==="suspend"?"ဤ Customer ၏ POS အသုံးပြုခွင့်ကို ရပ်ဆိုင်းမလား။":"ဤ Customer ၏ အသုံးပြုခွင့်ကို ပြန်ဖွင့်မလား။"))return;
+  const target=akPlatformUserRows.find(x=>x.uid===uid);
+  if(!target)throw Error("Customer အကောင့်ကို မတွေ့ပါ။");
+  const status=action==="suspend"?"suspended":"active";
+  if(target.plan==="free-beta"&&!target.expiresAt){
+   await fbStore.collection("freeBetaUsers").doc(uid).update({status:status==="active"?"active":"disabled"});
+  }else{
+   const ref=fbStore.collection("licenses").doc(uid);
+   await ref.update({status});
+  }
+  $("akPlatformUserStatus").textContent=action==="suspend"?"Customer အသုံးပြုခွင့် ရပ်ဆိုင်းပြီးပါပြီ။":"Customer အသုံးပြုခွင့် ပြန်ဖွင့်ပြီးပါပြီ။";
   await loadPlatformUsers();
  }catch(e){$("akPlatformUserStatus").textContent="Owner လုပ်ဆောင်ချက် မအောင်မြင်ပါ: "+e.message}
+}
+async function akGrantCustomerSubscription(uid){
+ try{
+  if(!akIsPlatformOwner()||!fbStore)throw Error("Platform Owner သာ ခွင့်ပြုသည်။");
+  const select=$("akGrantDays_"+uid),days=Number(select?.value||0);
+  if(![30,90,180,365].includes(days))throw Error("သက်တမ်းကာလ မမှန်ပါ။");
+  const target=akPlatformUserRows.find(x=>x.uid===uid);
+  if(!target)throw Error("Customer အကောင့်ကို စာရင်းထဲတွင် မတွေ့ပါ။");
+  if(!target.emailVerified)throw Error("Customer Gmail ကို အရင်အတည်ပြုခိုင်းပါ။");
+  if(!confirm((target.email||uid)+" ကို "+days+" ရက် အသုံးပြုခွင့်ပေးမလား။ App အပြင်တွင် ငွေပေးချေမှုကို သီးခြားစစ်ဆေးပြီးကြောင်း အတည်ပြုပါ။"))return;
+  const ref=fbStore.collection("licenses").doc(uid);
+  const expiresAt=await fbStore.runTransaction(async tx=>{
+   const snap=await tx.get(ref),old=snap.exists?snap.data()||{}:{};
+   const oldExpiry=old.expiresAt&&old.expiresAt.toMillis?old.expiresAt.toMillis():0;
+   const next=firebase.firestore.Timestamp.fromMillis(Math.max(Date.now(),oldExpiry)+days*86400000);
+   tx.set(ref,{uid,email:target.email||"",status:"active",plan:days+"-days",expiresAt:next,grantedBy:fbAuth.currentUser.email,grantedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+   return next;
+  });
+  alert("Subscription အတည်ပြုပြီးပါပြီ။ သက်တမ်းကုန်မည့်ရက်: "+expiresAt.toDate().toLocaleString());
+  await loadPlatformUsers();
+ }catch(e){alert("အသုံးပြုခွင့်ပေးမရပါ: "+(e.message||e))}
+}
+async function akRequestSubscriptionAccess(){
+ try{
+  if(!fbAuth?.currentUser||!fbStore)throw Error("Gmail ဖြင့် အရင် Login ဝင်ပါ။");
+  if(!fbAuth.currentUser.emailVerified)throw Error("Gmail ထဲမှ Email Verification Link ကို အရင်နှိပ်ပါ။");
+  const uid=fbAuth.currentUser.uid,email=String(fbAuth.currentUser.email||"").trim();
+  const days=Number($("payPlan")?.value||30);
+  if(![30,90,180,365].includes(days))throw Error("Package ရွေးချယ်မှု မမှန်ပါ။");
+  await fbStore.collection("subscriptionAccessRequests").doc(uid).set({
+   uid,email,days,status:"pending",
+   createdAt:firebase.firestore.FieldValue.serverTimestamp(),
+   updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+  },{merge:true});
+  const message="Access Request ကို Owner Dashboard ထဲသို့ ပို့ပြီးပါပြီ။ Owner က Package အသုံးပြုခွင့်ကို အတည်မပြုမချင်း POS ကို မဖွင့်သေးပါ။";
+  ["akAccessRequestStatus","akAccessRequestStatusPayment"].forEach(id=>{const node=$(id);if(node)node.textContent=message});
+  alert("Owner ထံ Access Request ပို့ပြီးပါပြီ။ Owner Dashboard မှာ မြင်နိုင်ပါပြီ။");
+ }catch(e){["akAccessRequestStatus","akAccessRequestStatusPayment"].forEach(id=>{const node=$(id);if(node)node.textContent="တောင်းဆိုမရပါ: "+(e.message||e)})}
 }
 
 let akCloudUnsubscribe=null;
@@ -2023,17 +2252,16 @@ let akFreeBetaAccessUnsubscribe=null;
 function akWatchFreeBetaAccess(uid){
  if(akFreeBetaAccessUnsubscribe){akFreeBetaAccessUnsubscribe();akFreeBetaAccessUnsubscribe=null}
  if(!uid||!fbStore)return;
- akFreeBetaAccessUnsubscribe=fbStore.collection("licenses").doc(uid).onSnapshot(snap=>{
+ akFreeBetaAccessUnsubscribe=fbStore.collection("freeBetaUsers").doc(uid).onSnapshot(snap=>{
   if(!fbAuth?.currentUser||fbAuth.currentUser.uid!==uid)return;
-  const license=snap.exists?snap.data()||{}:null;
-  const expiry=license&&license.expiresAt&&typeof license.expiresAt.toDate==="function"?license.expiresAt.toDate():null;
-  if(!license||license.status!=="active"||!expiry||expiry.getTime()<=Date.now()){
-   cloudReady=false;currentLicense=license?{uid,status:license.status||"pending_payment",plan:license.plan||"",expiresAt:expiry}:null;
-   akSetLicenseGate(false,"Subscription အသုံးပြုခွင့် မရှိပါ။ Owner အတည်ပြုချက် လိုအပ်သည်။");
-   $("fbStatus").textContent="Subscription အခြေအနေ ပြောင်းလဲသွားပါသည်။ POS ကို လုံခြုံရေးအတွက် ပိတ်ထားသည်။";
+  const profile=snap.exists?snap.data()||{}:null;
+  if(!profile||profile.status!=="active"){
+   cloudReady=false;currentLicense={uid,status:"disabled",plan:"free-beta",expiresAt:null};
+   akSetLicenseGate(false,"Free Beta အသုံးပြုခွင့်ကို Owner က ပိတ်ထားသည်။");
+   $("fbStatus").textContent="Free Beta အခြေအနေ ပြောင်းလဲသွားသည်။ POS နှင့် Cloud Sync ကို ပိတ်ထားသည်။";
    if(akCloudUnsubscribe){akCloudUnsubscribe();akCloudUnsubscribe=null}
   }
- },err=>{$("fbStatus").textContent="Subscription Status စစ်ဆေးမှု ခဏပြတ်တောက်နေသည်: "+err.message;cloudReady=false;akSetLicenseGate(false,"Subscription ကို အတည်မပြုနိုင်ပါ။ လုံခြုံရေးအတွက် POS ပိတ်ထားသည်။")});
+ },err=>{$("fbStatus").textContent="Free Beta Status စစ်ဆေးမှု ခဏပြတ်တောက်နေသည်: "+err.message;cloudReady=false;akSetLicenseGate(false,"Free Beta အသုံးပြုခွင့်ကို အတည်မပြုနိုင်ပါ။ လုံခြုံရေးအတွက် POS ပိတ်ထားသည်။")});
 }
 let akAuthGeneration=0;
 let akApplyingRemote=false;
@@ -2422,8 +2650,7 @@ body.ak-public footer{display:block}
  const publicMode=params.get("market")==="1" && params.get("app")!=="1";
  if(!publicMode)return;
  document.body.classList.add("ak-public");
- // Hide all existing promotional/sponsored placements from the public market feed.
- document.querySelectorAll("#akPublicSponsoredSection,#akLiveAdsPanel,#akSponsoredPublicGrid,#akPublicTikTokCard").forEach(el=>{el.hidden=true;el.style.display="none";});
+ const marketIsolationStyle=document.createElement("style");marketIsolationStyle.id="ak-public-market-account-isolation";marketIsolationStyle.textContent="html.ak-public-market #akFirebasePanel,html.ak-public-market #akAccountType,html.ak-public-market #akOwnerStaffPanel,html.ak-public-market #akOwnerDashboardPanels,html.ak-public-market #ownerDashboard,html.ak-public-market #akOwnerAccessQueue,html.ak-public-market #akAccessRequestPanel,html.ak-public-market #akMarketOwnerEntry,html.ak-public-market #akOwnerAdManager,html.ak-public-market #akPaywallNotice,html.ak-public-market #akLicensePanel,body.ak-public #akFirebasePanel,body.ak-public #akOwnerStaffPanel,body.ak-public #akOwnerDashboardPanels,body.ak-public #ownerDashboard,body.ak-public #akOwnerAccessQueue,body.ak-public #akAccessRequestPanel,body.ak-public #akStaffJoinPanel,body.ak-public #akStaffJoin,body.ak-public #akPlatformUserRows{display:none!important}";document.head.appendChild(marketIsolationStyle);
  document.title="Ak shopping markets · မြန်မာ့အွန်လိုင်းဈေး";
  const desc=document.querySelector('meta[name="description"]');
  if(desc)desc.content="မြန်မာနိုင်ငံတစ်ဝှမ်း ပစ္စည်းရှာဖွေ၊ ဈေးနှိုင်းယှဉ်၊ ဆိုင်များနှင့် တိုက်ရိုက်ဆက်သွယ်နိုင်သော Ak shopping markets";
@@ -2435,8 +2662,11 @@ body.ak-public footer{display:block}
   hero.innerHTML='<div><h2>မြန်မာ့ဈေးကွက်ကို တစ်နေရာတည်းမှာ ရှာဖွေပါ</h2><p>ကုန်မာ၊ လျှပ်စစ်၊ ဆောက်လုပ်ရေးနှင့် အိမ်သုံးပစ္စည်းများ · ဈေးနှိုင်းယှဉ် · ဆိုင်ကို တိုက်ရိုက်ဆက်သွယ်</p></div><a href="./download.html">AK Software · Web ဝင်ရန် / APK ရယူရန်</a>';
   market.prepend(hero);
   const authPanel=document.getElementById("akFirebasePanel");
+  // Public Market is catalog-only: never expose POS login, shop-owner registration,
+  // staff registration/Merchant Code, subscription payments, or Owner controls here.
+  if(authPanel){authPanel.hidden=true;authPanel.style.display="none";}
+  ["akOwnerStaffPanel","akOwnerDashboardPanels","ownerDashboard","akOwnerAccessQueue","akAccessRequestPanel"].forEach(id=>{const el=document.getElementById(id);if(el){el.hidden=true;el.style.display="none";}});
   const marketForm=document.getElementById("marketForm");
-  if(authPanel&&marketForm?.parentElement)marketForm.parentElement.before(authPanel);
   const posLink=document.createElement("a");posLink.href="./download.html";posLink.className="ak-pos-use";posLink.textContent="AK POS အသုံးပြုရန် · APK";posLink.setAttribute("aria-label","AK POS APK အသုံးပြုရန်");
   hero.querySelector("a")?.replaceWith(posLink);
   const note=document.createElement("div");note.className="ak-public-note";
@@ -2479,6 +2709,8 @@ body.ak-public footer{display:block}
 
 <script>
 (function(){
+ window.akSetAutoPrintAfterSale=function(value){const enabled=value==="on";localStorage.setItem("ak_sale_auto_print_after_sale",enabled?"on":"off");const status=document.getElementById("akPrinterStatus");if(status)status.textContent=enabled?"Auto Print ဖွင့်ထားသည်။ အရောင်းသိမ်းပြီးနောက် Default ဘောင်ချာ Printer သို့ ပို့မည်။":"Auto Print ပိတ်ထားသည်။ ဘောင်ချာကို ကိုယ်တိုင် Print လုပ်နိုင်သည်။"};
+ const autoPrintSelect=document.getElementById("akAutoPrintAfterSale");if(autoPrintSelect)autoPrintSelect.value=localStorage.getItem("ak_sale_auto_print_after_sale")==="on"?"on":"off";
  const KEY="ak_sale_printer_profiles_v1";
  function read(){try{const x=JSON.parse(localStorage.getItem(KEY)||"[]");return Array.isArray(x)?x:[]}catch(e){return[]}}
  window.akSetPrinterPaper=function(v){if(["58mm","80mm","A4"].includes(v))localStorage.setItem("ak_sale_printer_paper",v)};

@@ -728,7 +728,7 @@ function akInitMarketRebuild(){
  if(ownerNote)ownerNote.textContent="Owner တစ်ဦးတည်းက Market ပစ္စည်းကြော်ငြာနှင့် Sponsored ကြော်ငြာများကို စစ်ဆေး၊ ဖျက်နိုင်သည်။";
  const fbPanel=document.getElementById("akFirebasePanel");
  if(fbPanel&&ownerEntry){
-  if(new URLSearchParams(location.search).get("market")==="1"){flow.insertBefore(fbPanel,ownerOrders);const authTitle=fbPanel.querySelector("h2");if(authTitle)authTitle.textContent="Owner Login · လုံခြုံသော စီမံခန့်ခွဲမှု";const register=document.getElementById("akRegisterButton");if(register)register.style.display="none";const googleButton=fbPanel.querySelector('button[onclick="firebaseGoogleLogin()"]');if(googleButton){googleButton.style.display="inline-flex";googleButton.textContent="Google Account ဖြင့် ဝင်ရန်";googleButton.style.visibility="visible";googleButton.style.opacity="1";googleButton.style.minHeight="48px";googleButton.style.fontWeight="800";}}
+  if(false){flow.insertBefore(fbPanel,ownerOrders);const authTitle=fbPanel.querySelector("h2");if(authTitle)authTitle.textContent="Owner Login · လုံခြုံသော စီမံခန့်ခွဲမှု";const register=document.getElementById("akRegisterButton");if(register)register.style.display="none";const googleButton=fbPanel.querySelector('button[onclick="firebaseGoogleLogin()"]');if(googleButton){googleButton.style.display="inline-flex";googleButton.textContent="Google Account ဖြင့် ဝင်ရန်";googleButton.style.visibility="visible";googleButton.style.opacity="1";googleButton.style.minHeight="48px";googleButton.style.fontWeight="800";}}
   const jump=ownerEntry.querySelector("button");
   if(jump)jump.addEventListener("click",()=>setTimeout(()=>{if(fbPanel)fbPanel.scrollIntoView({behavior:"smooth",block:"center"});},150));
  }
@@ -902,7 +902,7 @@ function akApplyRoleNavigation(){
  document.querySelectorAll("#nav button[data-view]").forEach(btn=>{btn.hidden=staff&&!allowed.includes(btn.dataset.view)});
  const ownerBtn=document.querySelector('#nav button[data-view="ownerDashboard"]');if(ownerBtn)ownerBtn.hidden=!["shop-owner","platform-owner"].includes(role);
 }
-function akSetLicenseGate(allowed,message){const locked=!allowed;document.body.classList.toggle("ak-license-locked",locked);const notice=document.getElementById("akPaywallNotice");if(notice){notice.classList.toggle("hidden",!locked);const detail=document.getElementById("akPaywallDetail");if(detail&&message)detail.textContent=message}if(document.body.classList.contains("ak-public")){document.querySelectorAll(".view").forEach(x=>x.classList.toggle("active",x.id==="market"));return}if(locked){document.querySelectorAll(".view").forEach(x=>x.classList.toggle("active",x.id==="backup"))}else if(document.getElementById("backup")?.classList.contains("active")){document.querySelectorAll(".view").forEach(x=>x.classList.toggle("active",x.id==="home"));document.querySelectorAll("#nav button").forEach(b=>b.classList.toggle("active",b.dataset.view==="home"))}}
+function akSetLicenseGate(allowed,message){const locked=!allowed;document.body.classList.toggle("ak-license-locked",locked);const notice=document.getElementById("akPaywallNotice");if(notice){notice.classList.toggle("hidden",!locked);const detail=document.getElementById("akPaywallDetail");if(detail&&message)detail.textContent=message}if(document.body.classList.contains("ak-public")){document.querySelectorAll(".view").forEach(x=>x.classList.toggle("active",x.id==="market"));return}if(locked){document.querySelectorAll(".view").forEach(x=>x.classList.toggle("active",x.id==="account"))}else if(document.getElementById("backup")?.classList.contains("active")){document.querySelectorAll(".view").forEach(x=>x.classList.toggle("active",x.id==="home"));document.querySelectorAll("#nav button").forEach(b=>b.classList.toggle("active",b.dataset.view==="home"))}}
 function akApplyAnnouncementAdminVisibility(){const el=document.getElementById("globalAnnouncementAdmin");if(el)el.classList.toggle("hidden",!akIsPlatformOwner())}
 
 function akOfflineSalesKey(){const ownerId=fbAuth?.currentUser?.uid||fbUser?.uid||"guest";return "offline_sales_"+ownerId}
@@ -962,9 +962,45 @@ function persist(){
   akCheckBrowserStorage();akUpdateConnectionUI();
  }catch(e){$("saveState").textContent="သိမ်းဆည်းမှု မအောင်မြင်";alert("ဖုန်းထဲသိမ်းမရပါ။ Storage ပြည့်နေနိုင်သည်။ Backup JSON ထုတ်ပြီး ဓာတ်ပုံ/မလိုအပ်သောဖိုင်များ လျှော့ပါ။");console.error("AK local save failed",e)}
 }
-const pages=[["ownerDashboard","Owner Dashboard"],["home","ပင်မ"],["products","ပစ္စည်း"],["sales","အရောင်း"],["purchases","အဝယ်"],["people","Customer/Supplier"],["expenses","အသုံးစရိတ်"],["reports","အစီရင်ခံစာ"],["ads","ကြော်ငြာ"],["market","AK Market"],["centerManagement","စင်တာထိန်းချုပ်မှု"],["backup","Backup / Settings"]];
+const pages=[["ownerDashboard","Owner Dashboard"],["account","Login / Register"],["payment","ငွေပေးချေမှု"],["staffJoin","Merchant Code"],["staffManagement","ဝန်ထမ်းစီမံမှု"],["ownerPayments","ငွေလက်ခံစစ်ဆေးမှု"],["home","ပင်မ"],["products","ပစ္စည်း"],["sales","အရောင်း"],["purchases","အဝယ်"],["people","Customer/Supplier"],["expenses","အသုံးစရိတ်"],["reports","အစီရင်ခံစာ"],["ads","ကြော်ငြာ"],["market","AK Market"],["centerManagement","စင်တာထိန်းချုပ်မှု"],["backup","Backup / Settings"]];
 $("nav").innerHTML=pages.map(([id,n])=>'<button type="button" data-view="'+id+'" aria-label="'+n+'" title="'+n+'" onclick="go(\''+id+'\')">'+n+'</button>').join("");
 document.querySelector('#nav [data-view="ownerDashboard"]')?.classList.add("shop-owner-only","hidden");
+/* AK_ACCOUNT_SEPARATION_V1 — keep login, payment, staff join and owner controls in their own POS views. */
+(function(){
+ const main=document.querySelector("main"),nav=document.getElementById("nav");
+ if(!main||!nav||document.getElementById("account"))return;
+ function view(id,title,cls=""){const el=document.createElement("section");el.id=id;el.className="view "+cls;el.innerHTML='<div class="panel"><h2>'+title+'</h2></div>';main.insertBefore(el,main.querySelector("#home"));return el}
+ const account=view("account","အကောင့်ဝင်ရန် / Register");
+ const payment=view("payment","Package နှင့် ငွေပေးချေမှု");
+ const staffJoin=view("staffJoin","ဝန်ထမ်း Merchant Code ချိတ်ဆက်ရန်");
+ const staffManagement=view("staffManagement","ဆိုင်ရှင် · ဝန်ထမ်းစီမံခန့်ခွဲမှု","shop-owner-only");
+ const ownerPayments=view("ownerPayments","Platform Owner · ငွေလက်ခံစစ်ဆေးမှု","owner-only");
+ const fb=document.getElementById("akFirebasePanel");
+ if(fb){
+  const customerPay=document.getElementById("akCustomerPaymentPanel");
+  const join=document.getElementById("akMerchantJoinCode")?.closest(".notice");
+  if(customerPay)payment.appendChild(customerPay);
+  if(join)staffJoin.appendChild(join);
+  account.appendChild(fb);
+ }
+ const staff=document.getElementById("akOwnerStaffPanel");
+ if(staff)staffManagement.appendChild(staff);
+ const ownerPay=document.getElementById("akOwnerPaymentQueue");
+ if(ownerPay)ownerPayments.appendChild(ownerPay);
+ const addNav=(id,label)=>{const b=document.createElement("button");b.type="button";b.dataset.view=id;b.textContent=label;b.setAttribute("aria-label",label);b.title=label;b.onclick=()=>go(id);nav.appendChild(b)};
+ /* Rebuild nav entries in the intended operational order without disturbing existing POS pages. */
+ addNav("account","Login / Register");addNav("payment","ငွေပေးချေမှု");addNav("staffJoin","Merchant Code");addNav("staffManagement","ဝန်ထမ်းစီမံမှု");addNav("ownerPayments","ငွေလက်ခံစစ်ဆေးမှု");
+ const homeBtn=nav.querySelector('[data-view="home"]');
+ if(homeBtn){const ordered=["account","payment","staffJoin","staffManagement","ownerPayments"];for(const id of ordered){const b=nav.querySelector('[data-view="'+id+'"]');if(b)homeBtn.before(b)}}
+ const ownerBtn=nav.querySelector('[data-view="ownerDashboard"]');
+ if(ownerBtn)ownerBtn.classList.add("shop-owner-only");
+ const staffBtn=nav.querySelector('[data-view="staffManagement"]');if(staffBtn)staffBtn.classList.add("shop-owner-only");
+ const payBtn=nav.querySelector('[data-view="ownerPayments"]');if(payBtn)payBtn.classList.add("owner-only");
+ const style=document.createElement("style");
+ style.textContent='body.ak-license-locked #nav button:not([data-view="market"]):not([data-view="backup"]):not([data-view="account"]):not([data-view="payment"]):not([data-view="staffJoin"]){display:none!important} body.ak-license-locked main>.view{display:none!important} body.ak-license-locked main>#market.view.active,body.ak-license-locked main>#account.view.active,body.ak-license-locked main>#payment.view.active,body.ak-license-locked main>#staffJoin.view.active{display:block!important} html.ak-public-market #nav,html.ak-public-market main>.view:not(#market){display:none!important}';
+ document.head.appendChild(style);
+})();
+
 function akInitOwnerDashboard(){const host=document.getElementById("akOwnerDashboardPanels");if(!host)return;["akOwnerPromoPanel","akLicensePanel"].forEach(id=>{const el=document.getElementById(id);if(el&&el.parentElement!==host)host.appendChild(el)})}
 akInitOwnerDashboard();
 const AK_I18N_MY_EN={
@@ -998,9 +1034,9 @@ $("akLanguageBtn").addEventListener("click",()=>{akLanguage=akLanguage==="en"?"m
 /* Avoid observing every DOM mutation: large POS tables caused repeated full-page translation scans. */
 akApplyLanguage();
 function go(id){
- if(id==="ownerDashboard"&&!["shop-owner","platform-owner"].includes(akUserRole)){alert("ဆိုင်ရှင်အကောင့်ဖြင့်သာ ဝင်နိုင်သည်။");id="home"}
+ if(["staffManagement"].includes(id)&&akUserRole!=="shop-owner"){alert("ဝန်ထမ်းစီမံမှုကို ဆိုင်ရှင်သာ အသုံးပြုနိုင်သည်။");id="account"}\n if(["ownerPayments"].includes(id)&&!akIsPlatformOwner()){alert("ငွေလက်ခံစစ်ဆေးမှုကို Platform Owner သာ အသုံးပြုနိုင်သည်။");id="account"}\n if(id==="ownerDashboard"&&!["shop-owner","platform-owner"].includes(akUserRole)){alert("ဆိုင်ရှင်အကောင့်ဖြင့်သာ ဝင်နိုင်သည်။");id="account"}
  if(["manager","cashier","employee"].includes(akUserRole)){const allowed=akUserRole==="employee"?["home","sales"]:akUserRole==="cashier"?["home","sales","ads"]:["home","reports"];if(!allowed.includes(id)){alert("ဤလုပ်ဆောင်ချက်ကို သင့်ရာထူးအတွက် ခွင့်မပြုထားပါ။");id="home"}}
- const publicViews=["backup","market"];
+ const publicViews=["backup","market","account","payment","staffJoin"];
  if(document.body.classList.contains("ak-license-locked")&&!publicViews.includes(id)){
   alert("ဆိုင်သုံး POS ကို အသုံးပြုရန် Login နှင့် အသုံးပြုခွင့်လိုအပ်သည်။ AK Market၊ အတည်ပြုဆိုင်စာရင်းနှင့် ကြော်ငြာများကို အများပြည်သူ ကြည့်ရှုနိုင်သည်။");
   id="market";

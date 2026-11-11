@@ -987,11 +987,7 @@ document.querySelector('#nav [data-view="ownerDashboard"]')?.classList.add("shop
  if(staff)staffManagement.appendChild(staff);
  const ownerPay=document.getElementById("akOwnerPaymentQueue");
  if(ownerPay)ownerPayments.appendChild(ownerPay);
- const addNav=(id,label)=>{const b=document.createElement("button");b.type="button";b.dataset.view=id;b.textContent=label;b.setAttribute("aria-label",label);b.title=label;b.onclick=()=>go(id);nav.appendChild(b)};
- /* Rebuild nav entries in the intended operational order without disturbing existing POS pages. */
- addNav("account","Login / Register");addNav("payment","ငွေပေးချေမှု");addNav("staffJoin","Merchant Code");addNav("staffManagement","ဝန်ထမ်းစီမံမှု");addNav("ownerPayments","ငွေလက်ခံစစ်ဆေးမှု");
- const homeBtn=nav.querySelector('[data-view="home"]');
- if(homeBtn){const ordered=["account","payment","staffJoin","staffManagement","ownerPayments"];for(const id of ordered){const b=nav.querySelector('[data-view="'+id+'"]');if(b)homeBtn.before(b)}}
+ /* Navigation entries are created once from the POS page registry above. */
  const ownerBtn=nav.querySelector('[data-view="ownerDashboard"]');
  if(ownerBtn)ownerBtn.classList.add("shop-owner-only");
  const staffBtn=nav.querySelector('[data-view="staffManagement"]');if(staffBtn)staffBtn.classList.add("shop-owner-only");

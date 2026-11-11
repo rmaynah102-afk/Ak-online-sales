@@ -75,11 +75,15 @@ async function requireActiveShop(context) {
   const email = String(context.auth.token.email || "").trim().toLowerCase();
   // The sole verified Platform Owner may administer their own shop without a paid license.
   if (email === OWNER_EMAIL && context.auth.token.email_verified === true) return uid;
-  const snap = await db.collection("licenses").doc(uid).get();
-  const license = snap.data() || {};
-  if (!snap.exists || license.status !== "active" || !license.expiresAt ||
-      license.expiresAt.toMillis() <= Date.now()) {
-    throw new functions.https.HttpsError("permission-denied", "ငွေပေးချေမှုအတည်ပြုထားသော Subscription လိုအပ်သည်။");
+  const [snap,betaSnap] = await Promise.all([
+    db.collection("licenses").doc(uid).get(),
+    db.collection("freeBetaUsers").doc(uid).get()
+  ]);
+  const license = snap.data() || {}, beta=betaSnap.data() || {};
+  const paidActive=snap.exists&&license.status==="active"&&license.expiresAt&&license.expiresAt.toMillis()>Date.now();
+  const betaActive=betaSnap.exists&&beta.status==="active";
+  if (!paidActive && !betaActive) {
+    throw new functions.https.HttpsError("permission-denied", "Active Subscription သို့မဟုတ် Free Beta အသုံးပြုခွင့် လိုအပ်သည်။");
   }
   return uid;
 }
@@ -812,17 +816,19 @@ async function verifyWorkspaceMember(context, identity) {
       member.data().role!==identity.role) {
     throw new functions.https.HttpsError("permission-denied","ဆိုင်ဝန်ထမ်းအဖွဲ့ဝင်ခွင့် မမှန်ပါ။");
   }
-  const license=await db.collection("licenses").doc(identity.shopId).get();
-  const l=license.data()||{};
-  if (!license.exists || l.status!=="active" || !l.expiresAt ||
-      l.expiresAt.toMillis()<=Date.now()) {
-    throw new functions.https.HttpsError("permission-denied","ဆိုင် Subscription သက်တမ်း မရှိပါ။");
-  }
+  const [license,beta]=await Promise.all([
+    db.collection("licenses").doc(identity.shopId).get(),
+    db.collection("freeBetaUsers").doc(identity.shopId).get()
+  ]);
+  const l=license.data()||{},b=beta.data()||{};
+  const paidActive=license.exists&&l.status==="active"&&l.expiresAt&&l.expiresAt.toMillis()>Date.now();
+  const betaActive=beta.exists&&b.status==="active";
+  if(!paidActive&&!betaActive)throw new functions.https.HttpsError("permission-denied","ဆိုင် Subscription သို့မဟုတ် Free Beta အသုံးပြုခွင့် သက်တမ်း မရှိပါ။");
 }
 function workspaceCanWrite(role,key) {
   if (role==="owner") return true;
   if (role==="manager") return false;
-  if (role==="cashier") return ["sales","payments","people"].includes(key);
+  if (role==="cashier") return ["sales","payments"].includes(key);
   if (role==="employee") return ["products","sales"].includes(key);
   return false;
 }

@@ -1266,7 +1266,7 @@ function addSaleLine(){const root=$("saleLines"),first=root.querySelector(".sale
 function removeSaleLine(btn){const root=$("saleLines"),rows=root.querySelectorAll(".sale-line");if(rows.length<=1){alert("အနည်းဆုံး ပစ္စည်းတစ်မျိုး လိုအပ်သည်။");return}btn.closest(".sale-line").remove();const first=root.querySelector(".sale-line");if(!$("sProduct")){first.querySelector(".sale-product").id="sProduct";first.querySelector(".sale-type").id="sType";first.querySelector(".sale-qty").id="sQty";first.querySelector(".sale-price").id="sPrice"}}
 $("saleForm").addEventListener("submit",e=>{e.preventDefault();const lines=[];for(const row of $("saleLines").querySelectorAll(".sale-line")){const productId=row.querySelector(".sale-product").value,p=db.products.find(x=>x.id===productId),qty=Number(row.querySelector(".sale-qty").value),price=Number(row.querySelector(".sale-price").value);if(!p)return alert("ပစ္စည်းအရင်ထည့်ပါ");if(!Number.isFinite(qty)||qty<=0||qty>Number(p.stock))return alert(p.name+" လက်ကျန်မလုံလောက်ပါ");if(!Number.isFinite(price)||price<0)return alert("ရောင်းဈေး မှန်ကန်စွာထည့်ပါ");lines.push({productId:p.id,productName:p.name,qty,price,total:qty*price,cost:qty*Number(p.cost||0)})}if(!lines.length)return alert("ပစ္စည်းထည့်ပါ");const quantities={};for(const line of lines)quantities[line.productId]=(quantities[line.productId]||0)+line.qty;for(const [id,qty] of Object.entries(quantities)){const p=db.products.find(x=>x.id===id);if(!p||qty>Number(p.stock))return alert((p?.name||"ပစ္စည်း")+" စုစုပေါင်းလက်ကျန် မလုံလောက်ပါ");}const total=lines.reduce((a,x)=>a+x.total,0),cost=lines.reduce((a,x)=>a+x.cost,0),paid=$("sPayType").value==="full"?total:($("sPayType").value==="credit"?0:Number($("sPaid").value));if(!Number.isFinite(paid)||paid<0||paid>total)return alert("ပေးငွေမှန်ကန်စွာထည့်ပါ");for(const line of lines){const p=db.products.find(x=>x.id===line.productId);p.stock-=line.qty}const first=lines[0];const transaction={id:uid(),date:dateNow(),invoice:"AK-"+Date.now().toString().slice(-8),lines,productId:first.productId,productName:lines.map(x=>x.productName).join(", "),qty:lines.reduce((a,x)=>a+x.qty,0),price:first.price,total,cost,customer:$("sCustomer").value.trim(),paid,due:total-paid,note:$("sNote").value.trim(),isSynced:false};db.sales.unshift(transaction);saveLocalTransaction(transaction);persist();if(localStorage.getItem("ak_sale_auto_print_after_sale")==="on"){try{receipt(transaction.id,localStorage.getItem("ak_sale_printer_paper")||"80mm")}catch(printError){console.error("Auto receipt print failed",printError);const printStatus=document.getElementById("akPrinterStatus");if(printStatus)printStatus.textContent="Auto Print မအောင်မြင်ပါ: "+(printError.message||printError)}}$("saleForm").reset();$("sQty").value=1;$("sPaid").value=0;const root=$("saleLines");while(root.querySelectorAll(".sale-line").length>1)root.lastElementChild.remove();alert("အရောင်းဘောင်ချာ သိမ်းပြီးပါပြီ။ နောက်ဖောက်သည်အတွက် အသင့်ဖြစ်ပါပြီ။");startNextCustomer(false)});
 function startNextCustomer(confirmDiscard=true){const form=$("saleForm");if(!form)return;if(confirmDiscard){const hasItems=Array.from($("saleLines").querySelectorAll(".sale-line")).some(row=>row.querySelector(".sale-product").value||Number(row.querySelector(".sale-qty").value)>1||Number(row.querySelector(".sale-price").value)>0);const hasCustomer=$("sCustomer").value.trim()||$("sNote").value.trim();if((hasItems||hasCustomer)&&!confirm("လက်ရှိမသိမ်းရသေးသော အရောင်းစာရင်းကို ရှင်းပြီး နောက်ဖောက်သည်အတွက် အသစ်စမလား။"))return;}form.reset();const root=$("saleLines");while(root.querySelectorAll(".sale-line").length>1)root.lastElementChild.remove();const first=root.querySelector(".sale-line");first.querySelector(".sale-qty").value="1";first.querySelector(".sale-price").value="0";$("sPaid").value="0";$("sPayType").value="full";$("saleBarcodeInput").value="";$("akNextCustomerStatus").textContent="နောက်ဖောက်သည်အတွက် အရောင်းအသစ် အသင့်ဖြစ်ပါပြီ။";const scan=$("saleBarcodeInput");if(scan)setTimeout(()=>scan.focus(),80)}
-function renderSales(){$("saleRows").innerHTML=db.sales.map(s=>`<tr><td>${new Date(s.date).toLocaleString()}</td><td>${esc(s.invoice)}</td><td>${esc(s.customer)}</td><td>${money(s.total)}</td><td>${money(s.paid)}</td><td>${money(s.due)}</td><td><div class="actions"><button onclick="receipt('${s.id}')">ဘောင်ချာ Print</button><button type="button" class="alt" onclick="shareReceiptImage('${s.id}')">ဘောင်ချာပုံ Viber ပို့</button><button type="button" class="alt" onclick="shareReceiptImage('${s.id}','thermer')">Thermer / Printer App သို့ပို့</button></div></td></tr>`).join("")}
+function renderSales(){$("saleRows").innerHTML=db.sales.map(s=>`<tr><td>${new Date(s.date).toLocaleString()}</td><td>${esc(s.invoice)}</td><td>${esc(s.customer)}</td><td>${money(s.total)}</td><td>${money(s.paid)}</td><td>${money(s.due)}</td><td><div class="actions"><button onclick="receipt('${s.id}')">ဘောင်ချာ Print</button><button type="button" class="alt" onclick="shareReceiptImage('${s.id}','viber')">Viber ဘောင်ချာ</button><button type="button" class="alt" onclick="shareReceiptImage('${s.id}','facebook')">Facebook ဘောင်ချာ</button><button type="button" class="alt" onclick="shareReceiptImage('${s.id}','telegram')">Telegram ဘောင်ချာ</button><button type="button" class="alt" onclick="shareReceiptImage('${s.id}','thermer')">Thermer / Printer</button></div></td></tr>`).join("")}
 function akCreatePrintWindow(){try{const frame=document.createElement("iframe");frame.setAttribute("aria-hidden","true");frame.style.cssText="position:fixed;right:0;bottom:0;width:1px;height:1px;border:0;opacity:0";document.body.appendChild(frame);const win=frame.contentWindow;if(!win)return null;return {document:win.document,print:()=>{try{win.focus();win.print()}catch(e){alert("ဒီ Android WebView မှာ Print Service မရသေးပါ။ Chrome သို့မဟုတ် Android Print Service ကို သုံးပါ။")}}}}catch(e){return null}}
 function akBuildReceiptEscPos(s,paper="80mm"){
  const width=paper==="58mm"?384:576,pad=18,contentWidth=width-pad*2;
@@ -1359,60 +1359,47 @@ function receipt(id,paper="80mm"){
 }
 function akBuildViberReceiptCanvas(s){
  const shop=db.shop||{},date=new Date(s.date),items=Array.isArray(s.lines)&&s.lines.length?s.lines:[{productName:s.productName,qty:s.qty,price:s.price,total:s.total}];
- const width=1240,pad=70,inner=width-pad*2,headerH=420,rowH=112,tableTop=450,footerH=470;
- const canvas=document.createElement("canvas");canvas.width=width;canvas.height=tableTop+Math.max(items.length,1)*rowH+footerH;
- const ctx=canvas.getContext("2d");if(!ctx)throw Error("ဘောင်ချာ Canvas မရနိုင်ပါ");
- ctx.fillStyle="#fff";ctx.fillRect(0,0,width,canvas.height);
- const blue="#1689c7",dark="#155b86",line="#8abbd3";
+ const width=1240,pad=64,inner=width-pad*2,blue="#1769aa",navy="#123653",pale="#edf5fc",muted="#60758a",border="#d6e3ef";
+ const canvas=document.createElement("canvas"),ctx=canvas.getContext("2d");if(!ctx)throw Error("ဘောင်ချာ Canvas မရနိုင်ပါ");
  const font=(size,bold=false)=>ctx.font=(bold?"700 ":"400 ")+size+"px 'Noto Sans Myanmar',Arial,sans-serif";
- const center=(txt,y,size,bold=false,color="#183b55")=>{font(size,bold);ctx.fillStyle=color;ctx.textAlign="center";ctx.fillText(String(txt||""),width/2,y)};
- const left=(txt,x,y,size,bold=false,color="#183b55")=>{font(size,bold);ctx.fillStyle=color;ctx.textAlign="left";ctx.fillText(String(txt||""),x,y)};
- const right=(txt,x,y,size,bold=false,color="#183b55")=>{font(size,bold);ctx.fillStyle=color;ctx.textAlign="right";ctx.fillText(String(txt||""),x,y)};
- const wrap=(txt,maxWidth,size,bold=false)=>{font(size,bold);const words=String(txt||"").split(/\s+/);const out=[];let line="";for(const word of words){const test=line?line+" "+word:word;if(line&&ctx.measureText(test).width>maxWidth){out.push(line);line=word}else line=test}if(line)out.push(line);return out};
- const shopName=String(shop.receiptName||shop.name||"ဆိုင်အမည် မသတ်မှတ်ရသေးပါ");
- center(shopName,105,58,true,dark);
- center([shop.city,shop.township].filter(Boolean).join(" · "),165,29,false);
- center(shop.address||"",210,27,false);
- center(shop.phone?"ဖုန်း: "+shop.phone:"",255,27,false);
- ctx.strokeStyle=blue;ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(pad,300);ctx.lineTo(width-pad,300);ctx.stroke();
- left("Customer:",pad,350,29,true);left(s.customer||"လက်ငင်း",pad+190,350,29);
- right("Date: "+date.toLocaleDateString(),width-pad,350,29,true);
- left("Remark:",pad,405,27,true);left(s.note||"",pad+190,405,27);
- const cols=[pad,pad+inner*.55,pad+inner*.69,pad+inner*.84,width-pad];
- const headerY=tableTop,headerH2=76;
- ctx.fillStyle=blue;ctx.fillRect(pad,headerY,inner,headerH2);
- const headers=["Description","Qty","Price","Amount"];
- ctx.fillStyle="#fff";font(28,true);ctx.textAlign="center";
- for(let i=0;i<4;i++)ctx.fillText(headers[i],(cols[i]+cols[i+1])/2,headerY+49);
- let y=headerY+headerH2;
- items.forEach((item,index)=>{
-  const desc=String(item.productName||"ပစ္စည်း");
-  const descLines=wrap(desc,cols[1]-cols[0]-28,27,true);
-  const detail=wrap(String(item.description||""),cols[1]-cols[0]-28,21,false);
-  const lines=Math.max(1,descLines.length+detail.length);
-  const h=Math.max(rowH,lines*38+28);
-  ctx.fillStyle=index%2?"#f2f8fc":"#fff";ctx.fillRect(pad,y,inner,h);
-  ctx.strokeStyle=line;ctx.lineWidth=2;ctx.strokeRect(pad,y,inner,h);
-  for(let c=1;c<4;c++){ctx.beginPath();ctx.moveTo(cols[c],y);ctx.lineTo(cols[c],y+h);ctx.stroke()}
-  let ty=y+43;descLines.forEach(t=>{left(t,cols[0]+15,ty,27,true);ty+=35});
-  detail.forEach(t=>{left(t,cols[0]+15,ty,21,false);ty+=30});
-  const qty=Number(item.qty||0).toLocaleString();
-  const price=Number(item.price||0).toLocaleString("en-US");
-  const amount=Number(item.total??(Number(item.qty||0)*Number(item.price||0))).toLocaleString("en-US");
-  ctx.fillStyle="#183b55";font(27,false);ctx.textAlign="center";ctx.fillText(qty,(cols[1]+cols[2])/2,y+Math.min(h-20,Math.max(48,h/2+10)));
-  ctx.textAlign="right";ctx.fillText(price,cols[3]-14,y+Math.min(h-20,Math.max(48,h/2+10)));
-  ctx.font="700 27px 'Noto Sans Myanmar',Arial,sans-serif";ctx.fillText(amount,cols[4]-14,y+Math.min(h-20,Math.max(48,h/2+10)));
+ const wrap=(txt,maxWidth,size,bold=false)=>{font(size,bold);const parts=typeof Intl.Segmenter==="function"?Array.from(new Intl.Segmenter("my",{granularity:"grapheme"}).segment(String(txt||"")),x=>x.segment):Array.from(String(txt||""));const out=[];let line="";for(const part of parts){if(line&&ctx.measureText(line+part).width>maxWidth){out.push(line);line=part}else line+=part}if(line)out.push(line);return out};
+ const rowData=items.map(item=>({item,lines:wrap(item.productName||"ပစ္စည်း",inner*.48-24,27,true)}));
+ const rowHeights=rowData.map(x=>Math.max(94,x.lines.length*38+32));
+ const top=350,headH=78,tableH=headH+rowHeights.reduce((a,b)=>a+b,0),footer=360;
+ canvas.width=width;canvas.height=top+tableH+footer+60;
+ const c=canvas.getContext("2d");c.fillStyle="#f2f6fb";c.fillRect(0,0,width,canvas.height);
+ const round=(x,y,w,h,r,color)=>{c.fillStyle=color;c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();c.fill()};
+ round(28,24,width-56,canvas.height-48,28,"#ffffff");
+ round(28,24,width-56,270,28,blue);
+ c.fillStyle="#ffffff";c.textAlign="center";font(55,true);c.fillText(String(shop.receiptName||shop.name||"မိမိဆိုင်"),width/2,105);
+ c.fillStyle="#e7f3ff";font(25);c.fillText([shop.city,shop.township].filter(Boolean).join(" · ")||"အရောင်းဘောင်ချာ",width/2,155);
+ c.fillText(shop.address||"",width/2,198);c.fillText(shop.phone?"ဖုန်း: "+shop.phone:"",width/2,238);
+ c.textAlign="left";c.fillStyle=navy;font(25,true);c.fillText("ဘောင်ချာအမှတ်",pad+20,330);
+ c.textAlign="right";font(28,true);c.fillText(String(s.invoice||"-"),width-pad-20,330);
+ c.textAlign="left";c.fillStyle=muted;font(24);c.fillText("ရက်စွဲ: "+date.toLocaleString(),pad+20,top+38);
+ c.textAlign="right";c.fillText("ဖောက်သည်: "+(s.customer||"လက်ငင်း"),width-pad-20,top+38);
+ const ty=top+65,cols=[pad,pad+inner*.52,pad+inner*.67,pad+inner*.84,width-pad];
+ round(pad,ty,inner,headH,12,navy);
+ const headers=["ပစ္စည်းအမည်","အရေအတွက်","တစ်ခုဈေး","ကျသင့်ငွေ"];
+ c.fillStyle="#fff";font(25,true);c.textAlign="center";for(let i=0;i<4;i++)c.fillText(headers[i],(cols[i]+cols[i+1])/2,ty+49);
+ let y=ty+headH;
+ rowData.forEach(({item,lines},idx)=>{
+  const h=rowHeights[idx];round(pad,y,inner,h,8,idx%2?pale:"#ffffff");
+  c.strokeStyle=border;c.lineWidth=2;c.strokeRect(pad,y,inner,h);
+  c.fillStyle=navy;c.textAlign="left";font(26,true);lines.forEach((line,n)=>c.fillText(line,cols[0]+16,y+38+n*36));
+  c.textAlign="center";font(25);c.fillText(Number(item.qty||0).toLocaleString(),(cols[1]+cols[2])/2,y+h/2+9);
+  c.textAlign="right";c.fillText(Number(item.price||0).toLocaleString("en-US"),cols[3]-14,y+h/2+9);
+  font(25,true);c.fillText(Number(item.total??(Number(item.qty||0)*Number(item.price||0))).toLocaleString("en-US"),cols[4]-14,y+h/2+9);
   y+=h;
  });
- const totalY=y+85;
- ctx.fillStyle="#e9f5fb";ctx.fillRect(width-530,totalY-58,460,110);
- ctx.fillStyle=blue;ctx.fillRect(width-530,totalY-58,320,110);
- ctx.fillStyle="#fff";font(30,true);ctx.textAlign="center";ctx.fillText("Total Amount",width-370,totalY+10);
- right(Number(s.total||0).toLocaleString("en-US")+" "+(shop.currency||"MMK"),width-pad,totalY+12,39,true,dark);
- let footY=totalY+130;
- [["Paid",s.paid],["Balance",s.due]].forEach(([label,value])=>{right(label+": "+Number(value||0).toLocaleString("en-US")+" "+(shop.currency||"MMK"),width-pad,footY,27,true);footY+=48});
- center("အားပေးမှုအတွက် ကျေးဇူးတင်ပါသည်",canvas.height-75,29,true,dark);
- center(shop.name||"AK Sale Software",canvas.height-32,22,false,"#557184");
+ y+=26;round(width-570,y,500,205,18,pale);
+ c.textAlign="left";c.fillStyle=muted;font(25,true);c.fillText("စုစုပေါင်း",width-535,y+48);
+ c.textAlign="right";c.fillStyle=blue;font(38,true);c.fillText(Number(s.total||0).toLocaleString("en-US")+" "+(shop.currency||"MMK"),width-95,y+53);
+ c.fillStyle=navy;font(26,true);c.fillText("ပေးချေပြီး: "+Number(s.paid||0).toLocaleString("en-US"),width-95,y+112);
+ c.fillText("ကျန်ငွေ: "+Number(s.due||0).toLocaleString("en-US"),width-95,y+160);
+ if(s.note){c.textAlign="left";c.fillStyle=muted;font(22);c.fillText("မှတ်ချက်: "+String(s.note).slice(0,100),pad+12,y+60)}
+ c.textAlign="center";c.fillStyle=blue;font(28,true);c.fillText("အားပေးမှုအတွက် ကျေးဇူးတင်ပါသည်",width/2,canvas.height-86);
+ c.fillStyle=muted;font(19);c.fillText("Digital Receipt · "+String(shop.name||"AK Sale Software"),width/2,canvas.height-52);
  return canvas;
 }
 async function shareReceiptImage(id,destination="share"){
@@ -1429,10 +1416,10 @@ async function shareReceiptImage(id,destination="share"){
   if(api?.shareReceiptImage&&window.Capacitor?.isNativePlatform?.()){
    const bytes=new Uint8Array(await blob.arrayBuffer());let binary="";
    for(let i=0;i<bytes.length;i+=0x8000)binary+=String.fromCharCode(...bytes.subarray(i,Math.min(i+0x8000,bytes.length)));
-   const shareTitle=destination==="thermer"?"AK Sale · Thermer Printer":"AK Sale · Receipt";const shareText=destination==="thermer"?"Thermer ကိုရွေးပြီး Bluetooth / USB Thermal Printer မှ ဘောင်ချာထုတ်ပါ။":"AK Sale အရောင်းဘောင်ချာ";const chooserTitle=destination==="thermer"?"Thermer / Printer App ကို ရွေးပါ":"Viber / အခြား App ကို ရွေးပါ";await api.shareReceiptImage({data:btoa(binary),fileName,title:shareTitle,text:shareText,chooserTitle});return;
+   const targets={viber:["Viber ဘောင်ချာ","Viber ကိုရွေးပြီး ဘောင်ချာပုံပို့ပါ။","Viber ကို ရွေးပါ"],facebook:["Facebook ဘောင်ချာ","Facebook သို့ ဘောင်ချာပုံမျှဝေပါ။","Facebook ကို ရွေးပါ"],telegram:["Telegram ဘောင်ချာ","Telegram ကိုရွေးပြီး ဘောင်ချာပုံပို့ပါ။","Telegram ကို ရွေးပါ"],thermer:["Thermer Printer","Thermer ကိုရွေးပြီး Bluetooth / USB Thermal Printer မှ ဘောင်ချာထုတ်ပါ။","Thermer / Printer App ကို ရွေးပါ"]};const target=targets[destination]||["AK Sale · Receipt","AK Sale အရောင်းဘောင်ချာ","Viber / Facebook / Telegram ကို ရွေးပါ"];await api.shareReceiptImage({data:btoa(binary),fileName,title:"AK Sale · "+target[0],text:target[1],chooserTitle:target[2]});return;
   }
   const file=new File([blob],fileName,{type:"image/png"});
-  const shareTitle=destination==="thermer"?"AK Sale · Thermer Printer":"AK Sale · Receipt";const shareText=destination==="thermer"?"Thermer ကို ရွေးပြီး မိမိ Bluetooth / USB Printer မှ ဘောင်ချာထုတ်ပါ။":"AK Sale အရောင်းဘောင်ချာ";if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:shareTitle,text:shareText});return;}
+  const targets={viber:["Viber ဘောင်ချာ","Viber ကိုရွေးပြီး ဘောင်ချာပုံပို့ပါ။"],facebook:["Facebook ဘောင်ချာ","Facebook သို့ ဘောင်ချာပုံမျှဝေပါ။"],telegram:["Telegram ဘောင်ချာ","Telegram ကိုရွေးပြီး ဘောင်ချာပုံပို့ပါ။"],thermer:["Thermer Printer","Thermer ကိုရွေးပြီး Printer မှထုတ်ပါ။"]};const target=targets[destination]||["AK Sale · Receipt","AK Sale အရောင်းဘောင်ချာ"];if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:"AK Sale · "+target[0],text:target[1]});return;}
   const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=fileName;a.click();setTimeout(()=>URL.revokeObjectURL(url),2000);
   alert("ဘောင်ချာ PNG ပုံ သိမ်းပြီးပါပြီ။ Viber ထဲတွင် ပုံအဖြစ် ရွေးပြီး ပို့နိုင်ပါပြီ။");
  }catch(e){if(e?.name!=="AbortError")alert("ဘောင်ချာပုံ မျှဝေနိုင်ပါ: "+(e?.message||e))}

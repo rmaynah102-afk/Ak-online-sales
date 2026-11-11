@@ -55,8 +55,8 @@ jobs:
           let checked = 0;
           for (const page of pages) {
             const html = fs.readFileSync(page, 'utf8');
-            const scripts = [...html.matchAll(/<script\\b([^>]*)>([\\s\\S]*?)<\\/script>/gi)]
-              .filter(([, attrs]) => !/\\bsrc\\s*=/.test(attrs));
+            const scripts = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)]
+              .filter(([, attrs]) => !/\bsrc\s*=/.test(attrs));
             scripts.forEach((match, index) => {
               new vm.Script(match[2], {filename: page + ':inline-' + (index + 1)});
               checked++;

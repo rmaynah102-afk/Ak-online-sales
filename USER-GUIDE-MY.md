@@ -5,9 +5,9 @@
 ## ၁။ စတင်အသုံးပြုခြင်း
 1. AK Sale App ကိုဖွင့်ပါ။ အခြေခံ POS ကို အင်တာနက်မရှိဘဲ Offline Local Mode ဖြင့် စမ်းသုံးနိုင်သည်။
 2. Offline Mode တွင် ဒေတာသည် ထိုဖုန်းထဲတွင်သာ သိမ်းဆည်းသည်။ ဖုန်းပျောက်ခြင်း၊ App Data ဖျက်ခြင်း၊ ဖုန်းပြောင်းခြင်းတို့တွင် ဒေတာဆုံးရှုံးနိုင်သဖြင့် Backup ပုံမှန်ထုတ်ပါ။
-3. Cloud Sync၊ Market နှင့် Subscription ဝန်ဆောင်မှုများအတွက် Firebase Login/ခွင့်ပြုချက် လိုအပ်သည်။
+3. Cloud Sync နှင့် POS အသုံးပြုခွင့်အတွက် Verified Gmail လိုအပ်သည်။ ပထမဆုံး ဆိုင်အကောင့် ၃၀ ခုကို Free Beta အဖြစ် အခမဲ့ဖွင့်ပေးမည်။ နေရာပြည့်ပါက Subscription လိုအပ်သည်။
 4. Owner အကောင့်ကို Code/Firestore Rules ထဲရှိ သတ်မှတ်ထားသော Verified Gmail ဖြင့်သာ အတည်ပြုသည်။
-5. ဝန်ထမ်း Role-based Cloud POS ကို မပြီးမချင်း အခြားဝန်ထမ်းအကောင့်များကို ဆိုင်ဒေတာအတွက် မသုံးပါနှင့်။
+5. Free-only ဗားရှင်းတွင် သီးခြားဝန်ထမ်းအကောင့်၊ Merchant Code နှင့် Role-based access ကို ပိတ်ထားသည်။ Owner Gmail Password ကို ဝန်ထမ်းများနှင့် မမျှဝေပါနှင့်။
 
 ## ၂။ ဆိုင်အချက်အလက်
 ဆိုင်အမည်၊ မြို့၊ မြို့နယ်၊ လိပ်စာ၊ ဖုန်းနှင့် ငွေကြေးယူနစ်ကို ဆိုင်ဆက်တင်တွင် ဖြည့်ပါ။ ဘောင်ချာထုတ်ရာတွင် ထိုအချက်အလက်များကို အသုံးပြုသည်။
@@ -30,15 +30,16 @@
 
 ## ၇။ Backup နှင့် Cloud
 - အရေးကြီးသောအချက်အလက်ထည့်ပြီးတိုင်း Backup ကို ပုံမှန်သိမ်းပါ။
-- Cloud Save/Load မလုပ်မီ မှန်ကန်သော Gmail ဖြင့် Login ဝင်ထားကြောင်း စစ်ပါ။
+- Cloud Sync သည် Verified Gmail တစ်ခု၏ ကိုယ်ပိုင် UID အောက်တွင်သာ သိမ်းဆည်းသည်။ ဆိုင်တစ်ဆိုင်နှင့်တစ်ဆိုင် ဒေတာခွဲထားသည်။
+- ပထမဆုံး Login ပြီးနောက် အင်တာနက်ရှိမှ Cloud Sync လုပ်နိုင်သည်။ ဖုန်းထဲရှိ Product Photo များကို Cloud သို့ မပို့ပါ။
 - Cloud Load သည် ဖုန်းထဲရှိ ဒေတာကို အစားထိုးနိုင်သဖြင့် မလုပ်မီ Local JSON Backup ထုတ်ထားပါ။
 - Cloud Conflict ပြပါက အဟောင်းဒေတာကို အလိုအလျောက်မဖျက်ပါနှင့်။ Backup ထုတ်ပြီးမှ နှိုင်းယှဉ်ပါ။
 
 ## ၈။ Payment / Subscription
-လက်ရှိ code တွင် KBZPay ကို အခြေခံထားပြီး Package များကို ၁ လ 30,000 ကျပ်၊ ၃ လ 90,000 ကျပ်၊ ၆ လ 180,000 ကျပ်၊ ၁ နှစ် 360,000 ကျပ်ဟု သတ်မှတ်ထားသည်။ ငွေလွှဲပြီး Transaction ID နှင့် Screenshot ပို့ရမည်။ Owner က ငွေဝင်မှုကို စစ်ဆေးအတည်ပြုပြီးမှ POS အသုံးပြုခွင့် ဖွင့်ပေးမည်။
+Free Beta ဆိုင်အကောင့် ၃၀ ခု ပြည့်ပြီးနောက် KBZPay Package များကို အသုံးပြုနိုင်သည်။ Package များမှာ ၁ လ 30,000 ကျပ်၊ ၃ လ 90,000 ကျပ်၊ ၆ လ 180,000 ကျပ်၊ ၁ နှစ် 360,000 ကျပ် ဖြစ်သည်။ ငွေလွှဲပြီး Transaction ID ကို ထည့်ပါ။ Firebase Storage မဖွင့်ထားသဖြင့် Screenshot Upload ကို ယာယီပိတ်ထားသည်။ Owner က KBZPay ထဲတွင် ငွေဝင်မှုကို ကိုယ်တိုင်စစ်ဆေးပြီးမှ Approve လုပ်မည်။
 1. App တွင် ပြထားသော လက်ခံသူအချက်အလက်ကို စစ်ပါ။
 2. KBZPay App မှ ကိုယ်တိုင်ငွေလွှဲပါ။
-3. Transaction ID နှင့် Screenshot တင်ပါ။
+3. Transaction ID ကို ထည့်ပြီး တင်ပြပါ။ Screenshot Upload ကို လက်ရှိ Free-only ဗားရှင်းတွင် မရသေးပါ။
 4. Owner က KBZPay ထဲရှိ အမှန်တကယ်ငွေဝင်မှုကို စစ်ဆေးပြီးမှ Approve လုပ်ပါ။
 Screenshot တစ်ခုတည်းဖြင့် ငွေလက်ခံပြီးဟု မသတ်မှတ်ပါနှင့်။ Payment destination ပြောင်းလိုပါက အရင်ဆုံး အကောင့်ပိုင်ရှင်က အတည်ပြုပေးရမည်။
 
@@ -48,16 +49,16 @@ Screenshot တစ်ခုတည်းဖြင့် ငွေလက်ခံ�
 ## ၁၀။ Printer၊ Bluetooth နှင့် Sensor
 - System Print သို့မဟုတ် Wi-Fi printer ကို Android Print Service / printer app မှတစ်ဆင့် စမ်းသပ်ပါ။
 - Bluetooth/USB ESC/POS ကို App က တိုက်ရိုက်ထိန်းချုပ်နိုင်သည်ဟု မယူဆပါနှင့်။ Native bridge နှင့် printer model အလိုက် စမ်းသပ်မှုလိုအပ်သည်။
-- Camera Barcode/QR scan နှင့် အခြား hardware sensor များကို လက်ရှိ APK တွင် ထည့်သွင်းပြီး စမ်းသပ်အတည်ပြုထားခြင်း မရှိသေးပါ။
+- ZXing Scanner library ကို APK ထဲတွင် ထည့်ထားသော်လည်း ဖုန်းအမျိုးမျိုး၏ Camera ဖြင့် လက်တွေ့စမ်းသပ်အတည်ပြုရန် ကျန်သေးသည်။
 
 ## ၁၁။ လုံခြုံရေး
 - Gmail Password၊ OTP၊ Firebase Service Account JSON၊ Keystore၊ Signing Password များကို Chat၊ Viber၊ GitHub source ထဲ မတင်ပါနှင့်။
 - Owner Gmail သည် Verified ဖြစ်ရမည်။ Owner အီးမေးလ်ပြောင်းလဲမှုသည် Code၊ Firestore Rules၊ Storage Rules နှင့် Cloud Functions အားလုံးကို တစ်ပြိုင်နက်ညှိပြီးမှ ပြောင်းရမည်။
-- ဝန်ထမ်း Role များရှိသော်လည်း လက်ရှိ monolithic Cloud data access သည် Owner-only ဖြစ်နေသေးသည်။ ဝန်ထမ်းများအတွက် လုံခြုံသော role-based POS ကို အပြီးမသတ်မီ ရောင်းချအသုံးပြုခွင့်မပေးပါနှင့်။
+- Free-only build တွင် ဆိုင်ရှင်၏ UID အောက်ရှိ Cloud data ကိုသာ အသုံးပြုနိုင်သည်။ ဝန်ထမ်းအကောင့်နှင့် Merchant Code ကို လုံခြုံစွာ အကောင်အထည်မဖော်နိုင်သေးသဖြင့် ပိတ်ထားသည်။
 - APK build အောင်မြင်ခြင်းသည် ဖုန်းတိုင်းတွင် Login/Cloud/Printer/Payment အလုပ်လုပ်ကြောင်း အာမခံချက်မဟုတ်ပါ။
 
 ## ၁၂။ မဖြစ်မနေ စမ်းသပ်ရန်
-1. Android ဖုန်း ၂ လုံးတွင် Owner Login နှင့် Cloud Sync။
+1. Android ဖုန်း ၂ လုံးတွင် Gmail တစ်ခုတည်းဖြင့် Owner Login နှင့် Cloud Sync (လက်တွေ့စမ်းသပ်ရန် ကျန်)။
 2. Account တစ်ခု၏ ဒေတာကို အခြား Account မမြင်နိုင်ခြင်း။
 3. Product → Purchase → Sale → Stock balance → Report တိကျမှု။
 4. Backup ထုတ်ခြင်းနှင့် ပြန်ယူခြင်း။

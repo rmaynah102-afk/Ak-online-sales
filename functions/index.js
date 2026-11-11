@@ -822,14 +822,24 @@ async function verifyWorkspaceMember(context, identity) {
 function workspaceCanWrite(role,key) {
   if (role==="owner") return true;
   if (role==="manager") return false;
-  if (role==="cashier") return ["products","sales","payments","people"].includes(key);
-  if (role==="employee") return ["products","sales","payments"].includes(key);
+  if (role==="cashier") return ["sales","payments","people"].includes(key);
+  if (role==="employee") return ["products","sales"].includes(key);
   return false;
 }
 function workspaceCanRead(role,key) {
-  if (role==="owner" || role==="manager") return true;
-  if (role==="cashier" || role==="employee") return ["products","sales","people","payments"].includes(key);
+  if (role==="owner") return true;
+  if (["manager","cashier","employee"].includes(role)) return ["products","sales","people","payments"].includes(key);
   return false;
+}
+function akStripStaffFinancialFields(record) {
+  const copy={...(record||{})};
+  for (const key of ["cost","costPrice","purchaseCost","purchasePrice","unitCost","costTotal","profit","grossProfit","netProfit","margin","averageCost","lastPurchaseCost"]) delete copy[key];
+  if (Array.isArray(copy.lines)) copy.lines=copy.lines.map(line=>{
+    const item={...(line||{})};
+    for (const key of ["cost","costPrice","purchaseCost","purchasePrice","unitCost","costTotal","profit","grossProfit","margin"]) delete item[key];
+    return item;
+  });
+  return copy;
 }
 function workspaceDocId(value,index) {
   const raw=String(value && value.id || ("row_"+index));
@@ -849,7 +859,9 @@ exports.loadShopWorkspace = functions.https.onCall(async (data,context)=>{
     if (!version) { result[key]=[]; continue; }
     const snap=await db.collection("shops").doc(identity.shopId)
       .collection("workspaceVersions").doc(version).collection(key).get();
-    result[key]=snap.docs.map(d=>d.data().record);
+    const records=snap.docs.map(d=>d.data().record);
+    result[key]=identity.role==="owner"?records:
+      (key==="products"||key==="sales"?records.map(akStripStaffFinancialFields):records);
   }
   if (identity.role==="owner"||identity.role==="manager") {
     result.shop=meta.shop||{};
@@ -877,19 +889,29 @@ exports.saveShopWorkspace = functions.https.onCall(async (data,context)=>{
     if (!workspaceCanWrite(identity.role,key) || !Object.prototype.hasOwnProperty.call(input,key)) continue;
     if (!Array.isArray(input[key])) throw new functions.https.HttpsError("invalid-argument",key+" စာရင်းပုံစံ မမှန်ပါ။");
     if (input[key].length>100000) throw new functions.https.HttpsError("resource-exhausted",key+" စာရင်းသည် လက်ရှိ request အရွယ်အစားထက် ကျော်နေသည်။");
-    if (key==="products" && ["cashier","employee"].includes(identity.role)) {
+    if (key==="products" && identity.role==="employee") {
       const oldVersion=pointers.products;
       const oldSnap=oldVersion?await db.collection("shops").doc(identity.shopId).collection("workspaceVersions").doc(oldVersion).collection("products").get():null;
       const oldProducts=new Map((oldSnap?oldSnap.docs:[]).map(doc=>{const record=doc.data().record;return [String(record.id||doc.id),record]}));
-      if (input.products.length!==oldProducts.size) throw new functions.https.HttpsError("permission-denied","ဝန်ထမ်းသည် ပစ္စည်းအသစ်ထည့်ခြင်း/ဖျက်ခြင်း မလုပ်နိုင်ပါ။ ဆိုင်ရှင်ထံ ဆက်သွယ်ပါ။");
-      const canonical=value=>JSON.stringify(Object.keys(value||{}).filter(k=>k!=="stock"&&k!=="photo").sort().map(k=>[k,value[k]]));
-      for (const product of input.products) {
-        const beforeProduct=oldProducts.get(String(product&&product.id||""));
-        if (!beforeProduct || canonical(beforeProduct)!==canonical(product) ||
-            !Number.isFinite(Number(product.stock)) || Number(product.stock)<0) {
-          throw new functions.https.HttpsError("permission-denied","ဝန်ထမ်းသည် ပစ္စည်းဈေးနှုန်း/အချက်အလက်ကို ပြင်ခွင့်မရှိပါ။ လက်ကျန်ပမာဏသာ အရောင်းနှင့်အတူ ပြောင်းနိုင်သည်။");
+      if (input.products.length<oldProducts.size) throw new functions.https.HttpsError("permission-denied","ဝန်ထမ်းသည် ရှိပြီးသားပစ္စည်းကို ဖျက်ခွင့်မရှိပါ။");
+      const canonical=value=>JSON.stringify(Object.keys(value||{}).filter(k=>!["stock","photo","cost","costPrice","purchaseCost","purchasePrice","unitCost","costTotal","profit","grossProfit","netProfit","margin","averageCost","lastPurchaseCost"].includes(k)).sort().map(k=>[k,value[k]]));
+      const seen=new Set();
+      const safeProducts=input.products.map(product=>{
+        if(!product||typeof product!=="object"||Array.isArray(product)||!Number.isFinite(Number(product.stock))||Number(product.stock)<0)throw new functions.https.HttpsError("invalid-argument","ပစ္စည်းလက်ကျန် ပုံစံမမှန်ပါ။");
+        const id=String(product.id||"");
+        if(!id||seen.has(id))throw new functions.https.HttpsError("invalid-argument","ပစ္စည်း ID ထပ်နေသည် သို့မဟုတ် မရှိပါ။");
+        seen.add(id);
+        const beforeProduct=oldProducts.get(id);
+        if(beforeProduct){
+          if(canonical(beforeProduct)!==canonical(product))throw new functions.https.HttpsError("permission-denied","ဝန်ထမ်းသည် ရှိပြီးသားပစ္စည်း၏ အချက်အလက်/ဈေးနှုန်းကို မပြင်နိုင်ပါ။");
+          return {...product,cost:Number(beforeProduct.cost||0)};
         }
-      }
+        if(!String(product.name||"").trim()||!Number.isFinite(Number(product.retail??product.price??0))||!Number.isFinite(Number(product.wholesale??product.price??0)))throw new functions.https.HttpsError("invalid-argument","ပစ္စည်းအမည်နှင့် ရောင်းဈေး ထည့်ပါ။");
+        return {...product,cost:0,costPrice:undefined,purchaseCost:undefined,purchasePrice:undefined,unitCost:undefined,costTotal:undefined,profit:undefined,grossProfit:undefined,netProfit:undefined,margin:undefined};
+      });
+      for(const id of oldProducts.keys())if(!seen.has(id))throw new functions.https.HttpsError("permission-denied","ဝန်ထမ်းသည် ရှိပြီးသားပစ္စည်းကို ဖျက်ခွင့်မရှိပါ။");
+      changed[key]=safeProducts;
+      continue;
     }
     changed[key]=input[key];
   }

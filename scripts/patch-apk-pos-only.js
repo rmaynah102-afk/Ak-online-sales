@@ -37,7 +37,7 @@ replaceExactly('<meta property="og:title" content="AK Market | မြန်မ�
 replaceExactly('<meta property="og:description" content="ပစ္စည်းကြော်ငြာ အခမဲ့တင်ပါ။ မြို့နယ်အလိုက် ရှာဖွေပါ။ ဆိုင်နှင့် ရောင်းသူကို ဖုန်း/Viber ဖြင့် တိုက်ရိုက်ဆက်သွယ်ပါ။">','<meta property="og:description" content="Hardware & Electrical ဆိုင်များအတွက် အရောင်း၊ ကုန်ပစ္စည်း၊ အကြွေးနှင့် အမြတ်စာရင်း စီမံခန့်ခွဲမှု။">');
 replaceExactly('<title>AK Market | မြန်မာ့ Online Shopping ဈေးကွက်</title>','<title>AK Sale Software | Hardware & Electrical POS</title>');
 replaceExactly('<footer>Ak shopping markets · Myanmar Retail & Market Platform</footer>','<footer>AK Sale Software · Hardware & Electrical Shop POS</footer>');
-replaceExactly('ဆိုင်သုံး POS ကို အသုံးပြုရန် Gmail Login နှင့် Owner ခွင့်ပြုထားသော Package လိုအပ်သည်။ ငွေပေးချေမှုကို App အပြင်တွင် ဆောင်ရွက်ပြီး Owner က အသုံးပြုခွင့်ဖွင့်ပေးမည်။','ဆိုင်သုံး POS ကို အသုံးပြုရန် Gmail Login နှင့် အသုံးပြုခွင့်လိုအပ်သည်။ Package ရွေးချယ်ပြီး ငွေပေးချေမှု တင်ပြနိုင်ပါသည်။');
+replaceExactly('ဆိုင်သုံး POS ကို အသုံးပြုရန် Login နှင့် အသုံးပြုခွင့်လိုအပ်သည်။ AK Market၊ အတည်ပြုဆိုင်စာရင်းနှင့် ကြော်ငြာများကို အများပြည်သူ ကြည့်ရှုနိုင်သည်။','ဆိုင်သုံး POS ကို အသုံးပြုရန် Gmail Login နှင့် Owner ခွင့်ပြုထားသော Package လိုအပ်သည်။ ငွေပေးချေမှုကို App အပြင်တွင် ဆောင်ရွက်ပြီး Owner က အသုံးပြုခွင့်ဖွင့်ပေးမည်။');
 replaceExactly('if(typeof loadMarket==="function")await loadMarket()', '/* APK POS-only: do not load public Marketplace listings. */', 2);
 replaceExactly('applyAkTheme();renderAll();loadMarket();', 'applyAkTheme();renderAll();');
 replaceExactly('connectPublicCatalog();', '/* APK POS-only: public catalog listener disabled. */');

@@ -23,6 +23,6 @@ if (!centerReady) {
 }
 const bodyEnd = html.lastIndexOf('</body>');
 if (bodyEnd < 0) throw new Error('HTML body closing tag not found.');
-html = html.slice(0, bodyEnd) + '<script>/* AK_APK_CLOUD_STARTUP_GUARD_V2 */</script>\\n' + html.slice(bodyEnd);
+html = html.slice(0, bodyEnd) + '<script>/* AK_APK_CLOUD_STARTUP_GUARD_V2 */</script>\n' + html.slice(bodyEnd);
 fs.writeFileSync(target, html);
 console.log('APK-only Cloud startup guard V2 applied: 18s private shop-data deadline; Owner center loading remains non-blocking.');

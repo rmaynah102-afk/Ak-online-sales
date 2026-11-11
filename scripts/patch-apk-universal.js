@@ -51,8 +51,8 @@ replaceExactly(roleAnchor, roleReplacement);
 const style = [
   '<style id="ak-apk-universal-v1">',
   '/* AK_APK_UNIVERSAL_V1 · one APK, role-based access */',
-  'html.ak-apk-pos-only body.ak-license-locked main>#account #akFirebasePanel { display:block!important; }
-  html.ak-apk-pos-only body.ak-license-locked main>#payment #akAccessRequestPanel { display:block!important; }',
+  'html.ak-apk-pos-only body.ak-license-locked main>#account #akFirebasePanel { display:block!important; }',
+  'html.ak-apk-pos-only body.ak-license-locked main>#payment #akAccessRequestPanel { display:block!important; }',
 
   'html.ak-apk-pos-only #akMerchantJoinPanel { display:block; }',
   '</style>'

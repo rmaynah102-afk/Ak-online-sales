@@ -1976,7 +1976,15 @@ const AK_SPONSORED_ADS_FREE_BETA=true;async function approveSponsoredAd(id){let 
 async function rejectSponsoredAd(id){if(!confirm("ဤကြော်ငြာကို ပယ်ဖျက်မလား။"))return;try{const admin=fbAuth?.currentUser;if(!admin||String(admin.email||"").trim().toLowerCase()!=="painglin102@gmail.com"||!admin.emailVerified)throw Error("Owner ခွင့်ပြုချက်မရှိပါ။");await fbStore.collection("sponsoredAds").doc(id).update({status:"rejected",reviewedAt:firebase.firestore.FieldValue.serverTimestamp()});await loadPendingAds()}catch(e){alert("ပယ်ဖျက်မရပါ: "+e.message)}}
 let akFirebaseSdkPromise=null;function akLoadFirebaseSDK(){if(window.firebase&&firebase.auth&&firebase.firestore)return Promise.resolve();if(akFirebaseSdkPromise)return akFirebaseSdkPromise;akFirebaseSdkPromise=(async()=>{const base="https://www.gstatic.com/firebasejs/10.12.2/";const load=name=>new Promise((resolve,reject)=>{const script=document.createElement("script");script.src=base+name;script.async=true;script.onload=resolve;script.onerror=()=>reject(new Error("Firebase SDK မရနိုင်ပါ: "+name));document.head.appendChild(script)});await load("firebase-app-compat.js");await Promise.all(["firebase-auth-compat.js","firebase-firestore-compat.js","firebase-functions-compat.js","firebase-storage-compat.js"].map(load))})().catch(error=>{akFirebaseSdkPromise=null;throw error});return akFirebaseSdkPromise}
 async function firebaseConnect(){try{let rawConfig=window.AK_FIREBASE_PUBLIC_CONFIG||localStorage.getItem("ak_firebase_config");if(!rawConfig)throw Error("Firebase Web App Config ထည့်ပါ။");let cfg=typeof rawConfig==="string"?JSON.parse(rawConfig):rawConfig;if(!cfg||typeof cfg!=="object"||!cfg.apiKey||!cfg.projectId||!cfg.appId)throw Error("Firebase Web App Config မပြည့်စုံပါ။");if(window.AK_FIREBASE_PUBLIC_CONFIG){cfg=window.AK_FIREBASE_PUBLIC_CONFIG;}localStorage.setItem("ak_firebase_config",JSON.stringify(cfg));/* Always prefer the current project config over stale browser settings. */await akLoadFirebaseSDK();if(!window.firebase)throw Error("Firebase SDK မတင်နိုင်ပါ။ Internet စစ်ပါ။");if(!firebase.apps.length)fbApp=firebase.initializeApp(cfg);else fbApp=firebase.app();fbAuth=firebase.auth();fbStore=firebase.firestore();await Promise.all([fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL),fbStore.enablePersistence({synchronizeTabs:true}).catch(error=>{if(!["failed-precondition","unimplemented"].includes(error.code))console.warn("Firestore offline cache unavailable",error)})]);fbAuth.languageCode="my";if(!akRedirectResultChecked){akRedirectResultChecked=true;fbAuth.getRedirectResult().then(result=>{if(result&&result.user){const email=String(result.user.email||"").trim().toLowerCase();$("fbStatus").textContent=email==="painglin102@gmail.com"?"Owner Gmail Google Redirect Login ပြီးပါပြီ။ Cloud ဒေတာစစ်ဆေးနေသည်...":"Google Redirect Login ပြီးပါပြီ။ Subscription ကို စစ်ဆေးနေသည်...";}}).catch(error=>{const code=error.code||"";const detail=code==="auth/unauthorized-domain"?"Firebase Authorized domains ထဲတွင် rmaynah102-afk.github.io ထည့်ရန်လိုသည်။":code==="auth/operation-not-allowed"?"Firebase Authentication ထဲတွင် Google Provider ကို Enable လုပ်ရန်လိုသည်.":(error.message||String(error));$("fbStatus").textContent="Google Redirect ပြန်ဝင်မှု မအောင်မြင် ("+code+"): "+detail;console.error("AK Google redirect result error",error);});}if(!fbAuthListenerReady){fbAuthListenerReady=true;fbAuth.onAuthStateChanged(async user=>{const authGeneration=++akAuthGeneration;if(akCloudUnsubscribe){akCloudUnsubscribe();akCloudUnsubscribe=null}if(akFreeBetaAccessUnsubscribe){akFreeBetaAccessUnsubscribe();akFreeBetaAccessUnsubscribe=null}if(akPaymentQueueUnsubscribe){akPaymentQueueUnsubscribe();akPaymentQueueUnsubscribe=null}if(akAccessQueueUnsubscribe){akAccessQueueUnsubscribe();akAccessQueueUnsubscribe=null}akLocalDirty=false;akCloudConflict=false;akCloudRevision=0;akCloudSaveInFlight=false;akCloudSaveQueued=false;cloudReady=false;fbUser=user||null;akUserClaims={};akSetLicenseGate(false,"အကောင့်နှင့် Free Beta အသုံးပြုခွင့်ကို စစ်ဆေးနေသည်...");if(user){try{const token=await user.getIdTokenResult();akUserClaims=token.claims||{}}catch(claimError){console.warn("Custom claims unavailable",claimError)}if(authGeneration!==akAuthGeneration)return}checkUserRole(user);if(akIsPlatformOwner(user)){akSetLicenseGate(true,"Platform Owner · Dashboard ကို ဖွင့်ထားပြီး Cloud ဒေတာကို နောက်ကွယ်တွင် စစ်ဆေးနေသည်။");akInitOwnerDashboard();go("ownerDashboard");}if(typeof akLoadOwnerAds==="function")void akLoadOwnerAds();if(typeof akLoadMarketAdOrders==="function"&&akIsPlatformOwner(user))void akLoadMarketAdOrders();if(typeof loadSponsoredAds==="function")void loadSponsoredAds();if(typeof loadPublicShops==="function")void loadPublicShops();if(typeof loadMyMarketListings==="function")void loadMyMarketListings();if(window.cmLoadLocal)window.cmLoadLocal();if(!user){akWorkspaceMode=false;akWorkspaceShopId="";akWorkspaceRevision=0;checkUserRole(null);akSetLicenseGate(false,"Gmail ဖြင့် Login ဝင်ပါ။ Subscription နှင့် Owner ခွင့်ပြုချက် စစ်ဆေးပြီးမှ ပင်မ POS ကို ဖွင့်ပေးမည်။");akUserClaims={};const announcementBox=document.getElementById("globalAnnouncementFeed");if(announcementBox)announcementBox.classList.add("hidden");if(akCloudUnsubscribe){akCloudUnsubscribe();akCloudUnsubscribe=null}db=readDB(DBKEY);$("saveState").textContent="ဖုန်းထဲသိမ်းဆည်းမည်";$("fbStatus").textContent="Logout ဝင်ထားသည်";renderAll();return}try{const key=userDBKey(user.uid);db=readDB(key);renderAll();$("shopUid").textContent=user.uid;$("fbStatus").textContent="ဆိုင်အကောင့်နှင့် Cloud ဒေတာ စစ်ဆေးနေသည်: "+user.email;const normalizedEmail=String(user.email||"").trim().toLowerCase();const isOwnerAccount=normalizedEmail==="painglin102@gmail.com"&&user.emailVerified===true;const isStaff=!!akUserClaims.shopId&&!isOwnerAccount;akApplyAnnouncementAdminVisibility();let licenseReady=(isOwnerAccount||isStaff)?true:await refreshLicense();if(authGeneration!==akAuthGeneration)return;const isFreeBeta=currentLicense?.plan==="free-beta"&&currentLicense.status==="active";if(!isOwnerAccount&&!isStaff&&(!licenseReady||!currentLicense||currentLicense.status!=="active"||(!isFreeBeta&&(!currentLicense.expiresAt||((currentLicense.expiresAt.toDate?currentLicense.expiresAt.toDate():new Date(currentLicense.expiresAt))<=new Date()))))){akSetLicenseGate(false,"Subscription မရှိသေးပါ။ Package ရွေးချယ်ပြီး ငွေပေးချေပါ။ Owner အတည်ပြုပြီးမှ POS ကို ဖွင့်ပေးမည်။");cloudReady=false;$("fbStatus").textContent="Offline Local Mode — ဒေတာကို ဤဖုန်းထဲတွင်သာ သိမ်းဆည်းမည်။";renderAll();return}if(isOwnerAccount){$("deviceStatus").textContent="Platform Owner · Free Firestore Mode"}else{$("deviceStatus").textContent=currentLicense?.plan==="free-beta"?"Free Beta · Cloud Sync":"Subscription အတည်ပြုပြီးပါပြီ။"}if(authGeneration!==akAuthGeneration)return;if(isStaff){akWorkspaceMode=true;akWorkspaceShopId=String(akUserClaims.shopId||"");if(!akWorkspaceShopId)throw Error("ဝန်ထမ်းဆိုင် ID မရှိပါ။ Merchant Code ကို ပြန်ချိတ်ပါ။");const workspaceResult=await firebase.functions().httpsCallable("loadShopWorkspace")({});const ws=workspaceResult.data||{};if(!ws.ok||ws.shopId!==akWorkspaceShopId)throw Error("ဆိုင် Cloud Workspace ကို ဖတ်ခွင့်မရှိပါ။");db=akMergeLocalProductPhotos({...fresh(),...(ws.data||{})});akWorkspaceRevision=Number(ws.revision||0);}else{akWorkspaceMode=false;akWorkspaceShopId=user.uid;akWorkspaceRevision=0;const privateRef=fbStore.collection("users").doc(user.uid).collection("private").doc("appData");const privateSnap=await privateRef.get();if(authGeneration!==akAuthGeneration)return;if(privateSnap.exists){const remote=privateSnap.data()||{};if(remote.data&&Array.isArray(remote.data.products)&&Array.isArray(remote.data.sales)){db=akMergeLocalProductPhotos(remote.data);akCloudRevision=Number.isSafeInteger(remote.revision)&&remote.revision>=0?remote.revision:0;}}else{akCloudRevision=0;}}localStorage.setItem(key,JSON.stringify(db));akCloudConflict=false;akLocalDirty=false;cloudReady=true;akSetLicenseGate(true,isOwnerAccount?"Platform Owner · Free Firestore Mode":currentLicense?.plan==="free-beta"?"Free Beta · ကိုယ်ပိုင်ဆိုင်ဒေတာ":"ဆိုင် Subscription အတည်ပြုပြီးပါပြီ။");if(!isOwnerAccount&&!isStaff&&currentLicense?.plan==="free-beta")akWatchFreeBetaAccess(user.uid);startAkCloudSync();renderAll();if(isStaff)go("home");if(["shop-owner","platform-owner"].includes(akUserRole)){if(isOwnerAccount)akInitOwnerDashboard();go("ownerDashboard");void akLoadStaff();if(isOwnerAccount){void loadPlatformUsers();void akWatchAdminAccessRequests()}}if(window.cmCloudLoad){try{await window.cmCloudLoad()}catch(cmError){console.warn("Center cloud load did not block Owner Dashboard:",cmError)}}if(authGeneration!==akAuthGeneration)return;}catch(e){if(authGeneration!==akAuthGeneration)return;cloudReady=false;console.error("AK workspace startup failed",e);if(isOwnerAccount){akSetLicenseGate(true,"Platform Owner · Cloud Workspace ချိတ်ဆက်မှု မရသေးပါ။ Dashboard ကို ဆက်ဖွင့်ထားသည်။");renderAll();akInitOwnerDashboard();go("ownerDashboard");$("fbStatus").textContent="Owner Dashboard ဖွင့်ပြီးပါပြီ။ Cloud POS Sync မရသေးပါ: "+(e.message||e)+" · ဝန်ထမ်းစီမံမှုအတွက် Server Functions ချိတ်ဆက်မှု လိုအပ်သည်။";void akLoadStaff();void loadPlatformUsers();void akWatchAdminAccessRequests()}else{akSetLicenseGate(false,"Cloud / License စစ်ဆေးမှု မအောင်မြင်ပါ။ Internet ပြန်ချိတ်ပြီး Gmail နှင့် Subscription ကို ပြန်စစ်ပါ။ လုံခြုံရေးအတွက် POS ကို ပိတ်ထားသည်။");$("fbStatus").textContent="Offline Local Mode — Cloud ချိတ်ဆက်မှု မရပါ: "+e.message;renderAll()}}})}$("fbStatus").textContent="Firebase ချိတ်ပြီးပါပြီ။ Email နှင့် Password ဖြင့် Login ဝင်ပါ။";if(typeof loadMarket==="function")await loadMarket()}catch(e){akSetLicenseGate(false,"Firebase ချိတ်ဆက်မှု မရပါ။ Gmail / Internet ကို စစ်ပြီး ပြန်ချိတ်ပါ။ လုံခြုံရေးအတွက် POS ကို ပိတ်ထားသည်။");cloudReady=false;$("fbStatus").textContent="Offline Local Mode — Firebase ချိတ်ဆက်မှု မအောင်မြင်: "+e.message;console.error(e);renderAll()}}
-function akSetLoginMode(){const mode=$("akLoginMode")?.value||"shop",wrap=$("akStaffLoginCodeWrap"),hint=$("akLoginModeHint");if(wrap)wrap.classList.toggle("hidden",mode!=="staff");if(hint)hint.textContent=mode==="owner"?"Platform Owner သည် painglin102@gmail.com နှင့် အတည်ပြုပြီးသော Password ဖြင့်သာ ဝင်နိုင်သည်။":mode==="staff"?"ဝန်ထမ်းသည် ကိုယ်ပိုင် Gmail နှင့် Password ဖြင့်ဝင်ပါ။ ပထမဆုံးအကြိမ်တွင် ဆိုင်ရှင်ပေးထားသော Merchant Code ဖြင့် ဆိုင်နှင့်ချိတ်ပါ။ နောက်တစ်ကြိမ်မှ Password ဖြင့်သာ ဝင်နိုင်သည်။":"ဆိုင်ရှင်သည် မိမိဆိုင် Gmail နှင့် Password ဖြင့် ဝင်ပါ။ Platform Owner Gmail ကို Owner Login မှသာ ဝင်နိုင်သည်။";const reg=$("akRegisterButton");if(reg)reg.textContent=mode==="staff"?"ဝန်ထမ်း Gmail အကောင့်ဖွင့်ရန်":"ဆိုင်ရှင်အကောင့်အသစ်ဖွင့်ရန်";}
+function akSetLoginMode(){
+ const mode=$("akLoginMode")?.value||"shop";
+ const wrap=$("akStaffLoginCodeWrap"),packageWrap=$("akLoginPackageWrap"),accountWrap=$("akAccountTypeWrap"),hint=$("akLoginModeHint"),reg=$("akRegisterButton");
+ if(wrap)wrap.classList.toggle("hidden",mode!=="staff");
+ if(packageWrap)packageWrap.classList.toggle("hidden",mode!=="shop");
+ if(accountWrap)accountWrap.classList.toggle("hidden",mode!=="staff");
+ if(reg){reg.style.display=mode==="staff"?"":"none";reg.textContent="ဝန်ထမ်း Gmail အကောင့်ဖွင့်ရန်"}
+ if(hint)hint.textContent=mode==="owner"?"Platform Owner သည် painglin102@gmail.com နှင့် Owner Password ဖြင့် ဝင်ပါ။":mode==="staff"?"ဝန်ထမ်းသည် ကိုယ်ပိုင် Gmail ဖြင့် Register လုပ်ပြီး ပထမဆုံး Login တွင် Merchant Code ထည့်ပါ။":"ဆိုင်ရှင်သည် Package ရွေးပြီး Owner ပေးထားသော Gmail နှင့် Password ဖြင့် ဝင်ပါ။ Gmail ကို Owner က Verify လုပ်ပြီးမှ Login ရမည်။";
+}
 async function firebaseLogin(){
  const button=[...document.querySelectorAll("#akFirebasePanel button")].find(b=>b.textContent.trim()==="Login ဝင်မည်");
  try{
@@ -2001,6 +2009,15 @@ async function firebaseLogin(){
   if(mode==="shop"){
    const shopToken=await credential.user.getIdTokenResult(true);
    if(shopToken.claims.shopId){await fbAuth.signOut();throw Error("ဤအကောင့်သည် ဝန်ထမ်းအကောင့်ဖြစ်သည်။ ဝန်ထမ်း Login ကို ရွေးပါ။");}
+   const planDays=Number($("akLoginPackage")?.value||0);
+   if(![30,90,180,365].includes(planDays)){await fbAuth.signOut();throw Error("သင့်ဆိုင် Package ကို ရွေးပါ။")}
+   try{
+    await firebase.functions().httpsCallable("verifyShopOwnerLogin")({planDays});
+   }catch(verifyError){
+    await fbAuth.signOut();
+    if(verifyError.code==="functions/failed-precondition")throw Error("Package မကိုက်ညီပါ။ Owner သတ်မှတ်ပေးထားသော Package ကို ရွေးပါ။");
+    throw verifyError;
+   }
   }
   if(mode==="staff"){
    const token=await credential.user.getIdTokenResult(true);
@@ -2140,15 +2157,44 @@ let akPlatformUserPageToken="",akPlatformUserRows=[];
 function akRenderPlatformUsers(){
  const body=$("akPlatformUserRows");if(!body)return;
  body.innerHTML=akPlatformUserRows.length?akPlatformUserRows.map(u=>{
-  const exp=u.expiresAt?new Date(u.expiresAt):null;
-  const expired=exp&&Number.isFinite(exp.getTime())&&exp.getTime()<=Date.now();
+  const exp=u.expiresAt?new Date(u.expiresAt):null,expired=exp&&Number.isFinite(exp.getTime())&&exp.getTime()<=Date.now();
   const state=u.disabled?"Login ပိတ်ထားသည်":u.status==="suspended"?"Owner ရပ်ဆိုင်းထားသည်":u.status==="active"&&!expired?"အသုံးပြုခွင့်ရှိ":expired?"သက်တမ်းကုန်နေသည်":"ခွင့်ပြုရန် စောင့်နေသည်";
-  const action=u.status==="suspended"?"reactivate":"suspend";
-  const label=u.status==="suspended"?"ပြန်ဖွင့်မည်":"ရပ်ဆိုင်းမည်";
-  const color=u.status==="suspended"?"":"red";
-  const uid=esc(u.uid);
+  const action=u.status==="suspended"?"reactivate":"suspend",label=u.status==="suspended"?"ပြန်ဖွင့်မည်":"ရပ်ဆိုင်းမည်",color=u.status==="suspended"?"":"red",uid=esc(u.uid);
   return "<tr><td>"+esc(u.email||u.uid)+(u.emailVerified?"":"<br><small>Email မအတည်ပြုရသေး</small>")+"</td><td>"+state+"<br><small>"+esc(u.plan||"-")+"</small></td><td>"+(exp&&Number.isFinite(exp.getTime())?esc(exp.toLocaleString()):"သတ်မှတ်မထား")+"</td><td><select id=\"akGrantDays_"+uid+"\" aria-label=\"Subscription ကာလ\"><option value=\"30\">30 ရက်</option><option value=\"90\">90 ရက်</option><option value=\"180\">180 ရက်</option><option value=\"365\">365 ရက်</option></select><button type=\"button\" onclick=\"akGrantCustomerSubscription('"+uid+"')\">အသုံးပြုခွင့်ပေးမည်</button><button type=\"button\" class=\""+color+"\" onclick=\"akSetCustomerAccess('"+uid+"','"+action+"')\">"+label+"</button></td></tr>";
- }).join(""):"<tr><td colspan=\"4\">Gmail Account မရှိသေးပါ။ User ကို အရင် Register လုပ်ခိုင်းပါ။</td></tr>";
+ }).join(""):"<tr><td colspan=\"4\">Gmail Account မရှိသေးပါ။</td></tr>";
+}
+function akRenderOwnerShopRows(){
+ const body=$("akOwnerShopRows");if(!body)return;
+ const rows=akPlatformUserRows.filter(u=>String(u.email||"").toLowerCase()!=="painglin102@gmail.com");
+ body.innerHTML=rows.length?rows.map((u,i)=>{
+  const exp=u.expiresAt?new Date(u.expiresAt):null,expired=exp&&Number.isFinite(exp.getTime())&&exp.getTime()<=Date.now();
+  const active=u.status==="active"&&!u.disabled&&!expired;
+  const state=u.disabled?"Login ပိတ်ထား":u.status==="suspended"?"Owner ပိတ်ထား":active?"ဝင်ခွင့်ရှိ":expired?"သက်တမ်းကုန်":"စောင့်ဆိုင်း";
+  const password=u.passwordConfigured?"Owner သတ်မှတ်ပြီး":"အကောင့် Password ရှိ";
+  const date=exp&&Number.isFinite(exp.getTime())?exp.toLocaleDateString("en-GB"):"—";
+  return "<tr><td>"+(i+1)+"</td><td>"+esc(u.email||"")+"</td><td>"+password+"</td><td>"+(u.emailVerified?"Verify ပြီး":"မအတည်ပြုရသေး")+"</td><td>"+esc(u.plan||"—")+"<br>"+esc(date)+"</td><td>"+state+"</td></tr>";
+ }).join(""):"<tr><td colspan=\"6\">ဆိုင်ရှင် Gmail မရှိသေးပါ။ အပေါ်မှာ အသစ်ထည့်ပါ။</td></tr>";
+}
+async function akProvisionShopOwner(){
+ const status=$("akProvisionStatus"),button=$("akProvisionVerifyButton");
+ try{
+  if(!akIsPlatformOwner()||!fbAuth?.currentUser)throw Error("painglin102@gmail.com Platform Owner ဖြင့် Login ဝင်ပါ။");
+  const email=String($("akProvisionEmail")?.value||"").trim().toLowerCase();
+  const password=String($("akProvisionPassword")?.value||"");
+  const planDays=Number($("akProvisionPackage")?.value||0);
+  const expiryDate=String($("akProvisionExpiry")?.value||"");
+  if(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email))throw Error("ဆိုင်ရှင် Gmail မှန်ကန်စွာ ထည့်ပါ။");
+  if(password.length<8)throw Error("Password အနည်းဆုံး ၈ လုံး ထည့်ပါ။");
+  if(![30,90,180,365].includes(planDays))throw Error("Package ရွေးပါ။");
+  if(!expiryDate)throw Error("သက်တမ်းကုန်မည့်ရက် ရွေးပါ။");
+  if(button){button.disabled=true;button.textContent="အကောင့်ဖွင့်နေသည်..."}
+  status.textContent="Firebase မှာ Gmail၊ Password၊ Package နဲ့ သက်တမ်းကို သတ်မှတ်နေသည်...";
+  const result=await firebase.functions().httpsCallable("createShopOwnerAccount")({email,password,planDays,expiryDate});
+  $("akProvisionPassword").value="";
+  status.textContent="Login Verify အောင်မြင်ပါပြီ။ "+result.data.email+" သည် ယခု Gmail + Owner သတ်မှတ်ထားသော Password ဖြင့် Login ဝင်နိုင်ပါပြီ။";
+  await loadPlatformUsers();
+ }catch(e){if(status)status.textContent="အကောင့်ဖွင့်မရပါ: "+(e.message||e)}
+ finally{if(button){button.disabled=false;button.textContent="နံပါတ် (၃) · Login Verify / အကောင့်ဖွင့်ခွင့်ပေးမည်"}}
 }
 async function loadMarketReports(){
  const status=$("akMarketReportsStatus"),host=$("akMarketReportsRows");
@@ -2178,31 +2224,33 @@ async function setMarketReportStatus(id,statusValue){
 }
 async function loadPlatformUsers(){
  try{
-  if(!akIsPlatformOwner()||!fbStore)throw Error("အတည်ပြုထားသော Platform Owner Gmail ဖြင့် Login ဝင်ပါ။");
-  $("akPlatformUserStatus").textContent="Free Beta နှင့် Subscription စာရင်းဖတ်နေသည်...";
-  const [betaSnap,licenseSnap,capacitySnap]=await Promise.all([
-   fbStore.collection("freeBetaUsers").get(),
-   fbStore.collection("licenses").get(),
-   fbStore.collection("freeBetaCapacity").doc("slots").get()
-  ]);
-  const rows=new Map();
-  betaSnap.docs.forEach(doc=>{
-   const x=doc.data()||{};
-   rows.set(doc.id,{uid:doc.id,email:x.email||"",emailVerified:true,status:x.status==="disabled"?"suspended":x.status||"active",plan:"free-beta",expiresAt:null});
-  });
-  licenseSnap.docs.forEach(doc=>{
-   const x=doc.data()||{},previous=rows.get(doc.id)||{};
-   rows.set(doc.id,{...previous,uid:doc.id,email:x.email||previous.email||"",emailVerified:true,status:x.status||previous.status||"pending",plan:x.plan||previous.plan||"",expiresAt:x.expiresAt&&x.expiresAt.toDate?x.expiresAt.toDate().toISOString():x.expiresAt||null});
-  });
-  akPlatformUserRows=[...rows.values()].sort((a,b)=>{
-   const rank=x=>x.status==="pending_owner_review"||x.status==="pending"?0:x.status==="suspended"?1:2;
+  if(!akIsPlatformOwner()||!fbAuth?.currentUser)throw Error("အတည်ပြုထားသော Platform Owner Gmail ဖြင့် Login ဝင်ပါ။");
+  const status=$("akPlatformUserStatus"),ownerStatus=$("akProvisionStatus");
+  if(status)status.textContent="ဆိုင်ရှင်အကောင့်စာရင်း ဖတ်နေသည်...";
+  if(ownerStatus)ownerStatus.textContent="ဆိုင်ရှင် Gmail စာရင်း ဖတ်နေသည်...";
+  const callable=firebase.functions().httpsCallable("listPlatformUsers");
+  let pageToken="",all=[];
+  for(let page=0;page<10;page++){
+   const result=await callable({pageToken});
+   const data=result.data||{};
+   all=all.concat(Array.isArray(data.users)?data.users:[]);
+   pageToken=String(data.nextPageToken||"");
+   if(!pageToken)break;
+  }
+  akPlatformUserRows=all.filter(u=>String(u.email||"").toLowerCase()!=="painglin102@gmail.com");
+  akPlatformUserRows.sort((a,b)=>{
+   const rank=x=>x.status==="pending_owner_review"||x.status==="pending_payment"||x.status==="pending"?0:x.status==="suspended"||x.disabled?1:2;
    return rank(a)-rank(b)||String(a.email||"").localeCompare(String(b.email||""));
   });
-  akRenderPlatformUsers();
-  const betaUsed=capacitySnap.exists?Number((capacitySnap.data()||{}).count||0):betaSnap.size;
-  $("akOwnerUserCount").textContent=akPlatformUserRows.length+" ခု";
-  $("akPlatformUserStatus").textContent="ဆိုင်အကောင့် "+akPlatformUserRows.length+" ခု · Free Beta "+betaUsed+"/30 နေရာ အသုံးပြုပြီး။ App အပြင်တွင် သီးခြားစစ်ဆေးပြီး Owner က Package သက်တမ်းကို ကိုယ်တိုင်ပေးပါ။";
- }catch(e){$("akPlatformUserStatus").textContent="Customer စာရင်းဖတ်မရပါ: "+e.message}
+  akRenderPlatformUsers();akRenderOwnerShopRows();
+  const active=akPlatformUserRows.filter(u=>u.status==="active"&&!u.disabled&&u.expiresAt&&new Date(u.expiresAt).getTime()>Date.now()).length;
+  if($("akOwnerUserCount"))$("akOwnerUserCount").textContent=akPlatformUserRows.length+" ခု";
+  if(status)status.textContent="ဆိုင်အကောင့် "+akPlatformUserRows.length+" ခု · လက်ရှိအသုံးပြုခွင့်ရှိ "+active+" ခု · အများဆုံး ၃၀ ဆိုင်";
+  if(ownerStatus)ownerStatus.textContent="ဆိုင်ရှင်စာရင်း "+akPlatformUserRows.length+" ခု · Active "+active+" ခု · Password များကို လုံခြုံရေးအတွက် မပြသပါ။";
+ }catch(e){
+  if($("akPlatformUserStatus"))$("akPlatformUserStatus").textContent="Customer စာရင်းဖတ်မရပါ: "+(e.message||e);
+  if($("akProvisionStatus"))$("akProvisionStatus").textContent="ဆိုင်ရှင်စာရင်းဖတ်မရပါ: "+(e.message||e);
+ }
 }
 async function akSetCustomerAccess(uid,action){
  try{

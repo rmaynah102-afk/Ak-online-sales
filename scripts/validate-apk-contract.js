@@ -148,8 +148,11 @@ const expectedPlanMap = '{ 30: 30000, 90: 90000, 180: 180000, 365: 360000 }';
 if (!functionsSource.includes('db.collection("platformControls").doc("shopCapacity")') ||
     !functionsSource.includes('activeOwners.length >= 30') ||
     !functionsSource.includes('db.collection("shops").doc(ownerUid).collection("controls").doc("staff")') ||
-    !functionsSource.includes('staffLimit: 1')) {
-  console.error('Backend must serialize the 30-shop capacity limit and one-staff-per-shop limit.');
+    !functionsSource.includes('staffLimit: 3') ||
+    !functionsSource.includes('membersSnap.size >= 3') ||
+    !functionsSource.includes('members.size >= 3') ||
+    !functionsSource.includes('maxStaff: 3')) {
+  console.error('Backend must serialize the 30-shop capacity limit and three-staff-per-shop limit.');
   process.exitCode = 1;
 }
 if (!html.includes('Thermer / Printer App သို့ပို့') ||

@@ -89,6 +89,20 @@ if (!/request\.auth\.uid == uid/.test(rules)) {
   console.error('Private shop access must be bound to the authenticated UID.');
   process.exitCode = 1;
 }
+if (!html.includes('signInWithEmailAndPassword(email,pass)') ||
+    html.includes('firebaseGoogleLogin') || html.includes('firebaseSendPhoneOtp') || html.includes('firebaseVerifyPhoneOtp') ||
+    !html.includes('async function akOwnerChangePassword()') ||
+    !html.includes('async function akCreateStaffInvite()') ||
+    !html.includes('ak-staff-financial-privacy')) {
+  console.error('APK must require Email/Password, support password changes and Merchant Code onboarding, and hide staff cost/profit.');
+  process.exitCode = 1;
+}
+if (!functionsSource.includes('function akStripStaffFinancialFields(record)') ||
+    !functionsSource.includes('const safeProducts=input.products.map(product=>') ||
+    !functionsSource.includes('const totalCost=lines.reduce')) {
+  console.error('Server must strip staff cost/profit data, preserve Owner costs, and calculate staff sale COGS securely.');
+  process.exitCode = 1;
+}
 if (!html.includes('id="ownerDashboard" class="view shop-owner-only hidden"') ||
     !html.includes('id="akOwnerStaffPanel"') ||
     !html.includes('httpsCallable("loadShopWorkspace")') ||

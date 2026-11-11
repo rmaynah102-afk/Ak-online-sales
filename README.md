@@ -44,9 +44,9 @@ Myanmar-first shop POS and public product market for hardware, electrical and ge
 
 - Automatic Firebase deployment is limited to **Firebase Hosting + Firestore Rules/Indexes**. The Storage deployment step is disabled. Cloud Functions are not deployed. No Firebase Blaze billing or paid API is enabled by this workflow.
 - The first **30 verified shop-owner accounts** can enroll in Free Beta. Firestore rules enforce the shared capacity counter and each account's private data path is keyed by its Firebase UID.
-- Owner data sync uses Firestore directly at `users/{uid}/private/appData`. Rules restrict each account to its own records. The Platform Owner can manage license records after manually checking payment references.
+- Owner data sync uses Firestore directly at `users/{uid}/private/appData`. Rules restrict each account to its own records. The verified Platform Owner can manually grant or suspend license records after checking external payment outside the app.
 - Product photos stay on the device and are excluded from cloud sync. Use the JSON Backup/Restore function to move photos and all local records to another device.
-- Payment requests can be submitted with a KBZPay transaction reference. Screenshot upload is disabled because Firebase Storage is not initialized. The Platform Owner must verify the transaction in KBZPay before approving a license.
+- No in-app payment form, transaction-ID submission, screenshot upload, or payment-review queue is included. Customers request a package/access period; payment is handled outside AK Sale. The verified Platform Owner checks payment independently and manually grants or suspends the subscription in Owner Dashboard.
 - Public Market is separate from private POS data and continues to use its own public listing rules.
 
 ## Known limits — do not treat as production-ready
@@ -60,6 +60,6 @@ Myanmar-first shop POS and public product market for hardware, electrical and ge
 
 ## Release safety
 
-Before commercial sale, deploy Firebase resources and test account isolation, subscription expiry, device limits, backup/restore, payment approval, two-device cloud sync and printing on actual Android phones. KPay references are manually verified; never activate a subscription based on a QR/payment screenshot alone.
+Before commercial sale, deploy Firebase resources and test account isolation, subscription expiry, device limits, backup/restore, manual subscription activation, two-device cloud sync and printing on actual Android phones. KPay references are manually verified; never activate a subscription based on a QR/payment screenshot alone.
 
 Do not enable paid Google Cloud/Firebase billing without the owner's explicit approval. Keep service-account JSON, keystores, passwords and OTPs out of commits, chat and public files.

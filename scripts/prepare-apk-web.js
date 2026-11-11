@@ -13,7 +13,7 @@ function replaceExactly(oldText, newText, expected = 1) {
   html = html.replace(oldText, newText);
 }
 const root = '<html lang="my">';
-if (!html.startsWith('<!DOCTYPE html>\\n' + root)) throw new Error('Unexpected APK HTML root; refusing to patch the wrong source.');
+if (!html.startsWith('<!DOCTYPE html>\n' + root)) throw new Error('Unexpected APK HTML root; refusing to patch the wrong source.');
 html = html.replace(root, '<html lang="my" class="ak-apk-pos-only">');
 replaceExactly('<title>AK Market | မြန်မာ့ Online Shopping ဈေးကွက်</title>', '<title>AK Sale Software · Hardware & Electrical POS</title>');
 replaceExactly('const publicMode=params.get("market")==="1" && params.get("app")!=="1";', 'const publicMode=false; /* APK POS edition: public Market is website-only. */');

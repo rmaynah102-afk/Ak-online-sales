@@ -1984,6 +1984,10 @@ async function firebaseLogin(){
   if(mode==="shop"&&String(credential.user.email||"").trim().toLowerCase()===ownerEmail){
    await fbAuth.signOut();throw Error("Owner Login ကို ရွေးပြီး ပြန်ဝင်ပါ။");
   }
+  if(mode==="shop"){
+   const shopToken=await credential.user.getIdTokenResult(true);
+   if(shopToken.claims.shopId){await fbAuth.signOut();throw Error("ဤအကောင့်သည် ဝန်ထမ်းအကောင့်ဖြစ်သည်။ ဝန်ထမ်း Login ကို ရွေးပါ။");}
+  }
   if(mode==="staff"){
    const token=await credential.user.getIdTokenResult(true);
    if(token.claims.shopId===undefined||token.claims.shopId===null){

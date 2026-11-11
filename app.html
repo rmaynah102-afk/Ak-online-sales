@@ -1035,7 +1035,8 @@ $("akLanguageBtn").addEventListener("click",()=>{akLanguage=akLanguage==="en"?"m
 /* Avoid observing every DOM mutation: large POS tables caused repeated full-page translation scans. */
 akApplyLanguage();
 function go(id){
- if(["staffManagement"].includes(id)&&akUserRole!=="shop-owner"){alert("ဝန်ထမ်းစီမံမှုကို ဆိုင်ရှင်သာ အသုံးပြုနိုင်သည်။");id="account"}\n if(["ownerPayments"].includes(id)&&!akIsPlatformOwner()){alert("ငွေလက်ခံစစ်ဆေးမှုကို Platform Owner သာ အသုံးပြုနိုင်သည်။");id="account"}\n if(id==="ownerDashboard"&&!["shop-owner","platform-owner"].includes(akUserRole)){alert("ဆိုင်ရှင်အကောင့်ဖြင့်သာ ဝင်နိုင်သည်။");id="account"}
+ if(["staffManagement"].includes(id)&&akUserRole!=="shop-owner"){alert("ဝန်ထမ်းစီမံမှုကို ဆိုင်ရှင်သာ အသုံးပြုနိုင်သည်။");id="account"}
+ if(["ownerPayments"].includes(id)&&!akIsPlatformOwner()){alert("ငွေလက်ခံစစ်ဆေးမှုကို Platform Owner သာ အသုံးပြုနိုင်သည်။");id="account"}\n if(id==="ownerDashboard"&&!["shop-owner","platform-owner"].includes(akUserRole)){alert("ဆိုင်ရှင်အကောင့်ဖြင့်သာ ဝင်နိုင်သည်။");id="account"}
  if(["manager","cashier","employee"].includes(akUserRole)){const allowed=akUserRole==="employee"?["home","sales"]:akUserRole==="cashier"?["home","sales","ads"]:["home","reports"];if(!allowed.includes(id)){alert("ဤလုပ်ဆောင်ချက်ကို သင့်ရာထူးအတွက် ခွင့်မပြုထားပါ။");id="home"}}
  const publicViews=["backup","market","account","payment","staffJoin"];
  if(document.body.classList.contains("ak-license-locked")&&!publicViews.includes(id)){

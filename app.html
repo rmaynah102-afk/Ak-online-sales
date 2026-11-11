@@ -593,7 +593,7 @@ button,.btn{font-size:13px}
 <div class="panel"><h2>ပစ္စည်းထည့် / ပြင်</h2><form id="productForm"><input type="hidden" id="pId"><div class="grid">
 <div><label>ပစ္စည်းအမည် *</label><input id="pName" required></div><div><label>ပစ္စည်းကုဒ် / Barcode</label><div class="actions"><input id="pCode" autocomplete="off" style="flex:1;min-width:130px"><button type="button" class="alt" id="akScanBarcodeBtn">📷 Scan</button></div><small class="muted">Camera barcode scan သို့မဟုတ် Bluetooth/USB HID scanner ဖြင့် ဖတ်နိုင်သည်။</small></div><div><label>အမျိုးအစား</label><input id="pCat" placeholder="အမျိုးအစား ဥပမာ - အစားအသောက် / အဝတ်အထည် / ကုန်မာ"></div><div><label>ယူနစ်</label><input id="pUnit" value="ခု"></div><div><label>ဝယ်ဈေး</label><input id="pCost" type="number" min="0" step="any" value="0"></div><div><label>လက်လီဈေး</label><input id="pRetail" type="number" min="0" step="any" value="0"></div><div><label>လက်ကားဈေး</label><input id="pWholesale" type="number" min="0" step="any" value="0"></div><div><label>လက်ကျန်</label><input id="pStock" type="number" min="0" step="any" value="0"></div><div><label>အနည်းဆုံးထားရမည့်လက်ကျန် (Alert)</label><input id="pMinStock" type="number" min="0" step="any" value="0"><small class="muted">ဒီပမာဏအောက်ရောက်ရင် ပြန်မှာရန် သတိပေးမည်။</small></div><div><label>ပစ္စည်းဓာတ်ပုံ</label><input id="pPhoto" type="file" accept="image/*"><small class="muted">ဓာတ်ပုံကို အရွယ်အစားလျှော့ပြီး ဒီဖုန်းထဲတွင် သိမ်းမည်။ အခြားဖုန်းသို့ ပုံပါပြောင်းလိုပါက Backup JSON ကို အသုံးပြုပါ။</small></div>
 </div><img id="photoPreview" class="thumb hidden" alt="preview"><div class="actions"><button>သိမ်းမည်</button><button type="button" class="alt" onclick="akShareProductToViber()">Viber Channel ကြော်ငြာတင်ရန်</button><button type="button" class="alt" onclick="akSendProductToMarket()">Market ကြော်ငြာတင်ရန်</button><button type="button" class="alt" onclick="resetProduct()">ရှင်းမည်</button></div><p class="muted">Viber ကိုနှိပ်လျှင် ပုံနှင့်စာကို Share Menu မှတစ်ဆင့် ကိုယ့် Channel သို့ ရွေးပို့နိုင်သည်။ Market ကိုနှိပ်လျှင် အချက်အလက်များကို အလိုအလျောက်ဖြည့်ပေးမည်။</p></form></div>
-<div class="panel"><div class="split"><h2>ပစ္စည်းစာရင်း</h2><div class="actions"><button type="button" class="alt" onclick="exportProductsCsv()">CSV ထုတ်ရန်</button><input style="max-width:220px" id="productQuery" placeholder="ရှာရန်" oninput="renderProducts()"></div></div><div class="tablewrap"><table><thead><tr><th>ပုံ</th><th>ပစ္စည်း</th><th>ကုဒ်</th><th>လက်ကျန်</th><th>ဝယ်ဈေး</th><th>လက်လီ</th><th>လက်ကား</th><th>လုပ်ဆောင်ချက်</th></tr></thead><tbody id="productRows"></tbody></table></div></div>
+<div class="panel"><div class="split"><h2>ပစ္စည်းစာရင်း</h2><div class="actions"><button type="button" class="alt" onclick="document.getElementById('productCsvInput').click()">CSV အစုလိုက်ထည့်ရန်</button><input id="productCsvInput" type="file" accept=".csv,text/csv" hidden onchange="importProductsCsv(event)"><button type="button" class="alt" onclick="exportProductsCsv()">CSV ထုတ်ရန်</button><input style="max-width:220px" id="productQuery" placeholder="ရှာရန်" oninput="renderProducts()"></div></div><div class="tablewrap"><table><thead><tr><th>ပုံ</th><th>ပစ္စည်း</th><th>ကုဒ်</th><th>လက်ကျန်</th><th>ဝယ်ဈေး</th><th>လက်လီ</th><th>လက်ကား</th><th>လုပ်ဆောင်ချက်</th></tr></thead><tbody id="productRows"></tbody></table></div></div>
 </section>
 
 <section id="sales" class="view">
@@ -1148,7 +1148,7 @@ async function akStartBarcodeScanner(target="product",cameraId=""){
   if(cameraId)select.value=cameraId;
   else if(cameras.length){const track=akBarcodeStream.getVideoTracks()[0];const current=track?.getSettings?.().deviceId;if(current)select.value=current;}
   select.onchange=()=>{const id=select.value;if(id)akStartBarcodeScanner(target,id);};
-  const accept=async code=>{if(!akBarcodeActive||!code)return;await akStopBarcodeScanner();if(target==="sale")akAddScannedSaleProduct(code);else{const input=document.getElementById("pCode");if(input)input.value=code;document.getElementById("pName")?.focus();}};
+  const accept=async code=>{if(!akBarcodeActive||!code)return;await akStopBarcodeScanner();if(target==="sale"){akAddScannedSaleProduct(code);return;}const clean=String(code).trim();const existing=db.products.find(p=>String(p.code||"").trim().toLowerCase()===clean.toLowerCase());if(existing){editProduct(existing.id);alert("ဒီ Barcode ရှိပြီးသားဖြစ်သည်။ ပစ္စည်းအချက်အလက်ကို ဖွင့်ထားပါပြီ။");return;}const input=document.getElementById("pCode");if(input)input.value=clean;document.getElementById("pName")?.focus();};
   if("BarcodeDetector" in window){
    const supported=await BarcodeDetector.getSupportedFormats();
    const wanted=["qr_code","ean_13","ean_8","upc_a","upc_e","code_128","code_39","itf","data_matrix","codabar","pdf417","aztec"];
@@ -1212,6 +1212,50 @@ function removeProduct(id){if(confirm("ဒီပစ္စည်းကို ဖ�
 function renderProducts(){let q=($("productQuery").value||"").toLowerCase();$("productRows").innerHTML=db.products.filter(p=>(p.name+" "+p.code+" "+p.category).toLowerCase().includes(q)).map(p=>`<tr><td>${p.photo?`<img class="thumb" src="${p.photo}">`:"-"}</td><td>${esc(p.name)}<div class="muted">${esc(p.category)}</div></td><td>${esc(p.code)}</td><td>${p.stock} ${esc(p.unit)} ${Number(p.minStock)>0&&Number(p.stock)<=Number(p.minStock)?"⚠ လက်ကျန်နည်း":""}</td><td>${money(p.cost)}</td><td>${money(p.retail??p.price)}</td><td>${money(p.wholesale??p.price)}</td><td><button onclick="editProduct('${p.id}')">ပြင်</button> <button class="red" onclick="removeProduct('${p.id}')">ဖျက်</button></td></tr>`).join("")}
 
 function exportProductsCsv(){if(!db.products.length){alert("ပစ္စည်းစာရင်း မရှိသေးပါ");return}const fields=["name","code","category","unit","cost","retail","wholesale","stock","minStock"];const headers=["Product","SKU / Barcode","Category","Unit","Cost","Retail Price","Wholesale Price","Stock","Minimum Stock"];const cell=v=>'"'+String(v??"").replace(/"/g,'""')+'"';const rows=[headers.map(cell).join(","),...db.products.map(p=>fields.map(k=>cell(p[k]??((k==="retail"||k==="wholesale")?p.price??"": ""))).join(","))];const blob=new Blob(["\uFEFF"+rows.join("\r\n")],{type:"text/csv;charset=utf-8"});const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="AK-Products-"+dateKey(dateNow())+".csv";a.click();setTimeout(()=>URL.revokeObjectURL(url),1500)}
+function akParseCsv(text){
+ const rows=[];let row=[],field="",quoted=false;
+ text=String(text||"").replace(/^\\uFEFF/,"");
+ for(let i=0;i<text.length;i++){
+  const ch=text[i],next=text[i+1];
+  if(quoted){if(ch==='"'&&next==='"'){field+='"';i++}else if(ch==='"')quoted=false;else field+=ch}
+  else if(ch==='"'&&field==="")quoted=true;
+  else if(ch===","){row.push(field);field=""}
+  else if(ch==="\\n"){row.push(field);if(row.some(v=>String(v).trim()!==""))rows.push(row);row=[];field=""}
+  else if(ch!=="\\r")field+=ch;
+ }
+ if(quoted)throw Error("CSV ထဲတွင် Quote ပိတ်မထားသော အကွက်ရှိသည်။");
+ row.push(field);if(row.some(v=>String(v).trim()!==""))rows.push(row);
+ return rows;
+}
+async function importProductsCsv(ev){
+ const file=ev.target.files?.[0];if(!file)return;
+ try{
+  if(file.size>8*1024*1024)throw Error("CSV ဖိုင် 8MB အောက်သာ ထည့်နိုင်သည်။");
+  const rows=akParseCsv(await file.text());if(rows.length<2)throw Error("Header နှင့် ပစ္စည်းစာရင်း အနည်းဆုံး တစ်ကြောင်း လိုအပ်သည်။");
+  const headers=rows[0].map(v=>String(v||"").trim().toLowerCase().replace(/[\\s_]+/g," "));
+  const aliases={name:["product","product name","name","ပစ္စည်း","ပစ္စည်းအမည်"],code:["sku / barcode","barcode","sku","code","product code","ကုဒ်","ဘားကုဒ်"],category:["category","type","အမျိုးအစား"],unit:["unit","ယူနစ်"],cost:["cost","buy price","purchase price","ဝယ်ဈေး"],retail:["retail price","retail","sale price","price","လက်လီဈေး"],wholesale:["wholesale price","wholesale","လက်ကားဈေး"],stock:["stock","qty","quantity","လက်ကျန်"],minStock:["minimum stock","min stock","reorder level","အနည်းဆုံးလက်ကျန်"]};
+  const index={};for(const [key,names] of Object.entries(aliases)){index[key]=headers.findIndex(h=>names.includes(h))}
+  if(index.name<0)throw Error("Product / Product Name အမည်ကော်လံ မတွေ့ပါ။ CSV ထုတ်ရန်ခလုတ်မှ Sample Header ကို အသုံးပြုပါ။");
+  const seen=new Set(),incoming=[];
+  const num=(v,label)=>{const raw=String(v??"").trim().replace(/,/g,"");if(!raw)return 0;const n=Number(raw);if(!Number.isFinite(n)||n<0)throw Error(label+" တန်ဖိုး မမှန်ပါ: "+raw);return n};
+  for(let ri=1;ri<rows.length;ri++){
+   const cells=rows[ri],get=k=>index[k]>=0?String(cells[index[k]]??"").trim():"";
+   const name=get("name");if(!name)continue;
+   const code=get("code"),key=code.toLowerCase();if(key&&seen.has(key))throw Error("CSV ထဲတွင် Barcode ထပ်နေသည်: "+code);if(key)seen.add(key);
+   incoming.push({name,code,category:get("category"),unit:get("unit")||"ခု",cost:num(get("cost"),"ဝယ်ဈေး"),retail:num(get("retail"),"လက်လီဈေး"),wholesale:num(get("wholesale"),"လက်ကားဈေး"),stock:num(get("stock"),"လက်ကျန်"),minStock:num(get("minStock"),"အနည်းဆုံးလက်ကျန်")});
+  }
+  if(!incoming.length)throw Error("ထည့်သွင်းနိုင်သော ပစ္စည်းအချက်အလက် မတွေ့ပါ။");
+  const matches=incoming.filter(x=>x.code&&db.products.some(p=>String(p.code||"").trim().toLowerCase()===x.code.toLowerCase())).length;
+  if(!confirm("CSV မှ ပစ္စည်း "+incoming.length+" မျိုး ဖတ်ပြီးပါပြီ။ Barcode တူပြီးသား "+matches+" မျိုးကို Update လုပ်မည်၊ ကျန် "+(incoming.length-matches)+" မျိုးကို အသစ်ထည့်မည်။ ဆက်လုပ်မလား။"))return;
+  for(const item of incoming){
+   const existing=item.code?db.products.find(p=>String(p.code||"").trim().toLowerCase()===item.code.toLowerCase()):null;
+   if(existing)Object.assign(existing,item,{retail:item.retail,wholesale:item.wholesale,price:item.retail});
+   else db.products.push({id:uid(),...item,price:item.retail,photo:""});
+  }
+  persist();ev.target.value="";
+  alert("CSV အစုလိုက်ထည့်သွင်းပြီးပါပြီ။ စုစုပေါင်း "+incoming.length+" မျိုး · Barcode တူပြီးသား "+matches+" မျိုး Update လုပ်ပြီးပါပြီ။");
+ }catch(e){alert("CSV ထည့်သွင်းမရပါ: "+(e.message||e));ev.target.value=""}
+}
 function productOptions(){let opts=db.products.map(p=>`<option value="${p.id}">${esc(p.name)} · ${p.stock} ${esc(p.unit)}</option>`).join("");$("sProduct").innerHTML=opts;$("bProduct").innerHTML=opts}
 $("sProduct").addEventListener("change",setSalePrice);$("sType").addEventListener("change",setSalePrice);
 function setSalePrice(){let p=db.products.find(x=>x.id===$("sProduct").value);if(p)$("sPrice").value=$("sType").value==="wholesale"?(p.wholesale??p.price):(p.retail??p.price)}

@@ -26,7 +26,7 @@ const checks = [
  ['Firestore rules owner matches APK', rules.includes("request.auth.token.email == '"+owner+"'")],
  ['Native printer plugin source present', printer.includes('class AkPrinterPlugin')],
  ['Owner account provisioning callable', functions.includes('exports.createShopOwnerAccount') && functions.includes('exports.verifyShopOwnerLogin')],
- ['Owner password never stored in Firestore', functions.includes('Passwords are sent only to') && !functions.includes('password: password,') && !functions.includes('password, emailVerified: true, disabled: false') ? false : functions.includes('password, emailVerified: true, disabled: false')],
+ ['Owner password never stored in Firestore', functions.includes('Passwords are sent only to') && !functions.includes('password: password') && !functions.includes('passwordConfigured: password')],
  ['Owner assigns package and expiry', functions.includes('planDays, priceMMK: planPrices[planDays]') && functions.includes('expiresAt, emailVerified: true')],
  ['Shop owner login checks assigned package', html.includes('httpsCallable("verifyShopOwnerLogin")') && html.includes('id="akLoginPackage"')],
  ['Owner dashboard Gmail/password/verify form', html.includes('id="akProvisionEmail"') && html.includes('id="akProvisionPassword"') && html.includes('id="akProvisionVerifyButton"')],

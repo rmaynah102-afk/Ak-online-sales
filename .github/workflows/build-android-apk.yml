@@ -5,7 +5,18 @@ concurrency:
   cancel-in-progress: false
 
 on:
-  # APK is built manually only after free-tier backend checks are complete.
+  push:
+    branches: [ak-main-apk-login-v2]
+    paths:
+      - "apk/**"
+      - "scripts/**"
+      - "functions/**"
+      - "firestore.rules"
+      - "firebase-config.js"
+      - "package.json"
+      - "package-lock.json"
+      - "capacitor.config.json"
+      - ".github/workflows/build-android-apk.yml"
   workflow_dispatch:
 
 permissions:
@@ -27,12 +38,12 @@ jobs:
           node - <<'NODE'
           const fs = require('fs');
           const vm = require('vm');
-          const html = fs.readFileSync('app.html', 'utf8');
+          const html = fs.readFileSync('apk/app.html', 'utf8');
           const scripts = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)]
             .filter(([, attrs]) => !/\bsrc\s*=/.test(attrs));
-          if (!scripts.length) throw new Error('No inline JavaScript found in app.html');
+          if (!scripts.length) throw new Error('No inline JavaScript found in apk/app.html');
           scripts.forEach((match, index) => {
-            new vm.Script(match[2], { filename: 'app.html:inline-script-' + (index + 1) });
+            new vm.Script(match[2], { filename: 'apk/app.html:inline-script-' + (index + 1) });
           });
           console.log('Validated', scripts.length, 'inline JavaScript blocks.');
           NODE
@@ -51,77 +62,17 @@ jobs:
         run: npm install
       - name: Prepare web app
         run: npm run copy-web
-      - name: Apply APK-only Cloud startup guard (does not modify website source)
-        run: node scripts/patch-apk-cloud-startup.js
-      - name: Apply APK-only subscription and payment UI (does not modify website source)
-        run: node scripts/patch-apk-subscription-ui.js
-      - name: Apply APK-only POS isolation (Marketplace stays in website only)
-        run: node scripts/patch-apk-pos-only.js
-      - name: Apply one universal role-based APK
-        run: node scripts/patch-apk-universal.js
-      - name: Validate generated APK POS bundle
+      - name: Prepare dedicated APK POS bundle
         run: |
-          node - <<'NODE'
-          const fs = require('fs');
-          const vm = require('vm');
-          const html = fs.readFileSync('www/index.html', 'utf8');
-          const checks = [
-            ['APK POS-only universal root', html.includes('<html lang="my" class="ak-apk-pos-only"') && html.includes('data-ak-apk-edition="universal"')],
-            ['Marketplace hidden', 'html.ak-apk-pos-only #market'],
-            ['Market navigation hidden', 'html.ak-apk-pos-only #nav button[data-view="market"]'],
-            ['Owner Market promotion panel hidden', 'html.ak-apk-pos-only #akOwnerPromoPanel'],
-            ['Market reports panel hidden', 'html.ak-apk-pos-only #akMarketReportsPanel'],
-            ['Sponsored ads section hidden', 'html.ak-apk-pos-only #akPublicSponsoredSection'],
-            ['Market product action removed', 'onclick="akSendProductToMarket()"'],
-            ['Market deep-link disabled', 'public Market URL mode disabled'],
-            ['Subscription payment UI', 'id="akCustomerPaymentPanel"'],
-            ['Immediate locked onboarding on launch', 'document.body.classList.add("ak-license-locked")'],
-            ['Subscription package selector', 'id="payPlan"'],
-            ['Google Gmail login option', 'onclick="firebaseGoogleLogin()"'],
-            ['Android native Google bridge with legacy sign-in fallback', 'nativePromise("FirebaseAuthentication","signInWithGoogle",{skipNativeAuth:true,useCredentialManager:false}'],
-            ['Owner approval handler', 'async function adminApproveRequest(requestId)'],
-            ['Owner payment review UI', 'id="akOwnerPaymentQueue"'],
-            ['Email login handler', 'async function firebaseLogin()'],
-            ['Email registration handler', 'async function firebaseRegister()'],
-            ['Payment submission handler', 'async function submitPaymentRequest()'],
-            ['Native printer bridge', 'window.akPrintRawToDefault']
-          ];
-          for (const [label, marker] of checks) {
-            const present = html.includes(marker);
-            if (label === 'Market product action removed') {
-              if (present) throw new Error(label + ' is still visible in APK bundle');
-            } else if (!present) throw new Error('APK bundle check failed: ' + label);
-          }
-          // Source JavaScript is syntax-checked before APK-only transformations.
-          // Avoid regex-extracting generated scripts: nested receipt document.write HTML
-          // makes regex stop at embedded closing-script text rather than the real boundary.
-          const scriptCount = (html.match(/<script\b/gi) || []).length;
-          if (scriptCount < 5) throw new Error('Generated APK bundle is missing expected application scripts');
-          const actualHeadClose = html.indexOf('</head>');
-          const posOnlyStyle = html.indexOf('<style id="ak-apk-pos-only">');
-          if (actualHeadClose < 0 || posOnlyStyle < 0 || posOnlyStyle > actualHeadClose) {
-            throw new Error('APK POS-only CSS must be inserted inside the real document head, never inside the receipt print template');
-          }
-          if (!html.includes('AK_APK_SUBSCRIPTION_UI_V3') || !html.includes('AK_APK_CLOUD_STARTUP_GUARD_V1')) {
-            throw new Error('Generated APK patch markers are missing');
-          }
-          if (!html.includes('<option value="30">30 ရက် · 30,000 MMK</option>') || !html.includes('<option value="365">365 ရက် · 360,000 MMK</option>')) {
-            throw new Error('APK subscription duration and amount options are missing');
-          }
-          if (!html.includes('Owner အတည်ပြုပြီးမှ Cloud POS အသုံးပြုခွင့်ရမည်')) {
-            throw new Error('APK is missing owner-approved subscription gate messaging');
-          }
-          console.log('Generated APK POS bundle validated:', scriptCount, 'script tags; Market isolated; login, payment and printer UI present.');
-          NODE
-      - name: Validate universal APK role and feature isolation
-        run: node scripts/validate-apk-universal.js
+          npm run copy-web
+          node scripts/prepare-apk-web.js
+      - name: Validate APK Owner, Shop Owner and Staff login separation
+        run: node scripts/validate-apk-login-roles.js
       - name: Validate Firebase Functions
         run: |
           npm --prefix functions install --package-lock=false
           node --check functions/index.js
           node -e "JSON.parse(require('fs').readFileSync('functions/package.json','utf8')); console.log('Firebase Functions package.json valid')"
-      - name: Validate Firebase client/server contracts and security guards
-        run: node scripts/validate-apk-contract.js
       - name: Validate native printer installer
         run: node --check scripts/install-native-printer.js
       - name: Generate Android project

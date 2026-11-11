@@ -438,7 +438,10 @@ exports.listPlatformUsers = functions.https.onCall(async (data, context) => {
       return {
         uid: u.uid, email: u.email || "", emailVerified: !!u.emailVerified,
         disabled: !!u.disabled, status: String(license.status || "pending_payment"),
-        plan: String(license.plan || ""), expiresAt: license.expiresAt && license.expiresAt.toDate
+        plan: String(license.plan || ""), planDays: Number(license.planDays || String(license.plan || "").replace("-days", "")) || 0,
+        passwordConfigured: license.passwordConfigured === true,
+        credentialManagedBy: String(license.credentialManagedBy || ""),
+        expiresAt: license.expiresAt && license.expiresAt.toDate
           ? license.expiresAt.toDate().toISOString() : ""
       };
     }).filter(u => u.email.toLowerCase() !== OWNER_EMAIL),

@@ -53,7 +53,6 @@ html.ak-apk-pos-only #nav button[data-view="market"],
 html.ak-apk-pos-only #akOwnerPromoPanel,
 html.ak-apk-pos-only #akMarketReportsPanel,
 html.ak-apk-pos-only #akPublicSponsoredSection { display:none!important; }
-html.ak-apk-pos-only body.ak-license-locked #nav { display:none!important; }
 html.ak-apk-pos-only body.ak-license-locked main>#backup>.panel:not(#akPaywallNotice):not(#akSubscriptionPayment):not(#akLicensePanel):not(#akFirebasePanel) {
   display:none!important;
 }

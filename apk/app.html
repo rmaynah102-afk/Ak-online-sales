@@ -1985,6 +1985,7 @@ function akSetLoginMode(){
  if(reg){reg.style.display=mode==="staff"?"":"none";reg.textContent="ဝန်ထမ်း Gmail အကောင့်ဖွင့်ရန်"}
  if(hint)hint.textContent=mode==="owner"?"Platform Owner သည် painglin102@gmail.com နှင့် Owner Password ဖြင့် ဝင်ပါ။":mode==="staff"?"ဝန်ထမ်းသည် ကိုယ်ပိုင် Gmail ဖြင့် Register လုပ်ပြီး ပထမဆုံး Login တွင် Merchant Code ထည့်ပါ။":"ဆိုင်ရှင်သည် Package ရွေးပြီး Owner ပေးထားသော Gmail နှင့် Password ဖြင့် ဝင်ပါ။ Gmail ကို Owner က Verify လုပ်ပြီးမှ Login ရမည်။";
 }
+akSetLoginMode();
 async function firebaseLogin(){
  const button=[...document.querySelectorAll("#akFirebasePanel button")].find(b=>b.textContent.trim()==="Login ဝင်မည်");
  try{

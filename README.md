@@ -40,17 +40,23 @@ Myanmar-first shop POS and public product market for hardware, electrical and ge
 - Social sharing can prepare an image/caption and open supported apps. Automatic TikTok/Facebook/Viber posting is not implemented; the shop owner completes posting inside the target app.
 - Google AdSense is not active by default. It requires the owner's approved AdSense account, publisher ID, ad-slot IDs, site review and policy compliance. Never put private account passwords or service keys in source code.
 
-## Cloud deployment requirement
+## Free-tier deployment and account model
 
-The current Firebase GitHub Actions workflow deploys **Firebase Hosting and Firestore Rules**, and separately attempts to deploy **Storage Rules** when repository secret `FIREBASE_SERVICE_ACCOUNT_AK_ONLIN_SALES` is configured. Storage Rules deployment can fail if the bucket or required IAM permissions are unavailable. **Cloud Functions are not deployed**; trusted payment approval, account suspension, device management and cloud-backup callables therefore remain unavailable until an eligible Firebase billing plan and explicit owner approval are in place. A green workflow does not mean Cloud Functions are live. Do not enable billing or change Firebase permissions without the owner's approval. Follow [Firebase Deploy Setup](./FIREBASE-DEPLOY-SETUP-MY.md).
+- Automatic Firebase deployment is limited to **Firebase Hosting + Firestore Rules/Indexes**. The Storage deployment step is disabled. Cloud Functions are not deployed. No Firebase Blaze billing or paid API is enabled by this workflow.
+- The first **30 verified shop-owner accounts** can enroll in Free Beta. Firestore rules enforce the shared capacity counter and each account's private data path is keyed by its Firebase UID.
+- Owner data sync uses Firestore directly at `users/{uid}/private/appData`. Rules restrict each account to its own records. The Platform Owner can manage license records after manually checking payment references.
+- Product photos stay on the device and are excluded from cloud sync. Use the JSON Backup/Restore function to move photos and all local records to another device.
+- Payment requests can be submitted with a KBZPay transaction reference. Screenshot upload is disabled because Firebase Storage is not initialized. The Platform Owner must verify the transaction in KBZPay before approving a license.
+- Public Market is separate from private POS data and continues to use its own public listing rules.
 
-## Known limits — not yet complete
+## Known limits — do not treat as production-ready
 
-- Manager/cashier/employee accounts can be assigned roles, but secure role-based access to the current single-document Cloud POS data model is not implemented. Private POS data remains owner-only; staff cloud access is deliberately blocked rather than weakening Firestore rules.
-- The Android APK now includes a native Bluetooth Classic SPP ESC/POS and Wi-Fi RAW TCP 9100 bridge. It requires a compatible paired Classic Bluetooth ESC/POS printer or a network printer that accepts RAW TCP on the configured port. This code has not yet been verified on real printer hardware. BLE-only printers, vendor-specific protocols and unsupported paper widths may not work. Website printing continues to use Android/System Print.
+- Separate manager/cashier/employee accounts, Merchant Code invitations, custom role claims and shared staff access are disabled in the free-only build. Cloud Functions are not deployed; do not share the shop owner's password with staff.
+- Cloud backup callables, server-side device management and AI callable features are unavailable. Use local JSON Backup/Restore.
+- The Android APK includes a native Bluetooth Classic SPP ESC/POS and Wi-Fi RAW TCP 9100 bridge. It requires a compatible printer and has not been verified on real printer hardware. BLE-only printers, vendor-specific protocols and unsupported paper widths may not work. Website printing continues to use Android/System Print.
 - Social media auto-posting is not included; Android Share / manual posting is used.
 - The web Firebase SDK sign-in path is included. Native Google Sign-In still requires a registered Firebase Android app, matching signing-certificate SHA-1, and native configuration before it can be considered verified.
-- No real-device installation, Bluetooth/Wi-Fi printer, multi-device conflict or production payment test can be claimed from the build pipeline alone.
+- Workflow success proves static validation and deployment only. It does not prove real-device installation, camera scanning, printer operation, multi-device conflict handling or production payment behavior.
 
 ## Release safety
 

@@ -46,5 +46,25 @@ jobs:
       - name: Install Firebase CLI
         run: npm install --global firebase-tools
 
+      - name: Validate app JavaScript before deployment
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          const vm = require('vm');
+          const pages = ['index.html', 'app.html', 'global.html', 'community.html'];
+          let checked = 0;
+          for (const page of pages) {
+            const html = fs.readFileSync(page, 'utf8');
+            const scripts = [...html.matchAll(/<script\\b([^>]*)>([\\s\\S]*?)<\\/script>/gi)]
+              .filter(([, attrs]) => !/\\bsrc\\s*=/.test(attrs));
+            scripts.forEach((match, index) => {
+              new vm.Script(match[2], {filename: page + ':inline-' + (index + 1)});
+              checked++;
+            });
+          }
+          if (!checked) throw new Error('No inline JavaScript found');
+          console.log('JavaScript syntax OK:', checked, 'inline script block(s) across', pages.length, 'pages');
+          NODE
+
       - name: Deploy only Hosting and Firestore rules/indexes (no Storage or Functions)
         run: firebase deploy --only hosting,firestore:rules,firestore:indexes --project ak-onlin-sales --non-interactive

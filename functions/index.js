@@ -1216,7 +1216,7 @@ exports.akAiGenerateAd = functions.runWith({ secrets: [OPENAI_API_KEY], timeoutS
 
 exports.akAiSecurityReview = functions.runWith({ secrets: [OPENAI_API_KEY], timeoutSeconds: 60, memory: "256MB" })
   .https.onCall(async (data, context) => {
-    const identity = workspaceIdentity(context);
+    const identity = await workspaceIdentity(context);
     await verifyWorkspaceMember(context, identity);
     const snap = await db.collection("shops").doc(identity.shopId)
       .collection("auditLogs").orderBy("createdAt", "desc").limit(40).get();

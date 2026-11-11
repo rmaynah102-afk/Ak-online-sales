@@ -35,10 +35,12 @@ service cloud.firestore {
     }
 
     function activeShopLicense(shopId) {
-      return exists(/databases/$(database)/documents/licenses/$(shopId))
+      return (exists(/databases/$(database)/documents/licenses/$(shopId))
         && get(/databases/$(database)/documents/licenses/$(shopId)).data.status == 'active'
         && get(/databases/$(database)/documents/licenses/$(shopId)).data.expiresAt is timestamp
-        && get(/databases/$(database)/documents/licenses/$(shopId)).data.expiresAt > request.time;
+        && get(/databases/$(database)/documents/licenses/$(shopId)).data.expiresAt > request.time)
+        || (exists(/databases/$(database)/documents/freeBetaUsers/$(shopId))
+          && get(/databases/$(database)/documents/freeBetaUsers/$(shopId)).data.status == 'active');
     }
 
     function canReadShopWorkspaceMeta(shopId) {

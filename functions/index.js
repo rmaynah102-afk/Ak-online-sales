@@ -18,7 +18,7 @@ exports.startTrial = functions.auth.user().onCreate(async (user) => {
   await ref.create({
     uid: user.uid,
     email: user.email || "",
-    status: "pending_payment",
+    status: "pending_owner_review",
     plan: "awaiting-owner-approval",
     createdAt: admin.firestore.FieldValue.serverTimestamp()
   });
@@ -217,112 +217,6 @@ exports.reviewSponsoredAd = functions.https.onCall(async (data, context) => {
   return { ok:true, status:decision };
 });
 
-// Fixed single KBZPay receiving account. Destination changes require a code review.
-function normalizePaymentReference(value) {
-  return String(value || "").trim().replace(/\s+/g, "").toUpperCase();
-}
-
-// Platform owner confirmed this KBZPay receiving account.
-const AK_KPAY_ACCOUNT = Object.freeze({
-  enabled: true,
-  method: "KBZPay",
-  bankName: "KBZPay",
-  accountName: "NiNiWin",
-  accountNumber: "09774033661",
-  instructions: "KBZPay သို့ ငွေလွှဲပြီး Transaction ID ကို ထည့်ပါ။ Owner က KBZPay ထဲတွင် ငွေဝင်မှုကို စစ်ဆေးပြီးမှ အတည်ပြုမည်။ Screenshot တစ်ခုတည်းဖြင့် အတည်မပြုပါ။"
-});
-
-exports.createPaymentRequest = functions.https.onCall(async (data, context) => {
-  if (!context.auth) throw new functions.https.HttpsError("unauthenticated", "Login လိုအပ်သည်။");
-  const uid = context.auth.uid;
-  const email = String(context.auth.token.email || "").trim().toLowerCase();
-  const days = Number(data.days);
-  const amount = Number(data.amount);
-  const method = String(data.method || "");
-  const reference = String(data.reference || "").trim();
-  const normalizedReference = normalizePaymentReference(reference);
-  const screenshotUrl = String(data.screenshotUrl || "");
-  const expectedAmounts = { 30: 30000, 90: 90000, 180: 180000, 365: 360000 };
-  if (!Object.prototype.hasOwnProperty.call(expectedAmounts, days) ||
-      amount !== expectedAmounts[days] || method !== "KBZPay" ||
-      normalizedReference.length < 3 || normalizedReference.length > 100 ||
-      !screenshotUrl || screenshotUrl.length > 2000) {
-    throw new functions.https.HttpsError("invalid-argument", "Payment request အချက်အလက် မမှန်ပါ။");
-  }
-  if (!screenshotUrl.startsWith("https://firebasestorage.googleapis.com/") ||
-      !screenshotUrl.includes(encodeURIComponent("paymentProofs/" + uid + "/"))) {
-    throw new functions.https.HttpsError("invalid-argument", "Payment screenshot path မမှန်ပါ။");
-  }
-  const referenceKey = crypto.createHash("sha256")
-    .update("KBZPay:" + normalizedReference)
-    .digest("hex");
-  const referenceRef = db.collection("paymentReferences").doc(referenceKey);
-  const requestRef = db.collection("paymentRequests").doc();
-  const settings = AK_KPAY_ACCOUNT;
-  if (!settings.enabled || settings.method !== method) {
-    throw new functions.https.HttpsError("failed-precondition", "KBZPay လက်ခံမှုကို ယာယီပိတ်ထားသည်။");
-  }
-  await db.runTransaction(async tx => {
-    const referenceSnap = await tx.get(referenceRef);
-    if (referenceSnap.exists) {
-      throw new functions.https.HttpsError("already-exists", "ဤ KBZPay Transaction ID ကို ယခင်က တင်ပြပြီးဖြစ်သည်။");
-    }
-    tx.create(referenceRef, {
-      referenceHash: referenceKey, paymentRequestId: requestRef.id, uid,
-      method: "KBZPay", amount, days, status: "pending",
-      createdAt: admin.firestore.FieldValue.serverTimestamp()
-    });
-    tx.create(requestRef, {
-      uid, email, days, amount, method, bankName: settings.bankName,
-      reference, screenshotUrl, status: "pending",
-      createdAt: admin.firestore.FieldValue.serverTimestamp()
-    });
-  });
-  return { ok: true, requestId: requestRef.id };
-});
-
-exports.getPaymentAccountSettings = functions.https.onCall(async (data, context) => {
-  if (!context.auth) throw new functions.https.HttpsError("unauthenticated", "Login လိုအပ်သည်။");
-  return AK_KPAY_ACCOUNT;
-});
-
-// Only the verified platform Owner may request settings refresh.
-// Client-supplied destination details are deliberately ignored.
-exports.setPaymentAccountSettings = functions.https.onCall(async (data, context) => {
-  requireAdmin(context);
-  return { ok: true, ...AK_KPAY_ACCOUNT };
-});
-exports.listPendingPayments = functions.https.onCall(async (data, context) => {
-  requireAdmin(context);
-  const snap = await db.collection("paymentRequests")
-    .where("status", "==", "pending")
-    .orderBy("createdAt", "desc")
-    .limit(100)
-    .get();
-  return {
-    requests: snap.docs.map(doc => {
-      const x = doc.data();
-      return {
-        id: doc.id,
-        uid: x.uid || "",
-        email: x.email || "",
-        days: Number(x.days || 0),
-        reference: String(x.reference || ""),
-        method: String(x.method || ""),
-        amount: Number(x.amount || 0),
-        screenshotUrl: String(x.screenshotUrl || ""),
-        bankName: String(x.bankName || ""),
-        status: String(x.status || ""),
-        createdAt: x.createdAt && x.createdAt.toDate
-          ? x.createdAt.toDate().toISOString()
-          : ""
-      };
-    })
-  };
-});
-
-
-
 // Owner-only customer account controls. Every Gmail other than the fixed verified
 // platform owner is a customer; client role labels never grant platform privileges.
 exports.listPlatformUsers = functions.https.onCall(async (data, context) => {
@@ -337,7 +231,7 @@ exports.listPlatformUsers = functions.https.onCall(async (data, context) => {
       const license = byUid.get(u.uid) || {};
       return {
         uid: u.uid, email: u.email || "", emailVerified: !!u.emailVerified,
-        disabled: !!u.disabled, status: String(license.status || "pending_payment"),
+        disabled: !!u.disabled, status: String(license.status || "pending_owner_review"),
         plan: String(license.plan || ""), expiresAt: license.expiresAt && license.expiresAt.toDate
           ? license.expiresAt.toDate().toISOString() : ""
       };
@@ -368,7 +262,7 @@ exports.requestSubscriptionAccess = functions.https.onCall(async (data, context)
     return { ok: true, status: "active", message: "အသုံးပြုခွင့် ရှိပြီးဖြစ်သည်။" };
   }
   await ref.set({
-    uid, email, status: "pending_payment", plan: "awaiting-owner-approval",
+    uid, email, status: "pending_owner_review", plan: "awaiting-owner-approval",
     accessRequestedAt: admin.firestore.FieldValue.serverTimestamp(),
     updatedAt: admin.firestore.FieldValue.serverTimestamp()
   }, { merge: true });
@@ -376,7 +270,7 @@ exports.requestSubscriptionAccess = functions.https.onCall(async (data, context)
     action: "subscription_access_requested", targetUid: uid, targetEmail: email,
     createdAt: admin.firestore.FieldValue.serverTimestamp()
   });
-  return { ok: true, status: "pending_payment", message: "Owner အတည်ပြုရန် တောင်းဆိုချက် ပို့ပြီးပါပြီ။" };
+  return { ok: true, status: "pending_owner_review", message: "Owner အတည်ပြုရန် တောင်းဆိုချက် ပို့ပြီးပါပြီ။" };
 });
 
 // Manual subscription activation: the Platform Owner verifies external payment
@@ -463,136 +357,6 @@ exports.setPlatformUserAccess = functions.https.onCall(async (data, context) => 
   });
   return { ok: true, uid, action };
 });
-
-exports.rejectPaymentRequest = functions.https.onCall(async (data, context) => {
-  const actor = requireAdmin(context);
-  const requestId = String(data.requestId || "").trim();
-  const reason = String(data.reason || "").trim().slice(0, 240);
-  if (!requestId || requestId.length > 150) {
-    throw new functions.https.HttpsError("invalid-argument", "Payment request ID မမှန်ပါ။");
-  }
-  const requestRef = db.collection("paymentRequests").doc(requestId);
-  await db.runTransaction(async tx => {
-    const snap = await tx.get(requestRef);
-    if (!snap.exists || snap.data().status !== "pending") {
-      throw new functions.https.HttpsError("failed-precondition", "Pending တောင်းဆိုချက် မတွေ့ပါ။");
-    }
-    const payment = snap.data();
-    const referenceKey = crypto.createHash("sha256")
-      .update("KBZPay:" + normalizePaymentReference(payment.reference))
-      .digest("hex");
-    const referenceRef = db.collection("paymentReferences").doc(referenceKey);
-    const referenceSnap = await tx.get(referenceRef);
-    tx.update(requestRef, {
-      status: "rejected", rejectionReason: reason, reviewedBy: actor,
-      reviewedAt: admin.firestore.FieldValue.serverTimestamp()
-    });
-    if (referenceSnap.exists && referenceSnap.data().paymentRequestId === requestId &&
-        referenceSnap.data().status === "pending") {
-      tx.update(referenceRef, { status: "rejected", reviewedBy: actor,
-        reviewedAt: admin.firestore.FieldValue.serverTimestamp() });
-    }
-  });
-  await db.collection("platformAuditLogs").add({
-    action: "payment_rejected", requestId, reason, actor,
-    createdAt: admin.firestore.FieldValue.serverTimestamp()
-  });
-  return { ok: true, status: "rejected" };
-});
-
-exports.approveSubscription = functions.https.onCall(async (data, context) => {
-  const callerEmail = requireAdmin(context);
-  const requestId = String(data.requestId || "").trim();
-  if (!requestId || requestId.length > 150) {
-    throw new functions.https.HttpsError("invalid-argument", "Payment request ID မမှန်ပါ။");
-  }
-
-  const requestRef = db.collection("paymentRequests").doc(requestId);
-  const result = await db.runTransaction(async tx => {
-    const requestSnap = await tx.get(requestRef);
-    if (!requestSnap.exists) {
-      throw new functions.https.HttpsError("not-found", "ငွေပေးချေမှုတောင်းဆိုချက် မတွေ့ပါ။");
-    }
-    const payment = requestSnap.data();
-    const uid = String(payment.uid || "");
-    const days = Number(payment.days);
-    const reference = String(payment.reference || "").trim();
-    const normalizedReference = normalizePaymentReference(reference);
-    const expectedAmounts = { 30: 30000, 90: 90000, 180: 180000, 365: 360000 };
-    if (payment.status !== "pending") {
-      throw new functions.https.HttpsError("failed-precondition", "ဤတောင်းဆိုချက်ကို ယခင်က စီမံပြီးပါပြီ။");
-    }
-    if (!uid || !Object.prototype.hasOwnProperty.call(expectedAmounts, days) || normalizedReference.length < 3 || Number(payment.amount) !== expectedAmounts[days] || String(payment.method || "") !== "KBZPay" || String(payment.bankName || "") !== "KBZPay") {
-      throw new functions.https.HttpsError("failed-precondition", "Payment request data / package amount မမှန်ပါ။");
-    }
-
-    // A KBZPay transaction reference can only be used once, even if a user
-    // submits multiple payment requests with the same reference.
-    const referenceKey = crypto.createHash("sha256")
-      .update("KBZPay:" + normalizedReference)
-      .digest("hex");
-    const referenceRef = db.collection("paymentReferences").doc(referenceKey);
-    const referenceSnap = await tx.get(referenceRef);
-    if (referenceSnap.exists &&
-        (referenceSnap.data().paymentRequestId !== requestId || referenceSnap.data().status !== "pending")) {
-      throw new functions.https.HttpsError("already-exists", "ဤ KBZPay Transaction ID ကို ယခင်က အသုံးပြုပြီးပါပြီ။");
-    }
-
-    const licenseRef = db.collection("licenses").doc(uid);
-    const licenseSnap = await tx.get(licenseRef);
-    await enforceCustomerShopCapacity(tx, uid, licenseSnap);
-    const now = Date.now();
-    const currentExpiry = licenseSnap.exists && licenseSnap.data().expiresAt
-      ? licenseSnap.data().expiresAt.toMillis()
-      : now;
-    const nextExpiry = admin.firestore.Timestamp.fromMillis(
-      Math.max(now, currentExpiry) + days * 86400000
-    );
-    if (referenceSnap.exists) {
-      tx.update(referenceRef, {
-        status: "approved", approvedBy: callerEmail,
-        approvedAt: admin.firestore.FieldValue.serverTimestamp()
-      });
-    } else {
-      tx.create(referenceRef, {
-        referenceHash: referenceKey,
-        paymentRequestId: requestId,
-        uid,
-        method: "KBZPay",
-        amount: Number(payment.amount),
-        days,
-        status: "approved",
-        approvedBy: callerEmail,
-        createdAt: admin.firestore.FieldValue.serverTimestamp()
-      });
-    }
-    tx.set(licenseRef, {
-      uid,
-      email: payment.email || "",
-      status: "active",
-      plan: days + "-days",
-      expiresAt: nextExpiry,
-      lastPaymentReference: reference,
-      lastPaymentRequestId: requestId,
-      lastApprovedBy: callerEmail,
-      updatedAt: admin.firestore.FieldValue.serverTimestamp()
-    }, { merge: true });
-    tx.update(requestRef, {
-      status: "approved",
-      approvedBy: callerEmail,
-      approvedAt: admin.firestore.FieldValue.serverTimestamp()
-    });
-    return { uid, expiresAt: nextExpiry };
-  });
-
-  return { uid: result.uid, expiresAt: result.expiresAt.toDate().toISOString() };
-});
-
-// Shop staff identity and role administration.
-// Staff must already have registered with Firebase Authentication.
-// This establishes trusted server-side roles; access to the monolithic appData
-// document remains owner-only until the data model is split by permission.
-const SHOP_STAFF_ROLES = ["manager", "cashier", "employee"];
 
 exports.assignShopStaffRole = functions.https.onCall(async (data, context) => {
   const ownerUid = await requireActiveShop(context);

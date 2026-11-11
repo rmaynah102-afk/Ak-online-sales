@@ -29,7 +29,9 @@ html.ak-apk-pos-only #akPublicSponsoredSection,
 html.ak-apk-pos-only #akPublicShopsPanel {display:none!important}
 html.ak-apk-pos-only main>#market.view {display:none!important}
 </style>`;
-replaceExactly('</head>', css + '</head>');
+const headClose = html.indexOf('</head>');
+if (headClose < 0) throw new Error('HTML head closing tag not found.');
+html = html.slice(0, headClose) + css + html.slice(headClose);
 if (!html.includes('const OWNER_EMAIL="painglin102@gmail.com";')) throw new Error('Platform Owner allowlist is not painglin102@gmail.com.');
 if (!html.includes('data-view="ownerDashboard"') || !html.includes('id="akOwnerStaffPanel"')) throw new Error('Owner Dashboard or shop staff management is missing.');
 fs.writeFileSync(targetPath, html, 'utf8');

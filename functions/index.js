@@ -332,14 +332,14 @@ exports.createShopOwnerAccount = functions.https.onCall(async (data, context) =>
   const planDays = Number(data.planDays);
   const expiryDate = String(data.expiryDate || "").trim();
   const planPrices = { 30: 30000, 90: 90000, 180: 180000, 365: 360000 };
-  if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email) || email === OWNER_EMAIL) {
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email === OWNER_EMAIL) {
     throw new functions.https.HttpsError("invalid-argument", "ဆိုင်ရှင် Gmail မမှန်ပါ။");
   }
   if (password.length < 8 || password.length > 128) {
     throw new functions.https.HttpsError("invalid-argument", "Password အနည်းဆုံး ၈ လုံးနှင့် အများဆုံး ၁၂၈ လုံး ဖြစ်ရမည်။");
   }
   if (!Object.prototype.hasOwnProperty.call(planPrices, planDays) ||
-      !/^\\d{4}-\\d{2}-\\d{2}$/.test(expiryDate)) {
+      !/^\d{4}-\d{2}-\d{2}$/.test(expiryDate)) {
     throw new functions.https.HttpsError("invalid-argument", "Package သို့မဟုတ် သက်တမ်းကုန်ရက် မမှန်ပါ။");
   }
   // AK subscriptions use Myanmar local date. Keep the selected date valid through 23:59:59 Myanmar time.

@@ -1990,7 +1990,7 @@ async function firebaseLogin(){
   }
   if(mode==="staff"){
    const token=await credential.user.getIdTokenResult(true);
-   if(token.claims.shopId===undefined||token.claims.shopId===null){
+   if(!token.claims.shopId){
     const code=String($("akStaffLoginCode")?.value||"").trim().toUpperCase();
     if(!/^[A-F0-9]{10}$/.test(code))throw Error("ပထမဆုံး Staff Login အတွက် Merchant Code ၁၀ လုံးထည့်ပါ။");
     await firebase.functions().httpsCallable("claimShopInviteCode")({code});

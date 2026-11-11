@@ -27,7 +27,7 @@ if (html.includes('id="payPlan"') && html.includes('id="adminPaymentRows"') && h
   else if (!html.includes('cap.nativePromise("FirebaseAuthentication","signInWithGoogle"')) throw new Error('Native Google Login patch point not found in integrated payment UI.');
   const bodyEnd = html.lastIndexOf('</body>');
   if (bodyEnd < 0) throw new Error('HTML body closing tag not found.');
-  html = html.slice(0, bodyEnd) + '<script>document.body.classList.add("ak-license-locked");document.querySelectorAll(".view").forEach(view=>view.classList.toggle("active",view.id==="backup"));/* AK_APK_SUBSCRIPTION_UI_V3 */</script>' + html.slice(bodyEnd);
+  html = html.slice(0, bodyEnd) + '<script>document.body.classList.add("ak-license-locked");document.querySelectorAll(".view").forEach(view=>view.classList.toggle("active",view.id==="account"));/* AK_APK_SUBSCRIPTION_UI_V3 */</script>' + html.slice(bodyEnd);
   fs.writeFileSync(target, html);
   console.log('APK uses the integrated Firestore payment request and Owner review UI; duplicate onboarding panels skipped.');
   process.exit(0);
@@ -102,6 +102,6 @@ html = html.replace(nativeOld, nativeNew);
 
 const bodyEnd = html.lastIndexOf('</body>');
 if (bodyEnd < 0) throw new Error('HTML body closing tag not found.');
-html = html.slice(0, bodyEnd) + '<script>document.body.classList.add("ak-license-locked");document.querySelectorAll(".view").forEach(view=>view.classList.toggle("active",view.id==="backup"));/* AK_APK_SUBSCRIPTION_UI_V3 */</script>\n' + html.slice(bodyEnd);
+html = html.slice(0, bodyEnd) + '<script>document.body.classList.add("ak-license-locked");document.querySelectorAll(".view").forEach(view=>view.classList.toggle("active",view.id==="account"));/* AK_APK_SUBSCRIPTION_UI_V3 */</script>\n' + html.slice(bodyEnd);
 fs.writeFileSync(target, html);
 console.log('APK onboarding V3 applied: explicit package selection -> native Google Gmail -> payment proof -> owner approval -> re-login -> POS.');

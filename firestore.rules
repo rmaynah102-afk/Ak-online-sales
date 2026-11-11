@@ -181,57 +181,6 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // Customer payment requests are written by the customer and reviewed by the verified Owner.
-    // A matching reference reservation and request must be committed in one atomic batch.
-    match /paymentRequests/{requestId} {
-      allow create: if request.auth != null
-        && request.resource.data.uid == request.auth.uid
-        && request.resource.data.email == request.auth.token.email
-        && request.resource.data.status == 'pending'
-        && request.resource.data.method == 'KBZPay'
-        && request.resource.data.bankName == 'KBZPay'
-        && request.resource.data.days in [30, 90, 180, 365]
-        && request.resource.data.amount == (
-          request.resource.data.days == 30 ? 30000 :
-          request.resource.data.days == 90 ? 90000 :
-          request.resource.data.days == 180 ? 180000 : 360000)
-        && request.resource.data.reference is string
-        && request.resource.data.reference.matches('^[A-Z0-9_-]{3,100}$')
-        && request.resource.data.referenceKey == request.resource.data.reference
-        && request.resource.data.screenshotUrl is string
-        && request.resource.data.screenshotUrl.size() <= 2500
-        && request.resource.data.createdAt == request.time
-        && existsAfter(/databases/$(database)/documents/paymentReferences/$(request.resource.data.referenceKey))
-        && getAfter(/databases/$(database)/documents/paymentReferences/$(request.resource.data.referenceKey)).data.paymentRequestId == requestId
-        && getAfter(/databases/$(database)/documents/paymentReferences/$(request.resource.data.referenceKey)).data.uid == request.auth.uid;
-      allow read: if isVerifiedOwner()
-        || (request.auth != null && resource.data.uid == request.auth.uid);
-      allow update: if isVerifiedOwner()
-        && resource.data.status == 'pending'
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','reviewedBy','reviewedAt','rejectionReason'])
-        && request.resource.data.status in ['approved','rejected']
-        && request.resource.data.reviewedAt == request.time
-        && (request.resource.data.status != 'approved'
-          || (existsAfter(/databases/$(database)/documents/licenses/$(resource.data.uid))
-            && getAfter(/databases/$(database)/documents/licenses/$(resource.data.uid)).data.status == 'active'));
-      allow delete: if false;
-    }
-
-    match /paymentReferences/{referenceKey} {
-      allow create: if request.auth != null
-        && request.resource.data.uid == request.auth.uid
-        && request.resource.data.status == 'pending'
-        && request.resource.data.method == 'KBZPay'
-        && request.resource.data.reference is string
-        && request.resource.data.reference == referenceKey
-        && request.resource.data.paymentRequestId is string
-        && existsAfter(/databases/$(database)/documents/paymentRequests/$(request.resource.data.paymentRequestId))
-        && getAfter(/databases/$(database)/documents/paymentRequests/$(request.resource.data.paymentRequestId)).data.uid == request.auth.uid
-        && getAfter(/databases/$(database)/documents/paymentRequests/$(request.resource.data.paymentRequestId)).data.referenceKey == referenceKey;
-      allow read: if isVerifiedOwner();
-      allow update, delete: if false;
-    }
-
     // Automatic version snapshots are private to the owning shop account.
     match /users/{userId}/backups/{backupId} {
       allow read: if hasActiveLicense(userId);
@@ -489,16 +438,6 @@ service cloud.firestore {
         && request.resource.data.status in ['contacted','approved','rejected','completed']
         && request.resource.data.reviewedAt == request.time;
       allow delete: if isVerifiedOwner();
-    }
-
-    match /paymentRequests/{requestId} {
-      // Payment submissions and reference reservations are created only by the
-      // trusted callable, which validates package amounts and prevents reuse.
-      allow read: if request.auth != null && resource.data.uid == request.auth.uid;
-      allow create, update, delete: if false;
-    }
-    match /paymentReferences/{referenceHash} {
-      allow read, write: if false;
     }
 
     // AK Community commerce-first public posts. Users cannot alter another user's posts.

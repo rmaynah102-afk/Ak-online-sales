@@ -134,6 +134,7 @@ service cloud.firestore {
           && request.auth.uid == userId
           && resource.data.status == null
           && request.resource.data.status == 'active'
+          && request.resource.data.lastLoginAt == request.time
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','lastLoginAt']));
       allow delete: if false;
     }

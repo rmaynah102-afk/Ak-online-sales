@@ -18,6 +18,7 @@ function replaceExactly(oldText, newText, expected = 1) {
 if (!html.includes('<html lang="my">')) throw new Error('HTML root language tag not found.');
 html = html.replace('<html lang="my">', '<html lang="my" class="ak-apk-pos-only">');
 replaceExactly('const publicViews=["backup","market","account","payment","staffJoin"];', 'const publicViews=["backup","account","payment","staffJoin"];');
+replaceExactly('  id="market";\n }\n // Public Marketplace listings are open to everyone; POS/shop-owner tools remain gated.', '  id="account";\n }\n // Public Marketplace listings are open to everyone; POS/shop-owner tools remain gated.');
 replaceExactly('const publicMode=params.get("market")==="1" && params.get("app")!=="1";', 'const publicMode=false; /* APK: never move login or Merchant Code into Market. */');
 replaceExactly('if(new URLSearchParams(location.search).get("market")==="1")document.documentElement.classList.add("ak-public-market");','/* APK POS-only: public Market URL mode disabled. */');
 replaceExactly('s.src="https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js";s.async=true;','s.src="./vendor/zxing.min.js";s.async=true;');

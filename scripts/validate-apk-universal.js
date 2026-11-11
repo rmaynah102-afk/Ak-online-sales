@@ -19,6 +19,13 @@ const checks = [
   ['AI ad composer removed', !html.includes('<h3>AI ကြော်ငြာစာသား</h3>')],
   ['AI security panel removed', !html.includes('<h2>AI လုံခြုံရေးစစ်ဆေးမှု</h2>')],
   ['local ZXing scanner bundled', fs.existsSync(path.join(root, 'www', 'vendor', 'zxing.min.js')) && html.includes('s.src="./vendor/zxing.min.js";s.async=true;')],
+  ['APK Merchant Code join is enabled', html.includes('id="akMerchantJoinPanel"') && html.includes('onclick="akClaimMerchantCode()"') && !html.includes('placeholder="ယာယီပိတ်ထားသည်"') ],
+  ['APK Barcode Label / Sticker panel copied from APK source', html.includes('id="akLabelStudio"') && html.includes('id="akLabelColumns"') && html.includes('id="akLabelOffsetX"')],
+  ['APK Barcode Label Code 39 printing is wired', html.includes('window.akPrintLabels=function()') && html.includes('function code39Svg(value)') && html.includes('window.akRefreshLabelProducts?.()')],
+  ['APK payment proof upload is enabled', /id="payScreenshot"[^>]*required/.test(html) && !/id="payScreenshot"[^>]*disabled/.test(html)],
+  ['APK payment request requires screenshot proof', html.includes('if(!file)throw Error("ငွေလွှဲ Screenshot ကို မဖြစ်မနေတင်ပါ။")') && html.includes('firebase.storage().ref(uploadedPath).put(file)')],
+  ['APK owner can create Merchant Codes', html.includes('onclick="akCreateMerchantCode()"')],
+  ['APK staff list uses deployed callable', html.includes('httpsCallable("listShopStaff")') && html.includes('async function akLoadStaff()') && !html.includes('ဝန်ထမ်းစနစ် မဖွင့်ထားပါ။')],
   ['Thermer receipt sharing present', html.includes('Thermer / Printer App သို့ပို့') && html.includes('chooserTitle')],
   ['native printer plugin source and installer exist', fs.existsSync(path.join(root, 'native', 'android', 'AkPrinterPlugin.java')) && fs.existsSync(path.join(root, 'scripts', 'install-native-printer.js'))]
 ];

@@ -288,7 +288,7 @@
           await queue(name, id, { ...base, schemaVersion: VERSION, migratedAt: root.firebase.firestore.FieldValue.serverTimestamp() });
           if (Object.keys(costs).length) {
             await queue(name === "products" ? "productCosts" : "saleCosts", id, {
-              ...costs, schemaVersion: VERSION, migratedAt: this.db.FieldValue.serverTimestamp()
+              ...costs, schemaVersion: VERSION, migratedAt: root.firebase.firestore.FieldValue.serverTimestamp()
             });
           }
         }
@@ -321,6 +321,41 @@
       return { alreadyMigrated: false, counts, verified };
     }
 
+    async saveWorkspace(data) {
+      this._assertSignedIn();
+      const payload = data || {};
+      const writable = {
+        owner: ["products", "sales", "purchases", "people", "payments", "expenses"],
+        manager: ["products", "sales", "purchases", "people", "payments", "expenses"],
+        cashier: ["sales", "people", "payments"],
+        employee: []
+      }[this.role];
+      if (!writable) throw new Error("Unsupported or inactive shop role");
+      let written = 0;
+      for (const collection of writable) {
+        const rows = Array.isArray(payload[collection]) ? payload[collection] : [];
+        const result = await this.upsert(collection, rows);
+        written += result.written;
+      }
+      if (this.role === "owner" && payload.shop && typeof payload.shop === "object") {
+        const result = await this.upsert("settings", [{ id: "shop", ...payload.shop }]);
+        written += result.written;
+      }
+      let revision = 0;
+      if (written > 0) {
+        const metaRef = this.db.collection("shops").doc(this.shopId).collection("workspace").doc("current");
+        await this.db.runTransaction(async tx => {
+          const snap = await tx.get(metaRef);
+          revision = snap.exists ? Number((snap.data() || {}).revision || 0) + 1 : 1;
+          tx.set(metaRef, {
+            revision,
+            updatedAt: root.firebase.firestore.FieldValue.serverTimestamp()
+          });
+        });
+      }
+      return { written, revision };
+    }
+
     async upsert(collection, records) {
       this._assertSignedIn();
       const writeRoles = {
@@ -338,12 +373,12 @@
       for (const record of records) {
         const id = assertId(record && record.id);
         const { base, costs } = (collection === "products" || collection === "sales") ? splitSensitive(record) : { base: record, costs: {} };
-        batch.set(pathFor(this.db, this.shopId, collection).doc(id), clean({ ...base, updatedAt: this.db.FieldValue.serverTimestamp() }), { merge: true });
+        batch.set(pathFor(this.db, this.shopId, collection).doc(id), clean({ ...base, updatedAt: root.firebase.firestore.FieldValue.serverTimestamp() }), { merge: true });
         pending++; count++;
         if (Object.keys(costs).length) {
           const costCollection = collection === "products" ? "productCosts" : "saleCosts";
           if (!ROLE_COLLECTIONS[this.role].includes(costCollection)) throw new Error("Role cannot write protected cost data");
-          batch.set(pathFor(this.db, this.shopId, costCollection).doc(id), clean({ ...costs, updatedAt: this.db.FieldValue.serverTimestamp() }), { merge: true });
+          batch.set(pathFor(this.db, this.shopId, costCollection).doc(id), clean({ ...costs, updatedAt: root.firebase.firestore.FieldValue.serverTimestamp() }), { merge: true });
           pending++;
         }
         if (pending >= 400) await flush();

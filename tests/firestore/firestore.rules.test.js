@@ -153,17 +153,44 @@ describe('AK Sale Firestore security baseline', function () {
     }));
   });
 
-  it('allows only the verified Platform Owner to issue a customer license', async () => {
+  it('allows only the verified Platform Owner to issue a license with an atomic capacity increment', async () => {
     const db = testEnv.authenticatedContext('platform-owner-uid', {
       email: 'painglin102@gmail.com',
       email_verified: true,
     }).firestore();
-    await assertSucceeds(setDoc(doc(db, 'licenses', 'shop-a'), {
-      uid: 'shop-a',
-      status: 'active',
-      expiresAt: futureTimestamp(30),
-      plan: '30-days',
+    const counter = doc(db, 'platformMeta', 'shopCapacity');
+    await assertSucceeds(setDoc(counter, { activeShopCount: 0, updatedAt: serverTimestamp() }));
+    const license = doc(db, 'licenses', 'shop-a');
+    await assertFails(setDoc(license, {
+      uid: 'shop-a', status: 'active', expiresAt: futureTimestamp(30), plan: '30-days',
     }));
+    const batch = writeBatch(db);
+    batch.set(license, {
+      uid: 'shop-a', status: 'active', expiresAt: futureTimestamp(30), plan: '30-days',
+    });
+    batch.update(counter, {
+      activeShopCount: 1, lastIssuedUid: 'shop-a', updatedAt: serverTimestamp(),
+    });
+    await assertSucceeds(batch.commit());
+  });
+
+  it('enforces the 100-shop capacity limit and rejects a counter-only increment', async () => {
+    const db = testEnv.authenticatedContext('platform-owner-uid', {
+      email: 'painglin102@gmail.com', email_verified: true,
+    }).firestore();
+    const counter = doc(db, 'platformMeta', 'shopCapacity');
+    await assertSucceeds(setDoc(counter, { activeShopCount: 100, updatedAt: serverTimestamp() }));
+    await assertFails(setDoc(counter, {
+      activeShopCount: 101, lastIssuedUid: 'shop-101', updatedAt: serverTimestamp(),
+    }));
+    const batch = writeBatch(db);
+    batch.set(doc(db, 'licenses', 'shop-101'), {
+      uid: 'shop-101', status: 'active', expiresAt: futureTimestamp(30), plan: '30-days',
+    });
+    batch.update(counter, {
+      activeShopCount: 101, lastIssuedUid: 'shop-101', updatedAt: serverTimestamp(),
+    });
+    await assertFails(batch.commit());
   });
 
   it('allows shop owner to read workspace metadata but denies direct workspace writes', async () => {

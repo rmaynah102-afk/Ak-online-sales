@@ -55,6 +55,12 @@ assert.match(apkHtml, /sparkStore\.createInvite\(role\)/);
 assert.match(apkHtml, /akShopStaffCache=await sparkStore\.listStaff\(\)/);
 assert.match(apkHtml, /sparkStore\.setStaffPrintPermission\(uid,canPrint\)/);
 assert.match(apkHtml, /sparkStore\.revokeStaff\(uid\)/);
+assert.match(apkHtml, /akSparkStore\.saveWorkspace\(workspaceData\)/);
+assert.match(apkHtml, /akSparkStore\.migrateLegacyWorkspace\(remote\.data\)/);
+assert.equal((apkHtml.match(/httpsCallable\("loadShopWorkspace"\)/g) || []).length, 0);
+assert.equal((apkHtml.match(/httpsCallable\("saveShopWorkspace"\)/g) || []).length, 0);
+assert.equal((source.match(/this\.db\.FieldValue/g) || []).length, 0);
+
 assert.match(apkHtml, /shopMembers["']\)\.doc\(user\.uid\)\.get\(\)/);
 
 // Parse every inline APK script so a syntactically broken UI cannot pass adapter tests.

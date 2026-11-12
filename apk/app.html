@@ -2336,26 +2336,11 @@ function akRenderOwnerShopRows(){
  }).join(""):"<tr><td colspan=\"6\">ဆိုင်ရှင် Gmail မရှိသေးပါ။ အပေါ်မှာ အသစ်ထည့်ပါ။</td></tr>";
 }
 async function akProvisionShopOwner(){
- const status=$("akProvisionStatus"),button=$("akProvisionVerifyButton");
- try{
-  if(!akIsPlatformOwner()||!fbAuth?.currentUser)throw Error("painglin102@gmail.com Platform Owner ဖြင့် Login ဝင်ပါ။");
-  const email=String($("akProvisionEmail")?.value||"").trim().toLowerCase();
-  const password=String($("akProvisionPassword")?.value||"");
-  const planDays=Number($("akProvisionPackage")?.value||0);
-  const expiryDate=String($("akProvisionExpiry")?.value||"");
-  if(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email))throw Error("ဆိုင်ရှင် Gmail မှန်ကန်စွာ ထည့်ပါ။");
-  if(password.length<8)throw Error("Password အနည်းဆုံး ၈ လုံး ထည့်ပါ။");
-  if(![30,90,180,365].includes(planDays))throw Error("Package ရွေးပါ။");
-  if(!expiryDate)throw Error("သက်တမ်းကုန်မည့်ရက် ရွေးပါ။");
-  if(button){button.disabled=true;button.textContent="အကောင့်ဖွင့်နေသည်..."}
-  status.textContent="Firebase မှာ Gmail၊ Password၊ Package နဲ့ သက်တမ်းကို သတ်မှတ်နေသည်...";
-  const result=await firebase.functions().httpsCallable("createShopOwnerAccount")({email,password,planDays,expiryDate});
-  $("akProvisionPassword").value="";
-  status.textContent="Login Verify အောင်မြင်ပါပြီ။ "+result.data.email+" သည် ယခု Gmail + Owner သတ်မှတ်ထားသော Password ဖြင့် Login ဝင်နိုင်ပါပြီ။";
-  await loadPlatformUsers();
- }catch(e){if(status)status.textContent="အကောင့်ဖွင့်မရပါ: "+(e.message||e)}
- finally{if(button){button.disabled=false;button.textContent="နံပါတ် (၃) · Login Verify / အကောင့်ဖွင့်ခွင့်ပေးမည်"}}
+ const status=$("akProvisionStatus");
+ if(status)status.textContent="Platform Owner သည် ဆိုင်ရှင် Auth Account ကို မဖန်တီးပါ။ ဆိုင်ရှင်က ကိုယ်တိုင် Register လုပ်ပြီး Email အတည်ပြုကာ Access Request ပို့ရမည်။";
+ throw Error("Shop Owner self-registration only. Platform Owner can issue a license after reviewing the request.");
 }
+
 async function loadMarketReports(){
  const status=$("akMarketReportsStatus"),host=$("akMarketReportsRows");
  if(!akIsPlatformOwner()||!fbStore){if(status)status.textContent="အတည်ပြုထားသော Owner Gmail ဖြင့် Login ဝင်ပါ။";return}

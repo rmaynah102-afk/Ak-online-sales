@@ -43,7 +43,11 @@ const checks = [
  ['Owner dashboard Gmail/password/verify form', html.includes('id="akProvisionEmail"') && html.includes('id="akProvisionPassword"') && html.includes('id="akProvisionVerifyButton"')],
  ['Owner account list shows sequential numbers', html.includes('id="akOwnerShopRows"') && html.includes('function akRenderOwnerShopRows()')],
  ['Shop owner self-registration hidden', html.includes('reg.style.display=mode==="staff"?"":"none"')],
- ['Android package name stable', config.appId === 'com.ak.hardware.sales']
+ ['Android package name stable', config.appId === 'com.ak.hardware.sales'],
+ ['Platform Owner shop capacity is 100', functions.includes('activeOwners.length >= 100') && functions.includes('limit: 100,') && html.includes('အများဆုံး ၁၀၀ ဆိုင်')],
+ ['Owner can securely reset shop-owner passwords', functions.includes('exports.resetShopOwnerPassword') && html.includes('akResetShopOwnerPassword') && html.includes('httpsCallable("resetShopOwnerPassword")')],
+ ['Owner shop list excludes linked staff accounts', functions.includes('!u.customClaims?.shopId') && functions.includes('byUid.has(u.uid)')],
+ ['Shop-owner provisioning cannot overwrite staff membership', functions.includes('const existingMembership = await db.collection("shopMembers").doc(user.uid).get();')]
 ];;
 for (const [label, ok] of checks) console.log((ok ? 'PASS ' : 'FAIL ') + label);
 const failed = checks.filter(([,ok]) => !ok).map(([label]) => label);

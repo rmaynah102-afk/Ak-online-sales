@@ -68,7 +68,8 @@ service cloud.firestore {
     }
 
     function posRecordHasNoCostFields(data) {
-      return !('cost' in data.keys())
+      return data != null
+        && !('cost' in data.keys())
         && !('costPrice' in data.keys())
         && !('unitCost' in data.keys())
         && !('purchaseCost' in data.keys())

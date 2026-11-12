@@ -278,6 +278,46 @@ public class AkPrinterPlugin extends Plugin {
         }
     }
 
+    @PluginMethod
+    public void shareFile(PluginCall call) {
+        String encoded = call.getString("data", "");
+        String requestedName = call.getString("fileName", "AK-Sale-Export.txt");
+        String mimeType = call.getString("mimeType", "application/octet-stream");
+        String shareText = call.getString("text", "");
+        if (encoded.isEmpty()) { call.reject("မျှဝေမည့်ဖိုင် Data မရှိပါ။"); return; }
+        final byte[] bytes;
+        try {
+            bytes = Base64.decode(encoded, Base64.DEFAULT);
+            if (bytes.length == 0 || bytes.length > 12 * 1024 * 1024) { call.reject("မျှဝေမည့်ဖိုင် အရွယ်အစား မမှန်ပါ။ 12MB အောက်ထားပါ။"); return; }
+        } catch (IllegalArgumentException e) { call.reject("ဖိုင် Base64 မမှန်ပါ။"); return; }
+        String safeName = requestedName.replaceAll("[^A-Za-z0-9._-]", "_");
+        if (safeName.isEmpty()) safeName = "AK-Sale-Export.txt";
+        final String finalName = safeName;
+        final String finalMime = (mimeType == null || mimeType.trim().isEmpty()) ? "application/octet-stream" : mimeType;
+        try {
+            File directory = new File(getContext().getCacheDir(), "ak-file-share");
+            if (!directory.exists() && !directory.mkdirs()) throw new IOException("Share ဖိုင်သိမ်းရန် Folder မဖန်တီးနိုင်ပါ။");
+            File sharedFile = new File(directory, finalName);
+            try (FileOutputStream output = new FileOutputStream(sharedFile)) { output.write(bytes); output.flush(); }
+            Uri uri = FileProvider.getUriForFile(getContext(), getContext().getPackageName() + ".fileprovider", sharedFile);
+            Intent sendIntent = new Intent(Intent.ACTION_SEND);
+            sendIntent.setType(finalMime);
+            sendIntent.putExtra(Intent.EXTRA_STREAM, uri);
+            String shareTitle = call.getString("title", "AK Sale");
+            if (shareText != null && !shareText.trim().isEmpty()) { sendIntent.putExtra(Intent.EXTRA_TEXT, shareText); sendIntent.putExtra(Intent.EXTRA_SUBJECT, shareTitle == null ? "AK Sale" : shareTitle); }
+            sendIntent.setClipData(ClipData.newUri(getContext().getContentResolver(), "AK Sale export", uri));
+            sendIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            getActivity().runOnUiThread(() -> {
+                try {
+                    Intent chooser = Intent.createChooser(sendIntent, call.getString("chooserTitle", "Viber / အခြား App သို့ မျှဝေရန်"));
+                    chooser.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    getActivity().startActivity(chooser);
+                    JSObject result = new JSObject(); result.put("ok", true); result.put("fileName", finalName); call.resolve(result);
+                } catch (Exception e) { call.reject("Share Menu ဖွင့်မရပါ: " + e.getMessage()); }
+            });
+        } catch (Exception e) { call.reject("ဖိုင်မျှဝေရန် ပြင်ဆင်မရပါ: " + e.getMessage()); }
+    }
+
     private byte[] decodePayload(PluginCall call) {
         String encoded = call.getString("data", "");
         if (encoded.isEmpty()) {

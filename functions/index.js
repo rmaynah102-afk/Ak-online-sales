@@ -870,7 +870,7 @@ exports.setShopStaffViews = functions.https.onCall(async (data, context) => {
   const memberUid = String(data.memberUid || "").trim();
   const allowed = ["sales", "reports", "ads", "people"];
   const requested = Array.isArray(data.allowedViews) ? [...new Set(data.allowedViews.map(x => String(x)))] : [];
-  if (!memberUid || memberUid === ownerUid || memberUid.length > 128 || !requested.length ||
+  if (!memberUid || memberUid === ownerUid || memberUid.length > 128 ||
       requested.some(view => !allowed.includes(view))) {
     throw new functions.https.HttpsError("invalid-argument", "ဝန်ထမ်း Menu ခွင့်ပြုချက် မမှန်ပါ။");
   }

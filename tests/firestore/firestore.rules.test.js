@@ -213,6 +213,35 @@ describe('AK Sale Firestore security baseline', function () {
     await assertSucceeds(getDoc(doc(db, 'shops', 'shop-a', 'workspace', 'current')));
   });
 
+  it('denies reading an expired invite code', async () => {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), 'shopInvites', 'EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE'), {
+        shopId: 'shop-a', role: 'cashier', status: 'open',
+        createdAt: Timestamp.now(),
+        expiresAt: Timestamp.fromMillis(Date.now() - 60_000),
+        createdBy: 'shop-a',
+      });
+    });
+    const staffDb = testEnv.authenticatedContext('staff-a', {
+      email: 'staff-a@example.com', email_verified: true,
+    }).firestore();
+    await assertFails(getDoc(doc(staffDb, 'shopInvites', 'EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE')));
+  });
+
+  it('prevents staff from changing their own role or deleting their membership', async () => {
+    await seedLicense('shop-a');
+    await seedInvite('shop-a', '0123456789ABCDEF0123456789ABCDEF');
+    const db = await claimInvite('staff-a', 'staff-a@example.com', 'shop-a',
+      '0123456789ABCDEF0123456789ABCDEF');
+    await assertFails(setDoc(doc(db, 'shopMembers', 'staff-a'), {
+      shopId: 'shop-a', role: 'manager', status: 'active',
+      email: 'staff-a@example.com', createdAt: serverTimestamp(),
+      createdBy: 'shop-a', inviteCode: '0123456789ABCDEF0123456789ABCDEF',
+      slotId: 'shop-a_1', canPrint: true,
+    }));
+    await assertFails(deleteDoc(doc(db, 'shopMembers', 'staff-a')));
+  });
+
   it('denies a second claim using an already claimed invite', async () => {
     await seedLicense('shop-a');
     await seedInvite('shop-a', '0123456789ABCDEF0123456789ABCDEF');

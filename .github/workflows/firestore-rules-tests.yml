@@ -18,6 +18,12 @@ on:
     paths:
       - 'firestore.rules'
       - 'tests/firestore/**'
+      - 'apk/spark-pos-store.js'
+      - 'apk/app.html'
+      - 'spark-pos-store.js'
+      - 'app.html'
+      - 'package.json'
+      - 'sw.js'
       - '.github/workflows/firestore-rules-tests.yml'
   workflow_dispatch:
 

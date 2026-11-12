@@ -12,18 +12,23 @@ window.addEventListener("error",e=>add("error","JavaScript",e.message||"Applicat
 window.addEventListener("unhandledrejection",e=>add("error","Async task",e.reason?.message||"Unhandled asynchronous error"));
 window.addEventListener("offline",()=>add("warning","Network","Internet connection lost"));
 window.addEventListener("online",()=>add("info","Network","Internet connection restored"));
+window.addEventListener("ak:sync-error",e=>add("error","Cloud Sync",e.detail?.message||"Cloud sync failed"));
+window.addEventListener("ak:sync-success",()=>add("info","Cloud Sync","Cloud sync completed"));
+window.addEventListener("ak:printer-error",e=>add("warning","Printer",e.detail?.message||"Printer operation failed"));
+window.addEventListener("ak:printer-success",()=>add("info","Printer","Printer operation completed"));
 function status(){
  const online=navigator.onLine;
  const conn=document.getElementById("akConnectionStatus")?.textContent||"Connection status unavailable";
  const fb=document.getElementById("fbStatus")?.textContent||"Cloud status not reported";
  const printer=window.akPrinterBridge||window.AKPrinterBridge;
- return {online,conn:safeText(conn),fb:safeText(fb),printer:printer?"Printer bridge detected":"Printer bridge not detected"};
+ const printerText=document.getElementById("akPrinterStatus")?.textContent||"Printer status not reported";
+ return {online,conn:safeText(conn),fb:safeText(fb),printer:printer?safeText(printerText):safeText(printerText)};
 }
 function issues(){
  const s=status(),list=[];
  if(!s.online)list.push(["error","Internet","Offline ဖြစ်နေသည်","Internet ပြန်ချိတ်ပြီး Sync Now ကိုနှိပ်ပါ"]);
  if(/ပြတ်တောက်|မအောင်မြင်|failed|error|conflict|မရပါ/i.test(s.fb))list.push(["warning","Cloud Sync",s.fb,"Network နှင့် Login သက်တမ်းစစ်ပြီး Sync Now ကိုနှိပ်ပါ"]);
- if(/printer.*fail|print.*error|ပရင်တာ.*မရ/i.test(s.fb))list.push(["warning","Printer","Print service အမှားဖြစ်နိုင်သည်","Android Print Service နှင့် printer connection စစ်ပါ"]);
+ if(/printer.*fail|print.*error|ပရင်တာ.*မရ|မချိတ်နိုင်|အမှား/i.test(s.printer))list.push(["warning","Printer",s.printer,"Android Print Service၊ Bluetooth/Wi-Fi ချိတ်ဆက်မှုနှင့် printer permission စစ်ပါ"]);
  for(const e of events.slice(0,12))if(e.level==="error")list.push(["error",e.module,e.message,"အက်ပ်ကို မပိတ်ခင် Backup လုပ်ပြီး အမှားအချက်အလက်ကို Owner ထံပြပါ"]);
  return list.slice(0,30);
 }
@@ -52,7 +57,10 @@ function exportCsv(){
  const a=document.createElement("a"),url=URL.createObjectURL(new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8"}));a.href=url;a.download="ak-diagnostics.csv";a.click();URL.revokeObjectURL(url);
 }
 window.AKHealthMonitor={add,render,status,issues};
-document.addEventListener("DOMContentLoaded",()=>{ensureView();render()});
+document.addEventListener("DOMContentLoaded",()=>{ensureView();render();
+ const cloud=document.getElementById("fbStatus"),printer=document.getElementById("akPrinterStatus");
+ if(typeof MutationObserver!=="undefined") [cloud,printer].filter(Boolean).forEach(node=>new MutationObserver(()=>render()).observe(node,{childList:true,subtree:true,characterData:true}));
+});
 setTimeout(()=>{ensureView();render()},0);
 setInterval(()=>{if(document.getElementById("aiMonitor")?.classList.contains("active"))render()},15000);
 })();

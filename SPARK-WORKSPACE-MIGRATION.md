@@ -58,3 +58,8 @@ The new Rules use `shopMembers/{uid}` membership documents and the active shop l
 - APK migration adapter, collection repositories, login/membership fallback, data import, and Android runtime tests are **not implemented yet**.
 - The APK must not be described as using the Spark staff backend until those gates are complete and the emulator suite passes.
 - Do not deploy these rules to the live Firebase project yet. The APK still uses the old callable workspace flow.
+
+
+## Latest static check
+
+The branch Rules were reconstructed from the clean production-baseline file after an intermediate editing issue introduced duplicated/truncated text. The current file now has balanced rule braces and exactly one occurrence of each staff and tenant-POS match. The 19-test source parses as JavaScript. Emulator execution remains unconfirmed, and APK migration is still pending.

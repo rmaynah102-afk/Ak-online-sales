@@ -253,7 +253,7 @@ describe('AK Sale Firestore security baseline', function () {
     }).firestore();
     await assertFails(setDoc(doc(ownerDb, 'shopInvites', 'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF'), {
       shopId: 'shop-a', role: 'cashier', status: 'open',
-      createdAt: Timestamp.now(), expiresAt: futureTimestamp(1), createdBy: 'shop-a',
+      createdAt: serverTimestamp(), expiresAt: futureTimestamp(1), createdBy: 'shop-a',
     }));
   });
 

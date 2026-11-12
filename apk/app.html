@@ -599,7 +599,7 @@ body.ak-staff #productForm button[onclick^="akSendProductToMarket"] {display:non
 <div class="notice"><b>အသစ်ထုတ်ပေးသော Merchant Code</b><p id="akStaffInviteCode" style="font-size:22px;font-weight:800;letter-spacing:2px">—</p><button type="button" class="alt" onclick="akCopyStaffInviteCode()">Code ကူးရန်</button><p class="muted">Code တစ်ခုကို တစ်ကြိမ်သာ ချိတ်နိုင်ပြီး ၂၄ နာရီအတွင်း အသုံးပြုပါ။</p></div>
 <p id="akStaffStatus" class="muted">ဝန်ထမ်းအကောင့်အများဆုံး ၃ ခု ထည့်နိုင်သည်။</p>
 <div class="tablewrap"><table><thead><tr><th>ဝန်ထမ်း Gmail</th><th>Role</th><th>Print ခွင့်</th><th>Password / Account</th></tr></thead><tbody id="akStaffRows"><tr><td colspan="4">ဝန်ထမ်းစာရင်း မဖတ်ရသေးပါ။</td></tr></tbody></table></div></div>
-<div class="panel owner-only" id="akPlatformShopProvisionPanel">
+<div class="panel owner-only" id="akPlatformShopProvisionPanel" style="display:none">
 <h2>Platform Owner · ဆိုင်ရှင်အကောင့် ဖန်တီး / ခွင့်ပြု</h2>
 <p class="notice">Owner က Gmail၊ Password၊ Package နဲ့ သက်တမ်းကုန်ရက် သတ်မှတ်ပြီး Login Verify နှိပ်ပါ။ အကောင့်ကို Firebase မှာ ဖန်တီး/ပြင်ဆင်ပြီး ဆိုင်ရှင်က သတ်မှတ်ထားတဲ့ Gmail + Password နဲ့ ချက်ချင်း Login ဝင်နိုင်ပါမယ်။ Password ကို စာရင်းထဲ မသိမ်းပါ။</p>
 <div class="grid">
@@ -864,7 +864,7 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
 <div class="actions"><button type="button" onclick="loadMarketReports()">တိုင်ကြားချက်စာရင်းဖတ်မည်</button></div>
 <p id="akMarketReportsStatus" class="muted">စာရင်း မဖတ်ရသေးပါ။</p>
 <div id="akMarketReportsRows"><p class="muted">တိုင်ကြားချက်များ မဖတ်ရသေးပါ။</p></div>
-</div></div></div><div class="panel" id="akFirebasePanel"><h2>အကောင့်ဝင်ရန် · Cloud စနစ်</h2><div class="notice">ဆိုင်ရှင်အကောင့်ကို Platform Owner က Gmail၊ Password၊ Package နှင့် သက်တမ်းသတ်မှတ်ပြီး Login Verify လုပ်ပေးမည်။ ဆိုင်ရှင်သည် သတ်မှတ်ထားသော Gmail နှင့် Password ဖြင့် Login ဝင်ပါ။ ဝန်ထမ်းအကောင့်များကို ဆိုင်ရှင်က ထပ်ဖန်တီးနိုင်သည်။</div><div class="panel" id="akAccountTypeWrap" style="margin:10px 0"><label for="akAccountType">ဖွင့်မည့်အကောင့်အမျိုးအစား</label><select id="akAccountType" onchange="akUpdateAccountTypeHint()"><option value="shop-owner">ဆိုင်ရှင်အကောင့် (ဆိုင်ကို စီမံမည်)</option><option value="staff">ဝန်ထမ်း Gmail အကောင့် (Merchant Code ဖြင့်ချိတ်မည်)</option></select><p id="akAccountTypeHint" class="muted">ဆိုင်ရှင်အကောင့်ဖြင့် Register လုပ်ပြီး Email အတည်ပြုပါ။ ထို့နောက် Package ဝယ်ယူပြီး Owner အတည်ပြုချက်ရယူပါ။</p></div><div class="panel" style="margin:10px 0"><label for="akLoginMode">Login အမျိုးအစား</label><select id="akLoginMode" onchange="akSetLoginMode()"><option value="owner">Platform Owner Login · painglin102@gmail.com</option><option value="shop" selected>ဆိုင်ရှင် Login</option><option value="staff">ဝန်ထမ်း Login · Merchant Code</option></select><p id="akLoginModeHint" class="muted">ဆိုင်ရှင်သည် Owner ပေးထားသော Gmail နှင့် Password ဖြင့် ဝင်ပါ။</p><button type="button" id="akOwnerGoogleLoginBtn" class="alt hidden" onclick="akOwnerGoogleLogin()">Google ဖြင့် Platform Owner ဝင်မည်</button><div id="akStaffLoginCodeWrap" class="hidden"><label>ဝန်ထမ်း Merchant Code (ပထမဆုံးချိတ်ဆက်ချိန်)</label><input id="akStaffLoginCode" maxlength="32" autocomplete="off" placeholder="ဆိုင်ရှင်ထံမှ ရရှိသော Code" style="text-transform:uppercase"></div></div><div class="grid"><div><label>အကောင့် Gmail / Email</label><input id="fbEmail" type="email" value="" autocomplete="username" inputmode="email" onkeydown="if(event.key==='Enter')firebaseLogin()"></div><div id="akPasswordLoginWrap"><label>Password</label><div class="actions" style="gap:6px;flex-wrap:nowrap"><input id="fbPassword" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')firebaseLogin()" style="min-width:0;flex:1"><button type="button" class="alt" aria-label="Password ပြရန်/ဖျောက်ရန်" onclick="const p=document.getElementById('fbPassword');p.type=p.type==='password'?'text':'password';this.textContent=p.type==='password'?'ပြရန်':'ဖျောက်ရန်'">ပြရန်</button></div></div></div><div class="actions"><button type="button" id="akPasswordLoginButton" onclick="firebaseLogin()">Login ဝင်မည်</button><button type="button" id="akRegisterButton" class="alt" onclick="firebaseRegister()">User အကောင့်အသစ်ဖွင့်ရန်</button><button class="alt" type="button" onclick="firebaseResetPassword()">Password မေ့နေပါက</button><button class="alt" type="button" onclick="firebaseLogout()">Logout ထွက်မည်</button></div><p class="muted">Gmail / Email နှင့် Password ကို လုံခြုံစွာ သိမ်းထားပါ။ Password ကို မည်သူ့ကိုမျှ မပေးပါနှင့်။</p><p class="muted" id="fbStatus">Cloud စနစ် အဆင်သင့်ဖြစ်သည်။ Gmail ဖြင့် ဝင်ပါ။</p>
+</div></div></div><div class="panel" id="akFirebasePanel"><h2>အကောင့်ဝင်ရန် · Cloud စနစ်</h2><div class="notice">ဆိုင်ရှင်သည် ကိုယ်ပိုင် Gmail ဖြင့် အကောင့်ဖွင့်ပြီး Email အတည်ပြုပါ။ Platform Owner သည် Access Request နှင့် ပြင်ပငွေပေးချေမှုကို စစ်ဆေးပြီး License သက်တမ်းကိုသာ ဖွင့်ပေးသည်။</div><div class="panel" id="akAccountTypeWrap" style="margin:10px 0"><label for="akAccountType">ဖွင့်မည့်အကောင့်အမျိုးအစား</label><select id="akAccountType" onchange="akUpdateAccountTypeHint()"><option value="shop-owner">ဆိုင်ရှင်အကောင့် (ဆိုင်ကို စီမံမည်)</option><option value="staff">ဝန်ထမ်း Gmail အကောင့် (Merchant Code ဖြင့်ချိတ်မည်)</option></select><p id="akAccountTypeHint" class="muted">ဆိုင်ရှင်အကောင့်ဖြင့် Register လုပ်ပြီး Email အတည်ပြုပါ။ ထို့နောက် Package ဝယ်ယူပြီး Owner အတည်ပြုချက်ရယူပါ။</p></div><div class="panel" style="margin:10px 0"><label for="akLoginMode">Login အမျိုးအစား</label><select id="akLoginMode" onchange="akSetLoginMode()"><option value="owner">Platform Owner Login · painglin102@gmail.com</option><option value="shop" selected>ဆိုင်ရှင် Login</option><option value="staff">ဝန်ထမ်း Login · Merchant Code</option></select><p id="akLoginModeHint" class="muted">ဆိုင်ရှင်သည် Owner ပေးထားသော Gmail နှင့် Password ဖြင့် ဝင်ပါ။</p><button type="button" id="akOwnerGoogleLoginBtn" class="alt hidden" onclick="akOwnerGoogleLogin()">Google ဖြင့် Platform Owner ဝင်မည်</button><div id="akStaffLoginCodeWrap" class="hidden"><label>ဝန်ထမ်း Merchant Code (ပထမဆုံးချိတ်ဆက်ချိန်)</label><input id="akStaffLoginCode" maxlength="32" autocomplete="off" placeholder="ဆိုင်ရှင်ထံမှ ရရှိသော Code" style="text-transform:uppercase"></div></div><div class="grid"><div><label>အကောင့် Gmail / Email</label><input id="fbEmail" type="email" value="" autocomplete="username" inputmode="email" onkeydown="if(event.key==='Enter')firebaseLogin()"></div><div id="akPasswordLoginWrap"><label>Password</label><div class="actions" style="gap:6px;flex-wrap:nowrap"><input id="fbPassword" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')firebaseLogin()" style="min-width:0;flex:1"><button type="button" class="alt" aria-label="Password ပြရန်/ဖျောက်ရန်" onclick="const p=document.getElementById('fbPassword');p.type=p.type==='password'?'text':'password';this.textContent=p.type==='password'?'ပြရန်':'ဖျောက်ရန်'">ပြရန်</button></div></div></div><div class="actions"><button type="button" id="akPasswordLoginButton" onclick="firebaseLogin()">Login ဝင်မည်</button><button type="button" id="akRegisterButton" class="alt" onclick="firebaseRegister()">User အကောင့်အသစ်ဖွင့်ရန်</button><button class="alt" type="button" onclick="firebaseResetPassword()">Password မေ့နေပါက</button><button class="alt" type="button" onclick="firebaseLogout()">Logout ထွက်မည်</button></div><p class="muted">Gmail / Email နှင့် Password ကို လုံခြုံစွာ သိမ်းထားပါ။ Password ကို မည်သူ့ကိုမျှ မပေးပါနှင့်။</p><p class="muted" id="fbStatus">Cloud စနစ် အဆင်သင့်ဖြစ်သည်။ Gmail ဖြင့် ဝင်ပါ။</p>
 <div class="panel" id="akAccessRequestPanel" style="margin-top:12px"><h3>Package / အသုံးပြုခွင့်တောင်းရန်</h3><p class="muted">App အတွင်း ငွေပေးချေမှု၊ Transaction ID သို့မဟုတ် Screenshot တင်စနစ် မရှိပါ။ ငွေပေးချေမှုကို App အပြင်တွင် သီးခြားဆောင်ရွက်ပါ။ Platform Owner က စစ်ဆေးပြီး Package အသုံးပြုခွင့်ကို ကိုယ်တိုင်ဖွင့်ပေးမည်။</p><div class="grid"><div><label>အသုံးပြုခွင့်ကာလ</label><select id="payPlan"><option value="30">30 ရက်</option><option value="90">90 ရက်</option><option value="180">180 ရက်</option><option value="365">365 ရက်</option></select></div></div><div class="actions"><button type="button" onclick="akRequestSubscriptionAccess()">အသုံးပြုခွင့်တောင်းမည်</button></div><p id="akAccessRequestStatusPayment" class="muted">Gmail အတည်ပြုပြီး Login ဝင်ထားပါ။ Owner က စစ်ဆေးပြီးမှ POS ကို ဖွင့်ပေးမည်။</p></div></div>
 <div class="panel"><h2>အရောင်ဒီဇိုင်း ပြောင်းရန်</h2><p class="muted">ဒီဖုန်း / Browser အတွက် ဆော့ဖ်ဝဲလ် Theme အရောင်ကို ရွေးပါ။</p><label>အရောင် Theme</label><select id="akThemeSelect" onchange="localStorage.setItem('ak_sale_theme_v1',this.value);applyAkTheme()"><option value="green">အစိမ်း</option><option value="blue">အပြာ</option><option value="purple">ခရမ်း</option><option value="orange">လိမ္မော်</option></select></div><div class="panel"><h2>လုပ်ငန်းအမှတ်တံဆိပ်နှင့် တည်နေရာ</h2><div class="grid"><div><label>လုပ်ငန်းအမည် (စနစ်အတွင်း)</label><input id="shopName" placeholder="ဥပမာ - AK Hardware"></div><div><label>ဘောင်ချာပေါ်ပြမည့် ဆိုင်ရှင် / ဆိုင်အမည်</label><input id="receiptName" maxlength="80" placeholder="ဥပမာ - ကိုအောင် / Aung Store"><small class="muted">ဘောင်ချာခေါင်းစီးတွင် AK Hardware အစား ဒီအမည်ကို ပြမည်။</small></div><div><label>ငွေကြေး</label><input id="currency" value="MMK"></div><div><label>မြို့</label><input id="shopCity" placeholder="ဥပမာ - မန္တလေး"></div><div><label>မြို့နယ်</label><input id="shopTownship" placeholder="မြို့နယ်အမည်"></div><div><label>ဆိုင်လိပ်စာ</label><input id="shopAddress" placeholder="လမ်း၊ ရပ်ကွက်၊ အဆောက်အအုံ"></div><div><label>ဆက်သွယ်ရန်ဖုန်း</label><input id="shopPhone" inputmode="tel" placeholder="09xxxxxxxxx"></div><div><label>Logo ပုံ URL (မဖြစ်မနေမဟုတ်)</label><input id="shopLogo" type="url" placeholder="https://..."></div></div><div class="actions"><button onclick="saveShop()">အချက်အလက် သိမ်းမည်</button><button class="red" onclick="clearAll()">ဒေတာအားလုံးဖျက်ရန်</button></div><p class="muted">ဆိုင်ခွဲတစ်ခုချင်းစီ၏ လိပ်စာကို Shopping Center ထဲတွင် သီးခြားသတ်မှတ်နိုင်သည်။</p></div>
 
@@ -2278,14 +2278,14 @@ async function loadAdminAccessRequests(){
   $("adminAccessStatus").textContent="Access Request များ ဖတ်နေသည်...";
   const snap=await fbStore.collection("subscriptionAccessRequests").where("status","==","pending").orderBy("createdAt","desc").limit(100).get();
   const rows=snap.docs.map(doc=>{const x=doc.data()||{};return{uid:doc.id,email:x.email||"",days:Number(x.days||30),createdAt:x.createdAt&&x.createdAt.toDate?x.createdAt.toDate().toLocaleString():""}});
-  $("adminAccessRows").innerHTML=rows.length?rows.map(x=>"<tr><td>"+esc(x.createdAt)+"</td><td>"+esc(x.email)+"</td><td>"+x.days+" ရက်</td><td>Owner အတည်ပြုရန်</td><td><button class=\"alt\" data-uid=\""+esc(x.uid)+"\" onclick=\"reviewAdminAccessRequest(this.dataset.uid)\">ကြည့်ပြီး မှတ်သားမည်</button></td></tr>").join(""):"<tr><td colspan=\"5\">Pending Access Request မရှိပါ။</td></tr>";
+  $("adminAccessRows").innerHTML=rows.length?rows.map(x=>"<tr><td>"+esc(x.createdAt)+"</td><td>"+esc(x.email)+"</td><td>"+x.days+" ရက်</td><td>ငွေပေးချေမှုစစ်ရန်</td><td><button class=\"alt\" data-uid=\""+esc(x.uid)+"\" data-days=\""+x.days+"\" onclick=\"akGrantRequestSubscription(this.dataset.uid,Number(this.dataset.days))\">ငွေလွှဲစစ်ပြီး License ဖွင့်ရန်</button></td></tr>").join(""):"<tr><td colspan=\"5\">Pending Access Request မရှိပါ။</td></tr>";
   $("adminAccessStatus").textContent="Owner ကြည့်ရန် Access Request "+rows.length+" ခု ရှိသည်။";
  }catch(e){$("adminAccessStatus").textContent="Access Request ဖတ်မရပါ: "+e.message}
 }
 async function reviewAdminAccessRequest(uid){
  if(!uid||!akIsPlatformOwner()||!fbStore)return;
- try{await fbStore.collection("subscriptionAccessRequests").doc(uid).update({status:"reviewed",reviewedBy:fbAuth.currentUser.email,reviewedAt:firebase.firestore.FieldValue.serverTimestamp()});await loadAdminAccessRequests();}
- catch(e){alert("Request အခြေအနေ မပြောင်းနိုင်ပါ: "+e.message)}
+ try{const snap=await fbStore.collection("subscriptionAccessRequests").doc(uid).get();if(!snap.exists)throw Error("Request မတွေ့ပါ။");await akGrantRequestSubscription(uid,Number((snap.data()||{}).days||30));}
+ catch(e){alert("Request အတည်ပြုမရပါ: "+e.message)}
 }
 function akWatchAdminAccessRequests(){
  if(akAccessQueueUnsubscribe){akAccessQueueUnsubscribe();akAccessQueueUnsubscribe=null}
@@ -2387,50 +2387,39 @@ async function loadPlatformUsers(){
  try{
   if(!akIsPlatformOwner()||!fbAuth?.currentUser)throw Error("အတည်ပြုထားသော Platform Owner Gmail ဖြင့် Login ဝင်ပါ။");
   const status=$("akPlatformUserStatus"),ownerStatus=$("akProvisionStatus");
-  if(status)status.textContent="ဆိုင်ရှင်အကောင့်စာရင်း ဖတ်နေသည်...";
-  if(ownerStatus)ownerStatus.textContent="ဆိုင်ရှင် Gmail စာရင်း ဖတ်နေသည်...";
-  const callable=firebase.functions().httpsCallable("listPlatformUsers");
-  let pageToken="",all=[];
-  for(let page=0;page<10;page++){
-   const result=await callable({pageToken});
-   const data=result.data||{};
-   all=all.concat(Array.isArray(data.users)?data.users:[]);
-   pageToken=String(data.nextPageToken||"");
-   if(!pageToken)break;
-  }
-  akPlatformUserRows=all.filter(u=>String(u.email||"").toLowerCase()!=="painglin102@gmail.com");
+  if(status)status.textContent="Firestore မှ Subscription စာရင်း ဖတ်နေသည်...";
+  const snap=await fbStore.collection("licenses").limit(100).get();
+  akPlatformUserRows=snap.docs.map(d=>{
+   const v=d.data()||{},expiry=v.expiresAt&&typeof v.expiresAt.toDate==="function"?v.expiresAt.toDate().toISOString():v.expiresAt||null;
+   return {uid:d.id,email:v.email||"",emailVerified:v.emailVerified===true,status:v.status||"pending",plan:v.plan||"",expiresAt:expiry,disabled:v.status==="suspended"};
+  }).filter(u=>String(u.email||"").toLowerCase()!=="painglin102@gmail.com");
   akPlatformUserListLoaded=true;akPlatformUserListError="";
-  akPlatformUserRows.sort((a,b)=>{
-   const rank=x=>x.status==="pending_owner_review"||x.status==="pending_payment"||x.status==="pending"?0:x.status==="suspended"||x.disabled?1:2;
-   return rank(a)-rank(b)||String(a.email||"").localeCompare(String(b.email||""));
-  });
+  akPlatformUserRows.sort((a,b)=>String(a.email||a.uid).localeCompare(String(b.email||b.uid)));
   akRenderPlatformUsers();akRenderOwnerShopRows();
   const active=akPlatformUserRows.filter(u=>u.status==="active"&&!u.disabled&&u.expiresAt&&new Date(u.expiresAt).getTime()>Date.now()).length;
   if($("akOwnerUserCount"))$("akOwnerUserCount").textContent=akPlatformUserRows.length+" ခု";
-  if(status)status.textContent="ဆိုင်အကောင့် "+akPlatformUserRows.length+" ခု · လက်ရှိအသုံးပြုခွင့်ရှိ "+active+" ခု · အများဆုံး ၁၀၀ ဆိုင်";
-  if(ownerStatus)ownerStatus.textContent="ဆိုင်ရှင်စာရင်း "+akPlatformUserRows.length+" ခု · Active "+active+" ခု · Password များကို လုံခြုံရေးအတွက် မပြသပါ။";
+  if(status)status.textContent="လိုင်စင်စာရင်း "+akPlatformUserRows.length+" ခု · Active "+active+" ခု · အများဆုံး ၁၀၀ ဆိုင်";
+  if(ownerStatus)ownerStatus.textContent="ဆိုင်ရှင်များသည် ကိုယ်တိုင် Register လုပ်ပါ။ Owner သည် ငွေပေးချေမှုစစ်ပြီး License ကိုသာ ဖွင့်ပေးသည်။";
  }catch(e){
   akPlatformUserListLoaded=false;akPlatformUserListError=String(e?.message||e||"အမည်မသိ အမှား");
   akUpdateOwnerDashboardStats();
-  if($("akPlatformUserStatus"))$("akPlatformUserStatus").textContent="Customer စာရင်းဖတ်မရပါ: "+akPlatformUserListError;
-  if($("akProvisionStatus"))$("akProvisionStatus").textContent="ဆိုင်ရှင်စာရင်းဖတ်မရပါ: "+akPlatformUserListError;
-  const ownerStatus=$("akOwnerDashboardStatus");if(ownerStatus)ownerStatus.textContent="Owner Dashboard ပေါ်နေပါသည်။ ဆိုင်ရှင်စာရင်း မဖတ်နိုင်သေးပါ: "+akPlatformUserListError;
+  if($("akPlatformUserStatus"))$("akPlatformUserStatus").textContent="Subscription စာရင်းဖတ်မရပါ: "+akPlatformUserListError;
+  if($("akProvisionStatus"))$("akProvisionStatus").textContent="License စာရင်းဖတ်မရပါ: "+akPlatformUserListError;
+  const ownerStatus=$("akOwnerDashboardStatus");if(ownerStatus)ownerStatus.textContent="Owner Dashboard ပေါ်နေပါသည်။ License စာရင်း မဖတ်နိုင်သေးပါ: "+akPlatformUserListError;
  }
 }
 async function akSetCustomerAccess(uid,action){
  try{
   if(!akIsPlatformOwner()||!fbAuth?.currentUser)throw Error("Owner Gmail ဖြင့်သာ လုပ်ဆောင်နိုင်သည်။");
   if(!uid||!["suspend","reactivate"].includes(action))throw Error("လုပ်ဆောင်ချက် မမှန်ကန်ပါ။");
-  if(!confirm(action==="suspend"?"ဤ Customer ၏ POS အသုံးပြုခွင့်ကို ရပ်ဆိုင်းမလား။":"ဤ Customer ၏ အသုံးပြုခွင့်ကို ပြန်ဖွင့်မလား။"))return;
   const target=akPlatformUserRows.find(x=>x.uid===uid);
-  if(!target)throw Error("Customer အကောင့်ကို မတွေ့ပါ။");
-  if(target.plan==="free-trial"){
-   if(action==="reactivate"&&target.expiresAt&&new Date(target.expiresAt).getTime()<=Date.now())throw Error("Trial သက်တမ်းကုန်ပြီးပါပြီ။ Package အသစ်ကို သက်တမ်းတိုးပေးပါ။");
-   await fbStore.collection("freeBetaUsers").doc(uid).update({status:action==="suspend"?"disabled":"active"});
-  }else{
-   const result=await firebase.functions().httpsCallable("setPlatformUserAccess")({uid,action});
-   if(!result.data?.ok)throw Error("Server မှ အတည်ပြုချက် မရပါ။");
-  }
+  if(!target)throw Error("Customer License ကို မတွေ့ပါ။");
+  if(!confirm(action==="suspend"?"ဤ Customer ၏ POS အသုံးပြုခွင့်ကို ရပ်ဆိုင်းမလား။":"ဤ Customer ၏ အသုံးပြုခွင့်ကို ပြန်ဖွင့်မလား။"))return;
+  await fbStore.collection("licenses").doc(uid).update({
+   status:action==="suspend"?"suspended":"active",
+   updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
+   updatedBy:fbAuth.currentUser.email
+  });
   $("akPlatformUserStatus").textContent=action==="suspend"?"Customer အသုံးပြုခွင့် ရပ်ဆိုင်းပြီးပါပြီ။":"Customer အသုံးပြုခွင့် ပြန်ဖွင့်ပြီးပါပြီ။";
   await loadPlatformUsers();
  }catch(e){$("akPlatformUserStatus").textContent="Owner လုပ်ဆောင်ချက် မအောင်မြင်ပါ: "+(e.message||e)}
@@ -2438,19 +2427,41 @@ async function akSetCustomerAccess(uid,action){
 async function akGrantCustomerSubscription(uid){
  try{
   if(!akIsPlatformOwner()||!fbAuth?.currentUser)throw Error("Platform Owner သာ ခွင့်ပြုသည်။");
-  const select=$("akGrantDays_"+uid),days=Number(select?.value||0);
+  const days=Number($("akGrantDays_"+uid)?.value||0);
   if(![30,90,180,365].includes(days))throw Error("သက်တမ်းကာလ မမှန်ပါ။");
   const target=akPlatformUserRows.find(x=>x.uid===uid);
-  if(!target)throw Error("Customer အကောင့်ကို စာရင်းထဲတွင် မတွေ့ပါ။");
-  if(!target.emailVerified)throw Error("Customer Gmail ကို အရင်အတည်ပြုခိုင်းပါ။");
-  if(!confirm((target.email||uid)+" ကို "+days+" ရက် အသုံးပြုခွင့်ပေးမလား။ App အပြင်တွင် ငွေပေးချေမှုကို သီးခြားစစ်ဆေးပြီးကြောင်း အတည်ပြုပါ။"))return;
-  $("akPlatformUserStatus").textContent="Subscription သက်တမ်းကို လုံခြုံသော Server မှတစ်ဆင့် သတ်မှတ်နေသည်...";
-  const result=await firebase.functions().httpsCallable("grantSubscription")({uid,days});
-  if(!result.data?.ok||!result.data?.expiresAt)throw Error("Server မှ သက်တမ်းအတည်ပြုချက် မရပါ။");
-  const expiresAt=new Date(result.data.expiresAt);
-  alert("Subscription အတည်ပြုပြီးပါပြီ။ သက်တမ်းကုန်မည့်ရက်: "+expiresAt.toLocaleString());
+  if(!target)throw Error("Customer License ကို စာရင်းထဲတွင် မတွေ့ပါ။");
+  if(!confirm((target.email||uid)+" ကို "+days+" ရက် သက်တမ်းတိုးမလား။ App အပြင်တွင် ငွေပေးချေမှုကို သီးခြားစစ်ဆေးပြီးကြောင်း အတည်ပြုပါ။"))return;
+  const ref=fbStore.collection("licenses").doc(uid),snap=await ref.get(),current=snap.exists?snap.data()||{}:{};
+  const oldExpiry=current.expiresAt&&typeof current.expiresAt.toDate==="function"?current.expiresAt.toDate():current.expiresAt?new Date(current.expiresAt):null;
+  const base=oldExpiry&&oldExpiry.getTime()>Date.now()?oldExpiry:new Date();
+  const expiresAt=new Date(base.getTime()+days*86400000);
+  const plans={30:"30-days",90:"90-days",180:"180-days",365:"365-days"},prices={30:30000,90:90000,180:180000,365:360000};
+  await ref.set({uid,email:target.email||current.email||"",emailVerified:target.emailVerified===true,status:"active",plan:plans[days],expiresAt:firebase.firestore.Timestamp.fromDate(expiresAt),priceMMK:prices[days],updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:fbAuth.currentUser.email,issuedAt:current.issuedAt||firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+  alert("Subscription သက်တမ်းတိုးပြီးပါပြီ။ သက်တမ်းကုန်မည့်ရက်: "+expiresAt.toLocaleString());
   await loadPlatformUsers();
  }catch(e){alert("အသုံးပြုခွင့်ပေးမရပါ: "+(e.message||e))}
+}
+async function akGrantRequestSubscription(uid,requestedDays){
+ try{
+  if(!akIsPlatformOwner()||!fbAuth?.currentUser)throw Error("Platform Owner သာ ခွင့်ပြုသည်။");
+  const days=Number(requestedDays);
+  if(![30,90,180,365].includes(days))throw Error("Package ကာလ မမှန်ပါ။");
+  const requestRef=fbStore.collection("subscriptionAccessRequests").doc(uid),requestSnap=await requestRef.get();
+  if(!requestSnap.exists||requestSnap.data().status!=="pending")throw Error("Access Request မရှိတော့ပါ။");
+  const request=requestSnap.data()||{};
+  if(!confirm(request.email+" အတွက် "+days+" ရက် Subscription ကို ငွေပေးချေမှုစစ်ပြီး ဖွင့်ပေးမလား။"))return;
+  const licenseRef=fbStore.collection("licenses").doc(uid),licenseSnap=await licenseRef.get(),current=licenseSnap.exists?licenseSnap.data()||{}:{};
+  const oldExpiry=current.expiresAt&&typeof current.expiresAt.toDate==="function"?current.expiresAt.toDate():current.expiresAt?new Date(current.expiresAt):null;
+  const base=oldExpiry&&oldExpiry.getTime()>Date.now()?oldExpiry:new Date(),expiresAt=new Date(base.getTime()+days*86400000);
+  const plans={30:"30-days",90:"90-days",180:"180-days",365:"365-days"},prices={30:30000,90:90000,180:180000,365:360000};
+  const batch=fbStore.batch();
+  batch.set(licenseRef,{uid,email:request.email,emailVerified:true,status:"active",plan:plans[days],expiresAt:firebase.firestore.Timestamp.fromDate(expiresAt),priceMMK:prices[days],issuedAt:current.issuedAt||firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:fbAuth.currentUser.email},{merge:true});
+  batch.update(requestRef,{status:"reviewed",reviewedBy:fbAuth.currentUser.email,reviewedAt:firebase.firestore.FieldValue.serverTimestamp()});
+  await batch.commit();
+  $("adminAccessStatus").textContent=request.email+" ကို "+days+" ရက် License ဖွင့်ပြီးပါပြီ။";
+  await Promise.all([loadAdminAccessRequests(),loadPlatformUsers()]);
+ }catch(e){$("adminAccessStatus").textContent="License ဖွင့်မရပါ: "+(e.message||e)}
 }
 async function akRequestSubscriptionAccess(){
  try{

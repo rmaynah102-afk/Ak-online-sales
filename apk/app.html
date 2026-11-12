@@ -1043,6 +1043,7 @@ function persist(){
 const pages=[["ownerDashboard","Owner Dashboard"],["account","Login / Register"],["payment","ငွေပေးချေမှု"],["staffJoin","Merchant Code"],["staffManagement","ဝန်ထမ်းစီမံမှု"],["home","ပင်မ"],["products","ပစ္စည်း"],["sales","အရောင်း"],["purchases","အဝယ်"],["people","Customer/Supplier"],["expenses","အသုံးစရိတ်"],["reports","အစီရင်ခံစာ"],["ads","ကြော်ငြာ"],["market","AK Market"],["centerManagement","စင်တာထိန်းချုပ်မှု"],["aiMonitor","AI စနစ်စောင့်ကြည့်ရေး"],["backup","Backup / Settings"]];
 $("nav").innerHTML=pages.map(([id,n])=>'<button type="button" data-view="'+id+'" aria-label="'+n+'" title="'+n+'" onclick="go(\''+id+'\')">'+n+'</button>').join("");
 document.querySelector('#nav [data-view="ownerDashboard"]')?.classList.add("shop-owner-only","hidden");
+document.querySelector('#nav [data-view="aiMonitor"]')?.classList.add("owner-only");
 /* AK_ACCOUNT_SEPARATION_V2 — keep login, package access, staff join and owner controls in separate views. */
 (function(){
  const main=document.querySelector("main"),nav=document.getElementById("nav");
@@ -1111,6 +1112,7 @@ $("akLanguageBtn").addEventListener("click",()=>{akLanguage=akLanguage==="en"?"m
 /* Avoid observing every DOM mutation: large POS tables caused repeated full-page translation scans. */
 akApplyLanguage();
 function go(id){
+ if(id==="aiMonitor"&&!["platform-owner","shop-owner"].includes(akUserRole)){alert("စနစ်စောင့်ကြည့်ရေးကို Platform Owner နှင့် ဆိုင်ရှင်သာ ကြည့်နိုင်သည်။");id="home"}
  const ownerPreview=akUserRole==="platform-owner"&&document.body.classList.contains("ak-owner-user-preview");
  if(["staffManagement"].includes(id)&&akUserRole!=="shop-owner"&&!ownerPreview){alert("ဝန်ထမ်းစီမံမှုကို ဆိုင်ရှင်သာ အသုံးပြုနိုင်သည်။");id="account"}
  

@@ -204,6 +204,17 @@ describe('AK Sale Firestore security baseline', function () {
     await assertSucceeds(getDoc(doc(strangerDb, 'shopInvites', 'ABCDEF0123456789ABCDEF0123456789')));
   });
 
+  it('allows the verified Platform Owner to create staff invites in their own workspace without a customer license', async () => {
+    const ownerDb = testEnv.authenticatedContext('platform-owner', {
+      email: 'painglin102@gmail.com', email_verified: true,
+    }).firestore();
+    const inviteRef = doc(ownerDb, 'shopInvites', 'FEDCBA9876543210FEDCBA9876543210');
+    await assertSucceeds(setDoc(inviteRef, {
+      shopId: 'platform-owner', role: 'cashier', status: 'open',
+      createdAt: serverTimestamp(), expiresAt: futureTimestamp(1), createdBy: 'platform-owner',
+    }));
+  });
+
   it('allows staff to claim a one-time invite atomically without custom claims', async () => {
     await seedLicense('shop-a');
     await seedInvite('shop-a', '0123456789ABCDEF0123456789ABCDEF');

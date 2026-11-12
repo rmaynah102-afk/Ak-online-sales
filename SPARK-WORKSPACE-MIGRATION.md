@@ -70,3 +70,6 @@ The branch Rules were reconstructed from the clean production-baseline file afte
 The Firestore document path includes the `records` subcollection segment so each record has a valid even-segment document path. The first emulator run caught and corrected this path error; the updated workflow is running again.
 
 The role rules now also reject product/sales records that embed `cost`, `costPrice`, `unitCost`, `purchaseCost`, `profit`, `grossProfit`, or `margin`. Those values belong in the restricted cost collections. The test suite now includes a cashier cost-data denial case.
+
+
+The last completed emulator run (workflow 43224894520) passed all 20 test cases, including the product-cost privacy checks. A defensive null guard was added afterward; workflow 43225122902 is running against that exact Rules revision.

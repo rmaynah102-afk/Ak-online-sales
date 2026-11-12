@@ -49,6 +49,19 @@ const appHtml = fs.readFileSync("app.html", "utf8");
 const apkHtml = fs.readFileSync("apk/app.html", "utf8");
 assert.match(appHtml, /<script src="\.\/spark-pos-store\.js"><\/script>/);
 assert.match(apkHtml, /<script src="\.\/spark-pos-store\.js"><\/script>/);
+// The APK shell must call the Spark staff adapter rather than Cloud Functions for staff lifecycle.
+assert.match(apkHtml, /sparkStore\.claimInvite\(code\)/);
+assert.match(apkHtml, /sparkStore\.createInvite\(role\)/);
+assert.match(apkHtml, /akShopStaffCache=await sparkStore\.listStaff\(\)/);
+assert.match(apkHtml, /sparkStore\.setStaffPrintPermission\(uid,canPrint\)/);
+assert.match(apkHtml, /sparkStore\.revokeStaff\(uid\)/);
+assert.match(apkHtml, /shopMembers["']\)\.doc\(user\.uid\)\.get\(\)/);
+
+// Parse every inline APK script so a syntactically broken UI cannot pass adapter tests.
+for (const match of apkHtml.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)) {
+  const script = match[1].trim();
+  if (script) new vm.Script(script, { filename: "apk/app.html:inline-script" });
+}
 const packageJson = JSON.parse(fs.readFileSync("package.json", "utf8"));
 assert.match(packageJson.scripts["copy-web"], /spark-pos-store\.js/);
 

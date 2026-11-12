@@ -311,7 +311,7 @@ jobs:
           AK_RELEASE_KEY_ALIAS: ${{ secrets.AK_RELEASE_KEY_ALIAS }}
         run: |
           KEY_SHA1=$(keytool -list -v -keystore app/ak-release.keystore -storepass "$AK_RELEASE_STORE_PASSWORD" -alias "$AK_RELEASE_KEY_ALIAS" | awk -F': ' '/SHA1:/{gsub(":","",$2); print tolower($2)}')
-          CONFIG_SHA1=$(node -e "const g=require('./google-services.json');const c=(g.client||[]).find(x=>x.client_info?.android_client_info?.package_name==='com.ak.hardware.sales');const o=(c?.oauth_client||[]).find(x=>x.client_type===1&&x.android_info?.package_name==='com.ak.hardware.sales');if(!o)process.exit(1);process.stdout.write(String(o.android_info.certificate_hash||'').toLowerCase())")
+          CONFIG_SHA1=$(node -e "const g=require('../google-services.json');const c=(g.client||[]).find(x=>x.client_info?.android_client_info?.package_name==='com.ak.hardware.sales');const o=(c?.oauth_client||[]).find(x=>x.client_type===1&&x.android_info?.package_name==='com.ak.hardware.sales');if(!o)process.exit(1);process.stdout.write(String(o.android_info.certificate_hash||'').toLowerCase())")
           if [ -z "$KEY_SHA1" ] || [ "$KEY_SHA1" != "$CONFIG_SHA1" ]; then
             echo "Release signing SHA-1 does not match Firebase Android OAuth certificate hash."
             echo "Key SHA-1: $KEY_SHA1"

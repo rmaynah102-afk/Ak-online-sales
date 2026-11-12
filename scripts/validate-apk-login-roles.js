@@ -11,8 +11,8 @@ const health = fs.readFileSync('www/ak-health-monitor.js', 'utf8');
 const checks = [
  ['APK-only source marker', html.includes('class="ak-apk-pos-only"')],
  ['AI diagnostics module bundled in APK', html.includes('ak-health-monitor.js') && health.includes('window.AKHealthMonitor')],
- ['AI diagnostics screen is owner-restricted', html.includes('id="aiMonitor"') && html.includes('id==="aiMonitor"&&! [')===false && html.includes('စနစ်စောင့်ကြည့်ရေးကို Platform Owner သို့မဟုတ် ဆိုင်ရှင်သာ')],
- ['AI diagnostics does not auto-edit business data', health.includes('does not')===false && health.includes('financial')===false && health.includes('Cloud Sync Now')],
+ ['AI diagnostics screen is owner-restricted', health.includes('view.id="aiMonitor"') && html.includes('data-view="aiMonitor"') && html.includes('shop-owner-only")') && html.includes('id==="aiMonitor"')],
+ ['AI diagnostics never edits POS records or licenses', !health.includes('fbStore.collection') && !health.includes('firebase.firestore') && !health.includes('setDoc(') && health.includes('ငွေစာရင်း') && health.includes('လိုင်စင်')],
  ['Platform Owner Gmail in APK', html.includes('const OWNER_EMAIL="'+owner+'";')],
  ['Platform Owner Login option', html.includes('<option value="owner">Platform Owner Login')],
  ['Shop Owner Login option', html.includes('<option value="shop" selected>ဆိုင်ရှင် Login')],

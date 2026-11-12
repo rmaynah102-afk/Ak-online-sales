@@ -1,0 +1,35 @@
+name: Deploy AK Sale Cloudflare Backend
+
+on:
+  push:
+    branches:
+      - ak-cloudflare-backend-deploy
+    paths:
+      - "cloudflare/**"
+      - ".github/workflows/deploy-cloudflare-backend.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy Worker scaffold
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate Worker files
+        run: |
+          test -s cloudflare/worker.js
+          test -s cloudflare/wrangler.toml
+          node --check cloudflare/worker.js
+
+      - name: Deploy to Cloudflare Workers
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: "cloudflare"
+          command: deploy

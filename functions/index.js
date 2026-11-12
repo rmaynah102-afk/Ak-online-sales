@@ -348,7 +348,7 @@ exports.createShopOwnerAccount = functions.https.onCall(async (data, context) =>
     throw new functions.https.HttpsError("invalid-argument", "Password အနည်းဆုံး ၈ လုံးနှင့် အများဆုံး ၁၂၈ လုံး ဖြစ်ရမည်။");
   }
   if (!Object.prototype.hasOwnProperty.call(planPrices, planDays) ||
-      (planDays !== 5 && !/^\\d{4}-\\d{2}-\\d{2}$/.test(expiryDate))) {
+      (planDays !== 5 && !/^\d{4}-\d{2}-\d{2}$/.test(expiryDate))) {
     throw new functions.https.HttpsError("invalid-argument", "Package သို့မဟုတ် သက်တမ်းကုန်ရက် မမှန်ပါ။");
   }
   // Free Trial runs for exactly 120 hours from Owner approval; paid plans use Myanmar local end-of-day.

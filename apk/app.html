@@ -574,15 +574,6 @@ body.ak-staff #productForm button[onclick^="akSendProductToMarket"] {display:non
 <main>
 <nav id="nav" class="no-print"></nav>
 <section id="ownerDashboard" class="view hidden">
-<div class="panel shop-owner-only"><h2>AK Owner Dashboard</h2><p class="muted">မိမိဆိုင်၏ အရောင်းလုပ်ငန်း၊ ဝန်ထမ်းအကောင့်နှင့် ဝင်ခွင့်များကို ဒီနေရာမှ စီမံပါ။ Platform ထိန်းချုပ်မှုများကို Platform Owner သာ မြင်နိုင်သည်။</p>
-<div class="grid stats"><div class="panel"><div class="muted">Owner Account</div><div class="stat" style="font-size:18px">Verified</div></div><div class="panel"><div class="muted">Shop Staff</div><div class="stat" id="akOwnerStaffCount">မဖွင့်သေး</div></div><div class="panel owner-only"><div class="muted">Platform Users</div><div class="stat" id="akOwnerUserCount">—</div></div></div>
-<div class="actions"><button type="button" onclick="go('home')">ဆိုင် POS ပင်မသို့</button><button type="button" class="alt owner-only" onclick="loadPlatformUsers()">Platform ဆိုင်အကောင့်များ စစ်ရန်</button><button type="button" class="alt" disabled>ဝန်ထမ်းစနစ် မဖွင့်သေး</button></div></div>
-<div class="panel shop-owner-only" id="akOwnerPasswordPanel"><h2>ဆိုင်ရှင် / Owner Password ပြောင်းရန်</h2><p class="muted">Owner Gmail ၏ လက်ရှိ Password ကို အတည်ပြုပြီး Password အသစ်သတ်မှတ်ပါ။ Password ကို App ထဲတွင် သိမ်းမထားပါ။</p><div class="grid"><div><label>လက်ရှိ Password</label><input id="akOwnerCurrentPassword" type="password" autocomplete="current-password"></div><div><label>Password အသစ် (အနည်းဆုံး ၈ လုံး)</label><input id="akOwnerNewPassword" type="password" autocomplete="new-password"></div><div><label>Password အသစ် ထပ်ထည့်ပါ</label><input id="akOwnerConfirmPassword" type="password" autocomplete="new-password"></div></div><div class="actions"><button type="button" onclick="akOwnerChangePassword()">Owner Password ပြောင်းမည်</button></div><p id="akOwnerPasswordStatus" class="muted">Owner Account ဖြင့်သာ အသုံးပြုနိုင်သည်။</p></div><div class="panel shop-owner-only" id="akOwnerStaffPanel"><h2>ဆိုင်ရှင် / ဝန်ထမ်း စီမံခန့်ခွဲမှု</h2><p class="notice">ဝန်ထမ်းသည် ကိုယ်ပိုင် Gmail နှင့် Password ဖြင့် Account ဖွင့်ပြီး Email အတည်ပြုပါ။ ဆိုင်ရှင်ထုတ်ပေးသော Merchant Code ကို ပထမဆုံး Login ဝင်ချိန်တွင် ထည့်၍ ဆိုင်နှင့်ချိတ်ဆက်ပါ။</p>
-<div class="grid"><div><label>ဝန်ထမ်း Role</label><select id="akStaffRole"><option value="employee">ဝန်ထမ်း</option><option value="cashier">ငွေကိုင်</option><option value="manager">မန်နေဂျာ</option></select></div></div><div class="notice"><b>ဝန်ထမ်း Dashboard Menu (Owner က နောက်မှလည်း ပြင်နိုင်သည်)</b><div class="grid"><label><input type="checkbox" class="akNewStaffView" value="sales" checked> အရောင်းစင်တာ</label><label><input type="checkbox" class="akNewStaffView" value="reports" checked> အစီရင်ခံစာ</label><label><input type="checkbox" class="akNewStaffView" value="ads" checked> ကြော်ငြာ</label><label><input type="checkbox" class="akNewStaffView" value="people" checked> ကုန်သွင်းသူ</label></div></div>
-<div class="actions"><button type="button" onclick="akCreateStaffInvite()">Merchant Code ထုတ်ပေးရန်</button><button type="button" class="alt" onclick="akLoadStaff()">ဝန်ထမ်းစာရင်း ပြန်ဖတ်ရန်</button></div>
-<div class="notice"><b>အသစ်ထုတ်ပေးသော Merchant Code</b><p id="akStaffInviteCode" style="font-size:22px;font-weight:800;letter-spacing:2px">—</p><button type="button" class="alt" onclick="akCopyStaffInviteCode()">Code ကူးရန်</button><p class="muted">Code တစ်ခုကို တစ်ကြိမ်သာ ချိတ်နိုင်ပြီး ၂၄ နာရီအတွင်း အသုံးပြုပါ။</p></div>
-<p id="akStaffStatus" class="muted">ဝန်ထမ်းအကောင့်အများဆုံး ၃ ခု ထည့်နိုင်သည်။</p>
-<div class="tablewrap"><table><thead><tr><th>ဝန်ထမ်း Gmail</th><th>Role</th><th>Menu ခွင့်ပြုချက် (ပြ/ဖျောက်)</th><th>Print ခွင့်</th><th>Password / Account</th></tr></thead><tbody id="akStaffRows"><tr><td colspan="5">ဝန်ထမ်းစာရင်း မဖတ်ရသေးပါ။</td></tr></tbody></table></div></div>
 <div class="panel owner-only" id="akPlatformShopProvisionPanel">
 <h2>Platform Owner · ဆိုင်ရှင်အကောင့် ဖန်တီး / ခွင့်ပြု</h2>
 <p class="notice">Owner က Gmail၊ Password၊ Package နဲ့ သက်တမ်းကုန်ရက် သတ်မှတ်ပြီး Login Verify နှိပ်ပါ။ အကောင့်ကို Firebase မှာ ဖန်တီး/ပြင်ဆင်ပြီး ဆိုင်ရှင်က သတ်မှတ်ထားတဲ့ Gmail + Password နဲ့ ချက်ချင်း Login ဝင်နိုင်ပါမယ်။ Password ကို စာရင်းထဲ မသိမ်းပါ။</p>
@@ -597,7 +588,16 @@ body.ak-staff #productForm button[onclick^="akSendProductToMarket"] {display:non
 <div class="tablewrap"><table><thead><tr><th>စဉ်</th><th>ဆိုင်ရှင် Gmail</th><th>Password</th><th>Login Verify</th><th>Package / သက်တမ်း</th><th>အခြေအနေ</th></tr></thead><tbody id="akOwnerShopRows"><tr><td colspan="6">စာရင်းဖတ်ရန် နှိပ်ပါ။</td></tr></tbody></table></div>
 </div>
 <div id="akOwnerDashboardPanels"></div></section>
-<section id="home" class="view">
+<section id="userDashboard" class="view hidden">\n<div class="panel shop-owner-only"><h2>User Dashboard</h2><p class="muted">မိမိဆိုင်၏ အရောင်းလုပ်ငန်း၊ ဝန်ထမ်းအကောင့်နှင့် ဝင်ခွင့်များကို ဒီနေရာမှ စီမံပါ။ ဤ Dashboard သည် သင့်ဆိုင်အတွက်သာ ဖြစ်သည်။</p>
+<div class="grid stats"><div class="panel"><div class="muted">Owner Account</div><div class="stat" style="font-size:18px">Verified</div></div><div class="panel"><div class="muted">Shop Staff</div><div class="stat" id="akOwnerStaffCount">မဖွင့်သေး</div></div><div class="panel owner-only"><div class="muted">Platform Users</div><div class="stat" id="akOwnerUserCount">—</div></div></div>
+<div class="actions"><button type="button" onclick="go('home')">ဆိုင် POS ပင်မသို့</button><button type="button" class="alt owner-only" onclick="loadPlatformUsers()">Platform ဆိုင်အကောင့်များ စစ်ရန်</button><button type="button" class="alt" disabled>ဝန်ထမ်းစနစ် မဖွင့်သေး</button></div></div>
+<div class="panel shop-owner-only" id="akOwnerPasswordPanel"><h2>ဆိုင်ရှင် / Owner Password ပြောင်းရန်</h2><p class="muted">Owner Gmail ၏ လက်ရှိ Password ကို အတည်ပြုပြီး Password အသစ်သတ်မှတ်ပါ။ Password ကို App ထဲတွင် သိမ်းမထားပါ။</p><div class="grid"><div><label>လက်ရှိ Password</label><input id="akOwnerCurrentPassword" type="password" autocomplete="current-password"></div><div><label>Password အသစ် (အနည်းဆုံး ၈ လုံး)</label><input id="akOwnerNewPassword" type="password" autocomplete="new-password"></div><div><label>Password အသစ် ထပ်ထည့်ပါ</label><input id="akOwnerConfirmPassword" type="password" autocomplete="new-password"></div></div><div class="actions"><button type="button" onclick="akOwnerChangePassword()">Owner Password ပြောင်းမည်</button></div><p id="akOwnerPasswordStatus" class="muted">Owner Account ဖြင့်သာ အသုံးပြုနိုင်သည်။</p></div><div class="panel shop-owner-only" id="akOwnerStaffPanel"><h2>ဆိုင်ရှင် / ဝန်ထမ်း စီမံခန့်ခွဲမှု</h2><p class="notice">ဝန်ထမ်းသည် ကိုယ်ပိုင် Gmail နှင့် Password ဖြင့် Account ဖွင့်ပြီး Email အတည်ပြုပါ။ ဆိုင်ရှင်ထုတ်ပေးသော Merchant Code ကို ပထမဆုံး Login ဝင်ချိန်တွင် ထည့်၍ ဆိုင်နှင့်ချိတ်ဆက်ပါ။</p>
+<div class="grid"><div><label>ဝန်ထမ်း Role</label><select id="akStaffRole"><option value="employee">ဝန်ထမ်း</option><option value="cashier">ငွေကိုင်</option><option value="manager">မန်နေဂျာ</option></select></div></div><div class="notice"><b>ဝန်ထမ်း Dashboard Menu (Owner က နောက်မှလည်း ပြင်နိုင်သည်)</b><div class="grid"><label><input type="checkbox" class="akNewStaffView" value="sales" checked> အရောင်းစင်တာ</label><label><input type="checkbox" class="akNewStaffView" value="reports" checked> အစီရင်ခံစာ</label><label><input type="checkbox" class="akNewStaffView" value="ads" checked> ကြော်ငြာ</label><label><input type="checkbox" class="akNewStaffView" value="people" checked> ကုန်သွင်းသူ</label></div></div>
+<div class="actions"><button type="button" onclick="akCreateStaffInvite()">Merchant Code ထုတ်ပေးရန်</button><button type="button" class="alt" onclick="akLoadStaff()">ဝန်ထမ်းစာရင်း ပြန်ဖတ်ရန်</button></div>
+<div class="notice"><b>အသစ်ထုတ်ပေးသော Merchant Code</b><p id="akStaffInviteCode" style="font-size:22px;font-weight:800;letter-spacing:2px">—</p><button type="button" class="alt" onclick="akCopyStaffInviteCode()">Code ကူးရန်</button><p class="muted">Code တစ်ခုကို တစ်ကြိမ်သာ ချိတ်နိုင်ပြီး ၂၄ နာရီအတွင်း အသုံးပြုပါ။</p></div>
+<p id="akStaffStatus" class="muted">ဝန်ထမ်းအကောင့်အများဆုံး ၃ ခု ထည့်နိုင်သည်။</p>
+<div class="tablewrap"><table><thead><tr><th>ဝန်ထမ်း Gmail</th><th>Role</th><th>Menu ခွင့်ပြုချက် (ပြ/ဖျောက်)</th><th>Print ခွင့်</th><th>Password / Account</th></tr></thead><tbody id="akStaffRows"><tr><td colspan="5">ဝန်ထမ်းစာရင်း မဖတ်ရသေးပါ။</td></tr></tbody></table></div></div>
+</section>\n<section id="home" class="view">
 <div class="grid stats">
 <div class="panel"><div class="muted">ယနေ့အရောင်း</div><div class="stat" id="kSales">0</div></div>
 <div class="panel"><div class="muted">ယနေ့အမြတ် (ခန့်မှန်း)</div><div class="stat" id="kProfit">0</div></div>
@@ -927,15 +927,13 @@ function akApplyRoleNavigation(){
   const id=btn.dataset.view;
   if(staff)btn.hidden=!staffAllowed.includes(id);
   else if(role==="platform-owner")btn.hidden=!platformAllowed.includes(id);
-  else btn.hidden=false;
+  else if(role==="shop-owner")btn.hidden=id==="ownerDashboard";
+  else btn.hidden=!["account","market","home"].includes(id);
  });
  const ownerBtn=document.querySelector('#nav button[data-view="ownerDashboard"]');
- if(ownerBtn){
-  ownerBtn.classList.remove("shop-owner-only","hidden");
-  ownerBtn.hidden=!["shop-owner","platform-owner"].includes(role);
-  const label=role==="platform-owner"?"Owner Control Center":"User Dashboard";
-  ownerBtn.textContent=label;ownerBtn.title=label;ownerBtn.setAttribute("aria-label",label);
- }
+ if(ownerBtn){ownerBtn.classList.remove("shop-owner-only","hidden");ownerBtn.hidden=role!=="platform-owner";ownerBtn.textContent="Owner Control Center";ownerBtn.title="Owner Control Center";ownerBtn.setAttribute("aria-label","Owner Control Center");}
+ const userBtn=document.querySelector('#nav button[data-view="userDashboard"]');
+ if(userBtn){userBtn.hidden=role!=="shop-owner";userBtn.textContent="User Dashboard";userBtn.title="User Dashboard";userBtn.setAttribute("aria-label","User Dashboard");}
  const staffManage=document.querySelector('#nav button[data-view="staffManagement"]');
  if(staffManage)staffManage.hidden=role!=="shop-owner";
 }
@@ -999,7 +997,7 @@ function persist(){
   akCheckBrowserStorage();akUpdateConnectionUI();
  }catch(e){$("saveState").textContent="သိမ်းဆည်းမှု မအောင်မြင်";alert("ဖုန်းထဲသိမ်းမရပါ။ Storage ပြည့်နေနိုင်သည်။ Backup JSON ထုတ်ပြီး ဓာတ်ပုံ/မလိုအပ်သောဖိုင်များ လျှော့ပါ။");console.error("AK local save failed",e)}
 }
-const pages=[["ownerDashboard","Owner Dashboard"],["account","Login / Register"],["payment","ငွေပေးချေမှု"],["staffJoin","Merchant Code"],["staffManagement","ဝန်ထမ်းစီမံမှု"],["home","ပင်မ"],["products","ပစ္စည်း"],["sales","အရောင်း"],["purchases","အဝယ်"],["people","Customer/Supplier"],["expenses","အသုံးစရိတ်"],["reports","အစီရင်ခံစာ"],["ads","ကြော်ငြာ"],["market","AK Market"],["centerManagement","စင်တာထိန်းချုပ်မှု"],["backup","Backup / Settings"]];
+const pages=[["ownerDashboard","Owner Control Center"],["userDashboard","User Dashboard"],["account","Login / Register"],["payment","ငွေပေးချေမှု"],["staffJoin","Merchant Code"],["staffManagement","ဝန်ထမ်းစီမံမှု"],["home","ပင်မ"],["products","ပစ္စည်း"],["sales","အရောင်း"],["purchases","အဝယ်"],["people","Customer/Supplier"],["expenses","အသုံးစရိတ်"],["reports","အစီရင်ခံစာ"],["ads","ကြော်ငြာ"],["market","AK Market"],["centerManagement","စင်တာထိန်းချုပ်မှု"],["backup","Backup / Settings"]];
 $("nav").innerHTML=pages.map(([id,n])=>'<button type="button" data-view="'+id+'" aria-label="'+n+'" title="'+n+'" onclick="go(\''+id+'\')">'+n+'</button>').join("");
 document.querySelector('#nav [data-view="ownerDashboard"]')?.classList.add("owner-role-nav");
 /* AK_ACCOUNT_SEPARATION_V2 — keep login, package access, staff join and owner controls in separate views. */
@@ -1069,7 +1067,8 @@ akApplyLanguage();
 function go(id){
  if(["staffManagement"].includes(id)&&akUserRole!=="shop-owner"){alert("ဝန်ထမ်းစီမံမှုကို ဆိုင်ရှင်သာ အသုံးပြုနိုင်သည်။");id="account"}
  
- if(id==="ownerDashboard"&&!["shop-owner","platform-owner"].includes(akUserRole)){alert("ဆိုင်ရှင်အကောင့်ဖြင့်သာ ဝင်နိုင်သည်။");id="account"}
+ if(id==="ownerDashboard"&&akUserRole!=="platform-owner"){alert("Platform Owner သာ ဝင်နိုင်သည်။");id="account"}
+ if(id==="userDashboard"&&akUserRole!=="shop-owner"){alert("ဆိုင်ရှင်အကောင့်ဖြင့်သာ ဝင်နိုင်သည်။");id="account"}
  if(["manager","cashier","employee"].includes(akUserRole)){const allowed=akStaffAllowedViews;if(!allowed.includes(id)){id=allowed[0]||"account"}}
  if(akUserRole==="platform-owner"&&!["home","ownerDashboard","account","market"].includes(id)){alert("Platform Owner အတွက် ထိန်းချုပ်ရေးစင်တာနှင့် User Dashboard သာ ဖွင့်ထားသည်။");id="ownerDashboard"}
  const publicViews=["backup","market","account","payment","staffJoin"];
@@ -1092,7 +1091,7 @@ function go(id){
  if(activeNav&&window.matchMedia("(max-width: 650px)").matches)activeNav.scrollIntoView({block:"nearest",inline:"nearest",behavior:"smooth"});
  renderAll();
  if(id==="ownerDashboard"&&akIsPlatformOwner()){loadAdminAccessRequests();loadPlatformUsers();}
- if(id==="ownerDashboard"&&akUserRole==="shop-owner"){akLoadStaff();}
+ if(id==="userDashboard"&&akUserRole==="shop-owner"){akLoadStaff();}
  if(id==="sales"){
   const scanInput=document.getElementById("saleBarcodeInput");
   if(scanInput)requestAnimationFrame(()=>scanInput.focus());
@@ -2066,7 +2065,7 @@ async function firebaseConnect(){try{let rawConfig=window.AK_FIREBASE_PUBLIC_CON
   if(!migration.data?.ok)throw Error("ဆိုင်ဒေတာကို Shared Workspace သို့ မရွှေ့နိုင်ပါ။");
   akWorkspaceRevision=Number(migration.data.revision||1);
  }
-}localStorage.setItem(key,JSON.stringify(db));akCloudConflict=false;akLocalDirty=false;cloudReady=true;akSetLicenseGate(true,isOwnerAccount?"Platform Owner · Free Firestore Mode":currentLicense?.plan==="free-beta"?"Free Beta · ကိုယ်ပိုင်ဆိုင်ဒေတာ":"ဆိုင် Subscription အတည်ပြုပြီးပါပြီ။");if(!isOwnerAccount&&!isStaff&&currentLicense?.plan==="free-beta")akWatchFreeBetaAccess(user.uid);startAkCloudSync();renderAll();if(isStaff)go(akStaffAllowedViews[0]||"account");if(["shop-owner","platform-owner"].includes(akUserRole)){if(isOwnerAccount)akInitOwnerDashboard();go("ownerDashboard");void akLoadStaff();if(isOwnerAccount){void loadPlatformUsers();void akWatchAdminAccessRequests()}}if(window.cmCloudLoad){try{await window.cmCloudLoad()}catch(cmError){console.warn("Center cloud load did not block Owner Dashboard:",cmError)}}if(authGeneration!==akAuthGeneration)return;}catch(e){if(authGeneration!==akAuthGeneration)return;cloudReady=false;console.error("AK workspace startup failed",e);if(isOwnerAccount){akSetLicenseGate(true,"Platform Owner · Cloud Workspace ချိတ်ဆက်မှု မရသေးပါ။ Dashboard ကို ဆက်ဖွင့်ထားသည်။");renderAll();akInitOwnerDashboard();go("ownerDashboard");$("fbStatus").textContent="Owner Dashboard ဖွင့်ပြီးပါပြီ။ Cloud POS Sync မရသေးပါ: "+(e.message||e)+" · ဝန်ထမ်းစီမံမှုအတွက် Server Functions ချိတ်ဆက်မှု လိုအပ်သည်။";void akLoadStaff();void loadPlatformUsers();void akWatchAdminAccessRequests()}else{akSetLicenseGate(false,"Cloud / License စစ်ဆေးမှု မအောင်မြင်ပါ။ Internet ပြန်ချိတ်ပြီး Gmail နှင့် Subscription ကို ပြန်စစ်ပါ။ လုံခြုံရေးအတွက် POS ကို ပိတ်ထားသည်။");$("fbStatus").textContent="Offline Local Mode — Cloud ချိတ်ဆက်မှု မရပါ: "+e.message;renderAll()}}})}$("fbStatus").textContent="Firebase ချိတ်ပြီးပါပြီ။ Email နှင့် Password ဖြင့် Login ဝင်ပါ။";if(typeof loadMarket==="function")void Promise.resolve().then(()=>loadMarket()).catch(error=>console.warn("Market background load skipped:",error))}catch(e){akSetLicenseGate(false,"Firebase ချိတ်ဆက်မှု မရပါ။ Gmail / Internet ကို စစ်ပြီး ပြန်ချိတ်ပါ။ လုံခြုံရေးအတွက် POS ကို ပိတ်ထားသည်။");cloudReady=false;$("fbStatus").textContent="Offline Local Mode — Firebase ချိတ်ဆက်မှု မအောင်မြင်: "+e.message;console.error(e);renderAll()}}
+}localStorage.setItem(key,JSON.stringify(db));akCloudConflict=false;akLocalDirty=false;cloudReady=true;akSetLicenseGate(true,isOwnerAccount?"Platform Owner · Free Firestore Mode":currentLicense?.plan==="free-beta"?"Free Beta · ကိုယ်ပိုင်ဆိုင်ဒေတာ":"ဆိုင် Subscription အတည်ပြုပြီးပါပြီ။");if(!isOwnerAccount&&!isStaff&&currentLicense?.plan==="free-beta")akWatchFreeBetaAccess(user.uid);startAkCloudSync();renderAll();if(isStaff)go(akStaffAllowedViews[0]||"account");if(akUserRole==="shop-owner"){go("userDashboard");void akLoadStaff()}if(akUserRole==="platform-owner"){akInitOwnerDashboard();go("ownerDashboard");void loadPlatformUsers();void akWatchAdminAccessRequests()}if(window.cmCloudLoad){try{await window.cmCloudLoad()}catch(cmError){console.warn("Center cloud load did not block Owner Dashboard:",cmError)}}if(authGeneration!==akAuthGeneration)return;}catch(e){if(authGeneration!==akAuthGeneration)return;cloudReady=false;console.error("AK workspace startup failed",e);if(isOwnerAccount){akSetLicenseGate(true,"Platform Owner · Cloud Workspace ချိတ်ဆက်မှု မရသေးပါ။ Dashboard ကို ဆက်ဖွင့်ထားသည်။");renderAll();akInitOwnerDashboard();go("ownerDashboard");$("fbStatus").textContent="Owner Dashboard ဖွင့်ပြီးပါပြီ။ Cloud POS Sync မရသေးပါ: "+(e.message||e)+" · ဝန်ထမ်းစီမံမှုအတွက် Server Functions ချိတ်ဆက်မှု လိုအပ်သည်။";void akLoadStaff();void loadPlatformUsers();void akWatchAdminAccessRequests()}else{akSetLicenseGate(false,"Cloud / License စစ်ဆေးမှု မအောင်မြင်ပါ။ Internet ပြန်ချိတ်ပြီး Gmail နှင့် Subscription ကို ပြန်စစ်ပါ။ လုံခြုံရေးအတွက် POS ကို ပိတ်ထားသည်။");$("fbStatus").textContent="Offline Local Mode — Cloud ချိတ်ဆက်မှု မရပါ: "+e.message;renderAll()}}})}$("fbStatus").textContent="Firebase ချိတ်ပြီးပါပြီ။ Email နှင့် Password ဖြင့် Login ဝင်ပါ။";if(typeof loadMarket==="function")void Promise.resolve().then(()=>loadMarket()).catch(error=>console.warn("Market background load skipped:",error))}catch(e){akSetLicenseGate(false,"Firebase ချိတ်ဆက်မှု မရပါ။ Gmail / Internet ကို စစ်ပြီး ပြန်ချိတ်ပါ။ လုံခြုံရေးအတွက် POS ကို ပိတ်ထားသည်။");cloudReady=false;$("fbStatus").textContent="Offline Local Mode — Firebase ချိတ်ဆက်မှု မအောင်မြင်: "+e.message;console.error(e);renderAll()}}
 function akSetLoginMode(){
  const mode=$("akLoginMode")?.value||"shop",ownerMode=mode==="owner";
  const wrap=$("akStaffLoginCodeWrap"),packageWrap=$("akLoginPackageWrap"),accountWrap=$("akAccountTypeWrap"),hint=$("akLoginModeHint"),reg=$("akRegisterButton");

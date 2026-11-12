@@ -15,7 +15,7 @@ function replaceExactly(oldText, newText, expected = 1) {
 const root = '<html lang="my">';
 if (!html.startsWith('<!DOCTYPE html>\n' + root)) throw new Error('Unexpected APK HTML root; refusing to patch the wrong source.');
 html = html.replace(root, '<html lang="my" class="ak-apk-pos-only">');
-replaceExactly('<title>AK Market | မြန်မာ့ Online Shopping ဈေးကွက်</title>', '<title>AK Sale Software · Hardware & Electrical POS</title>');
+replaceExactly('<title>AK Sale Software | Hardware & Electrical POS</title>', '<title>AK Sale Software · Hardware & Electrical POS</title>');
 replaceExactly('const publicMode=params.get("market")==="1" && params.get("app")!=="1";', 'const publicMode=false; /* APK POS edition: public Market is website-only. */');
 replaceExactly('if(new URLSearchParams(location.search).get("market")==="1")document.documentElement.classList.add("ak-public-market");', '/* APK POS edition: ignore public Market query parameters. */');
 replaceExactly('const publicViews=["backup","market","account","payment","staffJoin"];', 'const publicViews=["backup","account","payment","staffJoin"];');

@@ -1,0 +1,35 @@
+name: Deploy AK Sale Owner and Staff Functions
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/ak-main-apk-login-v2'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout APK branch
+        uses: actions/checkout@v4
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_AK_ONLIN_SALES }}
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install Firebase CLI
+        run: npm install --global firebase-tools
+      - name: Install and validate Functions
+        run: |
+          npm --prefix functions install --package-lock=false
+          node --check functions/index.js
+      - name: Deploy only AK account, staff and shop-workspace functions
+        run: >-
+          firebase deploy
+          --only functions:createShopOwnerAccount,functions:listPlatformUsers,functions:verifyShopOwnerLogin,functions:createShopInviteCode,functions:claimShopInviteCode,functions:listShopStaff,functions:setShopStaffViews,functions:loadShopWorkspace,functions:saveShopWorkspace
+          --project ak-onlin-sales
+          --non-interactive

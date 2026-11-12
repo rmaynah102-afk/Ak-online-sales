@@ -6,6 +6,7 @@ on:
     paths:
       - 'firestore.rules'
       - 'tests/firestore/**'
+      - 'apk/spark-pos-store.js'
       - '.github/workflows/firestore-rules-tests.yml'
   push:
     branches: [ak-free-backend-migration]
@@ -32,6 +33,8 @@ jobs:
           java-version: '21'
       - name: Install isolated test dependencies
         run: npm --prefix tests/firestore install
+      - name: Run Spark POS adapter unit tests
+        run: node tests/firestore/spark-pos-store.test.js
       - name: Run Firestore emulator security tests
         run: |
           ./tests/firestore/node_modules/.bin/firebase emulators:exec \

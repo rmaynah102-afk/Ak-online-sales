@@ -62,6 +62,14 @@ describe('AK Sale Firestore security baseline', function () {
     await testEnv.clearFirestore();
   });
 
+  it('allows an authenticated user to check their own missing staff membership', async () => {
+    const db = testEnv.authenticatedContext('new-user', {
+      email: 'new-user@example.com', email_verified: true,
+    }).firestore();
+    await assertSucceeds(getDoc(doc(db, 'shopMembers', 'new-user')));
+    await assertFails(getDoc(doc(db, 'shopMembers', 'another-user')));
+  });
+
   it('denies anonymous access to private POS data', async () => {
     await seedPrivateData('shop-a');
     const db = testEnv.unauthenticatedContext().firestore();

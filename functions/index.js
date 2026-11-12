@@ -769,7 +769,7 @@ exports.createShopInviteCode = functions.https.onCall(async (data, context) => {
   const role = String(data.role || "employee").trim().toLowerCase();
   const allowedViews = ["sales", "reports", "ads", "people"];
   const requestedViews = Array.isArray(data.allowedViews) ? [...new Set(data.allowedViews.map(x => String(x)))] : allowedViews;
-  if (!SHOP_STAFF_ROLES.includes(role) ||
+  if (!SHOP_STAFF_ROLES.includes(role) || !requestedViews.length ||
       requestedViews.some(view => !allowedViews.includes(view))) {
     throw new functions.https.HttpsError("invalid-argument", "ဝန်ထမ်းရာထူး သို့မဟုတ် Menu ခွင့်ပြုချက် မမှန်ပါ။");
   }
@@ -870,7 +870,7 @@ exports.setShopStaffViews = functions.https.onCall(async (data, context) => {
   const memberUid = String(data.memberUid || "").trim();
   const allowed = ["sales", "reports", "ads", "people"];
   const requested = Array.isArray(data.allowedViews) ? [...new Set(data.allowedViews.map(x => String(x)))] : [];
-  if (!memberUid || memberUid === ownerUid || memberUid.length > 128 ||
+  if (!memberUid || memberUid === ownerUid || memberUid.length > 128 || !requested.length ||
       requested.some(view => !allowed.includes(view))) {
     throw new functions.https.HttpsError("invalid-argument", "ဝန်ထမ်း Menu ခွင့်ပြုချက် မမှန်ပါ။");
   }
@@ -1181,7 +1181,7 @@ async function workspaceIdentity(context) {
   return {shopId:ownerUid,role:"owner",isOwner:true};
 }
 async function verifyWorkspaceMember(context, identity) {
-  if (identity.isOwner) return;
+  if (identity.isOwner) return identity;
   const member=await db.collection("shopMembers").doc(context.auth.uid).get();
   if (!member.exists || member.data().shopId!==identity.shopId ||
       member.data().role!==identity.role) {
@@ -1193,17 +1193,32 @@ async function verifyWorkspaceMember(context, identity) {
       l.expiresAt.toMillis()<=Date.now()) {
     throw new functions.https.HttpsError("permission-denied","ဆိုင် Subscription သက်တမ်း မရှိပါ။");
   }
+  const validViews=["sales","reports","ads","people"];
+  const views=Array.isArray(member.data().allowedViews)
+    ? [...new Set(member.data().allowedViews.map(String).filter(x=>validViews.includes(x)))]
+    : validViews;
+  if (!views.length) throw new functions.https.HttpsError("permission-denied","ဆိုင်ရှင်က ဝန်ထမ်း Menu ခွင့်ပြုချက် မပေးရသေးပါ။");
+  identity.allowedViews=views;
+  return identity;
 }
-function workspaceCanWrite(role,key) {
-  if (role==="owner") return true;
-  if (role==="manager") return false;
-  if (role==="cashier") return ["products","sales","payments","people"].includes(key);
-  if (role==="employee") return ["products","sales","payments","people"].includes(key);
+function workspaceCanWrite(identity,key) {
+  if (identity.role==="owner") return true;
+  if (identity.role==="manager") return false;
+  const views=identity.allowedViews||[];
+  if (["cashier","employee"].includes(identity.role)) {
+    if (key==="products") return views.includes("sales");
+    if (key==="sales" || key==="payments") return views.includes("sales");
+    if (key==="people") return views.includes("people");
+  }
   return false;
 }
-function workspaceCanRead(role,key) {
-  if (role==="owner" || role==="manager") return true;
-  if (role==="cashier" || role==="employee") return ["products","sales","people","payments"].includes(key);
+function workspaceCanRead(identity,key) {
+  if (identity.role==="owner") return true;
+  const views=identity.allowedViews||[];
+  if (key==="products") return views.includes("sales")||views.includes("ads");
+  if (key==="sales" || key==="payments") return views.includes("sales")||views.includes("reports");
+  if (key==="purchases" || key==="expenses") return views.includes("reports");
+  if (key==="people") return views.includes("people");
   return false;
 }
 function workspaceDocId(value,index) {
@@ -1218,7 +1233,7 @@ exports.loadShopWorkspace = functions.https.onCall(async (data,context)=>{
   const meta=metaSnap.exists?metaSnap.data():{};
   const pointers=meta.collections||{};
   const result={shop:{},centerManagement:null};
-  const readableKeys=WORKSPACE_ARRAYS.filter(key=>workspaceCanRead(identity.role,key));
+  const readableKeys=WORKSPACE_ARRAYS.filter(key=>workspaceCanRead(identity,key));
   await Promise.all(readableKeys.map(async key=>{
     const version=pointers[key];
     if (!version) { result[key]=[]; return; }
@@ -1229,7 +1244,7 @@ exports.loadShopWorkspace = functions.https.onCall(async (data,context)=>{
       ? records.filter(record=>record && record.type==="supplier")
       : records;
   }));
-  if (identity.role==="owner"||identity.role==="manager") {
+  if (identity.role==="owner") {
     result.shop=meta.shop||{};
     result.centerManagement=meta.centerManagement||null;
   }
@@ -1252,7 +1267,7 @@ exports.saveShopWorkspace = functions.https.onCall(async (data,context)=>{
   const pointers={...(oldMeta.collections||{})};
   const changed={};
   for (const key of WORKSPACE_ARRAYS) {
-    if (!workspaceCanWrite(identity.role,key) || !Object.prototype.hasOwnProperty.call(input,key)) continue;
+    if (!workspaceCanWrite(identity,key) || !Object.prototype.hasOwnProperty.call(input,key)) continue;
     if (!Array.isArray(input[key])) throw new functions.https.HttpsError("invalid-argument",key+" စာရင်းပုံစံ မမှန်ပါ။");
     if (input[key].length>100000) throw new functions.https.HttpsError("resource-exhausted",key+" စာရင်းသည် လက်ရှိ request အရွယ်အစားထက် ကျော်နေသည်။");
     if (key==="products" && ["cashier","employee"].includes(identity.role)) {

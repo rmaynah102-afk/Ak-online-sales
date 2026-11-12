@@ -322,11 +322,11 @@ describe('AK Sale Firestore security baseline', function () {
     const db = testEnv.authenticatedContext('cashier-a', {
       email: 'cashier-a@example.com', email_verified: true,
     }).firestore();
-    await assertSucceeds(getDoc(doc(db, 'shops', 'shop-a', 'pos', 'products', 'p1')));
-    await assertFails(setDoc(doc(db, 'shops', 'shop-a', 'pos', 'products', 'p1'), { name: 'Hammer' }));
-    await assertSucceeds(setDoc(doc(db, 'shops', 'shop-a', 'pos', 'sales', 's1'), { total: 1000 }));
-    await assertFails(setDoc(doc(db, 'shops', 'shop-a', 'pos', 'expenses', 'e1'), { amount: 500 }));
-    await assertFails(setDoc(doc(db, 'shops', 'shop-a', 'pos', 'settings', 'main'), { currency: 'MMK' }));
+    await assertSucceeds(getDoc(doc(db, 'shops', 'shop-a', 'pos', 'products', 'records', 'p1')));
+    await assertFails(setDoc(doc(db, 'shops', 'shop-a', 'pos', 'products', 'records', 'p1'), { name: 'Hammer' }));
+    await assertSucceeds(setDoc(doc(db, 'shops', 'shop-a', 'pos', 'sales', 'records', 's1'), { total: 1000 }));
+    await assertFails(setDoc(doc(db, 'shops', 'shop-a', 'pos', 'expenses', 'records', 'e1'), { amount: 500 }));
+    await assertFails(setDoc(doc(db, 'shops', 'shop-a', 'pos', 'settings', 'records', 'main'), { currency: 'MMK' }));
   });
 
   it('allows manager inventory and expense writes but denies cross-tenant access', async () => {
@@ -336,10 +336,10 @@ describe('AK Sale Firestore security baseline', function () {
     const db = testEnv.authenticatedContext('manager-a', {
       email: 'manager-a@example.com', email_verified: true,
     }).firestore();
-    await assertSucceeds(setDoc(doc(db, 'shops', 'shop-a', 'pos', 'products', 'p1'), { name: 'Hammer' }));
-    await assertSucceeds(setDoc(doc(db, 'shops', 'shop-a', 'pos', 'expenses', 'e1'), { amount: 500 }));
-    await assertFails(getDoc(doc(db, 'shops', 'shop-b', 'pos', 'products', 'p1')));
-    await assertFails(setDoc(doc(db, 'shops', 'shop-a', 'pos', 'settings', 'main'), { currency: 'MMK' }));
+    await assertSucceeds(setDoc(doc(db, 'shops', 'shop-a', 'pos', 'products', 'records', 'p1'), { name: 'Hammer' }));
+    await assertSucceeds(setDoc(doc(db, 'shops', 'shop-a', 'pos', 'expenses', 'records', 'e1'), { amount: 500 }));
+    await assertFails(getDoc(doc(db, 'shops', 'shop-b', 'pos', 'products', 'records', 'p1')));
+    await assertFails(setDoc(doc(db, 'shops', 'shop-a', 'pos', 'settings', 'records', 'main'), { currency: 'MMK' }));
   });
 
   it('denies POS collection access to staff after shop license expiry', async () => {
@@ -358,8 +358,8 @@ describe('AK Sale Firestore security baseline', function () {
     const db = testEnv.authenticatedContext('cashier-a', {
       email: 'cashier-a@example.com', email_verified: true,
     }).firestore();
-    await assertFails(getDoc(doc(db, 'shops', 'shop-a', 'pos', 'products', 'p1')));
-    await assertFails(setDoc(doc(db, 'shops', 'shop-a', 'pos', 'sales', 's1'), { total: 1000 }));
+    await assertFails(getDoc(doc(db, 'shops', 'shop-a', 'pos', 'products', 'records', 'p1')));
+    await assertFails(setDoc(doc(db, 'shops', 'shop-a', 'pos', 'sales', 'records', 's1'), { total: 1000 }));
   });
 
   it('allows shop owner to revoke a staff member and release their slot', async () => {

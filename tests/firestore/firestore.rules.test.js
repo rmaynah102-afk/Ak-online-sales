@@ -10,6 +10,8 @@ const {
   doc,
   getDoc,
   setDoc,
+  deleteDoc,
+  writeBatch,
   Timestamp,
 } = require('firebase/firestore');
 
@@ -156,23 +158,116 @@ describe('AK Sale Firestore security baseline', function () {
     }));
   });
 
-  it('allows a staff member to read their own membership, but not another member record', async () => {
+  async function seedInvite(shopId, code, role = 'cashier', days = 1) {
     await testEnv.withSecurityRulesDisabled(async (context) => {
-      await setDoc(doc(context.firestore(), 'shopMembers', 'staff-a'), {
-        shopId: 'shop-a',
-        role: 'cashier',
-      });
-      await setDoc(doc(context.firestore(), 'shopMembers', 'staff-b'), {
-        shopId: 'shop-b',
-        role: 'cashier',
+      await setDoc(doc(context.firestore(), 'shopInvites', code), {
+        shopId, role, status: 'open', createdAt: Timestamp.now(),
+        expiresAt: futureTimestamp(days), createdBy: shopId,
       });
     });
+  }
 
-    const db = testEnv.authenticatedContext('staff-a', {
-      email: 'staff-a@example.com',
-      email_verified: true,
+  async function claimInvite(staffUid, email, shopId, code, slot = 1, role = 'cashier') {
+    const db = testEnv.authenticatedContext(staffUid, {
+      email, email_verified: true,
     }).firestore();
+    const slotId = shopId + '_' + slot;
+    const batch = writeBatch(db);
+    batch.set(doc(db, 'shopMembers', staffUid), {
+      shopId, role, status: 'active', email, createdAt: Timestamp.now(),
+      createdBy: shopId, inviteCode: code, slotId, canPrint: false,
+    });
+    batch.set(doc(db, 'shopStaffSlots', slotId), {
+      shopId, uid: staffUid, slot, inviteCode: code, createdAt: Timestamp.now(),
+    });
+    batch.update(doc(db, 'shopInvites', code), {
+      status: 'claimed', claimedBy: staffUid, claimedAt: Timestamp.now(),
+    });
+    await batch.commit();
+    return db;
+  }
+
+  it('allows staff to claim a one-time invite atomically without custom claims', async () => {
+    await seedLicense('shop-a');
+    await seedInvite('shop-a', '0123456789ABCDEF0123456789ABCDEF');
+    const db = await claimInvite('staff-a', 'staff-a@example.com', 'shop-a',
+      '0123456789ABCDEF0123456789ABCDEF');
     await assertSucceeds(getDoc(doc(db, 'shopMembers', 'staff-a')));
+    await assertSucceeds(getDoc(doc(db, 'shops', 'shop-a', 'workspace', 'current')));
+  });
+
+  it('denies a second claim using an already claimed invite', async () => {
+    await seedLicense('shop-a');
+    await seedInvite('shop-a', '0123456789ABCDEF0123456789ABCDEF');
+    await claimInvite('staff-a', 'staff-a@example.com', 'shop-a',
+      '0123456789ABCDEF0123456789ABCDEF');
+    await assertFails(claimInvite('staff-b', 'staff-b@example.com', 'shop-a',
+      '0123456789ABCDEF0123456789ABCDEF', 2));
+  });
+
+  it('denies staff invite claims when the shop license is expired', async () => {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), 'licenses', 'shop-a'), {
+        uid: 'shop-a', status: 'active',
+        expiresAt: Timestamp.fromMillis(Date.now() - 60_000), plan: '30-days',
+      });
+      await setDoc(doc(context.firestore(), 'shopInvites', '0123456789ABCDEF0123456789ABCDEF'), {
+        shopId: 'shop-a', role: 'cashier', status: 'open',
+        createdAt: Timestamp.now(), expiresAt: futureTimestamp(), createdBy: 'shop-a',
+      });
+    });
+    await assertFails(claimInvite('staff-a', 'staff-a@example.com', 'shop-a',
+      '0123456789ABCDEF0123456789ABCDEF'));
+  });
+
+  it('enforces the three staff slot maximum', async () => {
+    await seedLicense('shop-a');
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      const db = context.firestore();
+      for (let n = 1; n <= 3; n++) {
+        await setDoc(doc(db, 'shopStaffSlots', 'shop-a_' + n), {
+          shopId: 'shop-a', uid: 'existing-' + n, slot: n,
+          inviteCode: 'seed' + n, createdAt: Timestamp.now(),
+        });
+      }
+    });
+    const ownerDb = testEnv.authenticatedContext('shop-a', {
+      email: 'shop-a@example.com', email_verified: true,
+    }).firestore();
+    await assertFails(setDoc(doc(ownerDb, 'shopInvites', 'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF'), {
+      shopId: 'shop-a', role: 'cashier', status: 'open',
+      createdAt: Timestamp.now(), expiresAt: futureTimestamp(1), createdBy: 'shop-a',
+    }));
+  });
+
+  it('denies unverified email and cross-tenant staff membership access', async () => {
+    await seedLicense('shop-a');
+    await seedLicense('shop-b');
+    await seedInvite('shop-a', '0123456789ABCDEF0123456789ABCDEF');
+    const unverified = testEnv.authenticatedContext('staff-a', {
+      email: 'staff-a@example.com', email_verified: false,
+    }).firestore();
+    await assertFails(setDoc(doc(unverified, 'shopMembers', 'staff-a'), {
+      shopId: 'shop-a', role: 'cashier', status: 'active',
+      email: 'staff-a@example.com', createdAt: Timestamp.now(),
+      createdBy: 'shop-a', inviteCode: '0123456789ABCDEF0123456789ABCDEF',
+      slotId: 'shop-a_1', canPrint: false,
+    }));
+    const db = await claimInvite('staff-a', 'staff-a@example.com', 'shop-a',
+      '0123456789ABCDEF0123456789ABCDEF');
     await assertFails(getDoc(doc(db, 'shopMembers', 'staff-b')));
+    await assertFails(getDoc(doc(db, 'shops', 'shop-b', 'workspace', 'current')));
+  });
+
+  it('allows shop owner to revoke a staff member and release their slot', async () => {
+    await seedLicense('shop-a');
+    await seedInvite('shop-a', '0123456789ABCDEF0123456789ABCDEF');
+    await claimInvite('staff-a', 'staff-a@example.com', 'shop-a',
+      '0123456789ABCDEF0123456789ABCDEF');
+    const ownerDb = testEnv.authenticatedContext('shop-a', {
+      email: 'shop-a@example.com', email_verified: true,
+    }).firestore();
+    await assertSucceeds(deleteDoc(doc(ownerDb, 'shopMembers', 'staff-a')));
+    await assertSucceeds(deleteDoc(doc(ownerDb, 'shopStaffSlots', 'shop-a_1')));
   });
 });

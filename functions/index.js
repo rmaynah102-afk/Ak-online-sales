@@ -1198,7 +1198,7 @@ function workspaceCanWrite(role,key) {
   if (role==="owner") return true;
   if (role==="manager") return false;
   if (role==="cashier") return ["products","sales","payments","people"].includes(key);
-  if (role==="employee") return ["products","sales","payments"].includes(key);
+  if (role==="employee") return ["products","sales","payments","people"].includes(key);
   return false;
 }
 function workspaceCanRead(role,key) {
@@ -1224,7 +1224,10 @@ exports.loadShopWorkspace = functions.https.onCall(async (data,context)=>{
     if (!version) { result[key]=[]; return; }
     const snap=await db.collection("shops").doc(identity.shopId)
       .collection("workspaceVersions").doc(version).collection(key).get();
-    result[key]=snap.docs.map(d=>d.data().record);
+    const records=snap.docs.map(d=>d.data().record);
+    result[key]=key==="people" && identity.role!=="owner"
+      ? records.filter(record=>record && record.type==="supplier")
+      : records;
   }));
   if (identity.role==="owner"||identity.role==="manager") {
     result.shop=meta.shop||{};
@@ -1265,6 +1268,18 @@ exports.saveShopWorkspace = functions.https.onCall(async (data,context)=>{
           throw new functions.https.HttpsError("permission-denied","ဝန်ထမ်းသည် ပစ္စည်းဈေးနှုန်း/အချက်အလက်ကို ပြင်ခွင့်မရှိပါ။ လက်ကျန်ပမာဏသာ အရောင်းနှင့်အတူ ပြောင်းနိုင်သည်။");
         }
       }
+    }
+    if (key==="people" && identity.role!=="owner") {
+      if (input.people.some(person=>!person || person.type!=="supplier")) {
+        throw new functions.https.HttpsError("permission-denied","ဝန်ထမ်းသည် ကုန်သွင်းသူစာရင်းကိုသာ ပြင်ဆင်နိုင်သည်။ Customer စာရင်းကို မပြင်နိုင်ပါ။");
+      }
+      const oldVersion=pointers.people;
+      const oldSnap=oldVersion
+        ? await db.collection("shops").doc(identity.shopId).collection("workspaceVersions").doc(oldVersion).collection("people").get()
+        : null;
+      const customerRows=(oldSnap?oldSnap.docs:[]).map(doc=>doc.data().record).filter(person=>person && person.type==="customer");
+      changed.people=[...customerRows,...input.people];
+      continue;
     }
     changed[key]=input[key];
   }

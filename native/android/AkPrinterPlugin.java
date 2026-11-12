@@ -278,6 +278,87 @@ public class AkPrinterPlugin extends Plugin {
         }
     }
 
+    @PluginMethod
+    public void shareFile(PluginCall call) {
+        String encoded = call.getString("data", "");
+        String requestedName = call.getString("fileName", "AK-Sale-Export.txt");
+        String requestedMime = call.getString("mimeType", "text/plain");
+        String shareText = call.getString("text", "");
+        String shareTitle = call.getString("title", "AK Sale");
+        String mimeType = requestedMime.split(";")[0].trim().toLowerCase();
+        if (!mimeType.equals("text/csv") && !mimeType.equals("text/plain") &&
+            !mimeType.equals("application/pdf") && !mimeType.equals("application/json")) {
+            call.reject("ဤဖိုင်အမျိုးအစားကို Share ခွင့်မပြုပါ။");
+            return;
+        }
+        if (encoded.isEmpty()) {
+            call.reject("မျှဝေရန် ဖိုင် Data မရှိပါ။");
+            return;
+        }
+        final byte[] bytes;
+        try {
+            bytes = Base64.decode(encoded, Base64.DEFAULT);
+            if (bytes.length == 0 || bytes.length > 5 * 1024 * 1024) {
+                call.reject("ဖိုင်အရွယ်အစား မမှန်ပါ။ 5MB အောက်ထားပါ။");
+                return;
+            }
+        } catch (IllegalArgumentException e) {
+            call.reject("ဖိုင် Base64 မမှန်ပါ။");
+            return;
+        }
+        String safeName = requestedName.replaceAll("[^A-Za-z0-9._-]", "_");
+        if (safeName.isEmpty() || safeName.equals(".") || safeName.equals("..")) {
+            safeName = mimeType.equals("text/csv") ? "AK-Sales.csv" : "AK-Sales-Report.txt";
+        }
+        final String finalName = safeName;
+        try {
+            File directory = new File(getContext().getCacheDir(), "ak-receipt-share");
+            if (!directory.exists() && !directory.mkdirs()) {
+                throw new IOException("ယာယီဖိုင်သိမ်းရန် Folder မဖန်တီးနိုင်ပါ။");
+            }
+            File sharedFile = new File(directory, finalName);
+            try (FileOutputStream output = new FileOutputStream(sharedFile)) {
+                output.write(bytes);
+                output.flush();
+            }
+            Uri fileUri = FileProvider.getUriForFile(
+                getContext(),
+                getContext().getPackageName() + ".fileprovider",
+                sharedFile
+            );
+            Intent sendIntent = new Intent(Intent.ACTION_SEND);
+            sendIntent.setType(mimeType);
+            sendIntent.putExtra(Intent.EXTRA_STREAM, fileUri);
+            if (shareText != null && !shareText.trim().isEmpty()) {
+                sendIntent.putExtra(Intent.EXTRA_TEXT, shareText);
+                sendIntent.putExtra(Intent.EXTRA_SUBJECT, shareTitle);
+            }
+            sendIntent.setClipData(ClipData.newUri(
+                getContext().getContentResolver(),
+                "AK Sale export",
+                fileUri
+            ));
+            sendIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            getActivity().runOnUiThread(() -> {
+                try {
+                    String chooserTitle = call.getString("chooserTitle", "Viber သို့မဟုတ် အခြား App ဖြင့် ဖိုင်မျှဝေရန်");
+                    Intent chooser = Intent.createChooser(sendIntent, chooserTitle);
+                    chooser.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    getActivity().startActivity(chooser);
+                    JSObject result = new JSObject();
+                    result.put("ok", true);
+                    result.put("fileName", finalName);
+                    result.put("mimeType", mimeType);
+                    call.resolve(result);
+                } catch (Exception e) {
+                    call.reject("Share Menu ဖွင့်မရပါ: " + e.getMessage());
+                }
+            });
+        } catch (Exception e) {
+            call.reject("ဖိုင်မျှဝေရန် ပြင်ဆင်မရပါ: " + e.getMessage());
+        }
+    }
+
     private byte[] decodePayload(PluginCall call) {
         String encoded = call.getString("data", "");
         if (encoded.isEmpty()) {

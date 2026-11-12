@@ -314,7 +314,7 @@
         source: "users/" + this.shopId + "/private/appData",
         counts,
         verified,
-        completedAt: this.db.FieldValue.serverTimestamp(),
+        completedAt: root.firebase.firestore.FieldValue.serverTimestamp(),
         completedBy: this.auth.currentUser.uid
       };
       await markerRef.set(marker);

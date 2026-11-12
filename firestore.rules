@@ -42,10 +42,12 @@ service cloud.firestore {
     }
 
     function activeShopLicense(shopId) {
-      return exists(/databases/$(database)/documents/licenses/$(shopId))
-        && get(/databases/$(database)/documents/licenses/$(shopId)).data.status == 'active'
-        && get(/databases/$(database)/documents/licenses/$(shopId)).data.expiresAt is timestamp
-        && get(/databases/$(database)/documents/licenses/$(shopId)).data.expiresAt > request.time;
+      // Platform Owner has a separate, license-exempt workspace, but only at their own UID path.
+      return (isVerifiedOwner() && request.auth.uid == shopId)
+        || (exists(/databases/$(database)/documents/licenses/$(shopId))
+          && get(/databases/$(database)/documents/licenses/$(shopId)).data.status == 'active'
+          && get(/databases/$(database)/documents/licenses/$(shopId)).data.expiresAt is timestamp
+          && get(/databases/$(database)/documents/licenses/$(shopId)).data.expiresAt > request.time);
     }
 
     function isActiveShopMember(shopId) {

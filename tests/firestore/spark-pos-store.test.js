@@ -6,7 +6,7 @@ const sandbox = {};
 vm.runInNewContext(source, sandbox, { filename: "spark-pos-store.js" });
 const { splitSensitive, mergeSensitive } = sandbox.AKSparkPosInternals;
 const SparkStore = sandbox.AKSparkPosStore;
-for (const method of ["createInvite", "claimInvite", "listStaff", "setStaffPrintPermission", "revokeStaff", "migrateLegacyWorkspace", "loadWorkspace", "upsert"]) {
+for (const method of ["createInvite", "claimInvite", "listStaff", "setStaffPrintPermission", "revokeStaff", "migrateLegacyWorkspace", "loadWorkspace", "saveWorkspace", "upsert"]) {
   assert.equal(typeof SparkStore.prototype[method], "function", "missing adapter method: " + method);
 }
 

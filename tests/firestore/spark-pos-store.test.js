@@ -42,9 +42,9 @@ assert.equal(hasSensitive(productParts.base), false);
 assert.equal(hasSensitive(saleParts.base), false);
 
 const appHtml = fs.readFileSync("app.html", "utf8");
-assert.match(appHtml, /<script src="\\.\\/spark-pos-store\\.js"><\\/script>/);
+assert.match(appHtml, /<script src="\.\/spark-pos-store\.js"><\/script>/);
 const packageJson = JSON.parse(fs.readFileSync("package.json", "utf8"));
-assert.match(packageJson.scripts["copy-web"], /spark-pos-store\\.js/);
+assert.match(packageJson.scripts["copy-web"], /spark-pos-store\.js/);
 
 const schema = sandbox.AKSparkPosSchema;
 assert.deepEqual(JSON.parse(JSON.stringify(schema.roleCollections.cashier)), ["products", "sales", "people", "payments"]);

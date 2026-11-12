@@ -188,7 +188,7 @@ describe('AK Sale Firestore security baseline', function () {
     return db;
   }
 
-  it('allows a licensed shop owner to create an invite but keeps the code private', async () => {
+  it('allows a licensed shop owner to create an invite and a verified code holder to read it', async () => {
     await seedLicense('shop-a');
     const ownerDb = testEnv.authenticatedContext('shop-a', {
       email: 'shop-a@example.com', email_verified: true,
@@ -201,7 +201,7 @@ describe('AK Sale Firestore security baseline', function () {
     const strangerDb = testEnv.authenticatedContext('random-user', {
       email: 'random@example.com', email_verified: true,
     }).firestore();
-    await assertFails(getDoc(doc(strangerDb, 'shopInvites', 'ABCDEF0123456789ABCDEF0123456789')));
+    await assertSucceeds(getDoc(doc(strangerDb, 'shopInvites', 'ABCDEF0123456789ABCDEF0123456789')));
   });
 
   it('allows staff to claim a one-time invite atomically without custom claims', async () => {

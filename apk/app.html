@@ -585,7 +585,7 @@ body.ak-staff #productForm button[onclick^="akSendProductToMarket"] {display:non
 </div>
 <div class="actions"><button type="button" id="akProvisionVerifyButton" onclick="akProvisionShopOwner()">နံပါတ် (၃) · Login Verify / အကောင့်ဖွင့်ခွင့်ပေးမည်</button><button type="button" class="alt" onclick="loadPlatformUsers()">ဆိုင်ရှင်စာရင်း ပြန်ဖတ်ရန်</button></div>
 <p id="akProvisionStatus" class="muted">Owner Gmail ဖြင့်သာ အသုံးပြုနိုင်သည်။ Password ကို Firebase Authentication သို့သာ ပို့မည်။</p>
-<div class="tablewrap"><table><thead><tr><th>စဉ်</th><th>ဆိုင်ရှင် Gmail</th><th>Password</th><th>Login Verify</th><th>Package / သက်တမ်း</th><th>အခြေအနေ</th></tr></thead><tbody id="akOwnerShopRows"><tr><td colspan="6">စာရင်းဖတ်ရန် နှိပ်ပါ။</td></tr></tbody></table></div>
+<div class="tablewrap"><table><thead><tr><th>စဉ်</th><th>ဆိုင်ရှင် Gmail</th><th>Password</th><th>Login Verify</th><th>Package / သက်တမ်း</th><th>အခြေအနေ</th><th>Password စီမံမှု</th></tr></thead><tbody id="akOwnerShopRows"><tr><td colspan="6">စာရင်းဖတ်ရန် နှိပ်ပါ။</td></tr></tbody></table></div>
 </div>
 <div id="akOwnerDashboardPanels"></div></section>
 <section id="userDashboard" class="view hidden">\n<div class="panel shop-owner-only"><h2>User Dashboard</h2><p class="muted">မိမိဆိုင်၏ အရောင်းလုပ်ငန်း၊ ဝန်ထမ်းအကောင့်နှင့် ဝင်ခွင့်များကို ဒီနေရာမှ စီမံပါ။ ဤ Dashboard သည် သင့်ဆိုင်အတွက်သာ ဖြစ်သည်။</p>
@@ -2302,8 +2302,28 @@ function akRenderOwnerShopRows(){
   const state=u.disabled?"Login ပိတ်ထား":u.status==="suspended"?"Owner ပိတ်ထား":active?"ဝင်ခွင့်ရှိ":expired?"သက်တမ်းကုန်":"စောင့်ဆိုင်း";
   const password=u.passwordConfigured?"Owner သတ်မှတ်ပြီး":"အကောင့် Password ရှိ";
   const date=exp&&Number.isFinite(exp.getTime())?exp.toLocaleDateString("en-GB"):"—";
-  return "<tr><td>"+(i+1)+"</td><td>"+esc(u.email||"")+"</td><td>"+password+"</td><td>"+(u.emailVerified?"Verify ပြီး":"မအတည်ပြုရသေး")+"</td><td>"+esc(u.plan||"—")+"<br>"+esc(date)+"</td><td>"+state+"</td></tr>";
+  const canReset=["30-days","90-days","180-days","365-days"].includes(String(u.plan||""))||u.passwordConfigured;
+  const resetAction=canReset?'<button type="button" class="alt" onclick="akResetShopOwnerPassword(\''+esc(u.uid)+'\')">Password ပြောင်း / Reset</button>':"—";
+  return "<tr><td>"+(i+1)+"</td><td>"+esc(u.email||"")+"</td><td>"+password+"</td><td>"+(u.emailVerified?"Verify ပြီး":"မအတည်ပြုရသေး")+"</td><td>"+esc(u.plan||"—")+"<br>"+esc(date)+"</td><td>"+state+"</td><td>"+resetAction+"</td></tr>";
  }).join(""):"<tr><td colspan=\"6\">ဆိုင်ရှင် Gmail မရှိသေးပါ။ အပေါ်မှာ အသစ်ထည့်ပါ။</td></tr>";
+}
+async function akResetShopOwnerPassword(uid){
+ const status=$("akProvisionStatus");
+ try{
+  if(!akIsPlatformOwner()||!fbAuth?.currentUser)throw Error("Platform Owner ဖြင့် Login ဝင်ပါ။");
+  const target=akPlatformUserRows.find(x=>x.uid===uid);
+  if(!target)throw Error("ဆိုင်ရှင်အကောင့် မတွေ့ပါ။");
+  const password=prompt(target.email+" အတွက် Password အသစ်ထည့်ပါ (အနည်းဆုံး ၈ လုံး)");
+  if(password===null)return;
+  if(password.length<8||password.length>128)throw Error("Password သည် ၈ မှ ၁၂၈ လုံးအတွင်း ဖြစ်ရမည်။");
+  const confirmPassword=prompt("Password အသစ်ကို ထပ်မံထည့်ပါ။");
+  if(confirmPassword===null)return;
+  if(password!==confirmPassword)throw Error("Password နှစ်ကြိမ် မတူပါ။");
+  if(!confirm(target.email+" ၏ Password ကို ပြောင်းမလား။"))return;
+  if(status)status.textContent="Password ကို Firebase Authentication တွင် လုံခြုံစွာ ပြောင်းနေသည်...";
+  await firebase.functions().httpsCallable("resetShopOwnerPassword")({uid,password});
+  if(status)status.textContent=target.email+" ၏ Password ပြောင်းပြီးပါပြီ။ Password ကို စာရင်းတွင် မသိမ်းထားပါ။";
+ }catch(e){if(status)status.textContent="Password မပြောင်းနိုင်ပါ: "+(e.message||e)}
 }
 async function akProvisionShopOwner(){
  const status=$("akProvisionStatus"),button=$("akProvisionVerifyButton");

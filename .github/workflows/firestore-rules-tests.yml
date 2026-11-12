@@ -7,6 +7,9 @@ on:
       - 'firestore.rules'
       - 'tests/firestore/**'
       - 'apk/spark-pos-store.js'
+      - 'app.html'
+      - 'package.json'
+      - 'sw.js'
       - '.github/workflows/firestore-rules-tests.yml'
   push:
     branches: [ak-free-backend-migration]

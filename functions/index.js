@@ -444,9 +444,56 @@ exports.listPlatformUsers = functions.https.onCall(async (data, context) => {
         expiresAt: license.expiresAt && license.expiresAt.toDate
           ? license.expiresAt.toDate().toISOString() : ""
       };
-    }).filter(u => u.email.toLowerCase() !== OWNER_EMAIL),
+    }).filter(u => {
+      // Staff accounts are not shop-owner accounts. Keep the Owner's shop list
+      // limited to licensed, non-staff identities; never expose staff as shops.
+      return u.email.toLowerCase() !== OWNER_EMAIL
+        && !u.customClaims?.shopId
+        && u.customClaims?.platformAdmin !== true
+        && byUid.has(u.uid);
+    }),
     nextPageToken: page.pageToken || ""
   };
+});
+
+// Owner password reset for an existing licensed shop-owner account.
+// Passwords are sent directly to Firebase Authentication and never stored or logged.
+exports.resetShopOwnerPassword = functions.https.onCall(async (data, context) => {
+  const actor = requireAdmin(context);
+  const uid = String(data.uid || "").trim();
+  const password = String(data.password || "");
+  if (!uid || uid.length > 128 || password.length < 8 || password.length > 128) {
+    throw new functions.https.HttpsError("invalid-argument", "Account ID သို့မဟုတ် Password မမှန်ပါ။ Password အနည်းဆုံး ၈ လုံးလိုအပ်သည်။");
+  }
+  const user = await admin.auth().getUser(uid);
+  const email = String(user.email || "").trim().toLowerCase();
+  if (!email || email === OWNER_EMAIL || user.customClaims?.shopId || user.customClaims?.platformAdmin) {
+    throw new functions.https.HttpsError("permission-denied", "ဤအကောင့်သည် ဆိုင်ရှင်အကောင့် မဟုတ်ပါ။");
+  }
+  const licenseRef = db.collection("licenses").doc(uid);
+  const licenseSnap = await licenseRef.get();
+  const license = licenseSnap.data() || {};
+  const validPlan = ["30-days", "90-days", "180-days", "365-days"].includes(String(license.plan || ""));
+  const ownerProvisioned = license.credentialManagedBy === "platform-owner";
+  if (!licenseSnap.exists || (!validPlan && !ownerProvisioned)) {
+    throw new functions.https.HttpsError("permission-denied", "Owner က စီမံခန့်ခွဲထားသော ဆိုင်ရှင် License မဟုတ်ပါ။");
+  }
+  const memberSnap = await db.collection("shopMembers").doc(uid).get();
+  if (memberSnap.exists) {
+    throw new functions.https.HttpsError("permission-denied", "ဝန်ထမ်းအကောင့် Password ကို ဒီနေရာမှ မပြောင်းနိုင်ပါ။");
+  }
+  await admin.auth().updateUser(uid, { password, disabled: false });
+  await licenseRef.set({
+    passwordConfigured: true,
+    credentialManagedBy: "platform-owner",
+    passwordUpdatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    passwordUpdatedBy: actor
+  }, { merge: true });
+  await db.collection("platformAuditLogs").add({
+    action: "shop_owner_password_reset", targetUid: uid, targetEmail: email,
+    actor, createdAt: admin.firestore.FieldValue.serverTimestamp()
+  });
+  return { ok: true, uid, email };
 });
 
 // A customer asks for access after registering. Payment is handled outside the app;

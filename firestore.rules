@@ -825,25 +825,6 @@ service cloud.firestore {
         && activeShopLicense(resource.data.shopId);
     }
 
-    match /shopInvites/{code} {
-      // Invite codes are secrets: only the issuing shop owner may read/list them.
-      // Claim validation uses rules-side get(), not a client-readable invite document.
-      allow read: if request.auth != null
-        && request.auth.uid == resource.data.shopId
-        && activeShopLicense(resource.data.shopId);
-      allow create: if request.auth != null
-        && request.auth.uid == request.resource.data.shopId
-        && activeShopLicense(request.resource.data.shopId)
-        && request.resource.data.keys().hasOnly(['shopId','role','status','createdAt','expiresAt','createdBy'])
-        && request.resource.data.role in ['manager','cashier','employee']
-        && request.resource.data.status == 'open'
-        && request.resource.data.createdAt == request.time
-        && request.resource.data.createdBy == request.auth.uid
-        && request.resource.data.expiresAt is timestamp
-        && request.resource.data.expiresAt > request.time
-        && request.resource.data.expiresAt <= request.time + duration.value(24, 'h')
-        && code.matches('^[A-F0-9]{32}
-
     // A Gmail address can claim one five-day trial only once. The server timestamp
     // on the profile determines expiry; clients cannot extend or reset the trial clock.
     match /freeBetaUsers/{userId} {
@@ -1412,36 +1393,6 @@ service cloud.firestore {
         && existsAfter(/databases/$(database)/documents/shopMembers/$(request.auth.uid))
         && getAfter(/databases/$(database)/documents/shopMembers/$(request.auth.uid)).data.shopId == resource.data.shopId
         && getAfter(/databases/$(database)/documents/shopMembers/$(request.auth.uid)).data.inviteCode == code;
-      allow delete: if request.auth != null
-        && request.auth.uid == resource.data.shopId
-        && activeShopLicense(resource.data.shopId);
-    }
-
-    match /shopStaffSlots/{slotId} {
-      allow read: if request.auth != null
-        && (resource.data.uid == request.auth.uid
-          || resource.data.shopId == request.auth.uid);
-      allow create: if request.auth != null
-        && request.auth.token.email_verified == true
-        && request.resource.data.keys().hasOnly(['shopId','uid','slot','createdAt','inviteCode'])
-        && request.resource.data.uid == request.auth.uid
-        && request.resource.data.shopId is string
-        && request.resource.data.slot in [1,2,3]
-        && ((request.resource.data.slot == 1 && slotId == request.resource.data.shopId + '_1')
-          || (request.resource.data.slot == 2 && slotId == request.resource.data.shopId + '_2')
-          || (request.resource.data.slot == 3 && slotId == request.resource.data.shopId + '_3'))
-        && request.resource.data.createdAt == request.time
-        && activeShopLicense(request.resource.data.shopId)
-        && request.resource.data.inviteCode is string
-        && exists(/databases/$(database)/documents/shopInvites/$(request.resource.data.inviteCode))
-        && get(/databases/$(database)/documents/shopInvites/$(request.resource.data.inviteCode)).data.shopId == request.resource.data.shopId
-        && get(/databases/$(database)/documents/shopInvites/$(request.resource.data.inviteCode)).data.status == 'open'
-        && get(/databases/$(database)/documents/shopInvites/$(request.resource.data.inviteCode)).data.expiresAt > request.time
-        && existsAfter(/databases/$(database)/documents/shopInvites/$(request.resource.data.inviteCode))
-        && getAfter(/databases/$(database)/documents/shopInvites/$(request.resource.data.inviteCode)).data.status == 'claimed'
-        && existsAfter(/databases/$(database)/documents/shopMembers/$(request.auth.uid))
-        && getAfter(/databases/$(database)/documents/shopMembers/$(request.auth.uid)).data.shopId == request.resource.data.shopId;
-      allow update: if false;
       allow delete: if request.auth != null
         && request.auth.uid == resource.data.shopId
         && activeShopLicense(resource.data.shopId);

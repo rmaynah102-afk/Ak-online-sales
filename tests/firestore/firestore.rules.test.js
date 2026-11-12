@@ -188,6 +188,21 @@ describe('AK Sale Firestore security baseline', function () {
     return db;
   }
 
+  it('allows a shop owner to create and advance workspace revision metadata only', async () => {
+    await seedLicense('shop-a');
+    const ownerDb = testEnv.authenticatedContext('shop-a', {
+      email: 'shop-a@example.com', email_verified: true,
+    }).firestore();
+    const meta = doc(ownerDb, 'shops', 'shop-a', 'workspace', 'current');
+    await assertSucceeds(setDoc(meta, { revision: 1, updatedAt: serverTimestamp() }));
+    await assertSucceeds(setDoc(meta, { revision: 2, updatedAt: serverTimestamp() }));
+    await assertFails(setDoc(meta, { revision: 4, updatedAt: serverTimestamp() }));
+    const otherDb = testEnv.authenticatedContext('other-shop', {
+      email: 'other@example.com', email_verified: true,
+    }).firestore();
+    await assertFails(getDoc(doc(otherDb, 'shops', 'shop-a', 'workspace', 'current')));
+  });
+
   it('allows a licensed shop owner to create an invite and a verified code holder to read it', async () => {
     await seedLicense('shop-a');
     const ownerDb = testEnv.authenticatedContext('shop-a', {

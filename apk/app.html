@@ -2047,10 +2047,16 @@ checkUserRole(user);if(akIsPlatformOwner(user)){akSetLicenseGate(true,"Platform 
    akCloudRevision=Number.isSafeInteger(remote.revision)&&remote.revision>=0?remote.revision:0;
   }
  }else{akCloudRevision=0;}
- if(!legacySource)legacySource=JSON.parse(JSON.stringify(db||fresh()));
- const hasLegacyRows=["products","sales","purchases","people","payments","expenses"].some(name=>Array.isArray(legacySource[name])&&legacySource[name].length>0);
- const hasLegacySettings=legacySource.shop&&typeof legacySource.shop==="object"&&Object.keys(legacySource.shop).length>0;
- if(hasLegacyRows||hasLegacySettings)await akSparkStore.migrateLegacyWorkspace(legacySource);
+ if(legacySource){
+  await akSparkStore.migrateLegacyWorkspace(legacySource);
+ }else{
+  const localSource=JSON.parse(JSON.stringify(db||fresh()));
+  const existingWorkspace=await akSparkStore.loadWorkspace();
+  const hasCloudRows=["products","sales","purchases","people","payments","expenses"].some(name=>Array.isArray(existingWorkspace[name])&&existingWorkspace[name].length>0);
+  const hasLocalRows=["products","sales","purchases","people","payments","expenses"].some(name=>Array.isArray(localSource[name])&&localSource[name].length>0);
+  const hasLocalSettings=localSource.shop&&typeof localSource.shop==="object"&&Object.keys(localSource.shop).length>0;
+  if(!hasCloudRows&&(hasLocalRows||hasLocalSettings))await akSparkStore.migrateLegacyWorkspace(localSource);
+ }
  const ws=await akSparkStore.loadWorkspace();
  db=akMergeLocalProductPhotos({...fresh(),...(ws||{})});
  const metaSnap=await fbStore.collection("shops").doc(user.uid).collection("workspace").doc("current").get();

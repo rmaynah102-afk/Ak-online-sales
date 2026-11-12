@@ -340,6 +340,32 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // A transactionally maintained counter enforces the 100 customer-shop limit.
+    // A new license and the counter increment must be committed atomically.
+    match /platformMeta/{documentId} {
+      allow read: if isVerifiedOwner();
+      allow create: if isVerifiedOwner()
+        && documentId == 'shopCapacity'
+        && request.resource.data.keys().hasOnly(['activeShopCount','updatedAt'])
+        && request.resource.data.activeShopCount is int
+        && request.resource.data.activeShopCount >= 0
+        && request.resource.data.activeShopCount <= 100
+        && request.resource.data.updatedAt == request.time;
+      allow update: if isVerifiedOwner()
+        && documentId == 'shopCapacity'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['activeShopCount','updatedAt','lastIssuedUid'])
+        && resource.data.activeShopCount is int
+        && request.resource.data.activeShopCount == resource.data.activeShopCount + 1
+        && request.resource.data.activeShopCount <= 100
+        && request.resource.data.lastIssuedUid is string
+        && !exists(/databases/$(database)/documents/licenses/$(request.resource.data.lastIssuedUid))
+        && existsAfter(/databases/$(database)/documents/licenses/$(request.resource.data.lastIssuedUid))
+        && getAfter(/databases/$(database)/documents/licenses/$(request.resource.data.lastIssuedUid)).data.uid == request.resource.data.lastIssuedUid
+        && getAfter(/databases/$(database)/documents/licenses/$(request.resource.data.lastIssuedUid)).data.status == 'active'
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if false;
+    }
+
     match /licenses/{userId} {
       allow read: if request.auth != null && (request.auth.uid == userId || isVerifiedOwner());
       // Only the verified Platform Owner may issue or suspend a license after manual payment review.
@@ -347,7 +373,14 @@ service cloud.firestore {
         && request.resource.data.uid == userId
         && request.resource.data.status == 'active'
         && request.resource.data.expiresAt is timestamp
-        && request.resource.data.plan in ['30-days','90-days','180-days','365-days'];
+        && request.resource.data.plan in ['30-days','90-days','180-days','365-days']
+        && exists(/databases/$(database)/documents/platformMeta/shopCapacity)
+        && get(/databases/$(database)/documents/platformMeta/shopCapacity).data.activeShopCount is int
+        && get(/databases/$(database)/documents/platformMeta/shopCapacity).data.activeShopCount < 100
+        && existsAfter(/databases/$(database)/documents/platformMeta/shopCapacity)
+        && getAfter(/databases/$(database)/documents/platformMeta/shopCapacity).data.activeShopCount
+          == get(/databases/$(database)/documents/platformMeta/shopCapacity).data.activeShopCount + 1
+        && getAfter(/databases/$(database)/documents/platformMeta/shopCapacity).data.lastIssuedUid == userId;
       allow update: if isVerifiedOwner()
         && request.resource.data.uid == userId
         && request.resource.data.status in ['active','suspended']

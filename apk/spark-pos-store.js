@@ -230,5 +230,6 @@
   }
 
   root.AKSparkPosStore = AKSparkPosStore;
+  root.AKSparkPosInternals = Object.freeze({ splitSensitive, mergeSensitive });
   root.AKSparkPosSchema = Object.freeze({ version: VERSION, collections: COLLECTIONS.slice(), roleCollections: clone(ROLE_COLLECTIONS) });
 })(typeof window !== "undefined" ? window : globalThis);

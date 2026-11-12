@@ -9,22 +9,7 @@ const OWNER_EMAIL = "painglin102@gmail.com";
 admin.initializeApp();
 const db = admin.firestore();
 
-exports.startTrial = functions.auth.user().onCreate(async (user) => {
-  const ref = db.collection("licenses").doc(user.uid);
-  const snap = await ref.get();
-  if (snap.exists) return null;
-
-  // New accounts stay locked until the owner verifies payment and approves.
-  await ref.create({
-    uid: user.uid,
-    email: user.email || "",
-    status: "pending_payment",
-    plan: "awaiting-owner-approval",
-    createdAt: admin.firestore.FieldValue.serverTimestamp()
-  });
-  return null;
-});
-
+// Trial eligibility is enforced by Firestore rules and a one-time email claim.
 
 async function enforceCustomerShopCapacity(tx, uid, currentLicenseSnap) {
   // A shared lock document serializes every new activation/renewal across shops.
@@ -322,20 +307,41 @@ exports.listPlatformUsers = functions.https.onCall(async (data, context) => {
   requireAdmin(context);
   const pageToken = String(data.pageToken || "").trim() || undefined;
   const page = await admin.auth().listUsers(100, pageToken);
-  const refs = page.users.map(u => db.collection("licenses").doc(u.uid));
-  const licenseSnaps = refs.length ? await db.getAll(...refs) : [];
-  const byUid = new Map(licenseSnaps.map(s => [s.id, s.exists ? s.data() : {}]));
+  const licenseRefs = page.users.map(u => db.collection("licenses").doc(u.uid));
+  const trialRefs = page.users.map(u => db.collection("freeBetaUsers").doc(u.uid));
+  const [licenseSnaps, trialSnaps] = await Promise.all([
+    licenseRefs.length ? db.getAll(...licenseRefs) : [],
+    trialRefs.length ? db.getAll(...trialRefs) : []
+  ]);
+  const byUid = new Map(licenseSnaps.map(s => [s.id, s.exists ? s.data() : null]));
+  const trialsByUid = new Map(trialSnaps.map(s => [s.id, s.exists ? s.data() : null]));
+  const now = Date.now();
   return {
     users: page.users.map(u => {
-      const license = byUid.get(u.uid) || {};
+      const license = byUid.get(u.uid);
+      const trial = trialsByUid.get(u.uid);
+      if (!license && trial) {
+        const createdAt = trial.createdAt && typeof trial.createdAt.toMillis === "function"
+          ? trial.createdAt.toMillis() : 0;
+        const trialExpiry = createdAt ? createdAt + 5 * 86400000 : 0;
+        const trialActive = trial.status === "active" && trialExpiry > now;
+        return {
+          uid: u.uid, email: u.email || "", emailVerified: !!u.emailVerified,
+          disabled: !!u.disabled, status: trialActive ? "active" : (trial.status === "disabled" ? "suspended" : "expired"),
+          plan: "free-trial", planDays: 5, passwordConfigured: false,
+          credentialManagedBy: "self-registration",
+          expiresAt: trialExpiry ? new Date(trialExpiry).toISOString() : ""
+        };
+      }
+      const x = license || {};
       return {
         uid: u.uid, email: u.email || "", emailVerified: !!u.emailVerified,
-        disabled: !!u.disabled, status: String(license.status || "pending_payment"),
-        plan: String(license.plan || ""), planDays: Number(license.planDays || String(license.plan || "").replace("-days", "")) || 0,
-        passwordConfigured: license.passwordConfigured === true,
-        credentialManagedBy: String(license.credentialManagedBy || ""),
-        expiresAt: license.expiresAt && license.expiresAt.toDate
-          ? license.expiresAt.toDate().toISOString() : ""
+        disabled: !!u.disabled, status: String(x.status || "pending_owner_approval"),
+        plan: String(x.plan || ""), planDays: Number(x.planDays || String(x.plan || "").replace("-days", "")) || 0,
+        passwordConfigured: x.passwordConfigured === true,
+        credentialManagedBy: String(x.credentialManagedBy || ""),
+        expiresAt: x.expiresAt && x.expiresAt.toDate
+          ? x.expiresAt.toDate().toISOString() : ""
       };
     }).filter(u => u.email.toLowerCase() !== OWNER_EMAIL),
     nextPageToken: page.pageToken || ""

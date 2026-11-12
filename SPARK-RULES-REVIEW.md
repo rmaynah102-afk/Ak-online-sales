@@ -45,3 +45,20 @@ Do not replace the existing rules wholesale. They currently protect several unre
 ## Next implementation gate
 
 Run the emulator tests and inspect failures. Then design the new tenant-scoped POS document model and membership/role rules. Only after those tests pass should the client be migrated from callable functions to direct Firestore operations.
+
+## Follow-up implementation — 2026-11-12
+
+The isolated migration branch now contains an initial Spark-compatible Firestore Rules implementation for staff membership:
+
+- Staff membership is checked from `shopMembers/{uid}`; no `shopId` or `shopRole` custom token claim is used by the workspace metadata read check.
+- One-time invite documents live at `shopInvites/{32-char uppercase hex code}`. Only the issuing shop owner can read/list invite documents; claim validation uses Rules-side document reads.
+- A successful claim requires one atomic batch that creates the staff membership, reserves one of three fixed slot documents, and changes the invite from `open` to `claimed`.
+- Staff membership requires a verified email, active shop license, matching invite role/shop, and an unused slot.
+- Shop owner can update only the member print flag or delete a member and release a slot. The owner must delete both documents together in the client batch to avoid a stale slot.
+- The 3-slot limit is enforced by unique fixed slot document IDs, not by a client-side count.
+
+## Validation status
+
+The emulator test suite was expanded to cover invite creation/privacy, atomic one-time claim, replay denial, expired-license denial, verified-email requirement, cross-tenant denial, three-slot cap, and owner revocation.
+
+The GitHub Actions workflow has been committed, but its emulator run result has not yet been confirmed. Therefore this is an implementation candidate, not a verified release. Existing callable-based APK flows still need migration, and the POS workspace data model plus role-specific permissions remain separate unfinished work.

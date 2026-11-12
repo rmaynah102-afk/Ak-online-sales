@@ -1,0 +1,32 @@
+name: AK Sale Firestore Rules Tests
+
+on:
+  pull_request:
+    branches: [main, ak-free-backend-migration]
+    paths:
+      - 'firestore.rules'
+      - 'tests/firestore/**'
+      - '.github/workflows/firestore-rules-tests.yml'
+  push:
+    branches: [ak-free-backend-migration]
+    paths:
+      - 'firestore.rules'
+      - 'tests/firestore/**'
+      - '.github/workflows/firestore-rules-tests.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  firestore-rules:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install test dependencies
+        run: npm install --no-save firebase-tools mocha @firebase/rules-unit-testing firebase
+      - name: Run Firestore emulator security tests
+        run: npx firebase emulators:exec --project demo-ak-sale-rules --only firestore "npx mocha tests/firestore/firestore.rules.test.js"

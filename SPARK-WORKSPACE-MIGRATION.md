@@ -14,13 +14,13 @@ Giving a cashier access to that single blob would expose products' cost prices, 
 
 Each customer shop uses its authenticated shop-owner UID as `shopId`. The Platform Owner's own POS workspace uses the Platform Owner UID and remains separate.
 
-- `shops/{shopId}/pos/products/{productId}`
-- `shops/{shopId}/pos/sales/{saleId}`
-- `shops/{shopId}/pos/purchases/{purchaseId}`
-- `shops/{shopId}/pos/people/{personId}`
-- `shops/{shopId}/pos/payments/{paymentId}`
-- `shops/{shopId}/pos/expenses/{expenseId}`
-- `shops/{shopId}/pos/settings/{documentId}`
+- `shops/{shopId}/pos/products/records/{productId}`
+- `shops/{shopId}/pos/sales/records/{saleId}`
+- `shops/{shopId}/pos/purchases/records/{purchaseId}`
+- `shops/{shopId}/pos/people/records/{personId}`
+- `shops/{shopId}/pos/payments/records/{paymentId}`
+- `shops/{shopId}/pos/expenses/records/{expenseId}`
+- `shops/{shopId}/pos/settings/records/{documentId}`
 
 The existing `shops/{shopId}/workspace/current` document remains revision metadata only. It is not the POS data store.
 
@@ -63,3 +63,6 @@ The new Rules use `shopMembers/{uid}` membership documents and the active shop l
 ## Latest static check
 
 The branch Rules were reconstructed from the clean production-baseline file after an intermediate editing issue introduced duplicated/truncated text. The current file now has balanced rule braces and exactly one occurrence of each staff and tenant-POS match. The 19-test source parses as JavaScript. Emulator execution remains unconfirmed, and APK migration is still pending.
+
+
+The Firestore document path includes the `records` subcollection segment so each record has a valid even-segment document path. The first emulator run caught and corrected this path error; the updated workflow is running again.

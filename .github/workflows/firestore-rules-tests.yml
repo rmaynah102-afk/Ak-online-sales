@@ -26,7 +26,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Install test dependencies
-        run: npm install --no-save firebase-tools mocha @firebase/rules-unit-testing firebase
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Install isolated test dependencies
+        run: npm --prefix tests/firestore install
       - name: Run Firestore emulator security tests
-        run: npx firebase emulators:exec --project demo-ak-sale-rules --only firestore "npx mocha tests/firestore/firestore.rules.test.js"
+        run: |
+          ./tests/firestore/node_modules/.bin/firebase emulators:exec \
+            --project demo-ak-sale-rules --only firestore \
+            "./tests/firestore/node_modules/.bin/mocha tests/firestore/firestore.rules.test.js"

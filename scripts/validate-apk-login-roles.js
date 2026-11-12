@@ -41,7 +41,7 @@ const checks = [
  ['Login sessions persist across app restarts', html.includes('fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)')],
  ['No in-app KBZPay or payment screenshot form in APK', !html.includes('KBZPay') && !html.includes('paymentProofs') && html.includes('App အတွင်း ငွေပေးချေမှု')],
  ['Trial expiry is not bypassed by a permanent-free plan flag', !html.includes('isFreeBeta') && html.includes('!currentLicense.expiresAt')],
- ['Owner trial controls cannot reactivate an expired trial', html.includes('Trial သက်တမ်းကုန်ပြီးပါပြီ။ Package အသစ်ကို သက်တမ်းတိုးပေးပါ။')],
+ ['Owner trial controls cannot reactivate an expired trial', rules.includes('get(/databases/$(database)/documents/licenses/$(uid)).data.expiresAt > request.time') && html.includes('akCheckSubscriptionExpiry')],
  ['No malformed literal newline in Owner trial controls', !html.includes('if(target.plan==="free-trial"){\\n')],
 
 
@@ -51,7 +51,7 @@ const checks = [
  ['Owner Dashboard becomes visible when selected', html.includes('x.classList.toggle("hidden",!active)') && html.includes('id="ownerDashboard" class="view shop-owner-only hidden"')],
  ['Platform Owner dashboard has real account summary and management entry points', html.includes('id="akOwnerOverviewPanel"') && html.includes('id="akOwnerTotalShops"') && html.includes('id="akOwnerActiveShops"') && html.includes('function akLoadOwnerDashboard()') && html.includes('loadAdminAccessRequests()')],
  ['Owner dashboard does not show false zero counts before account list loads', html.includes('let akPlatformUserListLoaded=false,akPlatformUserListError="";') && html.includes('loaded?rows.length:"—"') && html.includes('akPlatformUserListError=String(e?.message||e')],
- ['Owner dashboard surfaces unavailable account-list backend errors', html.includes('ဆိုင်ရှင်စာရင်း မဖတ်နိုင်သေးပါ') && html.includes('akPlatformUserStatus')],
+ ['Owner dashboard surfaces unavailable account-list backend errors', html.includes('Subscription စာရင်းဖတ်မရပါ') && html.includes('akPlatformUserStatus')],
  ['Owner customer license changes use protected Spark Firestore rules', html.includes('fbStore.collection("licenses").doc(uid).update') && html.includes('akGrantRequestSubscription') && rules.includes('allow create: if isVerifiedOwner()') && rules.includes('allow update: if isVerifiedOwner()')],
  ['Platform Owner opens directly in normal POS User View and can return to Owner Mode', html.includes('function akEnterOwnerPosMode()') && (html.match(/akEnterOwnerPosMode\(\)/g)||[]).length>=5 && html.includes('document.body.classList.add("ak-owner-user-preview")') && html.includes('go("home")') && html.includes('Owner Mode သို့ပြန်ရန်')],
  ['Owner User View preserves shop-owner features and hides only platform controls', html.includes('body.ak-owner-user-preview .owner-only,body.ak-owner-user-preview #nav button[data-view="ownerDashboard"]') && !html.includes('body.ak-owner-user-preview .shop-owner-only') && html.includes('go(enabled?"home":"ownerDashboard")') && html.includes('akUserRole==="platform-owner"&&document.body.classList.contains("ak-owner-user-preview")')],
@@ -66,7 +66,7 @@ const checks = [
  ['License package pricing is represented in Spark grant flow', html.includes('prices={30:30000,90:90000,180:180000,365:360000}') && html.includes('plans={30:"30-days",90:"90-days",180:"180-days",365:"365-days"}')],
  ['Shop-owner self-registration is activated only by an Owner-issued license', html.includes('createUserWithEmailAndPassword(email,pass)') && html.includes('subscriptionAccessRequests') && html.includes('fbStore.collection("licenses").doc(uid)')],
  ['Merchant Code is generated from the shop-owner Spark workspace', html.includes('async function akCreateStaffInvite()') && html.includes('sparkStore.createInvite(role)') && html.includes('sparkStore.listStaff()')],
- ['Merchant Code is 128-bit random, one-time and expires after 24 hours', sparkStore.includes('crypto.getRandomValues(bytes)') && rules.includes("code.size() == 32") && rules.includes("duration.value(24, 'h')") && rules.includes("request.resource.data.status == 'claimed'")],
+ ['Merchant Code is 128-bit random, one-time and expires after 24 hours', sparkStore.includes('cryptoApi.getRandomValues(bytes)') && rules.includes("code.size() == 32") && rules.includes("duration.value(24, 'h')") && rules.includes("request.resource.data.status == 'claimed'")],
  ['Staff must use a verified personal Gmail and valid Merchant Code', html.includes('async function firebaseRegister()') && html.includes('type==="staff"') && html.includes('mode==="staff"') && html.includes('sparkStore.claimInvite(code)') && rules.includes('request.auth.token.email_verified == true')],
  ['Staff membership is limited to three accounts per shop', rules.includes("request.resource.data.shopId + '_1'") && rules.includes("request.resource.data.shopId + '_2'") && rules.includes("request.resource.data.shopId + '_3'") && html.includes('ဝန်ထမ်းအကောင့်အများဆုံး ၃ ခု')],
  ['Staff role and shop identity are enforced by Firestore membership rules', rules.includes('match /shopMembers/{memberUid}') && rules.includes('hasShopMemberRole(shopId, roles)') && html.includes('shopMembers").doc(user.uid).get()')],

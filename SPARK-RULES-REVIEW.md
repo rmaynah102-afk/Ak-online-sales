@@ -69,3 +69,10 @@ The GitHub Actions workflow has been committed, but its emulator run result has 
 The migration rules were rebuilt from the unmodified `ak-owner-pos-default-mode` baseline to remove duplicate/truncated intermediate edits. Current branch file has one rules header, one `shopMembers`, one `shopInvites`, one `shopStaffSlots`, one tenant-scoped POS match, and one final deny-all match. A comment/string-aware brace scan found balanced structure. The emulator suite contains 19 test cases and its JavaScript source passes a syntax parse check.
 
 These are static checks only. The Firestore Emulator workflow result is not visible/confirmed yet; no claim is made that the 19 security tests passed. Do not deploy the branch rules to production until the emulator workflow is confirmed green.
+
+
+## Emulator result — 2026-11-12
+
+GitHub Actions run [43224894520](https://github.com/rmaynah102-afk/Ak-online-sales/actions/runs/43224894520) completed successfully. The Firestore Emulator executed **20 passing tests** covering the baseline license/tenant checks, one-time staff invite claim and replay denial, 3-slot cap, verified email, staff revocation, manager/cashier permissions, expired license denial, and cost-field protection.
+
+A small defensive null guard was committed after that green run; the follow-up emulator run for the exact latest Rules commit is still pending. The APK remains on its previous callable-based workspace flow, so these rules are not deployed and do not yet activate Spark staff login in the APK.

@@ -372,8 +372,14 @@
       const flush = async () => { if (pending) { await batch.commit(); batch = this.db.batch(); pending = 0; } };
       for (const record of records) {
         const id = assertId(record && record.id);
+        const recordRef = pathFor(this.db, this.shopId, collection).doc(id);
+        // Cashiers may create sales/payments but cannot mutate existing transaction records.
+        if (this.role === "cashier" && ["sales", "payments"].includes(collection)) {
+          const existing = await recordRef.get();
+          if (existing.exists) continue;
+        }
         const { base, costs } = (collection === "products" || collection === "sales") ? splitSensitive(record) : { base: record, costs: {} };
-        batch.set(pathFor(this.db, this.shopId, collection).doc(id), clean({ ...base, updatedAt: root.firebase.firestore.FieldValue.serverTimestamp() }), { merge: true });
+        batch.set(recordRef, clean({ ...base, updatedAt: root.firebase.firestore.FieldValue.serverTimestamp() }), { merge: true });
         pending++; count++;
         if (Object.keys(costs).length) {
           const costCollection = collection === "products" ? "productCosts" : "saleCosts";

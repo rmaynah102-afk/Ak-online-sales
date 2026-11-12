@@ -20,12 +20,14 @@ service cloud.firestore {
         && (isVerifiedOwner()
           || (!exists(/databases/$(database)/documents/licenses/$(uid))
             && exists(/databases/$(database)/documents/freeBetaUsers/$(uid))
+            && request.auth.token.email is string
             && exists(freeTrialClaimPath(request.auth.token.email))
             && get(/databases/$(database)/documents/freeBetaUsers/$(uid)).data.status == 'active'
             && get(/databases/$(database)/documents/freeBetaUsers/$(uid)).data.createdAt is timestamp
             && get(/databases/$(database)/documents/freeBetaUsers/$(uid)).data.createdAt + duration.value(5, 'd') > request.time
             && get(freeTrialClaimPath(request.auth.token.email)).data.uid == uid
-            && get(freeTrialClaimPath(request.auth.token.email)).data.email == request.auth.token.email)
+            && get(freeTrialClaimPath(request.auth.token.email)).data.email == request.auth.token.email
+            && get(freeTrialClaimPath(request.auth.token.email)).data.createdAt == get(/databases/$(database)/documents/freeBetaUsers/$(uid)).data.createdAt)
           || ((request.auth.token.email_verified == true
               || (request.auth.token.phone_number is string
                 && request.auth.token.phone_number.size() >= 8))

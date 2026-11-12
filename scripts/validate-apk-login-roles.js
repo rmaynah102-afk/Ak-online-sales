@@ -1,6 +1,7 @@
 'use strict';
 const fs = require('fs');
 const html = fs.readFileSync('www/index.html', 'utf8');
+const sparkStore = fs.readFileSync('www/spark-pos-store.js', 'utf8');
 const functions = fs.readFileSync('functions/index.js', 'utf8');
 const rules = fs.readFileSync('firestore.rules', 'utf8');
 const printer = fs.readFileSync('native/android/AkPrinterPlugin.java', 'utf8');
@@ -65,9 +66,9 @@ const checks = [
  ['License package pricing is represented in Spark grant flow', html.includes('prices={30:30000,90:90000,180:180000,365:360000}') && html.includes('plans={30:"30-days",90:"90-days",180:"180-days",365:"365-days"}')],
  ['Shop-owner self-registration is activated only by an Owner-issued license', html.includes('createUserWithEmailAndPassword(email,pass)') && html.includes('subscriptionAccessRequests') && html.includes('fbStore.collection("licenses").doc(uid)')],
  ['Merchant Code is generated from the shop-owner Spark workspace', html.includes('async function akCreateStaffInvite()') && html.includes('sparkStore.createInvite(role)') && html.includes('sparkStore.listStaff()')],
- ['Merchant Code is 128-bit random, one-time and expires after 24 hours', html.includes('crypto.getRandomValues(bytes)') && rules.includes("code.size() == 32") && rules.includes("duration.value(24, 'h')") && rules.includes("request.resource.data.status == 'claimed'")],
+ ['Merchant Code is 128-bit random, one-time and expires after 24 hours', sparkStore.includes('crypto.getRandomValues(bytes)') && rules.includes("code.size() == 32") && rules.includes("duration.value(24, 'h')") && rules.includes("request.resource.data.status == 'claimed'")],
  ['Staff must use a verified personal Gmail and valid Merchant Code', html.includes('async function firebaseRegister()') && html.includes('type==="staff"') && html.includes('mode==="staff"') && html.includes('sparkStore.claimInvite(code)') && rules.includes('request.auth.token.email_verified == true')],
- ['Staff membership is limited to three accounts per shop', rules.includes("request.resource.data.shopId + '_1'") && rules.includes("request.resource.data.shopId + '_2'") && rules.includes("request.resource.data.shopId + '_3'") && html.includes('ဝန်ထမ်းအများဆုံး ၃ ဦး')],
+ ['Staff membership is limited to three accounts per shop', rules.includes("request.resource.data.shopId + '_1'") && rules.includes("request.resource.data.shopId + '_2'") && rules.includes("request.resource.data.shopId + '_3'") && html.includes('ဝန်ထမ်းအကောင့်အများဆုံး ၃ ခု')],
  ['Staff role and shop identity are enforced by Firestore membership rules', rules.includes('match /shopMembers/{memberUid}') && rules.includes('hasShopMemberRole(shopId, roles)') && html.includes('shopMembers").doc(user.uid).get()')],
  ['Staff workspace access is tenant-scoped and role-restricted', functions.includes('async function verifyWorkspaceMember(context, identity)') && functions.includes('member.data().shopId!==identity.shopId') && functions.includes('function workspaceCanRead(role,key)') && functions.includes('function workspaceCanWrite(role,key)')],
  ['Shop Owner and Platform Owner manage Merchant staff through Spark Firestore', html.includes('id="akOwnerStaffPanel"') && html.includes('function akLoadStaff()') && html.includes('sparkStore.listStaff()') && html.includes('sparkStore.setStaffPrintPermission(uid,canPrint)') && html.includes('sparkStore.revokeStaff(uid)')],

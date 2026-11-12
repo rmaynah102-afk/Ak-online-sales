@@ -1,0 +1,26 @@
+{
+  "id": "./",
+  "name": "AK Sale Software",
+  "short_name": "AK Sale",
+  "description": "AK Sale Software — Hardware and electrical shop POS, stock, sales, receipts and cloud sync.",
+  "lang": "my",
+  "categories": [
+    "business",
+    "productivity"
+  ],
+  "start_url": "./app.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "prefer_related_applications": false,
+  "background_color": "#f3f6fb",
+  "theme_color": "#071b57",
+  "icons": [
+    {
+      "src": "./ak-logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

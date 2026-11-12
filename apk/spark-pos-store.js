@@ -25,22 +25,49 @@
     return out;
   };
   const splitSensitive = record => {
-    const costs = {};
     const walk = value => {
-      if (Array.isArray(value)) return value.map(walk);
-      if (!value || typeof value !== "object") return value;
-      const safe = {};
+      if (Array.isArray(value)) {
+        const safe = [], sensitive = [];
+        let hasSensitive = false;
+        value.forEach((item, index) => {
+          const child = walk(item);
+          safe[index] = child.safe;
+          sensitive[index] = child.sensitive;
+          if (child.hasSensitive) hasSensitive = true;
+        });
+        return { safe, sensitive: hasSensitive ? sensitive : null, hasSensitive };
+      }
+      if (!value || typeof value !== "object") return { safe: value, sensitive: null, hasSensitive: false };
+      const safe = {}, sensitive = {};
+      let hasSensitive = false;
       for (const [key, item] of Object.entries(value)) {
-        if (COST_FIELDS.includes(key)) costs[key] = costs[key] || [];
         if (COST_FIELDS.includes(key)) {
-          costs[key].push({ path: [], value: clean(item) });
+          sensitive[key] = clean(item);
+          hasSensitive = true;
         } else {
-          safe[key] = walk(item);
+          const child = walk(item);
+          safe[key] = child.safe;
+          if (child.hasSensitive) {
+            sensitive[key] = child.sensitive;
+            hasSensitive = true;
+          }
         }
       }
-      return safe;
+      return { safe, sensitive: hasSensitive ? sensitive : null, hasSensitive };
     };
-    return { base: walk(record || {}), costs };
+    const result = walk(record || {});
+    return { base: result.safe, costs: result.sensitive || {} };
+  };
+  const mergeSensitive = (safe, sensitive) => {
+    if (Array.isArray(safe)) return safe.map((item, index) => mergeSensitive(item, sensitive && sensitive[index]));
+    if (!safe || typeof safe !== "object") return safe;
+    const result = { ...safe };
+    if (sensitive && typeof sensitive === "object" && !Array.isArray(sensitive)) {
+      for (const [key, value] of Object.entries(sensitive)) {
+        result[key] = key in result ? mergeSensitive(result[key], value) : value;
+      }
+    }
+    return result;
   };
   const assertId = id => {
     const value = String(id || "");
@@ -95,12 +122,12 @@
       if (names.includes("productCosts")) {
         const snap = await pathFor(this.db, this.shopId, "productCosts").get();
         const byId = new Map(snap.docs.map(doc => [doc.id, doc.data()]));
-        output.products = output.products.map(p => ({ ...p, ...(byId.get(p.id) || {}) }));
+        output.products = output.products.map(p => mergeSensitive(p, byId.get(p.id)));
       }
       if (names.includes("saleCosts")) {
         const snap = await pathFor(this.db, this.shopId, "saleCosts").get();
         const byId = new Map(snap.docs.map(doc => [doc.id, doc.data()]));
-        output.sales = output.sales.map(s => ({ ...s, ...(byId.get(s.id) || {}) }));
+        output.sales = output.sales.map(s => mergeSensitive(s, byId.get(s.id)));
       }
       return output;
     }
@@ -152,6 +179,10 @@
         const snap = await pathFor(this.db, this.shopId, name).get();
         verified[name] = snap.size;
         if (snap.size < counts[name]) throw new Error("Migration verification failed for " + name + ": source=" + counts[name] + ", destination=" + snap.size);
+        for (const row of (Array.isArray(data[name]) ? data[name] : [])) {
+          const sourceId = assertId(row && row.id);
+          if (!snap.docs.some(doc => doc.id === sourceId)) throw new Error("Migration verification missing " + name + "/" + sourceId);
+        }
       }
       const marker = {
         version: VERSION,

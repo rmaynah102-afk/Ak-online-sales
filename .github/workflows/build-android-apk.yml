@@ -49,6 +49,8 @@ jobs:
           NODE
       - name: Validate AI diagnostics JavaScript
         run: node --check apk/ak-health-monitor.js
+      - name: Test AI diagnostics privacy and issue detection
+        run: node tests/health-monitor.test.js
       - name: Set up Java
         uses: actions/setup-java@v4
         with:

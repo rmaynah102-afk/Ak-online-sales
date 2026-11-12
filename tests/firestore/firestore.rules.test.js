@@ -329,6 +329,32 @@ describe('AK Sale Firestore security baseline', function () {
     await assertFails(setDoc(doc(db, 'shops', 'shop-a', 'pos', 'settings', 'records', 'main'), { currency: 'MMK' }));
   });
 
+  it('keeps product and sale cost fields out of cashier-readable documents', async () => {
+    await seedLicense('shop-a');
+    await seedMember('cashier-a', 'shop-a', 'cashier');
+    await seedMember('manager-a', 'shop-a', 'manager');
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), 'shops', 'shop-a', 'pos', 'products', 'records', 'secret-product'), {
+        name: 'Drill', cost: 15000, retail: 20000,
+      });
+      await setDoc(doc(context.firestore(), 'shops', 'shop-a', 'pos', 'productCosts', 'records', 'p1'), {
+        productId: 'secret-product', cost: 15000,
+      });
+    });
+    const cashier = testEnv.authenticatedContext('cashier-a', {
+      email: 'cashier-a@example.com', email_verified: true,
+    }).firestore();
+    const manager = testEnv.authenticatedContext('manager-a', {
+      email: 'manager-a@example.com', email_verified: true,
+    }).firestore();
+    await assertFails(getDoc(doc(cashier, 'shops', 'shop-a', 'pos', 'products', 'records', 'secret-product')));
+    await assertFails(getDoc(doc(cashier, 'shops', 'shop-a', 'pos', 'productCosts', 'records', 'p1')));
+    await assertSucceeds(getDoc(doc(manager, 'shops', 'shop-a', 'pos', 'productCosts', 'records', 'p1')));
+    await assertFails(setDoc(doc(manager, 'shops', 'shop-a', 'pos', 'products', 'records', 'p2'), {
+      name: 'Saw', cost: 10000, retail: 14000,
+    }));
+  });
+
   it('allows manager inventory and expense writes but denies cross-tenant access', async () => {
     await seedLicense('shop-a');
     await seedLicense('shop-b');

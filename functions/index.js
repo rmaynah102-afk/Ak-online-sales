@@ -1203,13 +1203,10 @@ async function verifyWorkspaceMember(context, identity) {
 }
 function workspaceCanWrite(identity,key) {
   if (identity.role==="owner") return true;
-  if (identity.role==="manager") return false;
   const views=identity.allowedViews||[];
-  if (["cashier","employee"].includes(identity.role)) {
-    if (key==="products") return views.includes("sales");
-    if (key==="sales" || key==="payments") return views.includes("sales");
-    if (key==="people") return views.includes("people");
-  }
+  if (key==="products") return views.includes("sales");
+  if (key==="sales" || key==="payments") return views.includes("sales");
+  if (key==="people") return views.includes("people");
   return false;
 }
 function workspaceCanRead(identity,key) {
@@ -1270,7 +1267,7 @@ exports.saveShopWorkspace = functions.https.onCall(async (data,context)=>{
     if (!workspaceCanWrite(identity,key) || !Object.prototype.hasOwnProperty.call(input,key)) continue;
     if (!Array.isArray(input[key])) throw new functions.https.HttpsError("invalid-argument",key+" စာရင်းပုံစံ မမှန်ပါ။");
     if (input[key].length>100000) throw new functions.https.HttpsError("resource-exhausted",key+" စာရင်းသည် လက်ရှိ request အရွယ်အစားထက် ကျော်နေသည်။");
-    if (key==="products" && ["cashier","employee"].includes(identity.role)) {
+    if (key==="products" && WORKSPACE_READ_ROLES.includes(identity.role)) {
       const oldVersion=pointers.products;
       const oldSnap=oldVersion?await db.collection("shops").doc(identity.shopId).collection("workspaceVersions").doc(oldVersion).collection("products").get():null;
       const oldProducts=new Map((oldSnap?oldSnap.docs:[]).map(doc=>{const record=doc.data().record;return [String(record.id||doc.id),record]}));

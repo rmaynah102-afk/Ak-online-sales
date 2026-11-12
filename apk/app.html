@@ -2318,7 +2318,8 @@ async function akSetCustomerAccess(uid,action){
   const target=akPlatformUserRows.find(x=>x.uid===uid);
   if(!target)throw Error("Customer အကောင့်ကို မတွေ့ပါ။");
   const status=action==="suspend"?"suspended":"active";
-  if(target.plan==="free-trial"){\n    if(action==="reactivate"&&target.expiresAt&&new Date(target.expiresAt).getTime()<=Date.now())throw Error("Trial သက်တမ်းကုန်ပြီးပါပြီ။ Package အသစ်ကို သက်တမ်းတိုးပေးပါ။");
+  if(target.plan==="free-trial"){
+    if(action==="reactivate"&&target.expiresAt&&new Date(target.expiresAt).getTime()<=Date.now())throw Error("Trial သက်တမ်းကုန်ပြီးပါပြီ။ Package အသစ်ကို သက်တမ်းတိုးပေးပါ။");
    await fbStore.collection("freeBetaUsers").doc(uid).update({status:status==="active"?"active":"disabled"});
   }else{
    const ref=fbStore.collection("licenses").doc(uid);

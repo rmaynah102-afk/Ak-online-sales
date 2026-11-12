@@ -51,7 +51,6 @@ assert.match(appHtml, /<script src="\.\/spark-pos-store\.js"><\/script>/);
 assert.match(apkHtml, /<script src="\.\/spark-pos-store\.js"><\/script>/);
 assert.match(apkHtml, /<script src="\.\/ak-health-monitor\.js" defer><\/script>/);
 assert.match(fs.readFileSync("apk/ak-health-monitor.js", "utf8"), /window\.AKHealthMonitor/);
-assert.match(packageJson.scripts["copy-web"], /ak-health-monitor\.js/);
 // The APK shell must call the Spark staff adapter rather than Cloud Functions for staff lifecycle.
 assert.match(apkHtml, /sparkStore\.claimInvite\(code\)/);
 assert.match(apkHtml, /sparkStore\.createInvite\(role\)/);
@@ -75,6 +74,7 @@ for (const match of apkHtml.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)) {
   if (script) new vm.Script(script, { filename: "apk/app.html:inline-script" });
 }
 const packageJson = JSON.parse(fs.readFileSync("package.json", "utf8"));
+assert.match(packageJson.scripts["copy-web"], /ak-health-monitor\.js/);
 assert.match(packageJson.scripts["copy-web"], /spark-pos-store\.js/);
 
 const schema = sandbox.AKSparkPosSchema;

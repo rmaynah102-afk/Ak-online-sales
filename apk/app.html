@@ -1916,31 +1916,6 @@ async function refreshShopDevices(){try{if(!fbAuth?.currentUser)throw Error("ဆ
 async function revokeShopDevice(id){if(!id||!confirm("ဒီစက်ကို ဆိုင်အကောင့်မှ ဖြုတ်မလား။"))return;try{const call=firebase.functions().httpsCallable("revokeShopDevice");await call({deviceId:id});await refreshShopDevices();alert("စက်ကို ဖြုတ်ပြီးပါပြီ။")}catch(e){alert("စက်ဖြုတ်မရပါ: "+e.message)}}
 async function publishGlobalAnnouncement(){try{if(!akIsPlatformOwner())throw Error("CEO Owner အကောင့်သာ ကြေညာချက်ပို့နိုင်သည်။");const title=$("globalAnnouncementTitle").value.trim(),message=$("globalAnnouncementMessage").value.trim();if(title.length<2||message.length<2)throw Error("ခေါင်းစဉ်နှင့် စာသားထည့်ပါ။");$("globalAnnouncementStatus").textContent="ပို့နေသည်...";await firebase.functions().httpsCallable("publishGlobalAnnouncement")({title,message});$("globalAnnouncementTitle").value="";$("globalAnnouncementMessage").value="";$("globalAnnouncementStatus").textContent="ကြေညာချက် ပို့ပြီးပါပြီ။";await loadGlobalAnnouncements()}catch(e){$("globalAnnouncementStatus").textContent="ပို့မရပါ: "+(e.message||e)}}
 async function loadGlobalAnnouncements(){try{if(!fbAuth?.currentUser)return;const result=await firebase.functions().httpsCallable("listGlobalAnnouncements")({});const rows=result.data.announcements||[];const box=$("globalAnnouncementFeed"),target=$("globalAnnouncementRows");if(!box||!target)return;box.classList.toggle("hidden",!rows.length);target.innerHTML=rows.map(x=>'<article style="padding:10px 0;border-bottom:1px solid var(--line)"><b>'+esc(x.title)+'</b><p style="margin:5px 0;white-space:pre-wrap">'+esc(x.message)+'</p><small class="muted">'+(x.createdAt?new Date(x.createdAt).toLocaleString():"")+'</small></article>').join("")}catch(e){const el=document.getElementById("globalAnnouncementStatus");if(el)el.textContent="ကြေညာချက်ဖတ်မရပါ: "+e.message}}
-async function akSetStaffPrint(memberUid,canPrint){try{await firebase.functions().httpsCallable("setShopStaffPrintPermission")({memberUid,canPrint});$("akStaffStatus").textContent="Print ခွင့်ပြုချက် ပြောင်းပြီးပါပြီ။ ဝန်ထမ်းက ပြန် Login ဝင်ရန် လိုအပ်သည်။";await akLoadStaff()}catch(e){$("akStaffStatus").textContent="Print ခွင့်ပြုချက် ပြောင်းမရပါ: "+(e.message||e)}}
-async function akCreateMerchantCode(){
- try{
-  if(!fbAuth?.currentUser||!["shop-owner","platform-owner"].includes(akUserRole))throw Error("ဆိုင်ရှင်အကောင့်ဖြင့် Login ဝင်ပါ");
-  const role=$("akStaffRole").value;
-  $("akStaffStatus").textContent="Merchant Code ထုတ်နေသည်...";
-  const result=await firebase.functions().httpsCallable("createShopInviteCode")({role});
-  const code=result.data.code;
-  $("akStaffStatus").innerHTML="Merchant Code: <b style='font-size:22px;letter-spacing:3px'>"+esc(code)+"</b> · ၂၄ နာရီအတွင်း တစ်ကြိမ်သာ သုံးနိုင်သည်။ ဝန်ထမ်းထံ ပေးပါ။";
-  try{await navigator.clipboard.writeText(code)}catch(_){}
-  await akLoadStaff();
- }catch(e){$("akStaffStatus").textContent="Code ထုတ်မရပါ: "+(e.message||e)}
-}
-async function akClaimMerchantCode(){
- try{
-  if(!fbAuth?.currentUser)throw Error("ဝန်ထမ်း၏ ကိုယ်ပိုင် Gmail ဖြင့် အရင် Login ဝင်ပါ");
-  const code=String($("akMerchantJoinCode")?.value||"").trim().toUpperCase();
-  if(!code)throw Error("Merchant Code ထည့်ပါ");
-  $("fbStatus").textContent="ဆိုင်အကောင့်နှင့် ချိတ်ဆက်နေသည်...";
-  await firebase.functions().httpsCallable("claimShopInviteCode")({code});
-  await fbAuth.currentUser.getIdToken(true);
-  $("fbStatus").textContent="ဆိုင်နှင့် ချိတ်ဆက်ပြီးပါပြီ။ App ကို ပြန်ဖွင့်နေသည်...";
-  location.reload();
- }catch(e){$("fbStatus").textContent="ဆိုင်ချိတ်မရပါ: "+(e.message||e)}
-}
 let akShopStaffCache=[];
 async function akCreateStaffInvite(){try{if(!fbAuth?.currentUser||!["shop-owner","platform-owner"].includes(akUserRole))throw Error("ဆိုင်ရှင်အကောင့်ဖြင့် Login ဝင်ပါ။");const role=$("akStaffRole")?.value||"employee";$("akStaffStatus").textContent="Merchant Code ထုတ်နေသည်...";const sparkStore=new AKSparkPosStore({firestore:fbStore,auth:fbAuth,shopId:fbAuth.currentUser.uid,role:"owner",isPlatformOwner:akIsPlatformOwner(fbAuth.currentUser)});const result=await sparkStore.createInvite(role);const code=String(result.code||"");if(!/^[A-F0-9]{32}$/.test(code))throw Error("Merchant Code မမှန်ပါ။");$("akStaffInviteCode").textContent=code;$("akStaffStatus").textContent="Merchant Code ထုတ်ပြီးပါပြီ။ ဝန်ထမ်းထံ လုံခြုံစွာပေးပါ။ ၂၄ နာရီအတွင်း တစ်ကြိမ်သာ အသုံးပြုနိုင်သည်။";await akLoadStaff()}catch(e){$("akStaffStatus").textContent="Merchant Code ထုတ်မရပါ: "+(e.message||e)}}
 function akCopyStaffInviteCode(){const code=$("akStaffInviteCode")?.textContent||"";if(!/^[A-F0-9]{32}$/.test(code)){alert("ကူးယူရန် Merchant Code မရှိပါ။");return}if(navigator.clipboard?.writeText)navigator.clipboard.writeText(code).then(()=>alert("Merchant Code ကူးပြီးပါပြီ။")).catch(()=>alert("Code ကို ဖိ၍ Copy လုပ်ပါ။"));else alert("Code ကို ဖိ၍ Copy လုပ်ပါ။")}

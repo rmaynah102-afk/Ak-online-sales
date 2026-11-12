@@ -2,8 +2,8 @@
 <html lang="my">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0649b8"><meta name="description" content="AK Market — မြန်မာနိုင်ငံတစ်ဝန်း ပစ္စည်းဝယ်ယူရောင်းချရန် အခမဲ့ Online Marketplace။ ပစ္စည်းပုံ၊ ကျပ်ဈေးနှုန်း၊ မြို့နယ်နှင့် ဖုန်း/Viber ဆက်သွယ်ရန် တစ်နေရာတည်း။"><meta name="robots" content="index,follow"><link rel="canonical" href="https://rmaynah102-afk.github.io/Ak-online-sales/"><meta property="og:url" content="https://rmaynah102-afk.github.io/Ak-online-sales/"><meta property="og:type" content="website"><meta property="og:locale" content="my_MM"><meta name="application-name" content="AK Market"><meta property="og:title" content="AK Market | မြန်မာ့ Online Shopping ဈေးကွက်"><meta property="og:description" content="ပစ္စည်းကြော်ငြာ အခမဲ့တင်ပါ။ မြို့နယ်အလိုက် ရှာဖွေပါ။ ဆိုင်နှင့် ရောင်းသူကို ဖုန်း/Viber ဖြင့် တိုက်ရိုက်ဆက်သွယ်ပါ။"><link rel="manifest" href="./manifest.webmanifest"><link rel="icon" href="./ak-logo.svg" type="image/svg+xml">
-<title>AK Market | မြန်မာ့ Online Shopping ဈေးကွက်</title>
+<meta name="theme-color" content="#0649b8"><meta name="description" content="AK Sale Software — Hardware & Electrical POS. Manage products, stock, sales, purchases, staff, receipts, reports and secure cloud data for retail shops."><meta name="robots" content="index,follow"><link rel="canonical" href="https://rmaynah102-afk.github.io/Ak-online-sales/"><meta property="og:url" content="https://rmaynah102-afk.github.io/Ak-online-sales/"><meta property="og:type" content="website"><meta property="og:locale" content="my_MM"><meta name="application-name" content="AK Sale Software"><meta property="og:title" content="AK Sale Software | Hardware & Electrical POS"><meta property="og:description" content="ဆိုင်ပစ္စည်း၊ အရောင်း၊ အဝယ်၊ လက်ကျန်၊ ဝန်ထမ်း၊ ဘောင်ချာနှင့် Cloud Sync ကို တစ်နေရာတည်း စီမံပါ။"><link rel="manifest" href="./manifest.webmanifest"><link rel="icon" href="./ak-logo.svg" type="image/svg+xml">
+<title>AK Sale Software | Hardware & Electrical POS</title>
 <script src="./firebase-config.js"></script>
 <style>
 :root{--g:#123b2a;--g2:#1e6045;--bg:#f1f5f2;--line:#d8e2db;--red:#b42318;--gold:#fff4d6}
@@ -585,7 +585,7 @@ body.ak-staff #productForm button[onclick^="akSendProductToMarket"] {display:non
 </div>
 <div class="actions"><button type="button" id="akProvisionVerifyButton" onclick="akProvisionShopOwner()">နံပါတ် (၃) · Login Verify / အကောင့်ဖွင့်ခွင့်ပေးမည်</button><button type="button" class="alt" onclick="loadPlatformUsers()">ဆိုင်ရှင်စာရင်း ပြန်ဖတ်ရန်</button></div>
 <p id="akProvisionStatus" class="muted">Owner Gmail ဖြင့်သာ အသုံးပြုနိုင်သည်။ Password ကို Firebase Authentication သို့သာ ပို့မည်။</p>
-<div class="tablewrap"><table><thead><tr><th>စဉ်</th><th>ဆိုင်ရှင် Gmail</th><th>Password</th><th>Login Verify</th><th>Package / သက်တမ်း</th><th>အခြေအနေ</th><th>Password စီမံမှု</th></tr></thead><tbody id="akOwnerShopRows"><tr><td colspan="6">စာရင်းဖတ်ရန် နှိပ်ပါ။</td></tr></tbody></table></div>
+<div class="tablewrap"><table><thead><tr><th>စဉ်</th><th>ဆိုင်ရှင် Gmail</th><th>Password အခြေအနေ</th><th>Email Verify</th><th>Package / သက်တမ်း</th><th>အခြေအနေ</th><th>Password စီမံမှု</th></tr></thead><tbody id="akOwnerShopRows"><tr><td colspan="7">စာရင်းဖတ်ရန် နှိပ်ပါ။</td></tr></tbody></table></div>
 </div>
 <div id="akOwnerDashboardPanels"></div></section>
 <section id="userDashboard" class="view hidden">\n<div class="panel shop-owner-only"><h2>User Dashboard</h2><p class="muted">မိမိဆိုင်၏ အရောင်းလုပ်ငန်း၊ ဝန်ထမ်းအကောင့်နှင့် ဝင်ခွင့်များကို ဒီနေရာမှ စီမံပါ။ ဤ Dashboard သည် သင့်ဆိုင်အတွက်သာ ဖြစ်သည်။</p>
@@ -2340,7 +2340,7 @@ function akRenderOwnerShopRows(){
   const canReset=["30-days","90-days","180-days","365-days"].includes(String(u.plan||""))||u.passwordConfigured;
   const resetAction=canReset?'<button type="button" class="alt" onclick="akResetShopOwnerPassword(\''+esc(u.uid)+'\')">Password ပြောင်း / Reset</button>':"—";
   return "<tr><td>"+(i+1)+"</td><td>"+esc(u.email||"")+"</td><td>"+password+"</td><td>"+(u.emailVerified?"Verify ပြီး":"မအတည်ပြုရသေး")+"</td><td>"+esc(u.plan||"—")+"<br>"+esc(date)+"</td><td>"+state+"</td><td>"+resetAction+"</td></tr>";
- }).join(""):"<tr><td colspan=\"6\">ဆိုင်ရှင် Gmail မရှိသေးပါ။ အပေါ်မှာ အသစ်ထည့်ပါ။</td></tr>";
+ }).join(""):"<tr><td colspan=\"7\">ဆိုင်ရှင် Gmail မရှိသေးပါ။ အပေါ်မှာ အသစ်ထည့်ပါ။</td></tr>";
 }
 async function akResetShopOwnerPassword(uid){
  const status=$("akProvisionStatus");

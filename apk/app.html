@@ -2375,7 +2375,7 @@ async function loadPlatformUsers(){
   akRenderPlatformUsers();akRenderOwnerShopRows();
   const active=akPlatformUserRows.filter(u=>u.status==="active"&&!u.disabled&&u.expiresAt&&new Date(u.expiresAt).getTime()>Date.now()).length;
   if($("akOwnerUserCount"))$("akOwnerUserCount").textContent=akPlatformUserRows.length+" ခု";
-  if(status)status.textContent="ဆိုင်အကောင့် "+akPlatformUserRows.length+" ခု · လက်ရှိအသုံးပြုခွင့်ရှိ "+active+" ခု · အများဆုံး ၃၀ ဆိုင်";
+  if(status)status.textContent="ဆိုင်အကောင့် "+akPlatformUserRows.length+" ခု · လက်ရှိအသုံးပြုခွင့်ရှိ "+active+" ခု · အများဆုံး ၁၀၀ ဆိုင်";
   if(ownerStatus)ownerStatus.textContent="ဆိုင်ရှင်စာရင်း "+akPlatformUserRows.length+" ခု · Active "+active+" ခု · Password များကို လုံခြုံရေးအတွက် မပြသပါ။";
  }catch(e){
   if($("akPlatformUserStatus"))$("akPlatformUserStatus").textContent="Customer စာရင်းဖတ်မရပါ: "+(e.message||e);

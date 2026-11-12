@@ -41,8 +41,13 @@ function hasSensitive(value) {
 assert.equal(hasSensitive(productParts.base), false);
 assert.equal(hasSensitive(saleParts.base), false);
 
+const appHtml = fs.readFileSync("app.html", "utf8");
+assert.match(appHtml, /<script src="\\.\\/spark-pos-store\\.js"><\\/script>/);
+const packageJson = JSON.parse(fs.readFileSync("package.json", "utf8"));
+assert.match(packageJson.scripts["copy-web"], /spark-pos-store\\.js/);
+
 const schema = sandbox.AKSparkPosSchema;
 assert.deepEqual(JSON.parse(JSON.stringify(schema.roleCollections.cashier)), ["products", "sales", "people", "payments"]);
 assert.equal(schema.roleCollections.employee.includes("expenses"), false);
 assert.equal(schema.roleCollections.manager.includes("productCosts"), true);
-console.log("AK Spark POS adapter: 5 checks passed");
+console.log("AK Spark POS adapter: 7 checks passed");

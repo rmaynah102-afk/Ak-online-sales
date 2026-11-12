@@ -67,6 +67,16 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/shopMembers/$(request.auth.uid)).data.role in roles;
     }
 
+    function posRecordHasNoCostFields(data) {
+      return !('cost' in data.keys())
+        && !('costPrice' in data.keys())
+        && !('unitCost' in data.keys())
+        && !('purchaseCost' in data.keys())
+        && !('profit' in data.keys())
+        && !('grossProfit' in data.keys())
+        && !('margin' in data.keys());
+    }
+
     function canReadPosCollection(shopId, collection) {
       return isPosShopOwner(shopId)
         || (collection == 'products' && hasShopMemberRole(shopId, ['manager','cashier','employee']))
@@ -74,7 +84,8 @@ service cloud.firestore {
         || (collection == 'purchases' && hasShopMemberRole(shopId, ['manager']))
         || (collection == 'people' && hasShopMemberRole(shopId, ['manager','cashier']))
         || (collection == 'payments' && hasShopMemberRole(shopId, ['manager','cashier']))
-        || (collection == 'expenses' && hasShopMemberRole(shopId, ['manager']));
+        || (collection == 'expenses' && hasShopMemberRole(shopId, ['manager']))
+        || (collection in ['productCosts','saleCosts'] && hasShopMemberRole(shopId, ['manager']));
     }
 
     function canCreatePosCollection(shopId, collection) {
@@ -84,7 +95,8 @@ service cloud.firestore {
         || (collection == 'purchases' && hasShopMemberRole(shopId, ['manager']))
         || (collection == 'people' && hasShopMemberRole(shopId, ['manager','cashier']))
         || (collection == 'payments' && hasShopMemberRole(shopId, ['manager','cashier']))
-        || (collection == 'expenses' && hasShopMemberRole(shopId, ['manager']));
+        || (collection == 'expenses' && hasShopMemberRole(shopId, ['manager']))
+        || (collection in ['productCosts','saleCosts'] && hasShopMemberRole(shopId, ['manager']));
     }
 
     function canUpdatePosCollection(shopId, collection) {
@@ -94,7 +106,8 @@ service cloud.firestore {
         || (collection == 'purchases' && hasShopMemberRole(shopId, ['manager']))
         || (collection == 'people' && hasShopMemberRole(shopId, ['manager','cashier']))
         || (collection == 'payments' && hasShopMemberRole(shopId, ['manager']))
-        || (collection == 'expenses' && hasShopMemberRole(shopId, ['manager']));
+        || (collection == 'expenses' && hasShopMemberRole(shopId, ['manager']))
+        || (collection in ['productCosts','saleCosts'] && hasShopMemberRole(shopId, ['manager']));
     }
 
     function canDeletePosCollection(shopId, collection) {
@@ -110,9 +123,15 @@ service cloud.firestore {
     // Tenant-scoped POS data: collection-level rules enforce role permissions.
     // APK migration must split the legacy appData blob before using these paths.
     match /shops/{shopId}/pos/{collection}/records/{documentId} {
-      allow read: if canReadPosCollection(shopId, collection);
-      allow create: if canCreatePosCollection(shopId, collection);
-      allow update: if canUpdatePosCollection(shopId, collection);
+      allow read: if canReadPosCollection(shopId, collection)
+        && ((collection != 'products' && collection != 'sales')
+          || posRecordHasNoCostFields(resource.data));
+      allow create: if canCreatePosCollection(shopId, collection)
+        && ((collection != 'products' && collection != 'sales')
+          || posRecordHasNoCostFields(request.resource.data));
+      allow update: if canUpdatePosCollection(shopId, collection)
+        && ((collection != 'products' && collection != 'sales')
+          || posRecordHasNoCostFields(request.resource.data));
       allow delete: if canDeletePosCollection(shopId, collection);
     }
 

@@ -20,7 +20,12 @@ service cloud.firestore {
         && (isVerifiedOwner()
           || (!exists(/databases/$(database)/documents/licenses/$(uid))
             && exists(/databases/$(database)/documents/freeBetaUsers/$(uid))
-            && get(/databases/$(database)/documents/freeBetaUsers/$(uid)).data.status == 'active')
+            && exists(freeTrialClaimPath(request.auth.token.email))
+            && get(/databases/$(database)/documents/freeBetaUsers/$(uid)).data.status == 'active'
+            && get(/databases/$(database)/documents/freeBetaUsers/$(uid)).data.createdAt is timestamp
+            && get(/databases/$(database)/documents/freeBetaUsers/$(uid)).data.createdAt + duration.value(5, 'd') > request.time
+            && get(freeTrialClaimPath(request.auth.token.email)).data.uid == uid
+            && get(freeTrialClaimPath(request.auth.token.email)).data.email == request.auth.token.email)
           || ((request.auth.token.email_verified == true
               || (request.auth.token.phone_number is string
                 && request.auth.token.phone_number.size() >= 8))
@@ -30,8 +35,8 @@ service cloud.firestore {
             && get(/databases/$(database)/documents/licenses/$(uid)).data.expiresAt > request.time));
     }
 
-    function freeBetaCapacityPath() {
-      return /databases/$(database)/documents/freeBetaCapacity/slots;
+    function freeTrialClaimPath(email) {
+      return /databases/$(database)/documents/freeTrialClaims/$(email);
     }
 
     function activeShopLicense(shopId) {
@@ -70,40 +75,8 @@ service cloud.firestore {
       allow write: if false;
     }
 
-    // Hard cap: at most 30 registered Free Beta shop accounts.
-    // A new profile and the capacity counter must be created atomically.
-    match /freeBetaCapacity/slots {
-      allow read: if isVerifiedOwner()
-        || (request.auth != null && request.auth.token.email_verified == true);
-      allow create: if (isVerifiedOwner()
-          && request.resource.data.keys().hasOnly(['count','updatedAt'])
-          && request.resource.data.count is int
-          && request.resource.data.count >= 0
-          && request.resource.data.count <= 30)
-        || (request.auth != null
-          && request.auth.token.email_verified == true
-          && request.resource.data.keys().hasOnly(['count','updatedAt'])
-          && request.resource.data.count == 1
-          && request.resource.data.updatedAt == request.time
-          && existsAfter(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid))
-          && !exists(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid)));
-      allow update: if (isVerifiedOwner()
-          && request.resource.data.keys().hasOnly(['count','updatedAt'])
-          && request.resource.data.count is int
-          && request.resource.data.count >= 0
-          && request.resource.data.count <= 30)
-        || (request.auth != null
-          && request.auth.token.email_verified == true
-          && request.resource.data.keys().hasOnly(['count','updatedAt'])
-          && resource.data.count is int
-          && request.resource.data.count == resource.data.count + 1
-          && request.resource.data.count <= 30
-          && request.resource.data.updatedAt == request.time
-          && existsAfter(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid))
-          && !exists(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid)));
-      allow delete: if false;
-    }
-
+    // A Gmail address can claim one five-day trial only once. The server timestamp
+    // on the profile determines expiry; clients cannot extend or reset the trial clock.
     match /freeBetaUsers/{userId} {
       allow read: if isVerifiedOwner()
         || (request.auth != null && request.auth.uid == userId);
@@ -117,26 +90,47 @@ service cloud.firestore {
         && request.resource.data.lastLoginAt == request.time
         && request.resource.data.keys().hasOnly(['uid','email','status','createdAt','lastLoginAt'])
         && !exists(/databases/$(database)/documents/freeBetaUsers/$(userId))
-        && existsAfter(freeBetaCapacityPath())
-        && getAfter(freeBetaCapacityPath()).data.count
-          == (exists(freeBetaCapacityPath()) ? get(freeBetaCapacityPath()).data.count : 0) + 1
-        && getAfter(freeBetaCapacityPath()).data.count <= 30;
+        && !exists(freeTrialClaimPath(request.auth.token.email))
+        && existsAfter(freeTrialClaimPath(request.auth.token.email))
+        && getAfter(freeTrialClaimPath(request.auth.token.email)).data.uid == userId
+        && getAfter(freeTrialClaimPath(request.auth.token.email)).data.email == request.auth.token.email
+        && getAfter(freeTrialClaimPath(request.auth.token.email)).data.createdAt == request.time;
       allow update: if (isVerifiedOwner()
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
           && request.resource.data.status in ['active','disabled'])
         || (request.auth != null
           && request.auth.uid == userId
           && resource.data.status == 'active'
+          && resource.data.createdAt is timestamp
+          && resource.data.createdAt + duration.value(5, 'd') > request.time
           && request.resource.data.status == 'active'
           && request.resource.data.lastLoginAt == request.time
-          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastLoginAt']))
-        || (request.auth != null
-          && request.auth.uid == userId
-          && resource.data.status == null
-          && request.resource.data.status == 'active'
-          && request.resource.data.lastLoginAt == request.time
-          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','lastLoginAt']));
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastLoginAt']));
       allow delete: if false;
+    }
+
+    match /freeTrialClaims/{email} {
+      allow read: if isVerifiedOwner()
+        || (request.auth != null && request.auth.token.email == email);
+      allow create: if request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.email == email
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.email == email
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.keys().hasOnly(['uid','email','createdAt'])
+        && !exists(freeTrialClaimPath(email))
+        && (
+          (existsAfter(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid))
+            && !exists(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid))
+            && getAfter(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid)).data.createdAt == request.time
+            && request.resource.data.createdAt == request.time)
+          || (exists(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid))
+            && get(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid)).data.uid == request.auth.uid
+            && get(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid)).data.email == email
+            && get(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid)).data.createdAt == request.resource.data.createdAt)
+        );
+      allow update, delete: if false;
     }
 
     match /licenses/{userId} {

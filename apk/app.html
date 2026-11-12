@@ -2072,8 +2072,8 @@ function akSetLoginMode(){
  if(passwordButton)passwordButton.classList.toggle("hidden",ownerMode);
  if(googleButton)googleButton.classList.toggle("hidden",!ownerMode);
  if(ownerMode&&$("fbEmail"))$("fbEmail").value="painglin102@gmail.com";
- if(reg){reg.style.display=mode==="staff"?"":"none";reg.textContent="ဝန်ထမ်း Gmail အကောင့်ဖွင့်ရန်"}if(mode==="staff"&&$("akAccountType"))$("akAccountType").value="staff";
- if(hint)hint.textContent=ownerMode?"Platform Owner သည် Owner Gmail ကို Google ဖြင့် အတည်ပြုပြီး ဝင်ပါ။ Password မလိုပါ။":mode==="staff"?"ဝန်ထမ်းသည် ကိုယ်ပိုင် Gmail ဖြင့် Register လုပ်ပြီး ပထမဆုံး Login တွင် Merchant Code ထည့်ပါ။":"ဆိုင်ရှင်သည် Owner ပေးထားသော Gmail နှင့် Password ဖြင့် ဝင်ပါ။ Gmail ကို Owner က Verify လုပ်ပြီးမှ Login ရမည်။";
+ if(reg){reg.style.display=ownerMode?"none":"";reg.textContent=mode==="staff"?"ဝန်ထမ်း Gmail အကောင့်ဖွင့်ရန်":"ဆိုင်ရှင်အကောင့်အသစ် ဖွင့်ရန်"}if($("akAccountType"))$("akAccountType").value=mode==="staff"?"staff":"shop-owner";
+ if(hint)hint.textContent=ownerMode?"Platform Owner သည် Owner Gmail ကို Google ဖြင့် အတည်ပြုပြီး ဝင်ပါ။ Password မလိုပါ။":mode==="staff"?"ဝန်ထမ်းသည် ကိုယ်ပိုင် Gmail ဖြင့် Register လုပ်ပြီး ပထမဆုံး Login တွင် Merchant Code ထည့်ပါ။":"ဆိုင်ရှင်သည် ကိုယ်ပိုင် Gmail ဖြင့် အကောင့်ဖွင့်ပြီး Email အတည်ပြုပါ။ Platform Owner က သက်တမ်းဖွင့်ပေးပြီးမှ Cloud POS အသုံးပြုနိုင်သည်။";
 }
 akSetLoginMode();
 async function akOwnerGoogleLogin(){

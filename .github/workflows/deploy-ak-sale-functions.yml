@@ -1,0 +1,46 @@
+name: Deploy AK Sale Account and Merchant Functions
+
+on:
+  push:
+    branches: [ak-owner-pos-default-mode]
+    paths:
+      - "functions/**"
+      - ".github/workflows/deploy-ak-sale-functions.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: ak-sale-functions-deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy-account-and-merchant-functions:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_AK_ONLIN_SALES }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Validate Functions source
+        run: |
+          npm --prefix functions ci
+          node --check functions/index.js
+          node -e "JSON.parse(require('fs').readFileSync('functions/package.json','utf8')); console.log('Functions package.json valid')"
+
+      - name: Install Firebase CLI
+        run: npm install --global firebase-tools
+
+      - name: Deploy AK Sale account, subscription, staff and workspace callables
+        run: |
+          firebase deploy --only functions:claimShopDevice,functions:listShopDevices,functions:revokeShopDevice,functions:publishGlobalAnnouncement,functions:listGlobalAnnouncements,functions:setShopStaffPrintPermission,functions:createShopInviteCode,functions:claimShopInviteCode,functions:listShopStaff,functions:assignShopStaffRole,functions:removeShopStaff,functions:listPendingShopProfiles,functions:reviewShopProfile,functions:loadShopWorkspace,functions:verifyShopOwnerLogin,functions:createShopOwnerAccount,functions:listPlatformUsers,functions:setPlatformUserAccess,functions:grantSubscription,functions:saveShopWorkspace,functions:createCloudBackup,functions:listCloudBackups,functions:restoreCloudBackup --project ak-onlin-sales --non-interactive

@@ -123,6 +123,10 @@ service cloud.firestore {
       return isPosShopOwner(shopId) || isActiveShopMember(shopId);
     }
 
+    function canWriteShopWorkspaceMeta(shopId) {
+      return isPosShopOwner(shopId) || hasShopMemberRole(shopId, ['manager','cashier']);
+    }
+
     // Tenant-scoped POS data: collection-level rules enforce role permissions.
     // APK migration must split the legacy appData blob before using these paths.
     match /shops/{shopId}/pos/{collection}/records/{documentId} {
@@ -142,7 +146,18 @@ service cloud.firestore {
     // through trusted callable functions so role permissions are enforced server-side.
     match /shops/{shopId}/workspace/{documentId} {
       allow read: if documentId == 'current' && canReadShopWorkspaceMeta(shopId);
-      allow write: if false;
+      allow create: if documentId == 'current'
+        && canWriteShopWorkspaceMeta(shopId)
+        && request.resource.data.keys().hasOnly(['revision','updatedAt'])
+        && request.resource.data.revision == 1
+        && request.resource.data.updatedAt == request.time;
+      allow update: if documentId == 'current'
+        && canWriteShopWorkspaceMeta(shopId)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['revision','updatedAt'])
+        && resource.data.revision is int
+        && request.resource.data.revision == resource.data.revision + 1
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if false;
     }
 
     // Spark-compatible staff membership: a verified employee claims a one-time

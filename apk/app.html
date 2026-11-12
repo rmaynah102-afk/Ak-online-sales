@@ -2131,12 +2131,17 @@ async function firebaseLogin(){
   }
   if(mode==="shop"){
    const shopToken=await credential.user.getIdTokenResult(true);
-   if(shopToken.claims.shopId){await fbAuth.signOut();throw Error("ဤအကောင့်သည် ဝန်ထမ်းအကောင့်ဖြစ်သည်။ ဝန်ထမ်း Login ကို ရွေးပါ။");}
+   const shopMemberSnap=await fbStore.collection("shopMembers").doc(credential.user.uid).get();
+   const shopMember=shopMemberSnap.exists?(shopMemberSnap.data()||{}):{};
+   if(shopToken.claims.shopId||(shopMember.status==="active"&&shopMember.shopId)){await fbAuth.signOut();throw Error("ဤအကောင့်သည် ဝန်ထမ်းအကောင့်ဖြစ်သည်။ ဝန်ထမ်း Login ကို ရွေးပါ။");}
    // Spark mode: Firestore license gate verifies the subscription after Auth changes.
   }
   if(mode==="staff"){
    const token=await credential.user.getIdTokenResult(true);
-   if(!token.claims.shopId){
+   const existingMemberSnap=await fbStore.collection("shopMembers").doc(credential.user.uid).get();
+   const existingMember=existingMemberSnap.exists?(existingMemberSnap.data()||{}):{};
+   const hasSparkMembership=existingMember.status==="active"&&!!existingMember.shopId&&String(existingMember.email||"").toLowerCase()===email;
+   if(!token.claims.shopId&&!hasSparkMembership){
     const code=String($("akStaffLoginCode")?.value||"").trim().toUpperCase();
     if(!/^[A-F0-9]{32}$/.test(code))throw Error("ပထမဆုံး Staff Login အတွက် Merchant Code ၃၂ လုံးထည့်ပါ။");
     const sparkStore=new AKSparkPosStore({firestore:fbStore,auth:fbAuth,shopId:credential.user.uid,role:"guest"});

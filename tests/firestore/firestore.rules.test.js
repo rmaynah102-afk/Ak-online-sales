@@ -136,6 +136,23 @@ describe('AK Sale Firestore security baseline', function () {
     }));
   });
 
+  it('requires a verified Gmail before creating a subscription access request', async () => {
+    const unverified = testEnv.authenticatedContext('shop-a', {
+      email: 'shop-a@example.com', email_verified: false,
+    }).firestore();
+    const requestData = {
+      uid: 'shop-a', email: 'shop-a@example.com', days: 30, status: 'pending',
+      createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
+    };
+    await assertFails(setDoc(doc(unverified, 'subscriptionAccessRequests', 'shop-a'), requestData));
+    const verified = testEnv.authenticatedContext('shop-b', {
+      email: 'shop-b@example.com', email_verified: true,
+    }).firestore();
+    await assertSucceeds(setDoc(doc(verified, 'subscriptionAccessRequests', 'shop-b'), {
+      ...requestData, uid: 'shop-b', email: 'shop-b@example.com',
+    }));
+  });
+
   it('allows only the verified Platform Owner to issue a customer license', async () => {
     const db = testEnv.authenticatedContext('platform-owner-uid', {
       email: 'painglin102@gmail.com',

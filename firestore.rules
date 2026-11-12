@@ -165,6 +165,8 @@ service cloud.firestore {
     match /shopMembers/{memberUid} {
       allow read: if request.auth != null
         && ((request.auth.uid == memberUid
+            && !exists(/databases/$(database)/documents/shopMembers/$(memberUid)))
+          || (request.auth.uid == memberUid
             && resource.data.status == 'active'
             && activeShopLicense(resource.data.shopId))
           || (request.auth.uid == resource.data.shopId

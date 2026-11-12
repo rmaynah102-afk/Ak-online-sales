@@ -1044,8 +1044,6 @@ document.querySelector('#nav [data-view="ownerDashboard"]')?.classList.add("shop
 function akInitOwnerDashboard(){
  const host=document.getElementById("akOwnerDashboardPanels");if(!host)return;
  ["akOwnerPromoPanel","akLicensePanel"].forEach(id=>{const el=document.getElementById(id);if(el&&el.parentElement!==host)host.appendChild(el)});
- const dash=document.getElementById("ownerDashboard");
- if(dash){dash.classList.remove("hidden");}
 }
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",akInitOwnerDashboard,{once:true});else akInitOwnerDashboard();
 const AK_I18N_MY_EN={

@@ -407,20 +407,16 @@ exports.verifyShopOwnerLogin = functions.https.onCall(async (data, context) => {
   if (user.customClaims?.shopId || user.customClaims?.platformAdmin) {
     throw new functions.https.HttpsError("permission-denied", "ဤအကောင့်သည် ဝန်ထမ်းအကောင့် ဖြစ်သည်။");
   }
-  const selectedDays = Number(data.planDays);
-  if (![30, 90, 180, 365].includes(selectedDays)) {
-    throw new functions.https.HttpsError("invalid-argument", "Package ရွေးချယ်ပါ။");
-  }
+  // Package and expiry are assigned by the Platform Owner. Shop owners must not
+  // choose or re-enter a package during login; the server checks the stored license.
   const snap = await db.collection("licenses").doc(context.auth.uid).get();
   const license = snap.data() || {};
   if (!snap.exists || license.status !== "active" || !license.expiresAt ||
       license.expiresAt.toMillis() <= Date.now()) {
     throw new functions.https.HttpsError("permission-denied", "အသုံးပြုခွင့် မရှိသေးပါ သို့မဟုတ် သက်တမ်းကုန်နေပါပြီ။ AK Owner ထံ ဆက်သွယ်ပါ။");
   }
-  if (Number(license.planDays || String(license.plan || "").replace("-days", "")) !== selectedDays) {
-    throw new functions.https.HttpsError("failed-precondition", "ရွေးထားသော Package သည် Owner သတ်မှတ်ပေးထားသော Package နှင့် မကိုက်ညီပါ။");
-  }
-  return { ok: true, planDays: selectedDays, expiresAt: license.expiresAt.toDate().toISOString() };
+  const assignedDays = Number(license.planDays || String(license.plan || "").replace("-days", "")) || 0;
+  return { ok: true, planDays: assignedDays, expiresAt: license.expiresAt.toDate().toISOString() };
 });
 
 // Owner-only customer account controls. Every Gmail other than the fixed verified

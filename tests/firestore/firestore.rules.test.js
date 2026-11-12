@@ -13,6 +13,7 @@ const {
   deleteDoc,
   writeBatch,
   Timestamp,
+  serverTimestamp,
 } = require('firebase/firestore');
 
 const PROJECT_ID = 'demo-ak-sale-rules';
@@ -174,18 +175,34 @@ describe('AK Sale Firestore security baseline', function () {
     const slotId = shopId + '_' + slot;
     const batch = writeBatch(db);
     batch.set(doc(db, 'shopMembers', staffUid), {
-      shopId, role, status: 'active', email, createdAt: Timestamp.now(),
+      shopId, role, status: 'active', email, createdAt: serverTimestamp(),
       createdBy: shopId, inviteCode: code, slotId, canPrint: false,
     });
     batch.set(doc(db, 'shopStaffSlots', slotId), {
-      shopId, uid: staffUid, slot, inviteCode: code, createdAt: Timestamp.now(),
+      shopId, uid: staffUid, slot, inviteCode: code, createdAt: serverTimestamp(),
     });
     batch.update(doc(db, 'shopInvites', code), {
-      status: 'claimed', claimedBy: staffUid, claimedAt: Timestamp.now(),
+      status: 'claimed', claimedBy: staffUid, claimedAt: serverTimestamp(),
     });
     await batch.commit();
     return db;
   }
+
+  it('allows a licensed shop owner to create an invite but keeps the code private', async () => {
+    await seedLicense('shop-a');
+    const ownerDb = testEnv.authenticatedContext('shop-a', {
+      email: 'shop-a@example.com', email_verified: true,
+    }).firestore();
+    const inviteRef = doc(ownerDb, 'shopInvites', 'ABCDEF0123456789ABCDEF0123456789');
+    await assertSucceeds(setDoc(inviteRef, {
+      shopId: 'shop-a', role: 'cashier', status: 'open',
+      createdAt: serverTimestamp(), expiresAt: futureTimestamp(1), createdBy: 'shop-a',
+    }));
+    const strangerDb = testEnv.authenticatedContext('random-user', {
+      email: 'random@example.com', email_verified: true,
+    }).firestore();
+    await assertFails(getDoc(doc(strangerDb, 'shopInvites', 'ABCDEF0123456789ABCDEF0123456789')));
+  });
 
   it('allows staff to claim a one-time invite atomically without custom claims', async () => {
     await seedLicense('shop-a');

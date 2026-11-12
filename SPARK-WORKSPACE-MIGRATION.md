@@ -14,13 +14,15 @@ Giving a cashier access to that single blob would expose products' cost prices, 
 
 Each customer shop uses its authenticated shop-owner UID as `shopId`. The Platform Owner's own POS workspace uses the Platform Owner UID and remains separate.
 
-- `shops/{shopId}/pos/products/records/{productId}`
-- `shops/{shopId}/pos/sales/records/{saleId}`
+- `shops/{shopId}/pos/products/records/{productId}` (no cost/profit fields)
+- `shops/{shopId}/pos/sales/records/{saleId}` (no cost/profit fields)
 - `shops/{shopId}/pos/purchases/records/{purchaseId}`
 - `shops/{shopId}/pos/people/records/{personId}`
 - `shops/{shopId}/pos/payments/records/{paymentId}`
 - `shops/{shopId}/pos/expenses/records/{expenseId}`
 - `shops/{shopId}/pos/settings/records/{documentId}`
+- `shops/{shopId}/pos/productCosts/records/{productId}` (manager/owner only)
+- `shops/{shopId}/pos/saleCosts/records/{saleId}` (manager/owner only)
 
 The existing `shops/{shopId}/workspace/current` document remains revision metadata only. It is not the POS data store.
 
@@ -66,3 +68,5 @@ The branch Rules were reconstructed from the clean production-baseline file afte
 
 
 The Firestore document path includes the `records` subcollection segment so each record has a valid even-segment document path. The first emulator run caught and corrected this path error; the updated workflow is running again.
+
+The role rules now also reject product/sales records that embed `cost`, `costPrice`, `unitCost`, `purchaseCost`, `profit`, `grossProfit`, or `margin`. Those values belong in the restricted cost collections. The test suite now includes a cashier cost-data denial case.

@@ -48,16 +48,19 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/licenses/$(shopId)).data.expiresAt > request.time;
     }
 
+    function isActiveShopMember(shopId) {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && activeShopLicense(shopId)
+        && exists(/databases/$(database)/documents/shopMembers/$(request.auth.uid))
+        && get(/databases/$(database)/documents/shopMembers/$(request.auth.uid)).data.shopId == shopId
+        && get(/databases/$(database)/documents/shopMembers/$(request.auth.uid)).data.status == 'active';
+    }
+
     function canReadShopWorkspaceMeta(shopId) {
       return request.auth != null && (
         (request.auth.uid == shopId && (isVerifiedOwner() || activeShopLicense(shopId)))
-        || (request.auth.token.shopId == shopId
-          && request.auth.token.email_verified == true
-          && request.auth.token.shopRole in ['manager','cashier','employee']
-          && activeShopLicense(shopId)
-          && exists(/databases/$(database)/documents/shopMembers/$(request.auth.uid))
-          && get(/databases/$(database)/documents/shopMembers/$(request.auth.uid)).data.shopId == shopId
-          && get(/databases/$(database)/documents/shopMembers/$(request.auth.uid)).data.role == request.auth.token.shopRole)
+        || isActiveShopMember(shopId)
       );
     }
 
@@ -68,13 +71,1224 @@ service cloud.firestore {
       allow write: if false;
     }
 
-    // Staff membership is written only by trusted Cloud Functions.
-    // Owners can list their staff; each staff member can read their own role.
+    // Spark-compatible staff membership. Claims are verified against a one-time
+    // invite and a fixed slot in the same atomic batch; no custom claims are trusted.
     match /shopMembers/{memberUid} {
       allow read: if request.auth != null
-        && (request.auth.uid == memberUid
-          || resource.data.shopId == request.auth.uid);
+        && ((request.auth.uid == memberUid
+            && resource.data.status == 'active'
+            && activeShopLicense(resource.data.shopId))
+          || (request.auth.uid == resource.data.shopId
+            && activeShopLicense(resource.data.shopId)));
+      allow create: if request.auth != null
+        && request.auth.uid == memberUid
+        && request.auth.token.email_verified == true
+        && request.resource.data.keys().hasOnly(['shopId','role','status','email','createdAt','createdBy','inviteCode','slotId','canPrint'])
+        && request.resource.data.shopId is string
+        && request.resource.data.role in ['manager','cashier','employee']
+        && request.resource.data.status == 'active'
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.createdBy == request.resource.data.shopId
+        && request.resource.data.inviteCode is string
+        && request.resource.data.inviteCode.matches('^[A-F0-9]{32}
+
+    // A Gmail address can claim one five-day trial only once. The server timestamp
+    // on the profile determines expiry; clients cannot extend or reset the trial clock.
+    match /freeBetaUsers/{userId} {
+      allow read: if isVerifiedOwner()
+        || (request.auth != null && request.auth.uid == userId);
+      allow create: if request.auth != null
+        && request.auth.uid == userId
+        && request.auth.token.email_verified == true
+        && request.resource.data.uid == userId
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.status == 'active'
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.lastLoginAt == request.time
+        && request.resource.data.keys().hasOnly(['uid','email','status','createdAt','lastLoginAt'])
+        && !exists(/databases/$(database)/documents/freeBetaUsers/$(userId))
+        && !exists(freeTrialClaimPath(request.auth.token.email))
+        && existsAfter(freeTrialClaimPath(request.auth.token.email))
+        && getAfter(freeTrialClaimPath(request.auth.token.email)).data.uid == userId
+        && getAfter(freeTrialClaimPath(request.auth.token.email)).data.email == request.auth.token.email
+        && getAfter(freeTrialClaimPath(request.auth.token.email)).data.createdAt == request.time;
+      allow update: if (isVerifiedOwner()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+          && request.resource.data.status in ['active','disabled'])
+        || (request.auth != null
+          && request.auth.uid == userId
+          && resource.data.status == 'active'
+          && resource.data.createdAt is timestamp
+          && resource.data.createdAt + duration.value(5, 'd') > request.time
+          && request.resource.data.status == 'active'
+          && request.resource.data.lastLoginAt == request.time
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastLoginAt']));
+      allow delete: if false;
+    }
+
+    match /freeTrialClaims/{email} {
+      allow read: if isVerifiedOwner()
+        || (request.auth != null && request.auth.token.email == email);
+      allow create: if request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.email == email
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.email == email
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.keys().hasOnly(['uid','email','createdAt'])
+        && !exists(freeTrialClaimPath(email))
+        && (
+          (existsAfter(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid))
+            && !exists(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid))
+            && getAfter(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid)).data.createdAt == request.time
+            && request.resource.data.createdAt == request.time)
+          || (exists(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid))
+            && get(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid)).data.uid == request.auth.uid
+            && get(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid)).data.email == email
+            && get(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid)).data.createdAt == request.resource.data.createdAt)
+        );
+      allow update, delete: if false;
+    }
+
+    match /licenses/{userId} {
+      allow read: if request.auth != null && (request.auth.uid == userId || isVerifiedOwner());
+      // Only the verified Platform Owner may issue or suspend a license after manual payment review.
+      allow create: if isVerifiedOwner()
+        && request.resource.data.uid == userId
+        && request.resource.data.status == 'active'
+        && request.resource.data.expiresAt is timestamp
+        && request.resource.data.plan in ['30-days','90-days','180-days','365-days'];
+      allow update: if isVerifiedOwner()
+        && request.resource.data.uid == userId
+        && request.resource.data.status in ['active','suspended']
+        && request.resource.data.expiresAt is timestamp
+        && request.resource.data.plan in ['30-days','90-days','180-days','365-days'];
+      allow delete: if false;
+    }
+
+    match /subscriptionAccessRequests/{userId} {
+      allow create: if request.auth != null
+        && request.auth.uid == userId
+        && request.resource.data.uid == userId
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.days in [30, 90, 180, 365]
+        && request.resource.data.status == 'pending'
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+      allow read: if isVerifiedOwner()
+        || (request.auth != null && request.auth.uid == userId);
+      allow update: if (request.auth != null
+          && request.auth.uid == userId
+          && resource.data.status == 'pending'
+          && request.resource.data.uid == userId
+          && request.resource.data.status == 'pending'
+          && request.resource.data.days in [30, 90, 180, 365]
+          && request.resource.data.updatedAt == request.time)
+        || (isVerifiedOwner()
+          && resource.data.status == 'pending'
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','reviewedBy','reviewedAt'])
+          && request.resource.data.status == 'reviewed'
+          && request.resource.data.reviewedAt == request.time);
+      allow delete: if false;
+    }
+
+    // Customer payment requests are written by the customer and reviewed by the verified Owner.
+    // A matching reference reservation and request must be committed in one atomic batch.
+    match /paymentRequests/{requestId} {
+      allow create: if request.auth != null
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.status == 'pending'
+        && request.resource.data.method == 'KBZPay'
+        && request.resource.data.bankName == 'KBZPay'
+        && request.resource.data.days in [30, 90, 180, 365]
+        && request.resource.data.amount == (
+          request.resource.data.days == 30 ? 30000 :
+          request.resource.data.days == 90 ? 90000 :
+          request.resource.data.days == 180 ? 180000 : 360000)
+        && request.resource.data.reference is string
+        && request.resource.data.reference.matches('^[A-Z0-9_-]{3,100}$')
+        && request.resource.data.referenceKey == request.resource.data.reference
+        && request.resource.data.screenshotUrl is string
+        && request.resource.data.screenshotUrl.size() <= 2500
+        && request.resource.data.createdAt == request.time
+        && existsAfter(/databases/$(database)/documents/paymentReferences/$(request.resource.data.referenceKey))
+        && getAfter(/databases/$(database)/documents/paymentReferences/$(request.resource.data.referenceKey)).data.paymentRequestId == requestId
+        && getAfter(/databases/$(database)/documents/paymentReferences/$(request.resource.data.referenceKey)).data.uid == request.auth.uid;
+      allow read: if isVerifiedOwner()
+        || (request.auth != null && resource.data.uid == request.auth.uid);
+      allow update: if isVerifiedOwner()
+        && resource.data.status == 'pending'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','reviewedBy','reviewedAt','rejectionReason'])
+        && request.resource.data.status in ['approved','rejected']
+        && request.resource.data.reviewedAt == request.time
+        && (request.resource.data.status != 'approved'
+          || (existsAfter(/databases/$(database)/documents/licenses/$(resource.data.uid))
+            && getAfter(/databases/$(database)/documents/licenses/$(resource.data.uid)).data.status == 'active'));
+      allow delete: if false;
+    }
+
+    match /paymentReferences/{referenceKey} {
+      allow create: if request.auth != null
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.method == 'KBZPay'
+        && request.resource.data.reference is string
+        && request.resource.data.reference == referenceKey
+        && request.resource.data.paymentRequestId is string
+        && existsAfter(/databases/$(database)/documents/paymentRequests/$(request.resource.data.paymentRequestId))
+        && getAfter(/databases/$(database)/documents/paymentRequests/$(request.resource.data.paymentRequestId)).data.uid == request.auth.uid
+        && getAfter(/databases/$(database)/documents/paymentRequests/$(request.resource.data.paymentRequestId)).data.referenceKey == referenceKey;
+      allow read: if isVerifiedOwner();
+      allow update, delete: if false;
+    }
+
+    // Automatic version snapshots are private to the owning shop account.
+    match /users/{userId}/backups/{backupId} {
+      allow read: if hasActiveLicense(userId);
+      allow create: if hasActiveLicense(userId)
+        && request.resource.data.createdBy == userId
+        && request.resource.data.data is map
+        && request.resource.data.sizeBytes is int
+        && request.resource.data.sizeBytes > 0
+        && request.resource.data.sizeBytes <= 700000;
+      allow delete: if hasActiveLicense(userId);
+      allow update: if false;
+    }
+
+    match /users/{userId}/private/{document=**} {
+      allow read, write: if hasActiveLicense(userId);
+    }
+
+    match /marketReports/{reportId} {
+      allow read: if isVerifiedOwner();
+      allow create: if request.resource.data.keys().hasOnly(['listingId','listingTitle','reason','details','createdAt','status'])
+        && request.resource.data.listingId is string
+        && request.resource.data.listingId.size() >= 1
+        && exists(/databases/$(database)/documents/marketListings/$(request.resource.data.listingId))
+        && get(/databases/$(database)/documents/marketListings/$(request.resource.data.listingId)).data.status == 'published'
+        && request.resource.data.listingTitle is string
+        && request.resource.data.listingTitle.size() <= 90
+        && request.resource.data.reason in ['လိမ်လည်မှု / ငွေကြေးလိမ်လည်မှု','မမှန်ကန်သော ဈေးနှုန်း / အချက်အလက်','မသင့်လျော်သော ပုံ / စာသား','Spam / ထပ်တလဲလဲကြော်ငြာ','အခြား']
+        && request.resource.data.details is string
+        && request.resource.data.details.size() <= 300
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.status == 'new';
+      allow update: if isVerifiedOwner()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','reviewedAt'])
+        && request.resource.data.status in ['reviewed','resolved','dismissed']
+        && request.resource.data.reviewedAt == request.time;
+      allow delete: if isVerifiedOwner();
+    }
+
+    match /marketListings/{listingId} {
+      allow read: if isVerifiedOwner()
+        || resource.data.status == 'published'
+        || (request.auth != null && resource.data.ownerUid == request.auth.uid);
+      allow create: if (
+        isVerifiedMarketplaceUser()
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.status == 'published'
+        && request.resource.data.title is string
+        && request.resource.data.title.size() >= 2
+        && request.resource.data.title.size() <= 90
+        && request.resource.data.price is number
+        && request.resource.data.price > 0
+        && request.resource.data.currency == 'MMK'
+        && request.resource.data.imageUrl is string
+        && request.resource.data.imagePath == 'market/' + request.auth.uid + '/' + listingId + '/photo'
+        && request.resource.data.description is string
+        && request.resource.data.description.size() <= 700
+        && request.resource.data.city is string
+        && request.resource.data.city.size() <= 80
+        && request.resource.data.township is string
+        && request.resource.data.township.size() <= 80
+        && request.resource.data.phone is string
+        && request.resource.data.phone.size() <= 32
+      ) || (
+        !isVerifiedMarketplaceUser()
+        && request.resource.data.keys().hasOnly(['title','price','currency','category','city','township','address','phone','description','imageUrl','ownerUid','status','shopName','createdAt'])
+        && request.resource.data.ownerUid == 'public'
+        && request.resource.data.status == 'published'
+        && request.resource.data.title is string
+        && request.resource.data.title.size() >= 2
+        && request.resource.data.title.size() <= 90
+        && request.resource.data.price is number
+        && request.resource.data.price > 0
+        && request.resource.data.currency == 'MMK'
+        && request.resource.data.category is string
+        && request.resource.data.category.size() <= 80
+        && request.resource.data.shopName is string
+        && request.resource.data.shopName.size() >= 2
+        && request.resource.data.shopName.size() <= 90
+        && request.resource.data.city is string
+        && request.resource.data.city.size() >= 2
+        && request.resource.data.city.size() <= 80
+        && request.resource.data.township is string
+        && request.resource.data.township.size() >= 2
+        && request.resource.data.township.size() <= 80
+        && request.resource.data.address is string
+        && request.resource.data.address.size() <= 180
+        && request.resource.data.phone is string
+        && request.resource.data.phone.size() >= 7
+        && request.resource.data.phone.size() <= 32
+        && request.resource.data.description is string
+        && request.resource.data.description.size() <= 700
+        && request.resource.data.imageUrl is string
+        && request.resource.data.imageUrl.size() <= 180000
+        && request.resource.data.createdAt == request.time
+      );
+      allow update: if isVerifiedMarketplaceUser()
+        && request.auth.uid == resource.data.ownerUid
+        && request.resource.data.ownerUid == resource.data.ownerUid
+        && request.resource.data.status == 'published'
+        && request.resource.data.title is string
+        && request.resource.data.title.size() >= 2
+        && request.resource.data.title.size() <= 90
+        && request.resource.data.price is number
+        && request.resource.data.price > 0
+        && request.resource.data.currency == 'MMK'
+        && request.resource.data.description is string
+        && request.resource.data.description.size() <= 700;
+      allow delete: if isVerifiedOwner() || (isVerifiedMarketplaceUser() && resource.data.ownerUid == request.auth.uid);
+    }
+
+    match /marketListings/{listingId}/likes/{userId} {
+      allow read: if true;
+      allow create: if request.auth != null
+        && request.auth.uid == userId
+        && exists(/databases/$(database)/documents/marketListings/$(listingId))
+        && get(/databases/$(database)/documents/marketListings/$(listingId)).data.status == 'published'
+        && request.resource.data.keys().hasOnly(['uid','createdAt'])
+        && request.resource.data.uid == userId;
+      allow delete: if request.auth != null && request.auth.uid == userId;
+      allow update: if false;
+    }
+
+    // Buyers submit orders; buyer and seller can read their own order.
+    match /marketOrders/{orderId} {
+      allow create: if request.auth != null
+        && request.resource.data.buyerUid == request.auth.uid
+        && request.resource.data.sellerUid is string
+        && request.resource.data.sellerUid != request.auth.uid
+        && request.resource.data.listingId is string
+        && exists(/databases/$(database)/documents/marketListings/$(request.resource.data.listingId))
+        && get(/databases/$(database)/documents/marketListings/$(request.resource.data.listingId)).data.ownerUid == request.resource.data.sellerUid
+        && get(/databases/$(database)/documents/marketListings/$(request.resource.data.listingId)).data.status == 'published'
+        && request.resource.data.title is string
+        && request.resource.data.title.size() <= 90
+        && request.resource.data.price is number
+        && request.resource.data.price > 0
+        && request.resource.data.qty is int
+        && request.resource.data.qty >= 1
+        && request.resource.data.qty <= 9999
+        && request.resource.data.total == request.resource.data.price * request.resource.data.qty
+        && request.resource.data.buyerName is string
+        && request.resource.data.buyerName.size() >= 2
+        && request.resource.data.buyerPhone is string
+        && request.resource.data.buyerPhone.size() >= 7
+        && request.resource.data.status == 'new';
+      allow read: if request.auth != null
+        && (resource.data.buyerUid == request.auth.uid || resource.data.sellerUid == request.auth.uid);
+      allow update: if request.auth != null
+        && resource.data.sellerUid == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','sellerNote','updatedAt'])
+        && request.resource.data.status in ['accepted','rejected','completed'];
+      allow delete: if false;
+    }
+
+    match /publicShopSubmissions/{ownerUid} {
+      allow read: if request.auth != null && request.auth.uid == ownerUid;
+      allow create, update: if isVerifiedMarketplaceUser()
+        && request.auth.uid == ownerUid
+        && request.resource.data.ownerUid == ownerUid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.shopName is string
+        && request.resource.data.shopName.size() >= 2
+        && request.resource.data.shopName.size() <= 90
+        && request.resource.data.about is string
+        && request.resource.data.about.size() <= 300;
+      allow delete: if isVerifiedMarketplaceUser() && request.auth.uid == ownerUid;
+    }
+    match /publicShops/{ownerUid} {
+      allow read: if resource.data.status == 'approved';
       allow write: if false;
+    }
+
+    match /sponsoredAds/{adId} {
+      // Public sponsored advertisements auto-publish after strict field and expiry validation.
+      allow read: if isVerifiedOwner()
+        || resource.data.status == 'approved'
+        || (request.auth != null && resource.data.ownerUid == request.auth.uid);
+      allow create: if request.resource.data.keys().hasOnly(['ownerUid','email','shopName','category','city','township','phone','title','imageUrl','imageData','text','url','status','createdAt','startsAt','endsAt'])
+        && request.resource.data.ownerUid is string
+        && request.resource.data.email is string
+        && request.resource.data.shopName is string
+        && request.resource.data.shopName.size() >= 2
+        && request.resource.data.shopName.size() <= 100
+        && request.resource.data.category is string
+        && request.resource.data.category.size() >= 2
+        && request.resource.data.category.size() <= 100
+        && request.resource.data.city in ['မန္တလေးတိုင်း','ရန်ကုန်တိုင်း']
+        && request.resource.data.township is string
+        && request.resource.data.township.size() >= 2
+        && request.resource.data.township.size() <= 80
+        && request.resource.data.phone is string
+        && request.resource.data.phone.size() <= 32
+        && (request.resource.data.ownerUid != 'public' || request.resource.data.phone.size() >= 9)
+        && request.resource.data.title is string
+        && request.resource.data.title.size() >= 3
+        && request.resource.data.title.size() <= 80
+        && request.resource.data.imageUrl is string
+        && request.resource.data.imageUrl == ''
+        && request.resource.data.imageData is string
+        && request.resource.data.imageData.size() <= 500000
+        && request.resource.data.text is string
+        && request.resource.data.text.size() >= 8
+        && request.resource.data.text.size() <= 240
+        && request.resource.data.url is string
+        && request.resource.data.url.matches('https://[^ ]+')
+        && request.resource.data.status == 'approved'
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.startsAt is timestamp
+        && request.resource.data.startsAt <= request.time + duration.value(2, 'm')
+        && request.resource.data.endsAt is timestamp
+        && request.resource.data.endsAt > request.time
+        && request.resource.data.endsAt <= request.time + duration.value(30, 'd')
+        && ((request.auth == null && request.resource.data.ownerUid == 'public' && request.resource.data.email == '')
+          || (isVerifiedMarketplaceUser() && request.resource.data.ownerUid == request.auth.uid && request.resource.data.email == request.auth.token.email));
+      allow update: if isVerifiedOwner()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','paymentReference','reviewedAt','startsAt','endsAt'])
+        && request.resource.data.reviewedAt == request.time
+        && (request.resource.data.status == 'rejected'
+          || (request.resource.data.status == 'approved'
+            && request.resource.data.paymentReference is string
+            && (request.resource.data.paymentReference == 'FREE_BETA'
+              || (request.resource.data.paymentReference.size() >= 3
+                && request.resource.data.paymentReference.size() <= 100))
+            && request.resource.data.startsAt is timestamp
+            && request.resource.data.endsAt is timestamp
+            && request.resource.data.startsAt <= request.time
+            && request.resource.data.endsAt > request.time
+            && request.resource.data.endsAt <= request.time + duration.value(31, 'd')));
+      allow delete: if isVerifiedOwner();
+    }
+
+    // Public ad booking requests need no login; strict validation limits spam payloads.
+    match /marketAdOrders/{orderId} {
+      allow create: if request.resource.data.keys().hasOnly(['type','days','shopName','phone','category','budget','note','status','createdAt'])
+        && request.resource.data.type in ['ဆိုင်ကြော်ငြာ','Live ကြော်ငြာ','Sponsored Banner','ပစ္စည်းအထူးကြော်ငြာ']
+        && request.resource.data.days in [7,15,30]
+        && request.resource.data.shopName is string
+        && request.resource.data.shopName.size() >= 2
+        && request.resource.data.shopName.size() <= 100
+        && request.resource.data.phone is string
+        && request.resource.data.phone.size() >= 7
+        && request.resource.data.phone.size() <= 30
+        && request.resource.data.category is string
+        && request.resource.data.category.size() <= 80
+        && request.resource.data.budget is number
+        && request.resource.data.budget >= 0
+        && request.resource.data.budget <= 1000000000
+        && request.resource.data.note is string
+        && request.resource.data.note.size() <= 700
+        && request.resource.data.status == 'new'
+        && request.resource.data.createdAt == request.time;
+      allow read: if isVerifiedOwner();
+      allow update: if isVerifiedOwner()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','reviewedAt'])
+        && request.resource.data.status in ['contacted','approved','rejected','completed']
+        && request.resource.data.reviewedAt == request.time;
+      allow delete: if isVerifiedOwner();
+    }
+
+    match /paymentRequests/{requestId} {
+      // Payment submissions and reference reservations are created only by the
+      // trusted callable, which validates package amounts and prevents reuse.
+      allow read: if request.auth != null && resource.data.uid == request.auth.uid;
+      allow create, update, delete: if false;
+    }
+    match /paymentReferences/{referenceHash} {
+      allow read, write: if false;
+    }
+
+    // AK Community commerce-first public posts. Users cannot alter another user's posts.
+    match /globalCommunityPosts/{postId} {
+      allow read: if resource.data.status == 'published'
+        || (request.auth != null && resource.data.ownerUid == request.auth.uid);
+      allow create: if request.auth != null
+        && request.auth.token.email_verified == true
+        && request.resource.data.keys().hasOnly(['ownerUid','displayName','kind','body','country','product','price','currency','link','status','createdAt'])
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.displayName is string
+        && request.resource.data.displayName.size() <= 100
+        && request.resource.data.kind in ['business','product','question','supplier','knowledge']
+        && request.resource.data.body is string
+        && request.resource.data.body.size() >= 1
+        && request.resource.data.body.size() <= 1800
+        && request.resource.data.country is string
+        && request.resource.data.country.size() <= 80
+        && request.resource.data.product is string
+        && request.resource.data.product.size() <= 100
+        && (request.resource.data.price == null || (request.resource.data.price is number && request.resource.data.price >= 0))
+        && request.resource.data.currency in ['USD','MMK','CNY','THB','SGD','EUR']
+        && request.resource.data.link is string
+        && request.resource.data.link.size() <= 400
+        && (request.resource.data.link == '' || request.resource.data.link.matches('https://[^ ]+'))
+        && request.resource.data.status == 'published'
+        && request.resource.data.createdAt == request.time;
+      allow delete: if request.auth != null && resource.data.ownerUid == request.auth.uid;
+      allow update: if false;
+
+      match /likes/{userId} {
+        allow read: if true;
+        allow create: if request.auth != null
+          && request.auth.token.email_verified == true
+          && request.auth.uid == userId
+          && exists(/databases/$(database)/documents/globalCommunityPosts/$(postId))
+          && get(/databases/$(database)/documents/globalCommunityPosts/$(postId)).data.status == 'published'
+          && request.resource.data.keys().hasOnly(['uid','createdAt'])
+          && request.resource.data.uid == userId
+          && request.resource.data.createdAt == request.time;
+        allow delete: if request.auth != null && request.auth.uid == userId;
+        allow update: if false;
+      }
+      match /comments/{commentId} {
+        allow read: if true;
+        allow create: if request.auth != null
+          && request.auth.token.email_verified == true
+          && exists(/databases/$(database)/documents/globalCommunityPosts/$(postId))
+          && get(/databases/$(database)/documents/globalCommunityPosts/$(postId)).data.status == 'published'
+          && request.resource.data.keys().hasOnly(['uid','displayName','body','createdAt'])
+          && request.resource.data.uid == request.auth.uid
+          && request.resource.data.displayName is string
+          && request.resource.data.displayName.size() <= 160
+          && request.resource.data.body is string
+          && request.resource.data.body.size() >= 1
+          && request.resource.data.body.size() <= 500
+          && request.resource.data.createdAt == request.time;
+        allow update, delete: if false;
+      }
+    }
+
+    // AK Global: verified business enquiries. Private to the submitter and platform owner.
+    match /globalTradeLeads/{leadId} {
+      allow create: if request.auth != null
+        && request.auth.token.email_verified == true
+        && request.resource.data.keys().hasOnly(['ownerUid','email','name','country','type','message','status','createdAt'])
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 2
+        && request.resource.data.name.size() <= 100
+        && request.resource.data.country is string
+        && request.resource.data.country.size() >= 2
+        && request.resource.data.country.size() <= 80
+        && request.resource.data.type in ['Find supplier','Find buyer','Import / export quotation','Logistics / shipping','Other business partnership']
+        && request.resource.data.message is string
+        && request.resource.data.message.size() >= 3
+        && request.resource.data.message.size() <= 1800
+        && request.resource.data.status == 'new'
+        && request.resource.data.createdAt == request.time;
+      allow read: if isVerifiedOwner()
+        || (request.auth != null && resource.data.ownerUid == request.auth.uid);
+      allow update, delete: if false;
+    }
+
+    // AK Global paid-ad requests are applications only. A trusted owner/backend must
+    // verify payment and approve the campaign; clients cannot mark an ad as paid/live.
+    match /globalAdApplications/{applicationId} {
+      allow create: if request.auth != null
+        && request.auth.token.email_verified == true
+        && request.resource.data.keys().hasOnly(['ownerUid','email','business','title','url','targetMarket','contactEmail','plan','amountUSD','currency','status','createdAt'])
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.business is string
+        && request.resource.data.business.size() >= 2
+        && request.resource.data.business.size() <= 100
+        && request.resource.data.title is string
+        && request.resource.data.title.size() >= 3
+        && request.resource.data.title.size() <= 100
+        && request.resource.data.url is string
+        && request.resource.data.url.matches('https://[^ ]+')
+        && request.resource.data.targetMarket is string
+        && request.resource.data.targetMarket.size() >= 2
+        && request.resource.data.targetMarket.size() <= 100
+        && request.resource.data.contactEmail is string
+        && request.resource.data.contactEmail.size() >= 5
+        && request.resource.data.contactEmail.size() <= 160
+        && ((request.resource.data.plan == 'starter' && request.resource.data.amountUSD == 5)
+          || (request.resource.data.plan == 'growth' && request.resource.data.amountUSD == 15)
+          || (request.resource.data.plan == 'business' && request.resource.data.amountUSD == 30))
+        && request.resource.data.currency == 'USD'
+        && request.resource.data.status == 'pending_payment'
+        && request.resource.data.createdAt == request.time;
+      allow read: if resource.data.status == 'active'
+        || isVerifiedOwner()
+        || (request.auth != null && resource.data.ownerUid == request.auth.uid);
+      allow update: if isVerifiedOwner()
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['status','paymentReference','reviewedAt','expiresAt'])
+        && request.resource.data.status in ['pending_payment','active','rejected','expired']
+        && (request.resource.data.status != 'active'
+          || (request.resource.data.paymentReference is string
+            && request.resource.data.paymentReference.size() >= 3
+            && request.resource.data.expiresAt is timestamp
+            && request.resource.data.expiresAt > request.time))
+        && request.resource.data.reviewedAt == request.time;
+      allow delete: if isVerifiedOwner();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+)
+        && request.resource.data.slotId in [
+          request.resource.data.shopId + '_1',
+          request.resource.data.shopId + '_2',
+          request.resource.data.shopId + '_3'
+        ]
+        && activeShopLicense(request.resource.data.shopId)
+        && exists(/databases/$(database)/documents/shopInvites/$(request.resource.data.inviteCode))
+        && get(/databases/$(database)/documents/shopInvites/$(request.resource.data.inviteCode)).data.shopId == request.resource.data.shopId
+        && get(/databases/$(database)/documents/shopInvites/$(request.resource.data.inviteCode)).data.role == request.resource.data.role
+        && get(/databases/$(database)/documents/shopInvites/$(request.resource.data.inviteCode)).data.status == 'open'
+        && get(/databases/$(database)/documents/shopInvites/$(request.resource.data.inviteCode)).data.expiresAt > request.time
+        && !exists(/databases/$(database)/documents/shopStaffSlots/$(request.resource.data.slotId))
+        && existsAfter(/databases/$(database)/documents/shopStaffSlots/$(request.resource.data.slotId))
+        && getAfter(/databases/$(database)/documents/shopStaffSlots/$(request.resource.data.slotId)).data.uid == memberUid
+        && getAfter(/databases/$(database)/documents/shopStaffSlots/$(request.resource.data.slotId)).data.shopId == request.resource.data.shopId;
+      allow update: if request.auth != null
+        && request.auth.uid == resource.data.shopId
+        && activeShopLicense(resource.data.shopId)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['canPrint'])
+        && request.resource.data.canPrint is bool;
+      allow delete: if request.auth != null
+        && request.auth.uid == resource.data.shopId
+        && activeShopLicense(resource.data.shopId);
+    }
+
+    match /shopInvites/{code} {
+      allow read: if request.auth != null
+        && (resource.data.shopId == request.auth.uid
+          || (resource.data.status == 'open'
+            && resource.data.expiresAt is timestamp
+            && resource.data.expiresAt > request.time));
+      allow create: if request.auth != null
+        && request.auth.uid == request.resource.data.shopId
+        && activeShopLicense(request.resource.data.shopId)
+        && request.resource.data.keys().hasOnly(['shopId','role','status','createdAt','expiresAt','createdBy'])
+        && request.resource.data.role in ['manager','cashier','employee']
+        && request.resource.data.status == 'open'
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.expiresAt is timestamp
+        && request.resource.data.expiresAt > request.time
+        && request.resource.data.expiresAt <= request.time + duration.value(24, 'h')
+        && code.matches('^[A-F0-9]{32}
+
+    // A Gmail address can claim one five-day trial only once. The server timestamp
+    // on the profile determines expiry; clients cannot extend or reset the trial clock.
+    match /freeBetaUsers/{userId} {
+      allow read: if isVerifiedOwner()
+        || (request.auth != null && request.auth.uid == userId);
+      allow create: if request.auth != null
+        && request.auth.uid == userId
+        && request.auth.token.email_verified == true
+        && request.resource.data.uid == userId
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.status == 'active'
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.lastLoginAt == request.time
+        && request.resource.data.keys().hasOnly(['uid','email','status','createdAt','lastLoginAt'])
+        && !exists(/databases/$(database)/documents/freeBetaUsers/$(userId))
+        && !exists(freeTrialClaimPath(request.auth.token.email))
+        && existsAfter(freeTrialClaimPath(request.auth.token.email))
+        && getAfter(freeTrialClaimPath(request.auth.token.email)).data.uid == userId
+        && getAfter(freeTrialClaimPath(request.auth.token.email)).data.email == request.auth.token.email
+        && getAfter(freeTrialClaimPath(request.auth.token.email)).data.createdAt == request.time;
+      allow update: if (isVerifiedOwner()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+          && request.resource.data.status in ['active','disabled'])
+        || (request.auth != null
+          && request.auth.uid == userId
+          && resource.data.status == 'active'
+          && resource.data.createdAt is timestamp
+          && resource.data.createdAt + duration.value(5, 'd') > request.time
+          && request.resource.data.status == 'active'
+          && request.resource.data.lastLoginAt == request.time
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastLoginAt']));
+      allow delete: if false;
+    }
+
+    match /freeTrialClaims/{email} {
+      allow read: if isVerifiedOwner()
+        || (request.auth != null && request.auth.token.email == email);
+      allow create: if request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.email == email
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.email == email
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.keys().hasOnly(['uid','email','createdAt'])
+        && !exists(freeTrialClaimPath(email))
+        && (
+          (existsAfter(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid))
+            && !exists(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid))
+            && getAfter(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid)).data.createdAt == request.time
+            && request.resource.data.createdAt == request.time)
+          || (exists(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid))
+            && get(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid)).data.uid == request.auth.uid
+            && get(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid)).data.email == email
+            && get(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid)).data.createdAt == request.resource.data.createdAt)
+        );
+      allow update, delete: if false;
+    }
+
+    match /licenses/{userId} {
+      allow read: if request.auth != null && (request.auth.uid == userId || isVerifiedOwner());
+      // Only the verified Platform Owner may issue or suspend a license after manual payment review.
+      allow create: if isVerifiedOwner()
+        && request.resource.data.uid == userId
+        && request.resource.data.status == 'active'
+        && request.resource.data.expiresAt is timestamp
+        && request.resource.data.plan in ['30-days','90-days','180-days','365-days'];
+      allow update: if isVerifiedOwner()
+        && request.resource.data.uid == userId
+        && request.resource.data.status in ['active','suspended']
+        && request.resource.data.expiresAt is timestamp
+        && request.resource.data.plan in ['30-days','90-days','180-days','365-days'];
+      allow delete: if false;
+    }
+
+    match /subscriptionAccessRequests/{userId} {
+      allow create: if request.auth != null
+        && request.auth.uid == userId
+        && request.resource.data.uid == userId
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.days in [30, 90, 180, 365]
+        && request.resource.data.status == 'pending'
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+      allow read: if isVerifiedOwner()
+        || (request.auth != null && request.auth.uid == userId);
+      allow update: if (request.auth != null
+          && request.auth.uid == userId
+          && resource.data.status == 'pending'
+          && request.resource.data.uid == userId
+          && request.resource.data.status == 'pending'
+          && request.resource.data.days in [30, 90, 180, 365]
+          && request.resource.data.updatedAt == request.time)
+        || (isVerifiedOwner()
+          && resource.data.status == 'pending'
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','reviewedBy','reviewedAt'])
+          && request.resource.data.status == 'reviewed'
+          && request.resource.data.reviewedAt == request.time);
+      allow delete: if false;
+    }
+
+    // Customer payment requests are written by the customer and reviewed by the verified Owner.
+    // A matching reference reservation and request must be committed in one atomic batch.
+    match /paymentRequests/{requestId} {
+      allow create: if request.auth != null
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.status == 'pending'
+        && request.resource.data.method == 'KBZPay'
+        && request.resource.data.bankName == 'KBZPay'
+        && request.resource.data.days in [30, 90, 180, 365]
+        && request.resource.data.amount == (
+          request.resource.data.days == 30 ? 30000 :
+          request.resource.data.days == 90 ? 90000 :
+          request.resource.data.days == 180 ? 180000 : 360000)
+        && request.resource.data.reference is string
+        && request.resource.data.reference.matches('^[A-Z0-9_-]{3,100}$')
+        && request.resource.data.referenceKey == request.resource.data.reference
+        && request.resource.data.screenshotUrl is string
+        && request.resource.data.screenshotUrl.size() <= 2500
+        && request.resource.data.createdAt == request.time
+        && existsAfter(/databases/$(database)/documents/paymentReferences/$(request.resource.data.referenceKey))
+        && getAfter(/databases/$(database)/documents/paymentReferences/$(request.resource.data.referenceKey)).data.paymentRequestId == requestId
+        && getAfter(/databases/$(database)/documents/paymentReferences/$(request.resource.data.referenceKey)).data.uid == request.auth.uid;
+      allow read: if isVerifiedOwner()
+        || (request.auth != null && resource.data.uid == request.auth.uid);
+      allow update: if isVerifiedOwner()
+        && resource.data.status == 'pending'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','reviewedBy','reviewedAt','rejectionReason'])
+        && request.resource.data.status in ['approved','rejected']
+        && request.resource.data.reviewedAt == request.time
+        && (request.resource.data.status != 'approved'
+          || (existsAfter(/databases/$(database)/documents/licenses/$(resource.data.uid))
+            && getAfter(/databases/$(database)/documents/licenses/$(resource.data.uid)).data.status == 'active'));
+      allow delete: if false;
+    }
+
+    match /paymentReferences/{referenceKey} {
+      allow create: if request.auth != null
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.method == 'KBZPay'
+        && request.resource.data.reference is string
+        && request.resource.data.reference == referenceKey
+        && request.resource.data.paymentRequestId is string
+        && existsAfter(/databases/$(database)/documents/paymentRequests/$(request.resource.data.paymentRequestId))
+        && getAfter(/databases/$(database)/documents/paymentRequests/$(request.resource.data.paymentRequestId)).data.uid == request.auth.uid
+        && getAfter(/databases/$(database)/documents/paymentRequests/$(request.resource.data.paymentRequestId)).data.referenceKey == referenceKey;
+      allow read: if isVerifiedOwner();
+      allow update, delete: if false;
+    }
+
+    // Automatic version snapshots are private to the owning shop account.
+    match /users/{userId}/backups/{backupId} {
+      allow read: if hasActiveLicense(userId);
+      allow create: if hasActiveLicense(userId)
+        && request.resource.data.createdBy == userId
+        && request.resource.data.data is map
+        && request.resource.data.sizeBytes is int
+        && request.resource.data.sizeBytes > 0
+        && request.resource.data.sizeBytes <= 700000;
+      allow delete: if hasActiveLicense(userId);
+      allow update: if false;
+    }
+
+    match /users/{userId}/private/{document=**} {
+      allow read, write: if hasActiveLicense(userId);
+    }
+
+    match /marketReports/{reportId} {
+      allow read: if isVerifiedOwner();
+      allow create: if request.resource.data.keys().hasOnly(['listingId','listingTitle','reason','details','createdAt','status'])
+        && request.resource.data.listingId is string
+        && request.resource.data.listingId.size() >= 1
+        && exists(/databases/$(database)/documents/marketListings/$(request.resource.data.listingId))
+        && get(/databases/$(database)/documents/marketListings/$(request.resource.data.listingId)).data.status == 'published'
+        && request.resource.data.listingTitle is string
+        && request.resource.data.listingTitle.size() <= 90
+        && request.resource.data.reason in ['လိမ်လည်မှု / ငွေကြေးလိမ်လည်မှု','မမှန်ကန်သော ဈေးနှုန်း / အချက်အလက်','မသင့်လျော်သော ပုံ / စာသား','Spam / ထပ်တလဲလဲကြော်ငြာ','အခြား']
+        && request.resource.data.details is string
+        && request.resource.data.details.size() <= 300
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.status == 'new';
+      allow update: if isVerifiedOwner()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','reviewedAt'])
+        && request.resource.data.status in ['reviewed','resolved','dismissed']
+        && request.resource.data.reviewedAt == request.time;
+      allow delete: if isVerifiedOwner();
+    }
+
+    match /marketListings/{listingId} {
+      allow read: if isVerifiedOwner()
+        || resource.data.status == 'published'
+        || (request.auth != null && resource.data.ownerUid == request.auth.uid);
+      allow create: if (
+        isVerifiedMarketplaceUser()
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.status == 'published'
+        && request.resource.data.title is string
+        && request.resource.data.title.size() >= 2
+        && request.resource.data.title.size() <= 90
+        && request.resource.data.price is number
+        && request.resource.data.price > 0
+        && request.resource.data.currency == 'MMK'
+        && request.resource.data.imageUrl is string
+        && request.resource.data.imagePath == 'market/' + request.auth.uid + '/' + listingId + '/photo'
+        && request.resource.data.description is string
+        && request.resource.data.description.size() <= 700
+        && request.resource.data.city is string
+        && request.resource.data.city.size() <= 80
+        && request.resource.data.township is string
+        && request.resource.data.township.size() <= 80
+        && request.resource.data.phone is string
+        && request.resource.data.phone.size() <= 32
+      ) || (
+        !isVerifiedMarketplaceUser()
+        && request.resource.data.keys().hasOnly(['title','price','currency','category','city','township','address','phone','description','imageUrl','ownerUid','status','shopName','createdAt'])
+        && request.resource.data.ownerUid == 'public'
+        && request.resource.data.status == 'published'
+        && request.resource.data.title is string
+        && request.resource.data.title.size() >= 2
+        && request.resource.data.title.size() <= 90
+        && request.resource.data.price is number
+        && request.resource.data.price > 0
+        && request.resource.data.currency == 'MMK'
+        && request.resource.data.category is string
+        && request.resource.data.category.size() <= 80
+        && request.resource.data.shopName is string
+        && request.resource.data.shopName.size() >= 2
+        && request.resource.data.shopName.size() <= 90
+        && request.resource.data.city is string
+        && request.resource.data.city.size() >= 2
+        && request.resource.data.city.size() <= 80
+        && request.resource.data.township is string
+        && request.resource.data.township.size() >= 2
+        && request.resource.data.township.size() <= 80
+        && request.resource.data.address is string
+        && request.resource.data.address.size() <= 180
+        && request.resource.data.phone is string
+        && request.resource.data.phone.size() >= 7
+        && request.resource.data.phone.size() <= 32
+        && request.resource.data.description is string
+        && request.resource.data.description.size() <= 700
+        && request.resource.data.imageUrl is string
+        && request.resource.data.imageUrl.size() <= 180000
+        && request.resource.data.createdAt == request.time
+      );
+      allow update: if isVerifiedMarketplaceUser()
+        && request.auth.uid == resource.data.ownerUid
+        && request.resource.data.ownerUid == resource.data.ownerUid
+        && request.resource.data.status == 'published'
+        && request.resource.data.title is string
+        && request.resource.data.title.size() >= 2
+        && request.resource.data.title.size() <= 90
+        && request.resource.data.price is number
+        && request.resource.data.price > 0
+        && request.resource.data.currency == 'MMK'
+        && request.resource.data.description is string
+        && request.resource.data.description.size() <= 700;
+      allow delete: if isVerifiedOwner() || (isVerifiedMarketplaceUser() && resource.data.ownerUid == request.auth.uid);
+    }
+
+    match /marketListings/{listingId}/likes/{userId} {
+      allow read: if true;
+      allow create: if request.auth != null
+        && request.auth.uid == userId
+        && exists(/databases/$(database)/documents/marketListings/$(listingId))
+        && get(/databases/$(database)/documents/marketListings/$(listingId)).data.status == 'published'
+        && request.resource.data.keys().hasOnly(['uid','createdAt'])
+        && request.resource.data.uid == userId;
+      allow delete: if request.auth != null && request.auth.uid == userId;
+      allow update: if false;
+    }
+
+    // Buyers submit orders; buyer and seller can read their own order.
+    match /marketOrders/{orderId} {
+      allow create: if request.auth != null
+        && request.resource.data.buyerUid == request.auth.uid
+        && request.resource.data.sellerUid is string
+        && request.resource.data.sellerUid != request.auth.uid
+        && request.resource.data.listingId is string
+        && exists(/databases/$(database)/documents/marketListings/$(request.resource.data.listingId))
+        && get(/databases/$(database)/documents/marketListings/$(request.resource.data.listingId)).data.ownerUid == request.resource.data.sellerUid
+        && get(/databases/$(database)/documents/marketListings/$(request.resource.data.listingId)).data.status == 'published'
+        && request.resource.data.title is string
+        && request.resource.data.title.size() <= 90
+        && request.resource.data.price is number
+        && request.resource.data.price > 0
+        && request.resource.data.qty is int
+        && request.resource.data.qty >= 1
+        && request.resource.data.qty <= 9999
+        && request.resource.data.total == request.resource.data.price * request.resource.data.qty
+        && request.resource.data.buyerName is string
+        && request.resource.data.buyerName.size() >= 2
+        && request.resource.data.buyerPhone is string
+        && request.resource.data.buyerPhone.size() >= 7
+        && request.resource.data.status == 'new';
+      allow read: if request.auth != null
+        && (resource.data.buyerUid == request.auth.uid || resource.data.sellerUid == request.auth.uid);
+      allow update: if request.auth != null
+        && resource.data.sellerUid == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','sellerNote','updatedAt'])
+        && request.resource.data.status in ['accepted','rejected','completed'];
+      allow delete: if false;
+    }
+
+    match /publicShopSubmissions/{ownerUid} {
+      allow read: if request.auth != null && request.auth.uid == ownerUid;
+      allow create, update: if isVerifiedMarketplaceUser()
+        && request.auth.uid == ownerUid
+        && request.resource.data.ownerUid == ownerUid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.shopName is string
+        && request.resource.data.shopName.size() >= 2
+        && request.resource.data.shopName.size() <= 90
+        && request.resource.data.about is string
+        && request.resource.data.about.size() <= 300;
+      allow delete: if isVerifiedMarketplaceUser() && request.auth.uid == ownerUid;
+    }
+    match /publicShops/{ownerUid} {
+      allow read: if resource.data.status == 'approved';
+      allow write: if false;
+    }
+
+    match /sponsoredAds/{adId} {
+      // Public sponsored advertisements auto-publish after strict field and expiry validation.
+      allow read: if isVerifiedOwner()
+        || resource.data.status == 'approved'
+        || (request.auth != null && resource.data.ownerUid == request.auth.uid);
+      allow create: if request.resource.data.keys().hasOnly(['ownerUid','email','shopName','category','city','township','phone','title','imageUrl','imageData','text','url','status','createdAt','startsAt','endsAt'])
+        && request.resource.data.ownerUid is string
+        && request.resource.data.email is string
+        && request.resource.data.shopName is string
+        && request.resource.data.shopName.size() >= 2
+        && request.resource.data.shopName.size() <= 100
+        && request.resource.data.category is string
+        && request.resource.data.category.size() >= 2
+        && request.resource.data.category.size() <= 100
+        && request.resource.data.city in ['မန္တလေးတိုင်း','ရန်ကုန်တိုင်း']
+        && request.resource.data.township is string
+        && request.resource.data.township.size() >= 2
+        && request.resource.data.township.size() <= 80
+        && request.resource.data.phone is string
+        && request.resource.data.phone.size() <= 32
+        && (request.resource.data.ownerUid != 'public' || request.resource.data.phone.size() >= 9)
+        && request.resource.data.title is string
+        && request.resource.data.title.size() >= 3
+        && request.resource.data.title.size() <= 80
+        && request.resource.data.imageUrl is string
+        && request.resource.data.imageUrl == ''
+        && request.resource.data.imageData is string
+        && request.resource.data.imageData.size() <= 500000
+        && request.resource.data.text is string
+        && request.resource.data.text.size() >= 8
+        && request.resource.data.text.size() <= 240
+        && request.resource.data.url is string
+        && request.resource.data.url.matches('https://[^ ]+')
+        && request.resource.data.status == 'approved'
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.startsAt is timestamp
+        && request.resource.data.startsAt <= request.time + duration.value(2, 'm')
+        && request.resource.data.endsAt is timestamp
+        && request.resource.data.endsAt > request.time
+        && request.resource.data.endsAt <= request.time + duration.value(30, 'd')
+        && ((request.auth == null && request.resource.data.ownerUid == 'public' && request.resource.data.email == '')
+          || (isVerifiedMarketplaceUser() && request.resource.data.ownerUid == request.auth.uid && request.resource.data.email == request.auth.token.email));
+      allow update: if isVerifiedOwner()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','paymentReference','reviewedAt','startsAt','endsAt'])
+        && request.resource.data.reviewedAt == request.time
+        && (request.resource.data.status == 'rejected'
+          || (request.resource.data.status == 'approved'
+            && request.resource.data.paymentReference is string
+            && (request.resource.data.paymentReference == 'FREE_BETA'
+              || (request.resource.data.paymentReference.size() >= 3
+                && request.resource.data.paymentReference.size() <= 100))
+            && request.resource.data.startsAt is timestamp
+            && request.resource.data.endsAt is timestamp
+            && request.resource.data.startsAt <= request.time
+            && request.resource.data.endsAt > request.time
+            && request.resource.data.endsAt <= request.time + duration.value(31, 'd')));
+      allow delete: if isVerifiedOwner();
+    }
+
+    // Public ad booking requests need no login; strict validation limits spam payloads.
+    match /marketAdOrders/{orderId} {
+      allow create: if request.resource.data.keys().hasOnly(['type','days','shopName','phone','category','budget','note','status','createdAt'])
+        && request.resource.data.type in ['ဆိုင်ကြော်ငြာ','Live ကြော်ငြာ','Sponsored Banner','ပစ္စည်းအထူးကြော်ငြာ']
+        && request.resource.data.days in [7,15,30]
+        && request.resource.data.shopName is string
+        && request.resource.data.shopName.size() >= 2
+        && request.resource.data.shopName.size() <= 100
+        && request.resource.data.phone is string
+        && request.resource.data.phone.size() >= 7
+        && request.resource.data.phone.size() <= 30
+        && request.resource.data.category is string
+        && request.resource.data.category.size() <= 80
+        && request.resource.data.budget is number
+        && request.resource.data.budget >= 0
+        && request.resource.data.budget <= 1000000000
+        && request.resource.data.note is string
+        && request.resource.data.note.size() <= 700
+        && request.resource.data.status == 'new'
+        && request.resource.data.createdAt == request.time;
+      allow read: if isVerifiedOwner();
+      allow update: if isVerifiedOwner()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','reviewedAt'])
+        && request.resource.data.status in ['contacted','approved','rejected','completed']
+        && request.resource.data.reviewedAt == request.time;
+      allow delete: if isVerifiedOwner();
+    }
+
+    match /paymentRequests/{requestId} {
+      // Payment submissions and reference reservations are created only by the
+      // trusted callable, which validates package amounts and prevents reuse.
+      allow read: if request.auth != null && resource.data.uid == request.auth.uid;
+      allow create, update, delete: if false;
+    }
+    match /paymentReferences/{referenceHash} {
+      allow read, write: if false;
+    }
+
+    // AK Community commerce-first public posts. Users cannot alter another user's posts.
+    match /globalCommunityPosts/{postId} {
+      allow read: if resource.data.status == 'published'
+        || (request.auth != null && resource.data.ownerUid == request.auth.uid);
+      allow create: if request.auth != null
+        && request.auth.token.email_verified == true
+        && request.resource.data.keys().hasOnly(['ownerUid','displayName','kind','body','country','product','price','currency','link','status','createdAt'])
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.displayName is string
+        && request.resource.data.displayName.size() <= 100
+        && request.resource.data.kind in ['business','product','question','supplier','knowledge']
+        && request.resource.data.body is string
+        && request.resource.data.body.size() >= 1
+        && request.resource.data.body.size() <= 1800
+        && request.resource.data.country is string
+        && request.resource.data.country.size() <= 80
+        && request.resource.data.product is string
+        && request.resource.data.product.size() <= 100
+        && (request.resource.data.price == null || (request.resource.data.price is number && request.resource.data.price >= 0))
+        && request.resource.data.currency in ['USD','MMK','CNY','THB','SGD','EUR']
+        && request.resource.data.link is string
+        && request.resource.data.link.size() <= 400
+        && (request.resource.data.link == '' || request.resource.data.link.matches('https://[^ ]+'))
+        && request.resource.data.status == 'published'
+        && request.resource.data.createdAt == request.time;
+      allow delete: if request.auth != null && resource.data.ownerUid == request.auth.uid;
+      allow update: if false;
+
+      match /likes/{userId} {
+        allow read: if true;
+        allow create: if request.auth != null
+          && request.auth.token.email_verified == true
+          && request.auth.uid == userId
+          && exists(/databases/$(database)/documents/globalCommunityPosts/$(postId))
+          && get(/databases/$(database)/documents/globalCommunityPosts/$(postId)).data.status == 'published'
+          && request.resource.data.keys().hasOnly(['uid','createdAt'])
+          && request.resource.data.uid == userId
+          && request.resource.data.createdAt == request.time;
+        allow delete: if request.auth != null && request.auth.uid == userId;
+        allow update: if false;
+      }
+      match /comments/{commentId} {
+        allow read: if true;
+        allow create: if request.auth != null
+          && request.auth.token.email_verified == true
+          && exists(/databases/$(database)/documents/globalCommunityPosts/$(postId))
+          && get(/databases/$(database)/documents/globalCommunityPosts/$(postId)).data.status == 'published'
+          && request.resource.data.keys().hasOnly(['uid','displayName','body','createdAt'])
+          && request.resource.data.uid == request.auth.uid
+          && request.resource.data.displayName is string
+          && request.resource.data.displayName.size() <= 160
+          && request.resource.data.body is string
+          && request.resource.data.body.size() >= 1
+          && request.resource.data.body.size() <= 500
+          && request.resource.data.createdAt == request.time;
+        allow update, delete: if false;
+      }
+    }
+
+    // AK Global: verified business enquiries. Private to the submitter and platform owner.
+    match /globalTradeLeads/{leadId} {
+      allow create: if request.auth != null
+        && request.auth.token.email_verified == true
+        && request.resource.data.keys().hasOnly(['ownerUid','email','name','country','type','message','status','createdAt'])
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 2
+        && request.resource.data.name.size() <= 100
+        && request.resource.data.country is string
+        && request.resource.data.country.size() >= 2
+        && request.resource.data.country.size() <= 80
+        && request.resource.data.type in ['Find supplier','Find buyer','Import / export quotation','Logistics / shipping','Other business partnership']
+        && request.resource.data.message is string
+        && request.resource.data.message.size() >= 3
+        && request.resource.data.message.size() <= 1800
+        && request.resource.data.status == 'new'
+        && request.resource.data.createdAt == request.time;
+      allow read: if isVerifiedOwner()
+        || (request.auth != null && resource.data.ownerUid == request.auth.uid);
+      allow update, delete: if false;
+    }
+
+    // AK Global paid-ad requests are applications only. A trusted owner/backend must
+    // verify payment and approve the campaign; clients cannot mark an ad as paid/live.
+    match /globalAdApplications/{applicationId} {
+      allow create: if request.auth != null
+        && request.auth.token.email_verified == true
+        && request.resource.data.keys().hasOnly(['ownerUid','email','business','title','url','targetMarket','contactEmail','plan','amountUSD','currency','status','createdAt'])
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.business is string
+        && request.resource.data.business.size() >= 2
+        && request.resource.data.business.size() <= 100
+        && request.resource.data.title is string
+        && request.resource.data.title.size() >= 3
+        && request.resource.data.title.size() <= 100
+        && request.resource.data.url is string
+        && request.resource.data.url.matches('https://[^ ]+')
+        && request.resource.data.targetMarket is string
+        && request.resource.data.targetMarket.size() >= 2
+        && request.resource.data.targetMarket.size() <= 100
+        && request.resource.data.contactEmail is string
+        && request.resource.data.contactEmail.size() >= 5
+        && request.resource.data.contactEmail.size() <= 160
+        && ((request.resource.data.plan == 'starter' && request.resource.data.amountUSD == 5)
+          || (request.resource.data.plan == 'growth' && request.resource.data.amountUSD == 15)
+          || (request.resource.data.plan == 'business' && request.resource.data.amountUSD == 30))
+        && request.resource.data.currency == 'USD'
+        && request.resource.data.status == 'pending_payment'
+        && request.resource.data.createdAt == request.time;
+      allow read: if resource.data.status == 'active'
+        || isVerifiedOwner()
+        || (request.auth != null && resource.data.ownerUid == request.auth.uid);
+      allow update: if isVerifiedOwner()
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['status','paymentReference','reviewedAt','expiresAt'])
+        && request.resource.data.status in ['pending_payment','active','rejected','expired']
+        && (request.resource.data.status != 'active'
+          || (request.resource.data.paymentReference is string
+            && request.resource.data.paymentReference.size() >= 3
+            && request.resource.data.expiresAt is timestamp
+            && request.resource.data.expiresAt > request.time))
+        && request.resource.data.reviewedAt == request.time;
+      allow delete: if isVerifiedOwner();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+)
+        && !exists(/databases/$(database)/documents/shopInvites/$(code))
+        && (!exists(/databases/$(database)/documents/shopStaffSlots/$(request.auth.uid + '_1'))
+          || !exists(/databases/$(database)/documents/shopStaffSlots/$(request.auth.uid + '_2'))
+          || !exists(/databases/$(database)/documents/shopStaffSlots/$(request.auth.uid + '_3')));
+      allow update: if request.auth != null
+        && resource.data.status == 'open'
+        && resource.data.expiresAt is timestamp
+        && resource.data.expiresAt > request.time
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','claimedBy','claimedAt'])
+        && request.resource.data.status == 'claimed'
+        && request.resource.data.claimedBy == request.auth.uid
+        && request.resource.data.claimedAt == request.time
+        && existsAfter(/databases/$(database)/documents/shopMembers/$(request.auth.uid))
+        && getAfter(/databases/$(database)/documents/shopMembers/$(request.auth.uid)).data.shopId == resource.data.shopId
+        && getAfter(/databases/$(database)/documents/shopMembers/$(request.auth.uid)).data.inviteCode == code;
+      allow delete: if request.auth != null
+        && request.auth.uid == resource.data.shopId
+        && activeShopLicense(resource.data.shopId);
+    }
+
+    match /shopStaffSlots/{slotId} {
+      allow read: if request.auth != null
+        && (resource.data.uid == request.auth.uid
+          || resource.data.shopId == request.auth.uid);
+      allow create: if request.auth != null
+        && request.auth.token.email_verified == true
+        && request.resource.data.keys().hasOnly(['shopId','uid','slot','createdAt','inviteCode'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.shopId is string
+        && request.resource.data.slot in [1,2,3]
+        && slotId == request.resource.data.shopId + '_' + string(request.resource.data.slot)
+        && request.resource.data.createdAt == request.time
+        && activeShopLicense(request.resource.data.shopId)
+        && request.resource.data.inviteCode is string
+        && exists(/databases/$(database)/documents/shopInvites/$(request.resource.data.inviteCode))
+        && get(/databases/$(database)/documents/shopInvites/$(request.resource.data.inviteCode)).data.shopId == request.resource.data.shopId
+        && get(/databases/$(database)/documents/shopInvites/$(request.resource.data.inviteCode)).data.status == 'open'
+        && get(/databases/$(database)/documents/shopInvites/$(request.resource.data.inviteCode)).data.expiresAt > request.time
+        && existsAfter(/databases/$(database)/documents/shopInvites/$(request.resource.data.inviteCode))
+        && getAfter(/databases/$(database)/documents/shopInvites/$(request.resource.data.inviteCode)).data.status == 'claimed'
+        && existsAfter(/databases/$(database)/documents/shopMembers/$(request.auth.uid))
+        && getAfter(/databases/$(database)/documents/shopMembers/$(request.auth.uid)).data.shopId == request.resource.data.shopId;
+      allow update: if false;
+      allow delete: if request.auth != null
+        && request.auth.uid == resource.data.shopId
+        && activeShopLicense(resource.data.shopId);
     }
 
     // A Gmail address can claim one five-day trial only once. The server timestamp

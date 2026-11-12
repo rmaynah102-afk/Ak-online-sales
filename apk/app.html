@@ -231,7 +231,7 @@ button.alt{background:#e9f1ff;color:#123b72;border:1px solid #c8d9f6;box-shadow:
 nav button{color:#17417a;border-color:#d5e2f4}
 input:focus,select:focus,textarea:focus{border-color:#2878d7;box-shadow:0 0 0 3px #2878d71b}
 .owner-only[style*="display: none"]{display:none!important}
-body.ak-owner-user-preview .owner-only,body.ak-owner-user-preview #nav button[data-view="ownerDashboard"]{display:none!important} body.ak-owner-user-preview #akOwnerPreviewBanner{display:block!important}
+body.ak-owner-user-preview .owner-only,body.ak-owner-user-preview #nav button[data-view="ownerDashboard"]{display:none!important} body.ak-owner-user-preview #akOwnerPreviewBanner{display:block!important} body.ak-owner-user-preview #ownerDashboard{display:none!important}
 
 /* AK Sale 2026 — refined mobile-first navy / gold interface */
 :root{
@@ -596,6 +596,22 @@ body.ak-staff #productForm button[onclick^="akSendProductToMarket"] {display:non
 <p id="akProvisionStatus" class="muted">Owner Gmail ဖြင့်သာ အသုံးပြုနိုင်သည်။ Password ကို Firebase Authentication သို့သာ ပို့မည်။</p>
 <div class="tablewrap"><table><thead><tr><th>စဉ်</th><th>ဆိုင်ရှင် Gmail</th><th>Password</th><th>Login Verify</th><th>Package / သက်တမ်း</th><th>အခြေအနေ</th></tr></thead><tbody id="akOwnerShopRows"><tr><td colspan="6">စာရင်းဖတ်ရန် နှိပ်ပါ။</td></tr></tbody></table></div>
 </div>
+<div class="panel owner-only" id="akOwnerOverviewPanel">
+<h2>Platform Owner Control Center</h2>
+<p class="muted">အဓိကထိန်းချုပ်ရေးနေရာ · ဆိုင်ရှင်အကောင့်၊ သက်တမ်း၊ ဝင်ခွင့်နှင့် စနစ်အခြေအနေ</p>
+<div class="grid stats">
+<div class="panel"><div class="muted">ဆိုင်အကောင့်စုစုပေါင်း</div><div class="stat" id="akOwnerTotalShops">—</div></div>
+<div class="panel"><div class="muted">Active ဆိုင်များ</div><div class="stat" id="akOwnerActiveShops">—</div></div>
+<div class="panel"><div class="muted">သက်တမ်းကုန်</div><div class="stat" id="akOwnerExpiredShops">—</div></div>
+<div class="panel"><div class="muted">ရပ်ဆိုင်းထား</div><div class="stat" id="akOwnerSuspendedShops">—</div></div>
+</div>
+<div class="actions">
+<button type="button" onclick="loadPlatformUsers()">ဆိုင်ရှင်စာရင်း ပြန်ဖတ်ရန်</button>
+<button type="button" class="alt" onclick="loadAdminAccessRequests()">Access Request စစ်ရန်</button>
+<button type="button" class="alt" onclick="akToggleOwnerUserPreview()">User View သို့ဝင်ရန်</button>
+</div>
+<p id="akOwnerDashboardStatus" class="muted">Owner Dashboard စတင်ဖတ်နေသည်...</p>
+</div>
 <div id="akOwnerDashboardPanels"></div></section>
 <section id="home" class="view">
 <div class="grid stats">
@@ -899,13 +915,16 @@ function restrictUserPermissions(){
  document.querySelectorAll(".owner-only").forEach(el=>{el.style.display="none";el.classList.add("hidden")});
 }
 function akToggleOwnerUserPreview(){
- if(!akIsPlatformOwner()){alert("Owner account ဖြင့်သာ User View ကိုဖွင့်နိုင်သည်။");return}
- const enabled=document.body.classList.toggle("ak-owner-user-preview");
+ if(!akIsPlatformOwner()||!fbAuth?.currentUser){alert("အတည်ပြုထားသော Platform Owner သာ အသုံးပြုနိုင်သည်။");return}
+ const enabled=!document.body.classList.contains("ak-owner-user-preview");
+ document.body.classList.toggle("ak-owner-user-preview",enabled);
  const banner=document.getElementById("akOwnerPreviewBanner");
  if(banner)banner.style.display=enabled?"block":"none";
  const btn=document.getElementById("akOwnerUserPreviewBtn");
  if(btn)btn.textContent=enabled?"User View ဖွင့်ထားသည်":"User View";
- if(enabled){go("home");window.scrollTo({top:0,behavior:"smooth"})}else{go("ownerDashboard");window.scrollTo({top:0,behavior:"smooth"})}
+ akApplyRoleNavigation();
+ go(enabled?"home":"ownerDashboard");
+ window.scrollTo({top:0,behavior:"smooth"});
 }
 function checkUserRole(user){
  const isOwner=akIsPlatformOwner(user),claims=user?akUserClaims||{}:{};
@@ -913,15 +932,19 @@ function checkUserRole(user){
  akUserRole=role;
  if(isOwner)enableOwnerPrivileges();else restrictUserPermissions();
  document.querySelectorAll(".shop-owner-only").forEach(el=>{const show=["shop-owner","platform-owner"].includes(role);el.style.display=show?"":"none";el.classList.toggle("hidden",!show)});
+ if(!isOwner)document.body.classList.remove("ak-owner-user-preview");
+ const banner=document.getElementById("akOwnerPreviewBanner");if(banner)banner.style.display=isOwner&&document.body.classList.contains("ak-owner-user-preview")?"block":"none";
+ const previewBtn=document.getElementById("akOwnerUserPreviewBtn");if(previewBtn)previewBtn.textContent=document.body.classList.contains("ak-owner-user-preview")?"User View ဖွင့်ထားသည်":"User View";
  akApplyRoleNavigation();
  console.log("AK account role:",role,"| email:",user?.email||"offline");
  return {isOwner,role};
 }
 function akApplyRoleNavigation(){
- const role=akUserRole,staff=["manager","cashier","employee"].includes(role);document.body.classList.toggle("ak-staff",staff);
+ const role=akUserRole,staff=["manager","cashier","employee"].includes(role),preview=role==="platform-owner"&&document.body.classList.contains("ak-owner-user-preview");
+ document.body.classList.toggle("ak-staff",staff);
  const allowed=role==="employee"?["home","sales"]:role==="cashier"?["home","sales","ads"]:role==="manager"?["home","reports"]:null;
- document.querySelectorAll("#nav button[data-view]").forEach(btn=>{btn.hidden=staff&&!allowed.includes(btn.dataset.view)});
- const ownerBtn=document.querySelector('#nav button[data-view="ownerDashboard"]');if(ownerBtn)ownerBtn.hidden=!["shop-owner","platform-owner"].includes(role);
+ document.querySelectorAll("#nav button[data-view]").forEach(btn=>{btn.hidden=preview?btn.dataset.view==="ownerDashboard":staff&&!allowed.includes(btn.dataset.view)});
+ const ownerBtn=document.querySelector('#nav button[data-view="ownerDashboard"]');if(ownerBtn)ownerBtn.hidden=preview||!["shop-owner","platform-owner"].includes(role);
 }
 function akSetLicenseGate(allowed,message){const locked=!allowed;document.body.classList.toggle("ak-license-locked",locked);const notice=document.getElementById("akPaywallNotice");if(notice){notice.classList.toggle("hidden",!locked);const detail=document.getElementById("akPaywallDetail");if(detail&&message)detail.textContent=message}if(document.body.classList.contains("ak-public")){document.querySelectorAll(".view").forEach(x=>x.classList.toggle("active",x.id==="market"));return}if(locked){document.querySelectorAll(".view").forEach(x=>x.classList.toggle("active",x.id==="account"))}else if(document.getElementById("backup")?.classList.contains("active")){document.querySelectorAll(".view").forEach(x=>x.classList.toggle("active",x.id==="home"));document.querySelectorAll("#nav button").forEach(b=>b.classList.toggle("active",b.dataset.view==="home"))}}
 function akApplyAnnouncementAdminVisibility(){const el=document.getElementById("globalAnnouncementAdmin");if(el)el.classList.toggle("hidden",!akIsPlatformOwner())}
@@ -1018,8 +1041,13 @@ document.querySelector('#nav [data-view="ownerDashboard"]')?.classList.add("shop
  if(document.body.classList.contains("ak-license-locked")){document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id==="account"));document.querySelectorAll("#nav button").forEach(b=>b.classList.toggle("active",b.dataset.view==="account"));}
 })();
 
-function akInitOwnerDashboard(){const host=document.getElementById("akOwnerDashboardPanels");if(!host)return;["akOwnerPromoPanel","akLicensePanel"].forEach(id=>{const el=document.getElementById(id);if(el&&el.parentElement!==host)host.appendChild(el)})}
-akInitOwnerDashboard();
+function akInitOwnerDashboard(){
+ const host=document.getElementById("akOwnerDashboardPanels");if(!host)return;
+ ["akOwnerPromoPanel","akLicensePanel"].forEach(id=>{const el=document.getElementById(id);if(el&&el.parentElement!==host)host.appendChild(el)});
+ const dash=document.getElementById("ownerDashboard");
+ if(dash){dash.classList.remove("hidden");}
+}
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",akInitOwnerDashboard,{once:true});else akInitOwnerDashboard();
 const AK_I18N_MY_EN={
 "ပင်မ":"Home","ပစ္စည်း":"Products","အရောင်း":"Sales","အဝယ်":"Purchases","အသုံးစရိတ်":"Expenses","အစီရင်ခံစာ":"Reports","ကြော်ငြာ":"Ads","စင်တာထိန်းချုပ်မှု":"Center Management","အသုံးပြုသူလမ်းညွှန်":"User Guide","APK လမ်းညွှန်":"APK Guide","Backup / Settings":"Backup / Settings",
 "ယနေ့အရောင်း":"Today's Sales","ယနေ့အမြတ် (ခန့်မှန်း)":"Estimated Profit Today","ပစ္စည်းအမျိုးအစား":"Product Types","ရရန်အကြွေး":"Receivables","ပေးရန်အကြွေး":"Payables","အမြန်လုပ်ဆောင်ရန်":"Quick Actions","အရောင်းတင်ရန်":"New Sale","ပစ္စည်းထည့်ရန်":"Add Product","Backup သိမ်းရန်":"Save Backup",
@@ -1051,7 +1079,7 @@ $("akLanguageBtn").addEventListener("click",()=>{akLanguage=akLanguage==="en"?"m
 /* Avoid observing every DOM mutation: large POS tables caused repeated full-page translation scans. */
 akApplyLanguage();
 function go(id){
- if(["staffManagement"].includes(id)&&akUserRole!=="shop-owner"){alert("ဝန်ထမ်းစီမံမှုကို ဆိုင်ရှင်သာ အသုံးပြုနိုင်သည်။");id="account"}
+ if(["staffManagement"].includes(id)&&akUserRole!=="shop-owner"&&!(akUserRole==="platform-owner"&&document.body.classList.contains("ak-owner-user-preview"))){alert("ဝန်ထမ်းစီမံမှုကို ဆိုင်ရှင်သာ အသုံးပြုနိုင်သည်။");id="account"}
  
  if(id==="ownerDashboard"&&!["shop-owner","platform-owner"].includes(akUserRole)){alert("ဆိုင်ရှင်အကောင့်ဖြင့်သာ ဝင်နိုင်သည်။");id="account"}
  if(["manager","cashier","employee"].includes(akUserRole)){const allowed=akUserRole==="employee"?["home","sales"]:akUserRole==="cashier"?["home","sales","ads"]:["home","reports"];if(!allowed.includes(id)){alert("ဤလုပ်ဆောင်ချက်ကို သင့်ရာထူးအတွက် ခွင့်မပြုထားပါ။");id="home"}}
@@ -1074,7 +1102,7 @@ function go(id){
  const activeNav=document.querySelector('#nav button[data-view="'+id+'"]');
  if(activeNav&&window.matchMedia("(max-width: 650px)").matches)activeNav.scrollIntoView({block:"nearest",inline:"nearest",behavior:"smooth"});
  renderAll();
- if(id==="ownerDashboard"&&akIsPlatformOwner()){loadAdminAccessRequests();loadPlatformUsers();}
+ if(id==="ownerDashboard"&&akIsPlatformOwner()){akInitOwnerDashboard();akLoadOwnerDashboard();}
  if(id==="ownerDashboard"&&akUserRole==="shop-owner"){akLoadStaff();}
  if(id==="sales"){
   const scanInput=document.getElementById("saleBarcodeInput");
@@ -2213,6 +2241,23 @@ function akRenderPlatformUsers(){
   return "<tr><td>"+esc(u.email||u.uid)+(u.emailVerified?"":"<br><small>Email မအတည်ပြုရသေး</small>")+"</td><td>"+state+"<br><small>"+esc(u.plan||"-")+"</small></td><td>"+(exp&&Number.isFinite(exp.getTime())?esc(exp.toLocaleString()):"သတ်မှတ်မထား")+"</td><td><select id=\"akGrantDays_"+uid+"\" aria-label=\"Subscription ကာလ\"><option value=\"30\">30 ရက်</option><option value=\"90\">90 ရက်</option><option value=\"180\">180 ရက်</option><option value=\"365\">365 ရက်</option></select><button type=\"button\" onclick=\"akGrantCustomerSubscription('"+uid+"')\">အသုံးပြုခွင့်ပေးမည်</button><button type=\"button\" class=\""+color+"\" onclick=\"akSetCustomerAccess('"+uid+"','"+action+"')\">"+label+"</button></td></tr>";
  }).join(""):"<tr><td colspan=\"4\">Gmail Account မရှိသေးပါ။</td></tr>";
 }
+function akLoadOwnerDashboard(){
+ if(!akIsPlatformOwner()||!fbAuth?.currentUser)return;
+ const status=$("akOwnerDashboardStatus");if(status)status.textContent="Platform စာရင်းများကို ဖတ်နေသည်...";
+ Promise.allSettled([loadPlatformUsers(),loadAdminAccessRequests(),loadMarketReports(),loadSponsoredAds()])
+ .then(results=>{
+  const failed=results.filter(x=>x.status==="rejected").length;
+  if(status)status.textContent="Owner Dashboard အသင့် · ဆိုင်အကောင့်၊ Access Request၊ Market တိုင်ကြားချက်နှင့် ကြော်ငြာစာရင်းများကို "+(failed?"အချို့ မရနိုင်ပါ။ အောက်ပါအခြေအနေစာသားများကို စစ်ပါ။":"စစ်ဆေးပြီးပါပြီ။");
+  akUpdateOwnerDashboardStats();
+ });
+}
+function akUpdateOwnerDashboardStats(){
+ const rows=Array.isArray(akPlatformUserRows)?akPlatformUserRows:[];
+ const active=rows.filter(u=>u.status==="active"&&!u.disabled&&u.expiresAt&&new Date(u.expiresAt).getTime()>Date.now()).length;
+ const expired=rows.filter(u=>u.expiresAt&&new Date(u.expiresAt).getTime()<=Date.now()).length;
+ const suspended=rows.filter(u=>u.status==="suspended"||u.disabled).length;
+ [["akOwnerTotalShops",rows.length],["akOwnerActiveShops",active],["akOwnerExpiredShops",expired],["akOwnerSuspendedShops",suspended]].forEach(([id,value])=>{const el=$(id);if(el)el.textContent=String(value)});
+}
 function akRenderOwnerShopRows(){
  const body=$("akOwnerShopRows");if(!body)return;
  const rows=akPlatformUserRows.filter(u=>String(u.email||"").toLowerCase()!=="painglin102@gmail.com");
@@ -2292,7 +2337,7 @@ async function loadPlatformUsers(){
    const rank=x=>x.status==="pending_owner_review"||x.status==="pending_payment"||x.status==="pending"?0:x.status==="suspended"||x.disabled?1:2;
    return rank(a)-rank(b)||String(a.email||"").localeCompare(String(b.email||""));
   });
-  akRenderPlatformUsers();akRenderOwnerShopRows();
+  akRenderPlatformUsers();akRenderOwnerShopRows();akUpdateOwnerDashboardStats();
   const active=akPlatformUserRows.filter(u=>u.status==="active"&&!u.disabled&&u.expiresAt&&new Date(u.expiresAt).getTime()>Date.now()).length;
   if($("akOwnerUserCount"))$("akOwnerUserCount").textContent=akPlatformUserRows.length+" ခု";
   if(status)status.textContent="ဆိုင်အကောင့် "+akPlatformUserRows.length+" ခု · လက်ရှိအသုံးပြုခွင့်ရှိ "+active+" ခု · အများဆုံး ၃၀ ဆိုင်";

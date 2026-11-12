@@ -9,7 +9,7 @@
   const COST_FIELDS = ["cost", "costPrice", "unitCost", "purchaseCost", "profit", "grossProfit", "margin"];
   const ROLE_COLLECTIONS = {
     owner: COLLECTIONS,
-    manager: COLLECTIONS,
+    manager: ["products", "sales", "purchases", "people", "payments", "expenses", "productCosts", "saleCosts"],
     cashier: ["products", "sales", "people", "payments"],
     employee: ["products"]
   };
@@ -201,7 +201,7 @@
       this._assertSignedIn();
       const writeRoles = {
         owner: COLLECTIONS,
-        manager: COLLECTIONS,
+        manager: ["products", "sales", "purchases", "people", "payments", "expenses", "productCosts", "saleCosts"],
         cashier: ["sales", "people", "payments"],
         employee: []
       };

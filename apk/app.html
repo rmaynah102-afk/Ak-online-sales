@@ -2374,6 +2374,8 @@ async function loadPlatformUsers(){
   const status=$("akPlatformUserStatus"),ownerStatus=$("akProvisionStatus");
   if(status)status.textContent="Firestore မှ Subscription စာရင်း ဖတ်နေသည်...";
   const snap=await fbStore.collection("licenses").limit(100).get();
+  const capacityRef=fbStore.collection("platformMeta").doc("shopCapacity");
+  await fbStore.runTransaction(async tx=>{const capacity=await tx.get(capacityRef);if(!capacity.exists)tx.set(capacityRef,{activeShopCount:snap.size,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});});
   akPlatformUserRows=snap.docs.map(d=>{
    const v=d.data()||{},expiry=v.expiresAt&&typeof v.expiresAt.toDate==="function"?v.expiresAt.toDate().toISOString():v.expiresAt||null;
    return {uid:d.id,email:v.email||"",emailVerified:v.emailVerified===true,status:v.status||"pending",plan:v.plan||"",expiresAt:expiry,disabled:v.status==="suspended"};
@@ -2432,19 +2434,33 @@ async function akGrantRequestSubscription(uid,requestedDays){
   if(!akIsPlatformOwner()||!fbAuth?.currentUser)throw Error("Platform Owner သာ ခွင့်ပြုသည်။");
   const days=Number(requestedDays);
   if(![30,90,180,365].includes(days))throw Error("Package ကာလ မမှန်ပါ။");
-  const requestRef=fbStore.collection("subscriptionAccessRequests").doc(uid),requestSnap=await requestRef.get();
-  if(!requestSnap.exists||requestSnap.data().status!=="pending")throw Error("Access Request မရှိတော့ပါ။");
-  const request=requestSnap.data()||{};
-  if(!confirm(request.email+" အတွက် "+days+" ရက် Subscription ကို ငွေပေးချေမှုစစ်ပြီး ဖွင့်ပေးမလား။"))return;
-  const licenseRef=fbStore.collection("licenses").doc(uid),licenseSnap=await licenseRef.get(),current=licenseSnap.exists?licenseSnap.data()||{}:{};
-  const oldExpiry=current.expiresAt&&typeof current.expiresAt.toDate==="function"?current.expiresAt.toDate():current.expiresAt?new Date(current.expiresAt):null;
-  const base=oldExpiry&&oldExpiry.getTime()>Date.now()?oldExpiry:new Date(),expiresAt=new Date(base.getTime()+days*86400000);
-  const plans={30:"30-days",90:"90-days",180:"180-days",365:"365-days"},prices={30:30000,90:90000,180:180000,365:360000};
-  const batch=fbStore.batch();
-  batch.set(licenseRef,{uid,email:request.email,emailVerified:true,status:"active",plan:plans[days],expiresAt:firebase.firestore.Timestamp.fromDate(expiresAt),priceMMK:prices[days],issuedAt:current.issuedAt||firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:fbAuth.currentUser.email},{merge:true});
-  batch.update(requestRef,{status:"reviewed",reviewedBy:fbAuth.currentUser.email,reviewedAt:firebase.firestore.FieldValue.serverTimestamp()});
-  await batch.commit();
-  $("adminAccessStatus").textContent=request.email+" ကို "+days+" ရက် License ဖွင့်ပြီးပါပြီ။";
+  const requestRef=fbStore.collection("subscriptionAccessRequests").doc(uid);
+  const licenseRef=fbStore.collection("licenses").doc(uid);
+  const counterRef=fbStore.collection("platformMeta").doc("shopCapacity");
+  // Initialize the counter from existing licenses before any new shop is issued.
+  const existingLicenses=await fbStore.collection("licenses").limit(100).get();
+  await fbStore.runTransaction(async tx=>{const c=await tx.get(counterRef);if(!c.exists)tx.set(counterRef,{activeShopCount:existingLicenses.size,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});});
+  let expiryResult=null;
+  await fbStore.runTransaction(async tx=>{
+   const requestSnap=await tx.get(requestRef),licenseSnap=await tx.get(licenseRef),counterSnap=await tx.get(counterRef);
+   if(!requestSnap.exists||requestSnap.data().status!=="pending")throw Error("Access Request မရှိတော့ပါ။");
+   const request=requestSnap.data()||{},current=licenseSnap.exists?licenseSnap.data()||{}:{};
+   if(!request.email||!request.uid||request.uid!==uid)throw Error("Request အချက်အလက် မမှန်ပါ။");
+   if(!licenseSnap.exists){
+    if(!counterSnap.exists)throw Error("Shop capacity စာရင်း မစတင်ရသေးပါ။");
+    const count=Number((counterSnap.data()||{}).activeShopCount||0);
+    if(count>=100)throw Error("ဆိုင်အကောင့် ၁၀၀ ပြည့်နေပါသည်။ အသစ်ထပ်ဖွင့်မရပါ။");
+    tx.update(counterRef,{activeShopCount:count+1,lastIssuedUid:uid,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+   }
+   const oldExpiry=current.expiresAt&&typeof current.expiresAt.toDate==="function"?current.expiresAt.toDate():current.expiresAt?new Date(current.expiresAt):null;
+   const base=oldExpiry&&oldExpiry.getTime()>Date.now()?oldExpiry:new Date(),expiresAt=new Date(base.getTime()+days*86400000);
+   const plans={30:"30-days",90:"90-days",180:"180-days",365:"365-days"},prices={30:30000,90:90000,180:180000,365:360000};
+   tx.set(licenseRef,{uid,email:request.email,emailVerified:true,status:"active",plan:plans[days],expiresAt:firebase.firestore.Timestamp.fromDate(expiresAt),priceMMK:prices[days],issuedAt:current.issuedAt||firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:fbAuth.currentUser.email},{merge:true});
+   tx.update(requestRef,{status:"reviewed",reviewedBy:fbAuth.currentUser.email,reviewedAt:firebase.firestore.FieldValue.serverTimestamp()});
+   expiryResult=expiresAt;
+  });
+  $("adminAccessStatus").textContent=uid+" ကို "+days+" ရက် License ဖွင့်ပြီးပါပြီ။";
+  if(expiryResult)alert("Subscription အတည်ပြုပြီးပါပြီ။ သက်တမ်းကုန်မည့်ရက်: "+expiryResult.toLocaleString());
   await Promise.all([loadAdminAccessRequests(),loadPlatformUsers()]);
  }catch(e){$("adminAccessStatus").textContent="License ဖွင့်မရပါ: "+(e.message||e)}
 }

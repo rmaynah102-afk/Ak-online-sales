@@ -1,4 +1,4 @@
-name: AK Sale Firestore Rules Tests
+name: AK Sale Spark Backend Security and Adapter Tests
 
 on:
   pull_request:

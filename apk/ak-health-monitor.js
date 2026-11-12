@@ -56,7 +56,7 @@ function exportCsv(){
  const csv=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(",")).join("\r\n");
  const a=document.createElement("a"),url=URL.createObjectURL(new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8"}));a.href=url;a.download="ak-diagnostics.csv";a.click();URL.revokeObjectURL(url);
 }
-window.AKHealthMonitor={add,render,status,issues};
+window.AKHealthMonitor={add,render,status,issues,snapshot:()=>events.map(e=>({...e}))};
 document.addEventListener("DOMContentLoaded",()=>{ensureView();render();
  const cloud=document.getElementById("fbStatus"),printer=document.getElementById("akPrinterStatus");
  if(typeof MutationObserver!=="undefined") [cloud,printer].filter(Boolean).forEach(node=>new MutationObserver(()=>render()).observe(node,{childList:true,subtree:true,characterData:true}));

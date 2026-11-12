@@ -2230,6 +2230,7 @@ function akWatchAdminAccessRequests(){
  akAccessQueueUnsubscribe=fbStore.collection("subscriptionAccessRequests").where("status","==","pending").orderBy("createdAt","desc").limit(100).onSnapshot(()=>{void loadAdminAccessRequests()},error=>{const status=$("adminAccessStatus");if(status)status.textContent="Live Access Request အသိပေးမှု ချိတ်မရပါ: "+error.message});
 }
 let akPlatformUserPageToken="",akPlatformUserRows=[];
+let akPlatformUserListLoaded=false,akPlatformUserListError="";
 function akRenderPlatformUsers(){
  const body=$("akPlatformUserRows");if(!body)return;
  body.innerHTML=akPlatformUserRows.length?akPlatformUserRows.map(u=>{
@@ -2243,18 +2244,21 @@ function akLoadOwnerDashboard(){
  if(!akIsPlatformOwner()||!fbAuth?.currentUser)return;
  const status=$("akOwnerDashboardStatus");if(status)status.textContent="Platform စာရင်းများကို ဖတ်နေသည်...";
  Promise.allSettled([loadPlatformUsers(),loadAdminAccessRequests(),loadMarketReports(),loadSponsoredAds()])
- .then(results=>{
-  const failed=results.filter(x=>x.status==="rejected").length;
-  if(status)status.textContent="Owner Dashboard အသင့် · ဆိုင်အကောင့်၊ Access Request၊ Market တိုင်ကြားချက်နှင့် ကြော်ငြာစာရင်းများကို "+(failed?"အချို့ မရနိုင်ပါ။ အောက်ပါအခြေအနေစာသားများကို စစ်ပါ။":"စစ်ဆေးပြီးပါပြီ။");
+ .then(()=>{
   akUpdateOwnerDashboardStats();
+  if(status){
+   if(akPlatformUserListError)status.textContent="Owner Dashboard ကို ဖွင့်ထားသည်။ ဆိုင်အကောင့်စာရင်း မရသေးပါ။ အောက်ပါ Customer စာရင်းအခြေအနေကို စစ်ပါ။";
+   else status.textContent="Owner Dashboard အသင့် · ဆိုင်အကောင့် "+akPlatformUserRows.length+" ခု · Access Request၊ Market တိုင်ကြားချက်နှင့် ကြော်ငြာစာရင်းများကို ဖတ်ပြီးပါပြီ။";
+  }
  });
 }
 function akUpdateOwnerDashboardStats(){
  const rows=Array.isArray(akPlatformUserRows)?akPlatformUserRows:[];
+ const loaded=akPlatformUserListLoaded===true;
  const active=rows.filter(u=>u.status==="active"&&!u.disabled&&u.expiresAt&&new Date(u.expiresAt).getTime()>Date.now()).length;
- const expired=rows.filter(u=>u.expiresAt&&new Date(u.expiresAt).getTime()<=Date.now()).length;
+ const expired=rows.filter(u=>u.status!=="suspended"&&!u.disabled&&u.expiresAt&&new Date(u.expiresAt).getTime()<=Date.now()).length;
  const suspended=rows.filter(u=>u.status==="suspended"||u.disabled).length;
- [["akOwnerTotalShops",rows.length],["akOwnerActiveShops",active],["akOwnerExpiredShops",expired],["akOwnerSuspendedShops",suspended]].forEach(([id,value])=>{const el=$(id);if(el)el.textContent=String(value)});
+ [["akOwnerTotalShops",loaded?rows.length:"—"],["akOwnerActiveShops",loaded?active:"—"],["akOwnerExpiredShops",loaded?expired:"—"],["akOwnerSuspendedShops",loaded?suspended:"—"]].forEach(([id,value])=>{const el=$(id);if(el)el.textContent=String(value)});
 }
 function akRenderOwnerShopRows(){
  const body=$("akOwnerShopRows");if(!body)return;
@@ -2316,6 +2320,7 @@ async function setMarketReportStatus(id,statusValue){
  }catch(e){alert("တိုင်ကြားချက်အခြေအနေ မပြောင်းနိုင်ပါ: "+(e.message||e))}
 }
 async function loadPlatformUsers(){
+ akPlatformUserListLoaded=false;akPlatformUserListError="";akUpdateOwnerDashboardStats();
  try{
   if(!akIsPlatformOwner()||!fbAuth?.currentUser)throw Error("အတည်ပြုထားသော Platform Owner Gmail ဖြင့် Login ဝင်ပါ။");
   const status=$("akPlatformUserStatus"),ownerStatus=$("akProvisionStatus");
@@ -2331,6 +2336,7 @@ async function loadPlatformUsers(){
    if(!pageToken)break;
   }
   akPlatformUserRows=all.filter(u=>String(u.email||"").toLowerCase()!=="painglin102@gmail.com");
+  akPlatformUserListLoaded=true;akPlatformUserListError="";
   akPlatformUserRows.sort((a,b)=>{
    const rank=x=>x.status==="pending_owner_review"||x.status==="pending_payment"||x.status==="pending"?0:x.status==="suspended"||x.disabled?1:2;
    return rank(a)-rank(b)||String(a.email||"").localeCompare(String(b.email||""));
@@ -2341,8 +2347,11 @@ async function loadPlatformUsers(){
   if(status)status.textContent="ဆိုင်အကောင့် "+akPlatformUserRows.length+" ခု · လက်ရှိအသုံးပြုခွင့်ရှိ "+active+" ခု · အများဆုံး ၃၀ ဆိုင်";
   if(ownerStatus)ownerStatus.textContent="ဆိုင်ရှင်စာရင်း "+akPlatformUserRows.length+" ခု · Active "+active+" ခု · Password များကို လုံခြုံရေးအတွက် မပြသပါ။";
  }catch(e){
-  if($("akPlatformUserStatus"))$("akPlatformUserStatus").textContent="Customer စာရင်းဖတ်မရပါ: "+(e.message||e);
-  if($("akProvisionStatus"))$("akProvisionStatus").textContent="ဆိုင်ရှင်စာရင်းဖတ်မရပါ: "+(e.message||e);
+  akPlatformUserListLoaded=false;akPlatformUserListError=String(e?.message||e||"အမည်မသိ အမှား");
+  akUpdateOwnerDashboardStats();
+  if($("akPlatformUserStatus"))$("akPlatformUserStatus").textContent="Customer စာရင်းဖတ်မရပါ: "+akPlatformUserListError;
+  if($("akProvisionStatus"))$("akProvisionStatus").textContent="ဆိုင်ရှင်စာရင်းဖတ်မရပါ: "+akPlatformUserListError;
+  const ownerStatus=$("akOwnerDashboardStatus");if(ownerStatus)ownerStatus.textContent="Owner Dashboard ပေါ်နေပါသည်။ ဆိုင်ရှင်စာရင်း မဖတ်နိုင်သေးပါ: "+akPlatformUserListError;
  }
 }
 async function akSetCustomerAccess(uid,action){

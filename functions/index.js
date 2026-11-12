@@ -48,6 +48,7 @@ async function enforceCustomerShopCapacity(tx, uid, currentLicenseSnap) {
     updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     lastActivatedUid: uid
   }, { merge: true });
+}
 
 function requireAdmin(context) {
   if (!context.auth) {

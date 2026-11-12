@@ -45,13 +45,13 @@ async function enforceCustomerShopCapacity(tx, uid, currentLicenseSnap) {
     return email !== OWNER_EMAIL && expiry > now;
   });
   const targetAlreadyActive = activeOwners.some(doc => doc.id === uid);
-  if (!targetAlreadyActive && activeOwners.length >= 30) {
+  if (!targetAlreadyActive && activeOwners.length >= 100) {
     throw new functions.https.HttpsError("resource-exhausted",
-      "Platform Owner က ခွင့်ပြုထားသော ဆိုင် ၃၀ ဆိုင် ပြည့်နေပါပြီ။ ဆိုင်ဟောင်းတစ်ဆိုင်ကို Suspend လုပ်ခြင်း သို့မဟုတ် သက်တမ်းကုန်ပြီးမှ အသစ်ဖွင့်နိုင်ပါမည်။");
+      "Platform Owner က ခွင့်ပြုထားသော ဆိုင် ၁၀၀ ဆိုင် ပြည့်နေပါပြီ။ ဆိုင်ဟောင်းတစ်ဆိုင်ကို Suspend လုပ်ခြင်း သို့မဟုတ် သက်တမ်းကုန်ပြီးမှ အသစ်ဖွင့်နိုင်ပါမည်။");
   }
   tx.set(capacityRef, {
     activeCount: activeOwners.length + (targetAlreadyActive ? 0 : 1),
-    limit: 30,
+    limit: 100,
     updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     lastActivatedUid: uid
   }, { merge: true });

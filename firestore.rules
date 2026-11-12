@@ -109,7 +109,7 @@ service cloud.firestore {
 
     // Tenant-scoped POS data: collection-level rules enforce role permissions.
     // APK migration must split the legacy appData blob before using these paths.
-    match /shops/{shopId}/pos/{collection}/{documentId} {
+    match /shops/{shopId}/pos/{collection}/records/{documentId} {
       allow read: if canReadPosCollection(shopId, collection);
       allow create: if canCreatePosCollection(shopId, collection);
       allow update: if canUpdatePosCollection(shopId, collection);

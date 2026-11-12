@@ -358,6 +358,7 @@ service cloud.firestore {
 
     match /subscriptionAccessRequests/{userId} {
       allow create: if request.auth != null
+        && request.auth.token.email_verified == true
         && request.auth.uid == userId
         && request.resource.data.uid == userId
         && request.resource.data.email == request.auth.token.email

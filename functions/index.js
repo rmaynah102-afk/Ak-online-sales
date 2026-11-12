@@ -396,7 +396,8 @@ exports.createShopOwnerAccount = functions.https.onCall(async (data, context) =>
   }
 });
 
-// The shop login screen asks the customer to select the package assigned by the Owner.
+// Shop owners sign in with only their provisioned Gmail and password.
+// Package and expiry are read from the Owner-managed license; customers never select a plan.
 exports.verifyShopOwnerLogin = functions.https.onCall(async (data, context) => {
   if (!context.auth) throw new functions.https.HttpsError("unauthenticated", "Login ဝင်ပါ။");
   const email = String(context.auth.token.email || "").trim().toLowerCase();
@@ -407,22 +408,21 @@ exports.verifyShopOwnerLogin = functions.https.onCall(async (data, context) => {
   if (user.customClaims?.shopId || user.customClaims?.platformAdmin) {
     throw new functions.https.HttpsError("permission-denied", "ဤအကောင့်သည် ဝန်ထမ်းအကောင့် ဖြစ်သည်။");
   }
-  const selectedDays = Number(data.planDays);
-  if (![30, 90, 180, 365].includes(selectedDays)) {
-    throw new functions.https.HttpsError("invalid-argument", "Package ရွေးချယ်ပါ။");
-  }
   const snap = await db.collection("licenses").doc(context.auth.uid).get();
   const license = snap.data() || {};
   if (!snap.exists || license.status !== "active" || !license.expiresAt ||
-      license.expiresAt.toMillis() <= Date.now()) {
+      typeof license.expiresAt.toMillis !== "function" || license.expiresAt.toMillis() <= Date.now()) {
     throw new functions.https.HttpsError("permission-denied", "အသုံးပြုခွင့် မရှိသေးပါ သို့မဟုတ် သက်တမ်းကုန်နေပါပြီ။ AK Owner ထံ ဆက်သွယ်ပါ။");
   }
-  if (Number(license.planDays || String(license.plan || "").replace("-days", "")) !== selectedDays) {
-    throw new functions.https.HttpsError("failed-precondition", "ရွေးထားသော Package သည် Owner သတ်မှတ်ပေးထားသော Package နှင့် မကိုက်ညီပါ။");
-  }
-  return { ok: true, planDays: selectedDays, expiresAt: license.expiresAt.toDate().toISOString() };
+  return {
+    ok: true,
+    planDays: Number(license.planDays || String(license.plan || "").replace("-days", "")) || 0,
+    expiresAt: license.expiresAt.toDate().toISOString()
+  };
 });
 
+// Owner-only customer account controls. Every Gmail other than the fixed verified
+// platform owner is a customer; client role labels never grant platform privileges.
 // Owner-only customer account controls. Every Gmail other than the fixed verified
 // platform owner is a customer; client role labels never grant platform privileges.
 exports.listPlatformUsers = functions.https.onCall(async (data, context) => {
@@ -766,9 +766,12 @@ exports.assignShopStaffRole = functions.https.onCall(async (data, context) => {
 // after signing in with their own verified Gmail. Codes expire after 24 hours.
 exports.createShopInviteCode = functions.https.onCall(async (data, context) => {
   const ownerUid = await requireActiveShop(context);
-  const role = String(data.role || "").trim().toLowerCase();
-  if (!SHOP_STAFF_ROLES.includes(role)) {
-    throw new functions.https.HttpsError("invalid-argument", "ဝန်ထမ်းရာထူး မမှန်ပါ။");
+  const role = String(data.role || "employee").trim().toLowerCase();
+  const allowedViews = ["sales", "reports", "ads", "people"];
+  const requestedViews = Array.isArray(data.allowedViews) ? [...new Set(data.allowedViews.map(x => String(x)))] : allowedViews;
+  if (!SHOP_STAFF_ROLES.includes(role) ||
+      requestedViews.some(view => !allowedViews.includes(view))) {
+    throw new functions.https.HttpsError("invalid-argument", "ဝန်ထမ်းရာထူး သို့မဟုတ် Menu ခွင့်ပြုချက် မမှန်ပါ။");
   }
   const members = await db.collection("shopMembers").where("shopId", "==", ownerUid).get();
   if (members.size >= 3) {
@@ -777,7 +780,7 @@ exports.createShopInviteCode = functions.https.onCall(async (data, context) => {
   const code = crypto.randomBytes(5).toString("hex").toUpperCase();
   const hash = crypto.createHash("sha256").update(code).digest("hex");
   await db.collection("shopInviteCodes").doc(hash).create({
-    shopId: ownerUid, role, status: "pending",
+    shopId: ownerUid, role, allowedViews: requestedViews, status: "pending",
     expiresAt: admin.firestore.Timestamp.fromMillis(Date.now() + 24 * 60 * 60 * 1000),
     createdBy: ownerUid, createdAt: admin.firestore.FieldValue.serverTimestamp()
   });
@@ -831,13 +834,17 @@ exports.claimShopInviteCode = functions.https.onCall(async (data, context) => {
     tx.update(inviteRef, { status: "claimed", claimedBy: uid, claimedEmail: email, claimedAt: admin.firestore.FieldValue.serverTimestamp() });
     tx.set(memberRef, {
       uid, shopId: invite.shopId, email, role: invite.role,
+      allowedViews: Array.isArray(invite.allowedViews) ? invite.allowedViews : ["sales", "reports", "ads", "people"],
       updatedAt: admin.firestore.FieldValue.serverTimestamp(), invitedBy: invite.createdBy
     }, { merge: true });
     return { shopId: invite.shopId, role: invite.role };
   });
   const staff = await admin.auth().getUser(uid);
   await admin.auth().setCustomUserClaims(uid, {
-    ...(staff.customClaims || {}), shopId: outcome.shopId, shopRole: outcome.role
+    ...(staff.customClaims || {}), shopId: outcome.shopId, shopRole: outcome.role,
+    shopViews: Array.isArray((await db.collection("shopMembers").doc(uid).get()).data()?.allowedViews)
+      ? (await db.collection("shopMembers").doc(uid).get()).data().allowedViews
+      : ["sales", "reports", "ads", "people"]
   });
   await db.collection("users").doc(outcome.shopId).collection("auditLogs").add({
     action: "staff_joined_by_merchant_code", targetUid: uid, email, role: outcome.role,
@@ -851,10 +858,39 @@ exports.listShopStaff = functions.https.onCall(async (data, context) => {
   const snap = await db.collection("shopMembers").where("shopId", "==", ownerUid).limit(100).get();
   return { maxStaff: 3, totalAccounts: 1 + snap.size, members: snap.docs.map(doc => {
     const x = doc.data();
-    return { uid: doc.id, email: x.email || "", role: x.role || "employee", canPrint: x.canPrint === true };
+    return { uid: doc.id, email: x.email || "", role: x.role || "employee", canPrint: x.canPrint === true,
+      allowedViews: Array.isArray(x.allowedViews) ? x.allowedViews : ["sales", "reports", "ads", "people"] };
   }) };
 });
 
+
+// Per-staff menu visibility. Only the shop owner can change these four user-dashboard sections.
+exports.setShopStaffViews = functions.https.onCall(async (data, context) => {
+  const ownerUid = await requireActiveShop(context);
+  const memberUid = String(data.memberUid || "").trim();
+  const allowed = ["sales", "reports", "ads", "people"];
+  const requested = Array.isArray(data.allowedViews) ? [...new Set(data.allowedViews.map(x => String(x)))] : [];
+  if (!memberUid || memberUid === ownerUid || memberUid.length > 128 ||
+      requested.some(view => !allowed.includes(view))) {
+    throw new functions.https.HttpsError("invalid-argument", "ဝန်ထမ်း Menu ခွင့်ပြုချက် မမှန်ပါ။");
+  }
+  const ref = db.collection("shopMembers").doc(memberUid);
+  const snap = await ref.get();
+  if (!snap.exists || snap.data().shopId !== ownerUid) {
+    throw new functions.https.HttpsError("not-found", "ဤဆိုင်၏ ဝန်ထမ်းအကောင့် မတွေ့ပါ။");
+  }
+  await ref.set({ allowedViews: requested, permissionsUpdatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+  const staff = await admin.auth().getUser(memberUid);
+  await admin.auth().setCustomUserClaims(memberUid, {
+    ...(staff.customClaims || {}), shopId: ownerUid,
+    shopRole: snap.data().role || "employee", shopViews: requested
+  });
+  await db.collection("users").doc(ownerUid).collection("auditLogs").add({
+    action: "staff_menu_permissions_changed", targetUid: memberUid, allowedViews: requested,
+    actorUid: ownerUid, createdAt: admin.firestore.FieldValue.serverTimestamp()
+  });
+  return { ok: true, allowedViews: requested };
+});
 
 // Owner-controlled receipt and report printing permission for each staff account.
 exports.setShopStaffPrintPermission = functions.https.onCall(async (data, context) => {

@@ -1,7 +1,7 @@
 (function(){
 "use strict";
 const MAX=60,events=[],seen=new Set();
-const safeText=value=>String(value||"").replace(/(?:AIza[0-9A-Za-z_-]{30,}|[A-Za-z0-9_-]{24,}\.[A-Za-z0-9_-]{12,}\.[A-Za-z0-9_-]{12,})/g,"[redacted]").replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi,"[email]").slice(0,220);
+const safeText=value=>String(value||"").replace(/(?:AIza[0-9A-Za-z_-]{30,}|[A-Za-z0-9_-]{24,}\\.[A-Za-z0-9_-]{12,}\\.[A-Za-z0-9_-]{12,})/g,"[redacted]").replace(/((?:api[_-]?key|access[_-]?token|refresh[_-]?token|password|secret)\\s*[:=]\\s*)[^\\s,;]+/gi,"$1[redacted]").replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}/gi,"[email]").slice(0,220);
 function add(level,module,message){
  const item={time:new Date().toISOString(),level,module,message:safeText(message)};
  const key=item.level+"|"+item.module+"|"+item.message;

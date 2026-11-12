@@ -319,6 +319,11 @@ describe('AK Sale Firestore security baseline', function () {
   it('enforces cashier permissions on tenant-scoped POS collections', async () => {
     await seedLicense('shop-a');
     await seedMember('cashier-a', 'shop-a', 'cashier');
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), 'shops', 'shop-a', 'pos', 'products', 'records', 'p1'), {
+        name: 'Hammer', retail: 5000,
+      });
+    });
     const db = testEnv.authenticatedContext('cashier-a', {
       email: 'cashier-a@example.com', email_verified: true,
     }).firestore();

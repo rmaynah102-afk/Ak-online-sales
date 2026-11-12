@@ -31,6 +31,13 @@ const checks = [
  ['Platform Owner capacity is 100 shops', functions.includes('activeOwners.length >= 100') && functions.includes('limit: 100,')],
  ['In-app payment collection endpoints are absent', !['createPaymentRequest','getPaymentAccountSettings','setPaymentAccountSettings','listPendingPayments','rejectPaymentRequest','approveSubscription'].some(name => functions.includes('exports.'+name+' =')) && !functions.includes('AK_KPAY_ACCOUNT')],
  ['External payment is handled by manual Owner subscription grants', functions.includes('exports.grantSubscription') && functions.includes('Payments are handled outside')],
+ ['One-time five-day trial is tied to a Gmail claim', html.includes('freeTrialClaims') && html.includes('plan:"free-trial"') && html.includes('5*86400000')],
+ ['Trial automatically locks after five days', html.includes('akFreeTrialExpiryTimer') && html.includes('clearTimeout(akFreeTrialExpiryTimer)') && html.includes('Trial သက်တမ်းကုန်ဆုံးသွားပါပြီ')],
+ ['Firestore rules enforce five-day trial expiry', rules.includes("duration.value(5, 'd')") && rules.includes('freeTrialClaims') && rules.includes('request.auth.token.email == email')],
+ ['Owner account list includes trial users', functions.includes('freeBetaUsers') && functions.includes('plan: "free-trial"')],
+ ['Paid and trial accounts share the 100-shop limit', functions.includes('trialQuery = db.collection("freeBetaUsers")') && functions.includes('activeUids.size >= 100')],
+ ['APK shows 100-shop platform capacity', html.includes('အများဆုံး ၁၀၀ ဆိုင်')],
+
  ['Owner password never stored in Firestore', functions.includes('Passwords are sent only to') && !functions.includes('password: password') && !functions.includes('passwordConfigured: password')],
  ['Owner assigns package and expiry', functions.includes('planDays, priceMMK: planPrices[planDays]') && functions.includes('expiresAt, emailVerified: true')],
  ['Shop owner login uses Owner-assigned license without package selection', html.includes('httpsCallable("verifyShopOwnerLogin")({})') && !html.includes('akLoginPackage') && functions.includes('Package and expiry are assigned by the Platform Owner')],

@@ -28,6 +28,8 @@ const checks = [
  ['Native printer plugin source present', printer.includes('class AkPrinterPlugin') && printer.includes('public void shareReceiptImage(PluginCall call)')],
  ['Native file sharing restricts exports to safe document MIME types', printer.includes('mimeType.equals("text/csv")') && printer.includes('mimeType.equals("text/plain")') && printer.includes('5 * 1024 * 1024')],
  ['Owner account provisioning callable', functions.includes('exports.createShopOwnerAccount') && functions.includes('exports.verifyShopOwnerLogin')],
+ ['Owner customer license changes use audited server callables', html.includes('httpsCallable("grantSubscription")({uid,days})') && html.includes('httpsCallable("setPlatformUserAccess")({uid,action})') && functions.includes('exports.grantSubscription') && functions.includes('exports.setPlatformUserAccess')],
+ ['Owner customer account list uses protected Admin Auth callable', html.includes('httpsCallable("listPlatformUsers")') && functions.includes('exports.listPlatformUsers')],
  ['Owner password never stored in Firestore', functions.includes('Passwords are sent only to') && !functions.includes('password: password') && !functions.includes('passwordConfigured: password')],
  ['Owner assigns package and expiry', functions.includes('planDays, priceMMK: planPrices[planDays]') && functions.includes('expiresAt, emailVerified: true')],
  ['Shop owner login uses Owner-assigned license without package selection', html.includes('httpsCallable("verifyShopOwnerLogin")({})') && !html.includes('akLoginPackage') && functions.includes('Package and expiry are assigned by the Platform Owner')],

@@ -30,6 +30,6 @@ jobs:
       - name: Deploy only AK account, staff and shop-workspace functions
         run: >-
           firebase deploy
-          --only functions:createShopOwnerAccount,functions:listPlatformUsers,functions:verifyShopOwnerLogin,functions:resetShopOwnerPassword,functions:claimShopDevice,functions:listShopDevices,functions:revokeShopDevice,functions:syncPublicShopProfile,functions:assignShopStaffRole,functions:createShopInviteCode,functions:claimShopInviteCode,functions:listShopStaff,functions:setShopStaffViews,functions:setShopStaffPrintPermission,functions:publishShopAnnouncement,functions:listShopAnnouncements,functions:removeShopStaff,functions:loadShopWorkspace,functions:saveShopWorkspace,functions:akAiGenerateAd,firestore:rules,storage
+          --only functions:createShopOwnerAccount,functions:listPlatformUsers,functions:verifyShopOwnerLogin,functions:resetShopOwnerPassword,functions:grantSubscription,functions:setPlatformUserAccess,functions:approveSubscription,functions:claimShopDevice,functions:listShopDevices,functions:revokeShopDevice,functions:syncPublicShopProfile,functions:assignShopStaffRole,functions:createShopInviteCode,functions:claimShopInviteCode,functions:listShopStaff,functions:setShopStaffViews,functions:setShopStaffPrintPermission,functions:publishShopAnnouncement,functions:listShopAnnouncements,functions:removeShopStaff,functions:loadShopWorkspace,functions:saveShopWorkspace,functions:akAiGenerateAd,firestore:rules,storage
           --project ak-onlin-sales
           --non-interactive

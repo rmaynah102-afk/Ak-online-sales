@@ -840,11 +840,11 @@ exports.claimShopInviteCode = functions.https.onCall(async (data, context) => {
     return { shopId: invite.shopId, role: invite.role };
   });
   const staff = await admin.auth().getUser(uid);
+  const membership = await db.collection("shopMembers").doc(uid).get();
+  const shopViews = Array.isArray(membership.data()?.allowedViews)
+    ? membership.data().allowedViews : ["sales", "reports", "ads", "people"];
   await admin.auth().setCustomUserClaims(uid, {
-    ...(staff.customClaims || {}), shopId: outcome.shopId, shopRole: outcome.role,
-    shopViews: Array.isArray((await db.collection("shopMembers").doc(uid).get()).data()?.allowedViews)
-      ? (await db.collection("shopMembers").doc(uid).get()).data().allowedViews
-      : ["sales", "reports", "ads", "people"]
+    ...(staff.customClaims || {}), shopId: outcome.shopId, shopRole: outcome.role, shopViews
   });
   await db.collection("users").doc(outcome.shopId).collection("auditLogs").add({
     action: "staff_joined_by_merchant_code", targetUid: uid, email, role: outcome.role,

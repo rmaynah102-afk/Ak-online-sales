@@ -40,6 +40,7 @@ const checks = [
  ['Owner account provisioning callable', functions.includes('exports.createShopOwnerAccount') && functions.includes('exports.verifyShopOwnerLogin')],
  ['Owner password never stored in Firestore', functions.includes('Passwords are sent only to') && !functions.includes('password: password') && !functions.includes('passwordConfigured: password')],
  ['Owner assigns package and expiry', functions.includes('planDays, priceMMK: planPrices[planDays]') && functions.includes('expiresAt, emailVerified: true')],
+ ['Owner can grant one-time 5-day Free Trial', html.includes('<option value="5">၅ ရက် · Free Trial (အခမဲ့)</option>') && functions.includes('Date.now() + 5 * 24 * 60 * 60 * 1000') && functions.includes('trialUsedAt') && functions.includes('Free Trial ကို ယခင်က အသုံးပြုပြီးဖြစ်သည်')],
  ['Owner dashboard Gmail/password/verify form', html.includes('id="akProvisionEmail"') && html.includes('id="akProvisionPassword"') && html.includes('id="akProvisionVerifyButton"')],
  ['Owner account list shows sequential numbers', html.includes('id="akOwnerShopRows"') && html.includes('function akRenderOwnerShopRows()')],
  ['Shop owner self-registration hidden', html.includes('reg.style.display=mode==="staff"?"":"none"')],

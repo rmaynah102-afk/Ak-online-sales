@@ -1043,7 +1043,7 @@ function persist(){
 const pages=[["ownerDashboard","Owner Dashboard"],["account","Login / Register"],["payment","ငွေပေးချေမှု"],["staffJoin","Merchant Code"],["staffManagement","ဝန်ထမ်းစီမံမှု"],["home","ပင်မ"],["products","ပစ္စည်း"],["sales","အရောင်း"],["purchases","အဝယ်"],["people","Customer/Supplier"],["expenses","အသုံးစရိတ်"],["reports","အစီရင်ခံစာ"],["ads","ကြော်ငြာ"],["market","AK Market"],["centerManagement","စင်တာထိန်းချုပ်မှု"],["aiMonitor","AI စနစ်စောင့်ကြည့်ရေး"],["backup","Backup / Settings"]];
 $("nav").innerHTML=pages.map(([id,n])=>'<button type="button" data-view="'+id+'" aria-label="'+n+'" title="'+n+'" onclick="go(\''+id+'\')">'+n+'</button>').join("");
 document.querySelector('#nav [data-view="ownerDashboard"]')?.classList.add("shop-owner-only","hidden");
-document.querySelector('#nav [data-view="aiMonitor"]')?.classList.add("owner-only");
+document.querySelector('#nav [data-view="aiMonitor"]')?.classList.add("shop-owner-only");
 /* AK_ACCOUNT_SEPARATION_V2 — keep login, package access, staff join and owner controls in separate views. */
 (function(){
  const main=document.querySelector("main"),nav=document.getElementById("nav");

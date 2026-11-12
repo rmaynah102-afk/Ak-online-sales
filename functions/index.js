@@ -340,7 +340,7 @@ exports.createShopOwnerAccount = functions.https.onCall(async (data, context) =>
   const password = String(data.password || "");
   const planDays = Number(data.planDays);
   const expiryDate = String(data.expiryDate || "").trim();
-  const planPrices = { 30: 30000, 90: 90000, 180: 180000, 365: 360000 };
+  const planPrices = { 5: 0, 30: 30000, 90: 90000, 180: 180000, 365: 360000 };
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email === OWNER_EMAIL) {
     throw new functions.https.HttpsError("invalid-argument", "ဆိုင်ရှင် Gmail မမှန်ပါ။");
   }
@@ -348,13 +348,15 @@ exports.createShopOwnerAccount = functions.https.onCall(async (data, context) =>
     throw new functions.https.HttpsError("invalid-argument", "Password အနည်းဆုံး ၈ လုံးနှင့် အများဆုံး ၁၂၈ လုံး ဖြစ်ရမည်။");
   }
   if (!Object.prototype.hasOwnProperty.call(planPrices, planDays) ||
-      !/^\d{4}-\d{2}-\d{2}$/.test(expiryDate)) {
+      (planDays !== 5 && !/^\\d{4}-\\d{2}-\\d{2}$/.test(expiryDate))) {
     throw new functions.https.HttpsError("invalid-argument", "Package သို့မဟုတ် သက်တမ်းကုန်ရက် မမှန်ပါ။");
   }
-  // AK subscriptions use Myanmar local date. Keep the selected date valid through 23:59:59 Myanmar time.
-  const expiryMillis = Date.parse(expiryDate + "T23:59:59.999+06:30");
+  // Free Trial runs for exactly 120 hours from Owner approval; paid plans use Myanmar local end-of-day.
+  const expiryMillis = planDays === 5
+    ? Date.now() + 5 * 24 * 60 * 60 * 1000
+    : Date.parse(expiryDate + "T23:59:59.999+06:30");
   if (!Number.isFinite(expiryMillis) || expiryMillis <= Date.now()) {
-    throw new functions.https.HttpsError("invalid-argument", "သက်တမ်းကုန်ရက်သည် ယနေ့ထက် နောက်ကျရမည်။");
+    throw new functions.https.HttpsError("invalid-argument", "သက်တမ်းကုန်ရက် မမှန်ပါ။");
   }
 
   let user = null;
@@ -388,7 +390,8 @@ exports.createShopOwnerAccount = functions.https.onCall(async (data, context) =>
       await enforceCustomerShopCapacity(tx, user.uid, current);
       tx.set(licenseRef, {
         uid: user.uid, email, status: "active",
-        plan: planDays + "-days", planDays, priceMMK: planPrices[planDays],
+        plan: planDays === 5 ? "5-day-free-trial" : planDays + "-days",
+        planDays, priceMMK: planPrices[planDays], isFreeTrial: planDays === 5,
         expiresAt, emailVerified: true,
         credentialManagedBy: "platform-owner", passwordConfigured: true,
         provisionedBy: actor,
@@ -398,8 +401,8 @@ exports.createShopOwnerAccount = functions.https.onCall(async (data, context) =>
       }, { merge: true });
     });
     await db.collection("platformAuditLogs").add({
-      action: "shop_owner_account_provisioned", targetUid: user.uid,
-      targetEmail: email, planDays, expiresAt,
+      action: planDays === 5 ? "shop_owner_free_trial_approved" : "shop_owner_account_provisioned", targetUid: user.uid,
+      targetEmail: email, planDays, isFreeTrial: planDays === 5, expiresAt,
       actor, createdAt: admin.firestore.FieldValue.serverTimestamp()
     });
     return { ok: true, uid: user.uid, email, planDays, expiresAt: expiresAt.toDate().toISOString(), emailVerified: true };

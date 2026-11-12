@@ -921,8 +921,14 @@ function checkUserRole(user){
 function akApplyRoleNavigation(){
  const role=akUserRole,staff=["manager","cashier","employee"].includes(role);
  document.body.classList.toggle("ak-staff",staff);
- const allowed=staff?["home",...akStaffAllowedViews]:null;
- document.querySelectorAll("#nav button[data-view]").forEach(btn=>{btn.hidden=staff&&!allowed.includes(btn.dataset.view)});
+ const staffAllowed=staff?["home",...akStaffAllowedViews]:[];
+ const platformAllowed=["home","ownerDashboard","account","market"];
+ document.querySelectorAll("#nav button[data-view]").forEach(btn=>{
+  const id=btn.dataset.view;
+  if(staff)btn.hidden=!staffAllowed.includes(id);
+  else if(role==="platform-owner")btn.hidden=!platformAllowed.includes(id);
+  else btn.hidden=false;
+ });
  const ownerBtn=document.querySelector('#nav button[data-view="ownerDashboard"]');
  if(ownerBtn)ownerBtn.hidden=!["shop-owner","platform-owner"].includes(role);
 }
@@ -1058,6 +1064,7 @@ function go(id){
  
  if(id==="ownerDashboard"&&!["shop-owner","platform-owner"].includes(akUserRole)){alert("ဆိုင်ရှင်အကောင့်ဖြင့်သာ ဝင်နိုင်သည်။");id="account"}
  if(["manager","cashier","employee"].includes(akUserRole)){const allowed=["home",...akStaffAllowedViews];if(!allowed.includes(id)){alert("ဤစာမျက်နှာကို ဆိုင်ရှင်က သင့်အကောင့်အတွက် ဖွင့်မပေးထားပါ။");id="home"}}
+ if(akUserRole==="platform-owner"&&!["home","ownerDashboard","account","market"].includes(id)){alert("Platform Owner အတွက် ထိန်းချုပ်ရေးစင်တာနှင့် User Dashboard သာ ဖွင့်ထားသည်။");id="ownerDashboard"}
  const publicViews=["backup","market","account","payment","staffJoin"];
  if(document.body.classList.contains("ak-license-locked")&&!publicViews.includes(id)){
   alert("ဆိုင်သုံး POS ကို အသုံးပြုရန် Login နှင့် အသုံးပြုခွင့်လိုအပ်သည်။ AK Market၊ အတည်ပြုဆိုင်စာရင်းနှင့် ကြော်ငြာများကို အများပြည်သူ ကြည့်ရှုနိုင်သည်။");

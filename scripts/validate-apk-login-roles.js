@@ -28,7 +28,7 @@ const checks = [
  ['Native printer plugin source present', printer.includes('class AkPrinterPlugin') && printer.includes('public void shareReceiptImage(PluginCall call)')],
  ['Native file sharing restricts exports to safe document MIME types', printer.includes('mimeType.equals("text/csv")') && printer.includes('mimeType.equals("text/plain")') && printer.includes('5 * 1024 * 1024')],
  ['Owner account provisioning callable', functions.includes('exports.createShopOwnerAccount') && functions.includes('exports.verifyShopOwnerLogin')],
- ['Platform Owner capacity is 100 shops', functions.includes('activeOwners.length >= 100') && functions.includes('limit: 100,')],
+ ['Platform Owner capacity is 100 shops', functions.includes('activeUids.size >= 100') && functions.includes('limit: 100,')],
  ['In-app payment collection endpoints are absent', !['createPaymentRequest','getPaymentAccountSettings','setPaymentAccountSettings','listPendingPayments','rejectPaymentRequest','approveSubscription'].some(name => functions.includes('exports.'+name+' =')) && !functions.includes('AK_KPAY_ACCOUNT')],
  ['External payment is handled by manual Owner subscription grants', functions.includes('exports.grantSubscription') && functions.includes('Payments are handled outside')],
  ['One-time five-day trial is tied to a Gmail claim', html.includes('freeTrialClaims') && html.includes('plan:"free-trial"') && html.includes('5*86400000')],

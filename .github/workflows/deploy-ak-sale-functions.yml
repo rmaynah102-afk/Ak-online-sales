@@ -34,7 +34,7 @@ jobs:
 
       - name: Validate Functions source
         run: |
-          npm --prefix functions ci
+          npm --prefix functions install --package-lock=false
           node --check functions/index.js
           node -e "JSON.parse(require('fs').readFileSync('functions/package.json','utf8')); console.log('Functions package.json valid')"
 

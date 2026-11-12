@@ -567,6 +567,27 @@ body.ak-staff #home .stats .panel:has(#kProfit),
 body.ak-staff #productForm button[onclick^="akShareProduct"],
 body.ak-staff #productForm button[onclick^="akSendProductToMarket"] {display:none!important;}
 </style>
+<style id="ak-desktop-workspace">
+:root{--ak-navy:#0b1f46;--ak-blue:#1457bd;--ak-surface:#fff;--ak-border:#d7e0ec;--ak-muted:#64748b}
+#nav button{border:1px solid var(--ak-border);border-radius:5px!important;box-shadow:none!important}
+.panel,.stats .panel,.view>.panel{border:1px solid var(--ak-border)!important;border-radius:6px!important;box-shadow:0 1px 3px #142b4510!important;background:#fff}
+table{border-collapse:separate;border-spacing:0;width:100%;font-variant-numeric:tabular-nums}
+th{position:sticky;top:0;background:#eaf0f8;color:#183456;text-align:left;font-weight:700;border-bottom:2px solid #cbd7e6;white-space:nowrap}
+td,th{padding:9px 11px;border-right:1px solid #e5ebf2;border-bottom:1px solid #e5ebf2}
+tr:nth-child(even) td{background:#f8fafc}
+.tablewrap{overflow:auto;max-width:100%;border:1px solid var(--ak-border);border-radius:5px}
+input,select,textarea,button{border-radius:5px!important}
+.ak-health-grid{display:grid;grid-template-columns:repeat(4,minmax(130px,1fr));gap:10px;margin:12px 0}
+.ak-health-kpi{border:1px solid var(--ak-border);background:#fff;padding:12px;border-radius:5px}
+.ak-health-kpi strong{display:block;font-size:22px;color:#123d73}
+.ak-health-table{min-width:760px}
+.ak-health-muted{color:var(--ak-muted);font-size:12px}
+.ak-health-pill{display:inline-block;padding:3px 8px;border-radius:4px;font-weight:700;font-size:12px}
+.ak-health-ok{background:#e4f5eb;color:#17643b}.ak-health-warn{background:#fff2d6;color:#805500}.ak-health-bad{background:#fde8e8;color:#a32121}
+@media(min-width:1050px){main{max-width:1720px!important}.view .grid{grid-template-columns:repeat(4,minmax(0,1fr))}.panel{padding:20px!important}}
+@media(max-width:700px){.ak-health-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ak-health-kpi strong{font-size:18px}}
+</style>
+<script src="./ak-health-monitor.js" defer></script>
 </head>
 <body class="ak-license-locked">
 <header><div class="brand-lockup"><img src="./ak-logo.svg" alt="AK Sale logo" width="48" height="48"><div><h1 id="brandTitle">AK Sale Software</h1><small>Multi-Business POS · ဆိုင်နှင့် လုပ်ငန်းအမျိုးမျိုးအတွက်</small></div></div><div class="actions no-print"><button id="akInstallBtn" class="alt" type="button" hidden>Install</button><button id="akShareBtn" class="alt" type="button">Share</button><button id="akOwnerUserPreviewBtn" class="alt owner-only" type="button" onclick="akToggleOwnerUserPreview()">User View</button><button id="akLanguageBtn" class="alt" type="button" aria-label="Switch language">English</button><span class="pill" id="saveState">ဖုန်းထဲသိမ်းဆည်းမည်</span><span class="pill" id="akStorageState" title="ဖုန်း/ကွန်ပျူတာ၏ local storage အခြေအနေ">Storage စစ်ဆေးနေသည်…</span></div></header>
@@ -1019,7 +1040,7 @@ function persist(){
   akCheckBrowserStorage();akUpdateConnectionUI();
  }catch(e){$("saveState").textContent="သိမ်းဆည်းမှု မအောင်မြင်";alert("ဖုန်းထဲသိမ်းမရပါ။ Storage ပြည့်နေနိုင်သည်။ Backup JSON ထုတ်ပြီး ဓာတ်ပုံ/မလိုအပ်သောဖိုင်များ လျှော့ပါ။");console.error("AK local save failed",e)}
 }
-const pages=[["ownerDashboard","Owner Dashboard"],["account","Login / Register"],["payment","ငွေပေးချေမှု"],["staffJoin","Merchant Code"],["staffManagement","ဝန်ထမ်းစီမံမှု"],["home","ပင်မ"],["products","ပစ္စည်း"],["sales","အရောင်း"],["purchases","အဝယ်"],["people","Customer/Supplier"],["expenses","အသုံးစရိတ်"],["reports","အစီရင်ခံစာ"],["ads","ကြော်ငြာ"],["market","AK Market"],["centerManagement","စင်တာထိန်းချုပ်မှု"],["backup","Backup / Settings"]];
+const pages=[["ownerDashboard","Owner Dashboard"],["account","Login / Register"],["payment","ငွေပေးချေမှု"],["staffJoin","Merchant Code"],["staffManagement","ဝန်ထမ်းစီမံမှု"],["home","ပင်မ"],["products","ပစ္စည်း"],["sales","အရောင်း"],["purchases","အဝယ်"],["people","Customer/Supplier"],["expenses","အသုံးစရိတ်"],["reports","အစီရင်ခံစာ"],["ads","ကြော်ငြာ"],["market","AK Market"],["centerManagement","စင်တာထိန်းချုပ်မှု"],["aiMonitor","AI စနစ်စောင့်ကြည့်ရေး"],["backup","Backup / Settings"]];
 $("nav").innerHTML=pages.map(([id,n])=>'<button type="button" data-view="'+id+'" aria-label="'+n+'" title="'+n+'" onclick="go(\''+id+'\')">'+n+'</button>').join("");
 document.querySelector('#nav [data-view="ownerDashboard"]')?.classList.add("shop-owner-only","hidden");
 /* AK_ACCOUNT_SEPARATION_V2 — keep login, package access, staff join and owner controls in separate views. */

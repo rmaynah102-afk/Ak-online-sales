@@ -62,3 +62,16 @@ The existing POS workspace path `/shops/{shopId}/workspace/current` is metadata-
 - All callable dependencies in the APK are migrated or deliberately retained; no dead buttons or silent fallbacks.
 - Real-device tests on at least two separate shop accounts and one staff account.
 - Only then create a candidate APK. Production branch and existing released APK remain unchanged until explicit release approval.
+
+## Implementation progress — 2026-11-12
+
+The Firestore Rules branch now has a first implementation of the invite and fixed-slot checks described above. The emulator suite has corresponding test cases, and its JavaScript source passes a syntax parse check.
+
+Still not implemented in the APK:
+- generating a 128-bit invite code and creating the invite document;
+- atomically claiming the invite, creating the membership and reserving a fixed slot;
+- reading staff roles from `shopMembers` instead of ID token custom claims;
+- replacing callable staff listing, print-permission, role assignment and removal;
+- replacing callable workspace load/save with a tenant-scoped data model and rule-enforced per-role access.
+
+The current APK still calls Cloud Functions for these flows. Releasing the rules alone would not make the existing staff login/POS workflow work. Existing membership documents also need a controlled migration to the new `status`, `inviteCode`, `slotId` and slot-document schema before the new rules are deployed.

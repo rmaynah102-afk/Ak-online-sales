@@ -1513,7 +1513,7 @@ async function akShareBlobToApps(blob,fileName,mimeType,title,text){
 }
 async function akShareSalesCsvToViber(){
  try{const rows=[["Date","Invoice","Customer","Product","Qty","Total","Paid","Due"],...db.sales.map(x=>[x.date,x.invoice,x.customer,x.productName,x.qty,x.total,x.paid,x.due])];
- const csv="\\uFEFF"+rows.map(r=>r.map(v=>'"'+String(v??"").replace(/"/g,'""')+'"').join(",")).join("\\r\\n");
+ const csv="\uFEFF"+rows.map(r=>r.map(v=>'"'+String(v??"").replace(/"/g,'""')+'"').join(",")).join("\r\n");
  await akShareBlobToApps(new Blob([csv],{type:"text/csv;charset=utf-8"}),"AK-Sales-"+dateKey(dateNow())+".csv","text/csv","AK Sale · Sales CSV","AK Sale အရောင်းစာရင်း CSV ဖိုင်");
  }catch(e){if(e.name!=="AbortError")alert("CSV မျှဝေမရပါ: "+e.message)}
 }
@@ -1521,13 +1521,13 @@ async function akShareProductsCsvToViber(){
  try{if(!db.products.length)throw Error("ပစ္စည်းစာရင်း မရှိသေးပါ။");
  const fields=["name","code","category","unit","cost","retail","wholesale","stock","minStock"],headers=["Product","SKU / Barcode","Category","Unit","Cost","Retail Price","Wholesale Price","Stock","Minimum Stock"],cell=v=>'"'+String(v??"").replace(/"/g,'""')+'"';
  const rows=[headers.map(cell).join(","),...db.products.map(p=>fields.map(k=>cell(p[k]??((k==="retail"||k==="wholesale")?p.price??"": ""))).join(","))];
- await akShareBlobToApps(new Blob(["\\uFEFF"+rows.join("\\r\\n")],{type:"text/csv;charset=utf-8"}),"AK-Products-"+dateKey(dateNow())+".csv","text/csv","AK Sale · Products CSV","AK Sale ပစ္စည်းစာရင်း CSV ဖိုင်");
+ await akShareBlobToApps(new Blob(["\\uFEFF"+rows.join("\r\n")],{type:"text/csv;charset=utf-8"}),"AK-Products-"+dateKey(dateNow())+".csv","text/csv","AK Sale · Products CSV","AK Sale ပစ္စည်းစာရင်း CSV ဖိုင်");
  }catch(e){if(e.name!=="AbortError")alert("ပစ္စည်း CSV မျှဝေမရပါ: "+e.message)}
 }
 async function akShareReportToViber(){
  try{if(!$("reportOutput")?.textContent.trim())renderReport();const f=$("fromDate")?.value||"အစ",t=$("toDate")?.value||"ယနေ့",summary=$("reportOutput")?.innerText||"အစီရင်ခံစာ မရှိပါ။";
- const content=["AK Sale Software · အစီရင်ခံစာ","ဆိုင်: "+(db.shop?.name||"မိမိဆိုင်"),"ကာလ: "+f+" မှ "+t,"ထုတ်ယူချိန်: "+new Date().toLocaleString(),"",summary].join("\\n");
- await akShareBlobToApps(new Blob(["\\uFEFF"+content],{type:"text/plain;charset=utf-8"}),"AK-Report-"+dateKey(dateNow())+".txt","text/plain","AK Sale · Report",content);
+ const content=["AK Sale Software · အစီရင်ခံစာ","ဆိုင်: "+(db.shop?.name||"မိမိဆိုင်"),"ကာလ: "+f+" မှ "+t,"ထုတ်ယူချိန်: "+new Date().toLocaleString(),"",summary].join("\n");
+ await akShareBlobToApps(new Blob(["\uFEFF"+content],{type:"text/plain;charset=utf-8"}),"AK-Report-"+dateKey(dateNow())+".txt","text/plain","AK Sale · Report",content);
  }catch(e){if(e.name!=="AbortError")alert("အစီရင်ခံစာ မျှဝေမရပါ: "+e.message)}
 }
 function renderReport(){let f=$("fromDate").value||"0000-01-01",t=$("toDate").value||"9999-12-31",within=x=>dateKey(x.date)>=f&&dateKey(x.date)<=t;let ss=db.sales.filter(within),ee=db.expenses.filter(within),pp=db.purchases.filter(within);let rev=ss.reduce((a,x)=>a+x.total,0),gross=ss.reduce((a,x)=>a+x.total-x.cost,0),exp=ee.reduce((a,x)=>a+x.amount,0);$("reportOutput").innerHTML=`<div class="grid"><div class="panel">အရောင်းစုစုပေါင်း<br><b>${money(rev)}</b></div><div class="panel">ရောင်းကုန်အမြတ် (ခန့်မှန်း)<br><b>${money(gross)}</b></div><div class="panel">အသုံးစရိတ်<br><b>${money(exp)}</b></div><div class="panel">အသားတင်အမြတ် (ခန့်မှန်း)<br><b>${money(gross-exp)}</b></div><div class="panel">အဝယ်စုစုပေါင်း<br><b>${money(pp.reduce((a,x)=>a+x.total,0))}</b></div></div><p class="muted">အမြတ်သည် ရောင်းချချိန်ရှိ သိမ်းထားသော ဝယ်ဈေးအပေါ် အခြေခံသည်။ အကြွေးဆပ်မှတ်တမ်းများကို သီးခြားမှတ်တမ်းတင်ထားပြီး ဤအစီရင်ခံစာတွင် Invoice အကြွေးလက်ကျန်ကို အလိုအလျောက် မလျှော့သေးပါ။</p>`}
@@ -2488,6 +2488,7 @@ async function loadPlatformUsers(){
  }catch(e){
   if($("akPlatformUserStatus"))$("akPlatformUserStatus").textContent="Customer စာရင်းဖတ်မရပါ: "+(e.message||e);
   if($("akProvisionStatus"))$("akProvisionStatus").textContent="ဆိုင်ရှင်စာရင်းဖတ်မရပါ: "+(e.message||e);
+  const dashboardStatus=$("akOwnerDashboardStatus");if(dashboardStatus)dashboardStatus.textContent="Owner စာရင်းဖတ်မရပါ: "+(e.message||e)+" · Server Functions နှင့် Internet ကို စစ်ပါ။";
  }
 }
 function akRenderOwnerDashboardSummary(){

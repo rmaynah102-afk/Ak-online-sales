@@ -580,8 +580,8 @@ body.ak-staff #productForm button[onclick^="akSendProductToMarket"] {display:non
 <div class="grid">
 <div><label for="akProvisionEmail">နံပါတ် (၁) · ဆိုင်ရှင် Gmail</label><input id="akProvisionEmail" type="email" autocomplete="off" placeholder="shopowner@gmail.com"></div>
 <div><label for="akProvisionPassword">နံပါတ် (၂) · Owner သတ်မှတ်မည့် Password</label><input id="akProvisionPassword" type="password" autocomplete="new-password" minlength="8" placeholder="အနည်းဆုံး ၈ လုံး"></div>
-<div><label for="akProvisionPackage">Package</label><select id="akProvisionPackage"><option value="30">၁ လ · 30,000 MMK</option><option value="90">၃ လ · 90,000 MMK</option><option value="180">၆ လ · 180,000 MMK</option><option value="365">၁၂ လ · 360,000 MMK</option></select></div>
-<div><label for="akProvisionExpiry">သက်တမ်းကုန်မည့်ရက်</label><input id="akProvisionExpiry" type="date"></div>
+<div><label for="akProvisionPackage">Package</label><select id="akProvisionPackage" onchange="akUpdateProvisionExpiryField()"><option value="5">၅ ရက် · Free Trial (အခမဲ့)</option><option value="30">၁ လ · 30,000 MMK</option><option value="90">၃ လ · 90,000 MMK</option><option value="180">၆ လ · 180,000 MMK</option><option value="365">၁၂ လ · 360,000 MMK</option></select></div>
+<div id="akProvisionExpiryWrap"><label for="akProvisionExpiry">သက်တမ်းကုန်မည့်ရက် (Paid Package)</label><input id="akProvisionExpiry" type="date"></div>
 </div>
 <div class="actions"><button type="button" id="akProvisionVerifyButton" onclick="akProvisionShopOwner()">နံပါတ် (၃) · Login Verify / အကောင့်ဖွင့်ခွင့်ပေးမည်</button><button type="button" class="alt" onclick="loadPlatformUsers()">ဆိုင်ရှင်စာရင်း ပြန်ဖတ်ရန်</button></div>
 <p id="akProvisionStatus" class="muted">Owner Gmail ဖြင့်သာ အသုံးပြုနိုင်သည်။ Password ကို Firebase Authentication သို့သာ ပို့မည်။</p>
@@ -2148,8 +2148,7 @@ async function firebaseLogin(){
    try{
     await firebase.functions().httpsCallable("verifyShopOwnerLogin")({});
    }catch(verifyError){
-    await fbAuth.signOut();
-    if(verifyError.code==="functions/permission-denied")throw Error("ဆိုင်အကောင့် သက်တမ်းကုန်နေသည် သို့မဟုတ် Owner က ခွင့်မပြုရသေးပါ။");
+    if(verifyError.code==="functions/permission-denied")throw Error("ဆိုင်အကောင့် သက်တမ်းကုန်နေသည် သို့မဟုတ် Owner က ခွင့်မပြုရသေးပါ။ Login ကို ဆက်မှတ်ထားပြီး Owner ခွင့်ပြုချက်ရမှ POS ပြန်ဖွင့်ပါမည်။");
     throw verifyError;
    }
   }
@@ -2360,6 +2359,12 @@ async function akResetShopOwnerPassword(uid){
   if(status)status.textContent=target.email+" ၏ Password ပြောင်းပြီးပါပြီ။ Password ကို စာရင်းတွင် မသိမ်းထားပါ။";
  }catch(e){if(status)status.textContent="Password မပြောင်းနိုင်ပါ: "+(e.message||e)}
 }
+function akUpdateProvisionExpiryField(){
+ const trial=Number($("akProvisionPackage")?.value||0)===5;
+ const wrap=$("akProvisionExpiryWrap"),field=$("akProvisionExpiry");
+ if(wrap)wrap.style.display=trial?"none":"";
+ if(field)field.required=!trial;
+}
 async function akProvisionShopOwner(){
  const status=$("akProvisionStatus"),button=$("akProvisionVerifyButton");
  try{
@@ -2370,10 +2375,10 @@ async function akProvisionShopOwner(){
   const expiryDate=String($("akProvisionExpiry")?.value||"");
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))throw Error("ဆိုင်ရှင် Gmail မှန်ကန်စွာ ထည့်ပါ။");
   if(password.length<8)throw Error("Password အနည်းဆုံး ၈ လုံး ထည့်ပါ။");
-  if(![30,90,180,365].includes(planDays))throw Error("Package ရွေးပါ။");
-  if(!expiryDate)throw Error("သက်တမ်းကုန်မည့်ရက် ရွေးပါ။");
+  if(![5,30,90,180,365].includes(planDays))throw Error("Package ရွေးပါ.");
+  if(planDays!==5&&!expiryDate)throw Error("သက်တမ်းကုန်မည့်ရက် ရွေးပါ.");
   if(button){button.disabled=true;button.textContent="အကောင့်ဖွင့်နေသည်..."}
-  status.textContent="Firebase မှာ Gmail၊ Password၊ Package နဲ့ သက်တမ်းကို သတ်မှတ်နေသည်...";
+  status.textContent=planDays===5?"၅ ရက် Free Trial အကောင့်ကို Owner Verify လုပ်နေသည်...":"Firebase မှာ Gmail၊ Password၊ Package နဲ့ သက်တမ်းကို သတ်မှတ်နေသည်...";
   const result=await firebase.functions().httpsCallable("createShopOwnerAccount")({email,password,planDays,expiryDate});
   $("akProvisionPassword").value="";
   status.textContent="Login Verify အောင်မြင်ပါပြီ။ "+result.data.email+" သည် ယခု Gmail + Owner သတ်မှတ်ထားသော Password ဖြင့် Login ဝင်နိုင်ပါပြီ။";

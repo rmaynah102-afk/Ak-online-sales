@@ -673,11 +673,11 @@ service cloud.firestore {
     }
 
     match /shopInvites/{code} {
+      // Invite codes are secrets: only the issuing shop owner may read/list them.
+      // Claim validation uses rules-side get(), not a client-readable invite document.
       allow read: if request.auth != null
-        && (resource.data.shopId == request.auth.uid
-          || (resource.data.status == 'open'
-            && resource.data.expiresAt is timestamp
-            && resource.data.expiresAt > request.time));
+        && request.auth.uid == resource.data.shopId
+        && activeShopLicense(resource.data.shopId);
       allow create: if request.auth != null
         && request.auth.uid == request.resource.data.shopId
         && activeShopLicense(request.resource.data.shopId)

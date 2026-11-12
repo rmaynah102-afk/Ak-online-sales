@@ -105,6 +105,130 @@
       return user;
     }
 
+    _assertShopOwner() {
+      const user = this._assertSignedIn();
+      if (user.uid !== this.shopId || (!this.isPlatformOwner && this.role !== "owner")) {
+        throw new Error("Only the verified shop owner can manage staff");
+      }
+      return user;
+    }
+
+    _newInviteCode() {
+      const cryptoApi = root.crypto;
+      if (!cryptoApi || typeof cryptoApi.getRandomValues !== "function") {
+        throw new Error("Secure random generator is unavailable on this device");
+      }
+      const bytes = new Uint8Array(16);
+      cryptoApi.getRandomValues(bytes);
+      return Array.from(bytes, byte => byte.toString(16).padStart(2, "0")).join("").toUpperCase();
+    }
+
+    async createInvite(role) {
+      const user = this._assertShopOwner();
+      if (!["manager", "cashier", "employee"].includes(role)) throw new Error("Invalid staff role");
+      const code = this._newInviteCode();
+      const now = Date.now();
+      const inviteRef = this.db.collection("shopInvites").doc(code);
+      await inviteRef.set({
+        shopId: this.shopId,
+        role,
+        status: "open",
+        createdAt: root.firebase.firestore.FieldValue.serverTimestamp(),
+        expiresAt: root.firebase.firestore.Timestamp.fromDate(new Date(now + 24 * 60 * 60 * 1000)),
+        createdBy: user.uid
+      });
+      return { code, role, expiresAt: new Date(now + 24 * 60 * 60 * 1000) };
+    }
+
+    async claimInvite(rawCode) {
+      const user = this._assertSignedIn();
+      const code = String(rawCode || "").trim().toUpperCase();
+      if (!/^[A-F0-9]{32}$/.test(code)) throw new Error("Merchant Code must be 32 hexadecimal characters");
+      const inviteRef = this.db.collection("shopInvites").doc(code);
+      const inviteSnap = await inviteRef.get();
+      if (!inviteSnap.exists) throw new Error("Merchant Code is invalid or expired");
+      const invite = inviteSnap.data() || {};
+      if (invite.status !== "open" || !invite.expiresAt || invite.expiresAt.toDate().getTime() <= Date.now()) {
+        throw new Error("Merchant Code is already used or expired");
+      }
+      if (!["manager", "cashier", "employee"].includes(invite.role) || !invite.shopId) {
+        throw new Error("Merchant Code data is invalid");
+      }
+      if (user.uid === invite.shopId) throw new Error("Shop owner cannot claim a staff invite");
+      const memberRef = this.db.collection("shopMembers").doc(user.uid);
+      for (let slot = 1; slot <= 3; slot++) {
+        const slotId = invite.shopId + "_" + slot;
+        const slotRef = this.db.collection("shopStaffSlots").doc(slotId);
+        const batch = this.db.batch();
+        batch.set(memberRef, {
+          shopId: invite.shopId,
+          role: invite.role,
+          status: "active",
+          email: user.email,
+          createdAt: root.firebase.firestore.FieldValue.serverTimestamp(),
+          createdBy: invite.shopId,
+          inviteCode: code,
+          slotId,
+          canPrint: false
+        });
+        batch.update(inviteRef, {
+          status: "claimed",
+          claimedBy: user.uid,
+          claimedAt: root.firebase.firestore.FieldValue.serverTimestamp()
+        });
+        batch.set(slotRef, {
+          shopId: invite.shopId,
+          uid: user.uid,
+          slot,
+          createdAt: root.firebase.firestore.FieldValue.serverTimestamp(),
+          inviteCode: code
+        });
+        try {
+          await batch.commit();
+          this.shopId = invite.shopId;
+          this.role = invite.role;
+          this.isPlatformOwner = false;
+          return { shopId: invite.shopId, role: invite.role, slotId };
+        } catch (error) {
+          if (error && error.code === "permission-denied" && slot < 3) continue;
+          throw error;
+        }
+      }
+      throw new Error("ဆိုင်ဝန်ထမ်း ၃ ဦး ပြည့်နေပါသည်။");
+    }
+
+    async listStaff() {
+      this._assertShopOwner();
+      const snap = await this.db.collection("shopMembers").where("shopId", "==", this.shopId).get();
+      return snap.docs.map(doc => ({ uid: doc.id, ...doc.data() }));
+    }
+
+    async setStaffPrintPermission(memberUid, canPrint) {
+      this._assertShopOwner();
+      if (typeof canPrint !== "boolean" || !memberUid || memberUid === this.shopId) {
+        throw new Error("Invalid staff print permission update");
+      }
+      await this.db.collection("shopMembers").doc(memberUid).update({ canPrint });
+      return true;
+    }
+
+    async revokeStaff(memberUid) {
+      this._assertShopOwner();
+      if (!memberUid || memberUid === this.shopId) throw new Error("Invalid staff member");
+      const memberRef = this.db.collection("shopMembers").doc(memberUid);
+      const snap = await memberRef.get();
+      if (!snap.exists || snap.data().shopId !== this.shopId) throw new Error("Staff member not found in this shop");
+      const slotId = String(snap.data().slotId || "");
+      if (!new RegExp("^" + this.shopId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "_[123]$").test(slotId)) {
+        throw new Error("Staff slot reference is invalid; refusing unsafe removal");
+      }
+      const batch = this.db.batch();
+      batch.delete(memberRef);
+      batch.delete(this.db.collection("shopStaffSlots").doc(slotId));
+      await batch.commit();
+      return true;
+    }
+
     async loadWorkspace() {
       this._assertSignedIn();
       const names = ROLE_COLLECTIONS[this.role];

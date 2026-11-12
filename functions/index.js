@@ -73,8 +73,17 @@ async function requireActiveShop(context) {
   if (!context.auth) throw new functions.https.HttpsError("unauthenticated", "Login လိုအပ်သည်။");
   const uid = context.auth.uid;
   const email = String(context.auth.token.email || "").trim().toLowerCase();
+  // Staff identities must never fall through and be treated as independent shop owners,
+  // including when a stale/missing custom claim is present.
+  if (context.auth.token.shopId || context.auth.token.platformAdmin === true) {
+    throw new functions.https.HttpsError("permission-denied", "ဝန်ထမ်းအကောင့်ကို ဆိုင်ရှင်အကောင့်အဖြစ် အသုံးမပြုနိုင်ပါ။");
+  }
   // The sole verified Platform Owner may administer their own shop without a paid license.
   if (email === OWNER_EMAIL && context.auth.token.email_verified === true) return uid;
+  const membershipSnap = await db.collection("shopMembers").doc(uid).get();
+  if (membershipSnap.exists) {
+    throw new functions.https.HttpsError("permission-denied", "ဤ Gmail သည် ဆိုင်ဝန်ထမ်းအဖြစ် ချိတ်ဆက်ထားပြီးဖြစ်သည်။");
+  }
   const snap = await db.collection("licenses").doc(uid).get();
   const license = snap.data() || {};
   if (!snap.exists || license.status !== "active" || !license.expiresAt ||
@@ -409,7 +418,8 @@ exports.verifyShopOwnerLogin = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError("permission-denied", "ဆိုင်ရှင်အကောင့် မဟုတ်ပါ။");
   }
   const user = await admin.auth().getUser(context.auth.uid);
-  if (user.customClaims?.shopId || user.customClaims?.platformAdmin) {
+  const membershipSnap = await db.collection("shopMembers").doc(context.auth.uid).get();
+  if (user.customClaims?.shopId || user.customClaims?.platformAdmin || membershipSnap.exists) {
     throw new functions.https.HttpsError("permission-denied", "ဤအကောင့်သည် ဝန်ထမ်းအကောင့် ဖြစ်သည်။");
   }
   const snap = await db.collection("licenses").doc(context.auth.uid).get();

@@ -13,34 +13,41 @@ const db = admin.firestore();
 
 async function enforceCustomerShopCapacity(tx, uid, currentLicenseSnap) {
   // A shared lock document serializes every new activation/renewal across shops.
-  // The active license query is re-counted inside the same transaction so expired
-  // and suspended shops release capacity automatically.
+  // Paid subscriptions and unexpired one-time trials both consume one of 100 shop slots.
   const capacityRef = db.collection("platformControls").doc("shopCapacity");
   const activeQuery = db.collection("licenses").where("status", "==", "active");
-  const [capacitySnap, activeSnap] = await Promise.all([
+  const trialQuery = db.collection("freeBetaUsers").where("status", "==", "active");
+  const [capacitySnap, activeSnap, trialSnap] = await Promise.all([
     tx.get(capacityRef),
-    tx.get(activeQuery)
+    tx.get(activeQuery),
+    tx.get(trialQuery)
   ]);
   const now = Date.now();
-  const activeOwners = activeSnap.docs.filter(doc => {
+  const activeUids = new Set();
+  activeSnap.docs.forEach(doc => {
     const item = doc.data() || {};
     const email = String(item.email || "").trim().toLowerCase();
     const expiry = item.expiresAt && typeof item.expiresAt.toMillis === "function"
       ? item.expiresAt.toMillis() : 0;
-    return email !== OWNER_EMAIL && expiry > now;
+    if (email !== OWNER_EMAIL && expiry > now) activeUids.add(doc.id);
   });
-  const targetAlreadyActive = activeOwners.some(doc => doc.id === uid);
-  if (!targetAlreadyActive && activeOwners.length >= 100) {
+  trialSnap.docs.forEach(doc => {
+    const item = doc.data() || {};
+    const created = item.createdAt && typeof item.createdAt.toMillis === "function"
+      ? item.createdAt.toMillis() : 0;
+    if (created && created + 5 * 86400000 > now) activeUids.add(doc.id);
+  });
+  const targetAlreadyActive = activeUids.has(uid);
+  if (!targetAlreadyActive && activeUids.size >= 100) {
     throw new functions.https.HttpsError("resource-exhausted",
       "Platform Owner က ခွင့်ပြုထားသော ဆိုင် ၁၀၀ ဆိုင် ပြည့်နေပါပြီ။ ဆိုင်ဟောင်းတစ်ဆိုင်ကို Suspend လုပ်ခြင်း သို့မဟုတ် သက်တမ်းကုန်ပြီးမှ အသစ်ဖွင့်နိုင်ပါမည်။");
   }
   tx.set(capacityRef, {
-    activeCount: activeOwners.length + (targetAlreadyActive ? 0 : 1),
+    activeCount: activeUids.size + (targetAlreadyActive ? 0 : 1),
     limit: 100,
     updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     lastActivatedUid: uid
   }, { merge: true });
-}
 
 function requireAdmin(context) {
   if (!context.auth) {

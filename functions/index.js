@@ -352,6 +352,10 @@ exports.createShopOwnerAccount = functions.https.onCall(async (data, context) =>
   let created = false;
   try {
     user = await admin.auth().getUserByEmail(email);
+    const existingMembership = await db.collection("shopMembers").doc(user.uid).get();
+    if (existingMembership.exists || user.customClaims?.platformAdmin === true || user.customClaims?.shopId) {
+      throw new functions.https.HttpsError("already-exists", "ဤ Gmail သည် Owner သို့မဟုတ် ဝန်ထမ်းအကောင့်ဖြစ်ပြီးသား ဖြစ်သည်။");
+    }
     if (user.customClaims?.platformAdmin === true || user.customClaims?.shopId) {
       throw new functions.https.HttpsError("already-exists", "ဤ Gmail သည် Owner သို့မဟုတ် ဝန်ထမ်းအကောင့်ဖြစ်ပြီးသား ဖြစ်သည်။");
     }

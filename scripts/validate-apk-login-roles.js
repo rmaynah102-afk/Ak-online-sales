@@ -29,7 +29,7 @@ const checks = [
  ['Native file sharing restricts exports to safe document MIME types', printer.includes('mimeType.equals("text/csv")') && printer.includes('mimeType.equals("text/plain")') && printer.includes('5 * 1024 * 1024')],
  ['Owner account provisioning callable', functions.includes('exports.createShopOwnerAccount') && functions.includes('exports.verifyShopOwnerLogin')],
  ['Platform Owner capacity is 100 shops', functions.includes('activeOwners.length >= 100') && functions.includes('limit: 100,')],
- ['In-app payment collection endpoints are absent', !/exports\\.(createPaymentRequest|getPaymentAccountSettings|setPaymentAccountSettings|listPendingPayments|rejectPaymentRequest|approveSubscription)\\s*=/.test(functions) && !functions.includes('AK_KPAY_ACCOUNT')],
+ ['In-app payment collection endpoints are absent', !['createPaymentRequest','getPaymentAccountSettings','setPaymentAccountSettings','listPendingPayments','rejectPaymentRequest','approveSubscription'].some(name => functions.includes('exports.'+name+' =')) && !functions.includes('AK_KPAY_ACCOUNT')],
  ['External payment is handled by manual Owner subscription grants', functions.includes('exports.grantSubscription') && functions.includes('Payments are handled outside')],
  ['Owner password never stored in Firestore', functions.includes('Passwords are sent only to') && !functions.includes('password: password') && !functions.includes('passwordConfigured: password')],
  ['Owner assigns package and expiry', functions.includes('planDays, priceMMK: planPrices[planDays]') && functions.includes('expiresAt, emailVerified: true')],

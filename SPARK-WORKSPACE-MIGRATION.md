@@ -53,23 +53,12 @@ The new Rules use `shopMembers/{uid}` membership documents and the active shop l
 7. Add emulator tests for each role, tenant isolation, expired license, and prohibited collection writes.
 8. Keep a rollback path to the original local backup. Do not remove old callable functions until all tenants are migrated and runtime tests pass.
 
-## Current status
+## Current status (2026-11-12)
 
-- Firestore Rules for the tenant-scoped collection paths and role matrix have been added on `ak-free-backend-migration`.
-- Emulator test cases now cover cashier and manager collection permissions, cross-tenant access, and expired-license denial.
-- APK migration adapter, collection repositories, login/membership fallback, data import, and Android runtime tests are **not implemented yet**.
-- The APK must not be described as using the Spark staff backend until those gates are complete and the emulator suite passes.
-- Do not deploy these rules to the live Firebase project yet. The APK still uses the old callable workspace flow.
-
-
-## Latest static check
-
-The branch Rules were reconstructed from the clean production-baseline file after an intermediate editing issue introduced duplicated/truncated text. The current file now has balanced rule braces and exactly one occurrence of each staff and tenant-POS match. The 19-test source parses as JavaScript. Emulator execution remains unconfirmed, and APK migration is still pending.
-
-
-The Firestore document path includes the `records` subcollection segment so each record has a valid even-segment document path. The first emulator run caught and corrected this path error; the updated workflow is running again.
-
-The role rules now also reject product/sales records that embed `cost`, `costPrice`, `unitCost`, `purchaseCost`, `profit`, `grossProfit`, or `margin`. Those values belong in the restricted cost collections. The test suite now includes a cashier cost-data denial case.
-
-
-The last completed emulator run (workflow 43224894520) passed all 20 test cases, including the product-cost privacy checks. A defensive null guard was added afterward; workflow 43225122902 is running against that exact Rules revision.
+- The tenant-scoped Firestore Rules and role matrix are implemented on `ak-free-backend-migration`.
+- The latest Rules-only emulator run (workflow 43225122902, commit `5b1c983`) completed successfully with **20 passing tests**.
+- A first Spark-compatible data-layer module now exists at `apk/spark-pos-store.js`. It defines role-scoped reads, guarded writes, bounded idempotent upserts, a legacy-blob migration routine, per-record ID verification, and a migration marker. The old blob is not deleted.
+- Product and sales cost/profit fields are recursively separated into manager/owner-only cost collections. Cashier reads do not load those cost collections. Data-URL product photos are omitted from cloud writes so local photos remain local.
+- A separate Node test file now checks nested cost separation/reconstruction and role visibility. The CI workflow has been updated to run it before the Firestore emulator suite; the new workflow result is pending.
+- **Important: the new module is not yet loaded by the live website or APK, and the app still uses the legacy callable workspace flow.** Shop-owner self-registration, direct Firestore staff membership/invite screens, repository integration, and data reconciliation against real shop data are not yet complete.
+- Do not deploy the new Rules to production or issue a replacement APK yet. The old callable Functions remain untouched; switching the app before the remaining integration and tests would risk locking users out or exposing incomplete data.

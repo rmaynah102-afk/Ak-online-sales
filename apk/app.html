@@ -2039,13 +2039,18 @@ checkUserRole(user);if(akIsPlatformOwner(user)){akSetLicenseGate(true,"Platform 
  const privateRef=fbStore.collection("users").doc(user.uid).collection("private").doc("appData");
  const privateSnap=await akWithTimeout(privateRef.get(),12000,"Cloud ဒေတာဖတ်ချိန် ကြာနေသည်။ Owner Dashboard ကို ဆက်ဖွင့်ပေးမည်");
  if(authGeneration!==akAuthGeneration)return;
+ let legacySource=null;
  if(privateSnap.exists){
   const remote=privateSnap.data()||{};
   if(remote.data&&typeof remote.data==="object"){
-   await akSparkStore.migrateLegacyWorkspace(remote.data);
+   legacySource=remote.data;
    akCloudRevision=Number.isSafeInteger(remote.revision)&&remote.revision>=0?remote.revision:0;
   }
  }else{akCloudRevision=0;}
+ if(!legacySource)legacySource=JSON.parse(JSON.stringify(db||fresh()));
+ const hasLegacyRows=["products","sales","purchases","people","payments","expenses"].some(name=>Array.isArray(legacySource[name])&&legacySource[name].length>0);
+ const hasLegacySettings=legacySource.shop&&typeof legacySource.shop==="object"&&Object.keys(legacySource.shop).length>0;
+ if(hasLegacyRows||hasLegacySettings)await akSparkStore.migrateLegacyWorkspace(legacySource);
  const ws=await akSparkStore.loadWorkspace();
  db=akMergeLocalProductPhotos({...fresh(),...(ws||{})});
  const metaSnap=await fbStore.collection("shops").doc(user.uid).collection("workspace").doc("current").get();

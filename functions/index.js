@@ -367,6 +367,12 @@ exports.createShopOwnerAccount = functions.https.onCall(async (data, context) =>
     if (existingMembership.exists || user.customClaims?.platformAdmin === true || user.customClaims?.shopId) {
       throw new functions.https.HttpsError("already-exists", "ဤ Gmail သည် Owner သို့မဟုတ် ဝန်ထမ်းအကောင့်ဖြစ်ပြီးသား ဖြစ်သည်။");
     }
+    if (planDays === 5) {
+      const priorLicense = await db.collection("licenses").doc(user.uid).get();
+      if (priorLicense.exists && (priorLicense.data().trialUsedAt || priorLicense.data().isFreeTrial || priorLicense.data().planDays || priorLicense.data().plan)) {
+        throw new functions.https.HttpsError("failed-precondition", "ဤ Gmail သည် Free Trial ကို ယခင်က အသုံးပြုပြီးဖြစ်သည်။ Paid Package ကို ရွေးပါ။");
+      }
+    }
     if (user.customClaims?.platformAdmin === true || user.customClaims?.shopId) {
       throw new functions.https.HttpsError("already-exists", "ဤ Gmail သည် Owner သို့မဟုတ် ဝန်ထမ်းအကောင့်ဖြစ်ပြီးသား ဖြစ်သည်။");
     }
@@ -387,11 +393,15 @@ exports.createShopOwnerAccount = functions.https.onCall(async (data, context) =>
     const expiresAt = admin.firestore.Timestamp.fromMillis(expiryMillis);
     await db.runTransaction(async tx => {
       const current = await tx.get(licenseRef);
+      if (planDays === 5 && current.exists && (current.data().trialUsedAt || current.data().isFreeTrial || current.data().planDays || current.data().plan)) {
+        throw new functions.https.HttpsError("failed-precondition", "ဤ Gmail သည် Free Trial ကို ယခင်က အသုံးပြုပြီးဖြစ်သည်။ Paid Package ကို ရွေးပါ။");
+      }
       await enforceCustomerShopCapacity(tx, user.uid, current);
       tx.set(licenseRef, {
         uid: user.uid, email, status: "active",
         plan: planDays === 5 ? "5-day-free-trial" : planDays + "-days",
         planDays, priceMMK: planPrices[planDays], isFreeTrial: planDays === 5,
+        ...(planDays === 5 ? { trialUsedAt: admin.firestore.FieldValue.serverTimestamp() } : {}),
         expiresAt, emailVerified: true,
         credentialManagedBy: "platform-owner", passwordConfigured: true,
         provisionedBy: actor,

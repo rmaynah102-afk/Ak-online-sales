@@ -305,6 +305,63 @@ describe('AK Sale Firestore security baseline', function () {
     await assertFails(getDoc(doc(db, 'shops', 'shop-b', 'workspace', 'current')));
   });
 
+  async function seedMember(uid, shopId, role, canPrint = false) {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), 'shopMembers', uid), {
+        shopId, role, status: 'active', email: uid + '@example.com',
+        createdAt: Timestamp.now(), createdBy: shopId,
+        inviteCode: 'ABCDEF0123456789ABCDEF0123456789',
+        slotId: shopId + '_1', canPrint,
+      });
+    });
+  }
+
+  it('enforces cashier permissions on tenant-scoped POS collections', async () => {
+    await seedLicense('shop-a');
+    await seedMember('cashier-a', 'shop-a', 'cashier');
+    const db = testEnv.authenticatedContext('cashier-a', {
+      email: 'cashier-a@example.com', email_verified: true,
+    }).firestore();
+    await assertSucceeds(getDoc(doc(db, 'shops', 'shop-a', 'pos', 'products', 'p1')));
+    await assertFails(setDoc(doc(db, 'shops', 'shop-a', 'pos', 'products', 'p1'), { name: 'Hammer' }));
+    await assertSucceeds(setDoc(doc(db, 'shops', 'shop-a', 'pos', 'sales', 's1'), { total: 1000 }));
+    await assertFails(setDoc(doc(db, 'shops', 'shop-a', 'pos', 'expenses', 'e1'), { amount: 500 }));
+    await assertFails(setDoc(doc(db, 'shops', 'shop-a', 'pos', 'settings', 'main'), { currency: 'MMK' }));
+  });
+
+  it('allows manager inventory and expense writes but denies cross-tenant access', async () => {
+    await seedLicense('shop-a');
+    await seedLicense('shop-b');
+    await seedMember('manager-a', 'shop-a', 'manager');
+    const db = testEnv.authenticatedContext('manager-a', {
+      email: 'manager-a@example.com', email_verified: true,
+    }).firestore();
+    await assertSucceeds(setDoc(doc(db, 'shops', 'shop-a', 'pos', 'products', 'p1'), { name: 'Hammer' }));
+    await assertSucceeds(setDoc(doc(db, 'shops', 'shop-a', 'pos', 'expenses', 'e1'), { amount: 500 }));
+    await assertFails(getDoc(doc(db, 'shops', 'shop-b', 'pos', 'products', 'p1')));
+    await assertFails(setDoc(doc(db, 'shops', 'shop-a', 'pos', 'settings', 'main'), { currency: 'MMK' }));
+  });
+
+  it('denies POS collection access to staff after shop license expiry', async () => {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), 'licenses', 'shop-a'), {
+        uid: 'shop-a', status: 'active',
+        expiresAt: Timestamp.fromMillis(Date.now() - 60_000), plan: '30-days',
+      });
+      await setDoc(doc(context.firestore(), 'shopMembers', 'cashier-a'), {
+        shopId: 'shop-a', role: 'cashier', status: 'active',
+        email: 'cashier-a@example.com', createdAt: Timestamp.now(),
+        createdBy: 'shop-a', inviteCode: 'ABCDEF0123456789ABCDEF0123456789',
+        slotId: 'shop-a_1', canPrint: false,
+      });
+    });
+    const db = testEnv.authenticatedContext('cashier-a', {
+      email: 'cashier-a@example.com', email_verified: true,
+    }).firestore();
+    await assertFails(getDoc(doc(db, 'shops', 'shop-a', 'pos', 'products', 'p1')));
+    await assertFails(setDoc(doc(db, 'shops', 'shop-a', 'pos', 'sales', 's1'), { total: 1000 }));
+  });
+
   it('allows shop owner to revoke a staff member and release their slot', async () => {
     await seedLicense('shop-a');
     await seedInvite('shop-a', '0123456789ABCDEF0123456789ABCDEF');

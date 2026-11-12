@@ -62,3 +62,10 @@ The isolated migration branch now contains an initial Spark-compatible Firestore
 The emulator test suite was expanded to cover invite creation/privacy, atomic one-time claim, replay denial, expired-license denial, verified-email requirement, cross-tenant denial, three-slot cap, and owner revocation.
 
 The GitHub Actions workflow has been committed, but its emulator run result has not yet been confirmed. Therefore this is an implementation candidate, not a verified release. Existing callable-based APK flows still need migration, and the POS workspace data model plus role-specific permissions remain separate unfinished work.
+
+
+## Clean rebuild and static validation — 2026-11-12
+
+The migration rules were rebuilt from the unmodified `ak-owner-pos-default-mode` baseline to remove duplicate/truncated intermediate edits. Current branch file has one rules header, one `shopMembers`, one `shopInvites`, one `shopStaffSlots`, one tenant-scoped POS match, and one final deny-all match. A comment/string-aware brace scan found balanced structure. The emulator suite contains 19 test cases and its JavaScript source passes a syntax parse check.
+
+These are static checks only. The Firestore Emulator workflow result is not visible/confirmed yet; no claim is made that the 19 security tests passed. Do not deploy the branch rules to production until the emulator workflow is confirmed green.

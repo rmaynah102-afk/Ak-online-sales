@@ -49,6 +49,9 @@ const appHtml = fs.readFileSync("app.html", "utf8");
 const apkHtml = fs.readFileSync("apk/app.html", "utf8");
 assert.match(appHtml, /<script src="\.\/spark-pos-store\.js"><\/script>/);
 assert.match(apkHtml, /<script src="\.\/spark-pos-store\.js"><\/script>/);
+assert.match(apkHtml, /<script src="\.\/ak-health-monitor\.js" defer><\/script>/);
+assert.match(fs.readFileSync("apk/ak-health-monitor.js", "utf8"), /window\.AKHealthMonitor/);
+assert.match(packageJson.scripts["copy-web"], /ak-health-monitor\.js/);
 // The APK shell must call the Spark staff adapter rather than Cloud Functions for staff lifecycle.
 assert.match(apkHtml, /sparkStore\.claimInvite\(code\)/);
 assert.match(apkHtml, /sparkStore\.createInvite\(role\)/);

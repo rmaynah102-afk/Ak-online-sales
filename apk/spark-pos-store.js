@@ -24,13 +24,23 @@
     }
     return out;
   };
-  const splitCost = record => {
-    const base = {}, costs = {};
-    for (const [key, value] of Object.entries(record || {})) {
-      if (COST_FIELDS.includes(key)) costs[key] = value;
-      else base[key] = value;
-    }
-    return { base, costs };
+  const splitSensitive = record => {
+    const costs = {};
+    const walk = value => {
+      if (Array.isArray(value)) return value.map(walk);
+      if (!value || typeof value !== "object") return value;
+      const safe = {};
+      for (const [key, item] of Object.entries(value)) {
+        if (COST_FIELDS.includes(key)) costs[key] = costs[key] || [];
+        if (COST_FIELDS.includes(key)) {
+          costs[key].push({ path: [], value: clean(item) });
+        } else {
+          safe[key] = walk(item);
+        }
+      }
+      return safe;
+    };
+    return { base: walk(record || {}), costs };
   };
   const assertId = id => {
     const value = String(id || "");
@@ -123,8 +133,8 @@
         counts[name] = rows.length;
         for (const row of rows) {
           const id = assertId(row && row.id);
-          const { base, costs } = (name === "products" || name === "sales") ? splitCost(row) : { base: row, costs: {} };
-          await queue(name, id, { ...base, schemaVersion: VERSION, migratedAt: this.db.FieldValue.serverTimestamp() });
+          const { base, costs } = (name === "products" || name === "sales") ? splitSensitive(row) : { base: row, costs: {} };
+          await queue(name, id, { ...base, schemaVersion: VERSION, migratedAt: root.firebase.firestore.FieldValue.serverTimestamp() });
           if (Object.keys(costs).length) {
             await queue(name === "products" ? "productCosts" : "saleCosts", id, {
               ...costs, schemaVersion: VERSION, migratedAt: this.db.FieldValue.serverTimestamp()
@@ -158,7 +168,13 @@
 
     async upsert(collection, records) {
       this._assertSignedIn();
-      if (!ROLE_COLLECTIONS[this.role] || !ROLE_COLLECTIONS[this.role].includes(collection)) {
+      const writeRoles = {
+        owner: COLLECTIONS,
+        manager: COLLECTIONS,
+        cashier: ["sales", "people", "payments"],
+        employee: []
+      };
+      if (!writeRoles[this.role] || !writeRoles[this.role].includes(collection)) {
         throw new Error("Role cannot write this collection");
       }
       if (!Array.isArray(records)) throw new Error("records must be an array");
@@ -166,7 +182,7 @@
       const flush = async () => { if (pending) { await batch.commit(); batch = this.db.batch(); pending = 0; } };
       for (const record of records) {
         const id = assertId(record && record.id);
-        const { base, costs } = (collection === "products" || collection === "sales") ? splitCost(record) : { base: record, costs: {} };
+        const { base, costs } = (collection === "products" || collection === "sales") ? splitSensitive(record) : { base: record, costs: {} };
         batch.set(pathFor(this.db, this.shopId, collection).doc(id), clean({ ...base, updatedAt: this.db.FieldValue.serverTimestamp() }), { merge: true });
         pending++; count++;
         if (Object.keys(costs).length) {

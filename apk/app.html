@@ -625,7 +625,7 @@ input,select,textarea,button{border-radius:5px!important}
 <p class="notice">Owner က Gmail၊ Password၊ Package နဲ့ သက်တမ်းကုန်ရက် သတ်မှတ်ပြီး Login Verify နှိပ်ပါ။ အကောင့်ကို Firebase မှာ ဖန်တီး/ပြင်ဆင်ပြီး ဆိုင်ရှင်က သတ်မှတ်ထားတဲ့ Gmail + Password နဲ့ ချက်ချင်း Login ဝင်နိုင်ပါမယ်။ Password ကို စာရင်းထဲ မသိမ်းပါ။</p>
 <div class="grid">
 <div><label for="akProvisionEmail">နံပါတ် (၁) · ဆိုင်ရှင် Gmail</label><input id="akProvisionEmail" type="email" autocomplete="off" placeholder="shopowner@gmail.com"></div>
-<div><label for="akProvisionPassword">နံပါတ် (၂) · Owner သတ်မှတ်မည့် Password</label><input id="akProvisionPassword" type="password" autocomplete="new-password" minlength="8" placeholder="အနည်းဆုံး ၈ လုံး"></div>
+<div><label for="akProvisionPassword">နံပါတ် (၂) · ဆိုင်ရှင် Password (အသစ် / Reset ပြီးနောက်)</label><input id="akProvisionPassword" type="password" autocomplete="new-password" minlength="8" placeholder="အနည်းဆုံး ၈ လုံး"></div>
 <div><label for="akProvisionPackage">Package</label><select id="akProvisionPackage"><option value="30">၁ လ · 30,000 MMK</option><option value="90">၃ လ · 90,000 MMK</option><option value="180">၆ လ · 180,000 MMK</option><option value="365">၁၂ လ · 360,000 MMK</option></select></div>
 <div><label for="akProvisionExpiry">သက်တမ်းကုန်မည့်ရက်</label><input id="akProvisionExpiry" type="date"></div>
 </div>
@@ -2188,7 +2188,13 @@ async function firebaseRegister(){
   try{credential=await registrationAuth.createUserWithEmailAndPassword(email,pass);}
   catch(createError){
    if(createError.code==="auth/email-already-in-use"){
-    throw Error("ဤ Gmail ဖြင့် Account ရှိပြီးသားဖြစ်သည်။ Account အသစ်ထပ်မဖွင့်ပါနှင့်။ "+(type==="staff"?"Staff Login ကိုရွေးပြီး မူလ Password နှင့် Merchant Code ထည့်ပါ။":"ဆိုင်ရှင် Login ဝင်ပါ သို့မဟုတ် Password Reset ကို အသုံးပြုပါ။"));
+    try{
+     await registrationAuth.sendPasswordResetEmail(email,{url:location.origin+location.pathname+"?app=1",handleCodeInApp:false});
+     throw Error("ဤ Gmail ဖြင့် Account ရှိပြီးသားဖြစ်သည်။ Account အသစ်ထပ်မဖွင့်ပါ။ Password Reset Link ကို Gmail Inbox/Spam သို့ ပို့ပြီးပါပြီ။ Password အသစ်သတ်မှတ်ပြီး "+(type==="staff"?"Staff Login မှ ဝင်ကာ Merchant Code ထည့်ပါ။":"ဆိုင်ရှင် Login ဝင်ပါ။"));
+    }catch(resetError){
+     if(String(resetError.message||"").includes("Password Reset Link ကို Gmail"))throw resetError;
+     throw Error("ဤ Gmail ဖြင့် Account ရှိပြီးသားဖြစ်သည်။ Password Reset Email မပို့နိုင်ပါ ("+(resetError.code||"")+"): "+(resetError.message||resetError));
+    }
    }
    throw createError;
   }
@@ -2408,9 +2414,13 @@ async function akProvisionShopOwner(){
     createdUser=credential.user;
    }catch(existingAccountError){
     if(["auth/invalid-credential","auth/wrong-password","auth/user-not-found"].includes(existingAccountError.code)){
-     try{await secondaryAuth.sendPasswordResetEmail(email);}
-     catch(resetError){console.warn("Existing shop-owner password reset email failed:",resetError);}
-     throw Error("ဤ Gmail ဖြင့် Firebase အကောင့် ရှိပြီးသားဖြစ်သည်။ ထည့်ထားသော Password မကိုက်ပါ။ Gmail Inbox/Spam မှ Password Reset Link ကိုဖွင့်ပြီး Password အသစ်သတ်မှတ်ပါ။ ပြီးလျှင် Owner က အကောင့်ကို ပြန် Verify လုပ်ပါ။");
+     try{
+      await secondaryAuth.sendPasswordResetEmail(email,{url:location.origin+location.pathname+"?app=1",handleCodeInApp:false});
+      setStatus("ဒီ Gmail ဖြင့် ဆိုင်ရှင်အကောင့် ရှိပြီးသားဖြစ်သည်။ အကောင့်အသစ်ထပ်မဖန်တီးပါ။ "+email+" သို့ Password Reset Link ပို့ပြီးပါပြီ။ Gmail Inbox နှင့် Spam ထဲမှ Link ကိုဖွင့်ပြီး Password အသစ်သတ်မှတ်ပါ။ ပြီးလျှင် Owner Dashboard သို့ပြန်လာ၍ Password အသစ်ထည့်ပြီး နံပါတ် (၃) ကို ထပ်နှိပ်ပါ။");
+      return;
+     }catch(resetError){
+      throw Error("ဒီ Gmail အကောင့် ရှိပြီးသားဖြစ်ပြီး Password မကိုက်ပါ။ Password Reset Email မပို့နိုင်ပါ ("+(resetError.code||"")+"): "+(resetError.message||resetError));
+     }
     }
     throw existingAccountError;
    }

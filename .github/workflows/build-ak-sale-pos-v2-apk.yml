@@ -99,6 +99,10 @@ jobs:
           NODE
       - name: Sync Android project
         run: npx cap sync android
+      - name: Install AK native Bluetooth / Wi-Fi printer bridge
+        run: node scripts/install-native-printer.js
+      - name: Bundle local ZXing barcode scanner
+        run: node scripts/copy-zxing.js
       - name: Check release signing secrets
         id: signing
         env:

@@ -26,6 +26,7 @@ jobs:
           test -s cloudflare/worker.js
           test -s cloudflare/wrangler.toml
           node --check cloudflare/worker.js
+          node --test cloudflare/worker.test.mjs
 
       - name: Check Cloudflare credentials
         env:

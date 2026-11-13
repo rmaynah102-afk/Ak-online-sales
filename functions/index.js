@@ -1244,3 +1244,148 @@ exports.akAiSecurityReview = functions.runWith({ secrets: [OPENAI_API_KEY], time
     return { ok: true, text };
   });
 
+
+// AK Sale POS 2.0: staff sign-in with a one-time-issued Merchant Code and password.
+// Staff accounts use private synthetic Firebase Auth emails; staff do not need personal Gmail.
+exports.createMerchantCodeStaff = functions.https.onCall(async (data, context) => {
+  const shopId = await requireActiveShop(context);
+  const name = String(data.name || "").trim().slice(0, 80);
+  const role = String(data.role || "cashier").trim().toLowerCase();
+  const password = String(data.password || "");
+  if (name.length < 2) throw new functions.https.HttpsError("invalid-argument", "ဝန်ထမ်းအမည် အနည်းဆုံး ၂ လုံးဖြည့်ပါ။");
+  if (!SHOP_STAFF_ROLES.includes(role)) throw new functions.https.HttpsError("invalid-argument", "ဝန်ထမ်းရာထူး မမှန်ပါ။");
+  if (password.length < 8 || password.length > 128) throw new functions.https.HttpsError("invalid-argument", "Password အနည်းဆုံး ၈ လုံးနှင့် အများဆုံး ၁၂၈ လုံးဖြစ်ရမည်။");
+
+  const code = crypto.randomBytes(6).toString("hex").toUpperCase();
+  const codeHash = crypto.createHash("sha256").update(code).digest("hex");
+  const internalEmail = "staff." + crypto.randomBytes(16).toString("hex") + "@akstaff.app";
+  const controlRef = db.collection("shops").doc(shopId).collection("controls").doc("merchantStaff");
+  const membersQuery = db.collection("shopMembers").where("shopId", "==", shopId);
+
+  // Reserve one of the three staff slots under a transaction lock before creating Auth.
+  await db.runTransaction(async tx => {
+    const [controlSnap, membersSnap] = await Promise.all([tx.get(controlRef), tx.get(membersQuery)]);
+    const activeCount = membersSnap.docs.filter(doc => {
+      const x = doc.data() || {};
+      return x.merchantStaff === true && x.status === "active";
+    }).length;
+    if (activeCount >= 3) {
+      throw new functions.https.HttpsError("resource-exhausted", "ဆိုင်တစ်ဆိုင်လျှင် ဝန်ထမ်း ၃ ဦးသာ ဖွင့်နိုင်ပါသည်။");
+    }
+    tx.set(controlRef, {
+      staffCount: activeCount + 1, staffLimit: 3,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+  });
+
+  let createdUser = null;
+  try {
+    createdUser = await admin.auth().createUser({
+      email: internalEmail, password, emailVerified: true,
+      displayName: name, disabled: false
+    });
+    await admin.auth().setCustomUserClaims(createdUser.uid, {
+      shopId, shopRole: role, merchantStaff: true
+    });
+    const batch = db.batch();
+    batch.set(db.collection("shopMembers").doc(createdUser.uid), {
+      uid: createdUser.uid, shopId, email: internalEmail, name, role,
+      status: "active", merchantStaff: true, createdBy: shopId,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(), canPrint: false
+    });
+    batch.create(db.collection("merchantCodeLogins").doc(codeHash), {
+      uid: createdUser.uid, shopId, email: internalEmail,
+      status: "active", createdAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+    batch.set(db.collection("users").doc(shopId).collection("auditLogs").doc(), {
+      action: "merchant_staff_created", targetUid: createdUser.uid, role,
+      actorUid: shopId, createdAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+    await batch.commit();
+    return { ok: true, code, name, role, expiresIn: "until revoked" };
+  } catch (error) {
+    if (createdUser) {
+      await admin.auth().deleteUser(createdUser.uid).catch(() => {});
+      await db.collection("shopMembers").doc(createdUser.uid).delete().catch(() => {});
+      await db.collection("merchantCodeLogins").doc(codeHash).delete().catch(() => {});
+    }
+    await db.runTransaction(async tx => {
+      const snap = await tx.get(controlRef);
+      if (snap.exists) {
+        const count = Math.max(0, Number(snap.data().staffCount || 1) - 1);
+        tx.set(controlRef, { staffCount: count, updatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+      }
+    }).catch(() => {});
+    console.error("createMerchantCodeStaff failed", error && error.code);
+    if (error instanceof functions.https.HttpsError) throw error;
+    throw new functions.https.HttpsError("internal", "ဝန်ထမ်းအကောင့် ဖန်တီးမရပါ။ ပြန်စမ်းပါ။");
+  }
+});
+
+exports.resolveMerchantCodeLogin = functions.https.onCall(async (data, context) => {
+  const code = String(data.code || "").trim().toUpperCase();
+  if (!/^[A-F0-9]{12}$/.test(code)) {
+    throw new functions.https.HttpsError("invalid-argument", "Merchant Code မမှန်ပါ။");
+  }
+  const hash = crypto.createHash("sha256").update(code).digest("hex");
+  const loginSnap = await db.collection("merchantCodeLogins").doc(hash).get();
+  if (!loginSnap.exists || loginSnap.data().status !== "active") {
+    throw new functions.https.HttpsError("not-found", "Merchant Code သို့မဟုတ် Password မမှန်ပါ။");
+  }
+  const login = loginSnap.data();
+  const [licenseSnap, memberSnap] = await Promise.all([
+    db.collection("licenses").doc(login.shopId).get(),
+    db.collection("shopMembers").doc(login.uid).get()
+  ]);
+  const license = licenseSnap.data() || {};
+  if (!licenseSnap.exists || license.status !== "active" || !license.expiresAt ||
+      license.expiresAt.toMillis() <= Date.now() || !memberSnap.exists ||
+      memberSnap.data().status !== "active" || memberSnap.data().shopId !== login.shopId) {
+    throw new functions.https.HttpsError("permission-denied", "ဆိုင်သက်တမ်း သို့မဟုတ် ဝန်ထမ်းအကောင့် ပိတ်ထားပါသည်။");
+  }
+  const authUser = await admin.auth().getUser(login.uid);
+  if (authUser.disabled) throw new functions.https.HttpsError("permission-denied", "ဝန်ထမ်းအကောင့် ပိတ်ထားပါသည်။");
+  return { ok: true, email: login.email };
+});
+
+exports.listMerchantCodeStaff = functions.https.onCall(async (data, context) => {
+  const shopId = await requireActiveShop(context);
+  const snap = await db.collection("shopMembers").where("shopId", "==", shopId).get();
+  return {
+    maxStaff: 3,
+    members: snap.docs.filter(doc => doc.data().merchantStaff === true).map(doc => {
+      const x = doc.data();
+      return { uid: doc.id, name: x.name || "", role: x.role || "employee", status: x.status || "active" };
+    })
+  };
+});
+
+exports.removeMerchantCodeStaff = functions.https.onCall(async (data, context) => {
+  const shopId = await requireActiveShop(context);
+  const memberUid = String(data.memberUid || "").trim();
+  if (!memberUid || memberUid.length > 128 || memberUid === shopId) {
+    throw new functions.https.HttpsError("invalid-argument", "ဝန်ထမ်းအကောင့် ID မမှန်ပါ။");
+  }
+  const memberRef = db.collection("shopMembers").doc(memberUid);
+  const memberSnap = await memberRef.get();
+  const member = memberSnap.data() || {};
+  if (!memberSnap.exists || member.shopId !== shopId || member.merchantStaff !== true) {
+    throw new functions.https.HttpsError("not-found", "ဤဆိုင်၏ Merchant Code ဝန်ထမ်း မတွေ့ပါ။");
+  }
+  await admin.auth().updateUser(memberUid, { disabled: true });
+  const batch = db.batch();
+  batch.update(memberRef, { status: "suspended", removedAt: admin.firestore.FieldValue.serverTimestamp() });
+  const codeSnap = await db.collection("merchantCodeLogins").where("uid", "==", memberUid).get();
+  codeSnap.docs.forEach(doc => batch.update(doc.ref, { status: "revoked", revokedAt: admin.firestore.FieldValue.serverTimestamp() }));
+  batch.set(db.collection("users").doc(shopId).collection("auditLogs").doc(), {
+    action: "merchant_staff_removed", targetUid: memberUid,
+    actorUid: shopId, createdAt: admin.firestore.FieldValue.serverTimestamp()
+  });
+  await batch.commit();
+  const activeSnap = await db.collection("shopMembers").where("shopId", "==", shopId).get();
+  const count = activeSnap.docs.filter(doc => doc.data().merchantStaff === true && doc.data().status === "active").length;
+  await db.collection("shops").doc(shopId).collection("controls").doc("merchantStaff").set({
+    staffCount: count, staffLimit: 3, updatedAt: admin.firestore.FieldValue.serverTimestamp()
+  }, { merge: true });
+  return { ok: true };
+});

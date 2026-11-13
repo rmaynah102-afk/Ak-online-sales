@@ -1,5 +1,5 @@
 {
-  "id": "./",
+  "id": "./pos.html",
   "name": "AK Sale Software",
   "short_name": "AK Sale",
   "description": "AK Sale Software — Myanmar hardware and electrical shop sales, inventory and business management.",
@@ -8,7 +8,7 @@
     "business",
     "productivity"
   ],
-  "start_url": "./?view=market",
+  "start_url": "./pos.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",

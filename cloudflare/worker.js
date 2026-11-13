@@ -62,33 +62,73 @@ async function provisionShopOwner(request, env, origin) {
     return json({ ok: false, error: "platform_owner_verification_failed" }, 403, origin);
   }
 
-  // Create only new accounts through Firebase's public Identity Toolkit endpoint.
-  // The endpoint is protected by the verified Platform Owner ID token above.
+  let uid = "", shopToken = "", emailVerified = false, accountReused = false;
   const createResponse = await fetch("https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=" + encodeURIComponent(apiKey), {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password, returnSecureToken: true })
   });
   const created = await createResponse.json().catch(() => ({}));
-  if (!createResponse.ok || !created.localId || !created.idToken) {
-    const message = String(created.error && created.error.message || "shop_owner_create_failed");
-    const reason = message === "EMAIL_EXISTS" ? "shop_owner_email_already_registered" : message.slice(0, 120);
-    return json({ ok: false, error: reason }, message === "EMAIL_EXISTS" ? 409 : 400, origin);
+
+  if (createResponse.ok && created.localId && created.idToken) {
+    uid = created.localId;
+    shopToken = created.idToken;
+  } else {
+    const reason = String(created.error && created.error.message || "");
+    if (reason !== "EMAIL_EXISTS") {
+      return json({ ok: false, error: reason.slice(0, 120) || "shop_owner_create_failed" }, 400, origin);
+    }
+
+    // Earlier versions may already have created this Firebase account before the
+    // license write failed. Reuse it only when the supplied password authenticates.
+    const loginResponse = await fetch("https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=" + encodeURIComponent(apiKey), {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password, returnSecureToken: true })
+    });
+    const login = await loginResponse.json().catch(() => ({}));
+    if (!loginResponse.ok || !login.localId || !login.idToken) {
+      const resetResponse = await fetch("https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=" + encodeURIComponent(apiKey), {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ requestType: "PASSWORD_RESET", email })
+      });
+      const reset = await resetResponse.json().catch(() => ({}));
+      return json({
+        ok: false,
+        error: resetResponse.ok ? "shop_owner_email_exists_password_reset_sent" : "shop_owner_email_exists_use_password_recovery",
+        passwordResetSent: resetResponse.ok,
+        recoveryError: resetResponse.ok ? undefined : String(reset.error && reset.error.message || "password_reset_failed").slice(0, 100)
+      }, 409, origin);
+    }
+    const existingLookup = await fetch("https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=" + encodeURIComponent(apiKey), {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ idToken: login.idToken })
+    });
+    const existingData = await existingLookup.json().catch(() => ({}));
+    const existingUser = existingData.users && existingData.users[0];
+    if (!existingLookup.ok || !existingUser || String(existingUser.email || "").toLowerCase() !== email) {
+      return json({ ok: false, error: "existing_shop_owner_account_verification_failed" }, 409, origin);
+    }
+    uid = login.localId;
+    shopToken = login.idToken;
+    emailVerified = existingUser.emailVerified === true;
+    accountReused = true;
   }
 
-  // Send the standard Firebase email-verification message to the new shop owner.
-  const verifyResponse = await fetch("https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=" + encodeURIComponent(apiKey), {
-    method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ requestType: "VERIFY_EMAIL", idToken: created.idToken })
-  });
-  const verification = await verifyResponse.json().catch(() => ({}));
+  let verificationEmailSent = false, verificationError;
+  if (!emailVerified) {
+    const verifyResponse = await fetch("https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=" + encodeURIComponent(apiKey), {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ requestType: "VERIFY_EMAIL", idToken: shopToken })
+    });
+    const verification = await verifyResponse.json().catch(() => ({}));
+    verificationEmailSent = verifyResponse.ok;
+    if (!verifyResponse.ok) verificationError = String(verification.error && verification.error.message || "verification_email_send_failed").slice(0, 100);
+  }
   return json({
-    ok: true, uid: created.localId, email, emailVerified: false,
-    verificationEmailSent: verifyResponse.ok,
-    verificationError: verifyResponse.ok ? undefined : String(verification.error && verification.error.message || "verification_email_send_failed").slice(0, 100),
+    ok: true, uid, email, emailVerified,
+    verificationEmailSent, verificationError,
+    accountReused,
     credentialManagedBy: "platform-owner"
   }, 200, origin);
 }
-
 
 const STAFF_EMAIL_DOMAIN = "akstaff.app";
 

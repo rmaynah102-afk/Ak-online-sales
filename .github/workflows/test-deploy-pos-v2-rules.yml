@@ -33,7 +33,7 @@ jobs:
       - name: Authenticate Firebase deployment
         uses: google-github-actions/auth@v2
         with:
-          credentials_json: \${{ secrets.FIREBASE_SERVICE_ACCOUNT_AK_ONLIN_SALES }}
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_AK_ONLIN_SALES }}
       - name: Install Firebase CLI
         run: npm install --global firebase-tools
       - name: Deploy tested Firestore rules

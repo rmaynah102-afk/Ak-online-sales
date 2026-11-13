@@ -74,6 +74,8 @@ jobs:
             }
           }
           JSON
+      - name: Bundle local ZXing barcode scanner before Capacitor sync
+        run: node scripts/copy-zxing.js
       - name: Validate app JavaScript
         run: |
           node - <<'NODE'
@@ -125,10 +127,10 @@ jobs:
           PY
       - name: Sync Android project
         run: npx cap sync android
+      - name: Verify local barcode scanner is packaged in Android assets
+        run: test -s android/app/src/main/assets/public/vendor/zxing.min.js
       - name: Install AK native Bluetooth / Wi-Fi printer bridge
         run: node scripts/install-native-printer.js
-      - name: Bundle local ZXing barcode scanner
-        run: node scripts/copy-zxing.js
       - name: Generate AK Sale Android launcher icons
         run: node scripts/generate-android-icons.js
       - name: Check release signing secrets

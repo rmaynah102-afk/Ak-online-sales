@@ -504,7 +504,6 @@ describe('AK Sale Firestore security baseline', function () {
     });
     const db = testEnv.authenticatedContext('merchant-cashier', {
       email: 'staff.abc@akstaff.app', email_verified: true,
-      shopId: 'shop-a', merchantStaff: true, shopRole: 'cashier',
     }).firestore();
     await assertSucceeds(getDoc(doc(db, 'licenses', 'shop-a')));
     await assertFails(getDoc(doc(db, 'licenses', 'shop-b')));

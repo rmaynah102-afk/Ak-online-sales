@@ -80,8 +80,9 @@ async function boot(){
  auth.onAuthStateChanged(async u=>{
   user=u;if(!u){show("loginPanel");$("userBadge").textContent="";return}
   try{
-   if(!u.emailVerified){await auth.signOut();show("loginPanel");status("အကောင့်အတည်ပြုမှု မပြီးသေးပါ။");return}
    const email=(u.email||"").toLowerCase();
+   // Platform Owner is the fixed, password-authenticated control account; do not block Owner login on email verification.
+   if(!u.emailVerified && email!==OWNER){await auth.signOut();show("loginPanel");status("အကောင့်အတည်ပြုမှု မပြီးသေးပါ။ Gmail Inbox/Spam မှ Verification Link ကိုအရင်ဖွင့်ပါ။");return}
    if(email===OWNER){staffRole="owner";show("ownerPanel");$("userBadge").textContent="Platform Owner";await loadLicenses()}
    else if(email.endsWith("@akstaff.app")){
     const memberSnap=await db.collection("shopMembers").doc(u.uid).get(),member=memberSnap.data()||{};

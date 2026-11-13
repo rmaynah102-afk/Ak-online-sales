@@ -451,6 +451,11 @@ window.shareSaleReceipt=async id=>{
   c.strokeStyle="#d8e2db";c.beginPath();c.moveTo(55,710);c.lineTo(665,710);c.stroke();
   const blob=await new Promise(resolve=>canvas.toBlob(resolve,"image/png"));if(!blob)throw Error("ဘောင်ချာပုံ မရပါ");
   const file=new File([blob],"AK-Sale-Receipt-"+String(id).slice(-8)+".png",{type:"image/png"});
+  const nativeShare=window.Capacitor?.isNativePlatform?.()&&window.Capacitor?.Plugins?.AkPrinter;
+  if(nativeShare?.shareReceiptImage){
+   const data=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(",")[1]);reader.onerror=reject;reader.readAsDataURL(blob)});
+   await nativeShare.shareReceiptImage({data,fileName:file.name,text,title:"AK Sale ဘောင်ချာ"});return;
+  }
   if(navigator.canShare?.({files:[file]})){await navigator.share({files:[file],title:"AK Sale ဘောင်ချာ",text});return}
   if(navigator.share){await navigator.share({title:"AK Sale ဘောင်ချာ",text});return}
   const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=file.name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1200);

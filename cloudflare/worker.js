@@ -40,85 +40,53 @@ const ALLOWED_FUNCTIONS = new Set([
 
 
 const ALLOWED_ORIGINS = new Set(["https://rmaynah102-afk.github.io","capacitor://localhost","https://localhost","http://localhost","http://localhost:8100"]);
-let cachedGoogleToken = null;
-function b64url(value) {
-  const bytes = typeof value === "string" ? new TextEncoder().encode(value) : value;
-  let binary = "";
-  for (const byte of bytes) binary += String.fromCharCode(byte);
-  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
-}
-function decodePem(pem) {
-  const body = String(pem || "").replace(/-----BEGIN PRIVATE KEY-----|-----END PRIVATE KEY-----|\s/g, "");
-  const raw = atob(body);
-  return Uint8Array.from(raw, ch => ch.charCodeAt(0));
-}
-async function getGoogleAccessToken(env) {
-  const now = Math.floor(Date.now() / 1000);
-  if (cachedGoogleToken && cachedGoogleToken.exp > now + 60) return cachedGoogleToken.token;
-  if (!env.FIREBASE_SERVICE_ACCOUNT_JSON) throw new Error("firebase_service_account_secret_missing");
-  let service;
-  try { service = JSON.parse(env.FIREBASE_SERVICE_ACCOUNT_JSON); } catch { throw new Error("firebase_service_account_secret_invalid_json"); }
-  if (service.project_id !== PROJECT_ID || !service.client_email || !service.private_key || !service.token_uri) throw new Error("firebase_service_account_project_or_fields_invalid");
-  const header = b64url(JSON.stringify({ alg: "RS256", typ: "JWT" }));
-  const claims = b64url(JSON.stringify({ iss: service.client_email, scope: "https://www.googleapis.com/auth/identitytoolkit https://www.googleapis.com/auth/datastore", aud: service.token_uri, iat: now, exp: now + 3600 }));
-  const unsigned = header + "." + claims;
-  const key = await crypto.subtle.importKey("pkcs8", decodePem(service.private_key), { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" }, false, ["sign"]);
-  const signature = await crypto.subtle.sign("RSASSA-PKCS1-v1_5", key, new TextEncoder().encode(unsigned));
-  const assertion = unsigned + "." + b64url(new Uint8Array(signature));
-  const response = await fetch(service.token_uri, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer", assertion }) });
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok || !data.access_token) throw new Error("google_service_token_exchange_failed");
-  cachedGoogleToken = { token: data.access_token, exp: now + Number(data.expires_in || 3600) };
-  return cachedGoogleToken.token;
-}
-async function firebaseAdminRequest(path, token, body, apiKey) {
-  if (!apiKey) throw new Error("firebase_api_key_missing");
-  const endpoint = "https://identitytoolkit.googleapis.com/v1/" + path + "?key=" + encodeURIComponent(apiKey);
-  const response = await fetch(endpoint, { method: "POST", headers: { Authorization: "Bearer " + token, "Content-Type": "application/json" }, body: JSON.stringify(body) });
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    const error = new Error(data.error && data.error.message ? String(data.error.message).slice(0, 120) : "firebase_admin_request_failed");
-    error.status = response.status;
-    throw error;
-  }
-  return data;
-}
 async function provisionShopOwner(request, env, origin) {
-  const auth = (request.headers.get("Authorization") || "").match(/^Bearer\s+(\S+)$/i);
+  const auth = (request.headers.get("Authorization") || "").match(/^Bearer\\s+(\\S+)$/i);
   if (!auth) return json({ ok: false, error: "unauthenticated" }, 401, origin);
   let body;
   try { body = await request.json(); } catch { return json({ ok: false, error: "invalid_json" }, 400, origin); }
   const email = String(body.email || "").trim().toLowerCase();
   const password = String(body.password || "");
   const apiKey = String(body.apiKey || "");
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email === "painglin102@gmail.com") return json({ ok: false, error: "invalid_shop_owner_email" }, 400, origin);
+  if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email) || email === "painglin102@gmail.com") return json({ ok: false, error: "invalid_shop_owner_email" }, 400, origin);
   if (password.length < 8 || password.length > 128) return json({ ok: false, error: "password_must_be_8_to_128_characters" }, 400, origin);
   if (!apiKey || apiKey.length > 200) return json({ ok: false, error: "firebase_api_key_required" }, 400, origin);
-  const callerResponse = await fetch("https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=" + encodeURIComponent(apiKey), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ idToken: auth[1] }) });
+
+  // Verify the caller against Firebase Auth; never trust client-supplied role fields.
+  const callerResponse = await fetch("https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=" + encodeURIComponent(apiKey), {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ idToken: auth[1] })
+  });
   const callerData = await callerResponse.json().catch(() => ({}));
   const caller = callerData.users && callerData.users[0];
-  if (!callerResponse.ok || !caller || String(caller.email || "").toLowerCase() !== "painglin102@gmail.com" || caller.emailVerified !== true) return json({ ok: false, error: "platform_owner_verification_failed" }, 403, origin);
-  try {
-    const token = await getGoogleAccessToken(env);
-    const lookup = await firebaseAdminRequest("projects/" + PROJECT_ID + "/accounts:lookup", token, { email: [email] }, apiKey);
-    const existing = lookup.users && lookup.users[0];
-    let uid;
-    if (existing) {
-      let claims = {};
-      try { claims = JSON.parse(existing.customAttributes || "{}"); } catch {}
-      if (claims.platformAdmin || claims.shopId) return json({ ok: false, error: "target_account_is_reserved" }, 409, origin);
-      uid = existing.localId;
-      await firebaseAdminRequest("projects/" + PROJECT_ID + "/accounts:update", token, { localId: uid, password, emailVerified: true, disableUser: false }, apiKey);
-    } else {
-      const created = await firebaseAdminRequest("projects/" + PROJECT_ID + "/accounts", token, { email, password, emailVerified: true, disabled: false }, apiKey);
-      uid = created.localId;
-    }
-    if (!uid) throw new Error("firebase_uid_missing");
-    return json({ ok: true, uid, email, emailVerified: true, credentialManagedBy: "platform-owner" }, 200, origin);
-  } catch (error) {
-    const status = Number(error.status) >= 400 && Number(error.status) < 500 ? Number(error.status) : 502;
-    return json({ ok: false, error: String(error.message || "owner_provision_failed").slice(0, 160) }, status, origin);
+  if (!callerResponse.ok || !caller || String(caller.email || "").toLowerCase() !== "painglin102@gmail.com" || caller.emailVerified !== true) {
+    return json({ ok: false, error: "platform_owner_verification_failed" }, 403, origin);
   }
+
+  // Create only new accounts through Firebase's public Identity Toolkit endpoint.
+  // The endpoint is protected by the verified Platform Owner ID token above.
+  const createResponse = await fetch("https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=" + encodeURIComponent(apiKey), {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password, returnSecureToken: true })
+  });
+  const created = await createResponse.json().catch(() => ({}));
+  if (!createResponse.ok || !created.localId || !created.idToken) {
+    const message = String(created.error && created.error.message || "shop_owner_create_failed");
+    const reason = message === "EMAIL_EXISTS" ? "shop_owner_email_already_registered" : message.slice(0, 120);
+    return json({ ok: false, error: reason }, message === "EMAIL_EXISTS" ? 409 : 400, origin);
+  }
+
+  // Send the standard Firebase email-verification message to the new shop owner.
+  const verifyResponse = await fetch("https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=" + encodeURIComponent(apiKey), {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ requestType: "VERIFY_EMAIL", idToken: created.idToken })
+  });
+  const verification = await verifyResponse.json().catch(() => ({}));
+  return json({
+    ok: true, uid: created.localId, email, emailVerified: false,
+    verificationEmailSent: verifyResponse.ok,
+    verificationError: verifyResponse.ok ? undefined : String(verification.error && verification.error.message || "verification_email_send_failed").slice(0, 100),
+    credentialManagedBy: "platform-owner"
+  }, 200, origin);
 }
 
 function corsHeaders(origin) {
@@ -161,7 +129,7 @@ export default {
         ok: true,
         service: "ak-sale-gateway",
         status: "owner-provision-ready",
-        serviceAccountConfigured: Boolean(env.FIREBASE_SERVICE_ACCOUNT_JSON),
+        serviceAccountConfigured: false,\n        serviceAccountRequired: false,
         upstream: "Cloudflare Worker Firebase Admin REST",
         firebaseCallableProxy: "legacy-only; still requires Firebase Functions",
         project: PROJECT_ID,

@@ -84,13 +84,13 @@ function render(){
  let rows=items.filter(x=>(!q||[x.title,x.shopName,x.category,x.city,x.township,x.description].join(" ").toLowerCase().includes(q))&&(!cat||x.category===cat)&&(!place||[x.city,x.township,x.address].join(" ").toLowerCase().includes(place)));
  rows.sort((a,b)=>sort==="low"?Number(a.price)-Number(b.price):sort==="high"?Number(b.price)-Number(a.price):dateValue(b.createdAt)-dateValue(a.createdAt));
  $("count").textContent=rows.length+" ခု တွေ့ရှိ";
- $("feed").innerHTML=rows.length?rows.map(x=>'<article class="product"><img loading="lazy" src="'+esc(/^https:\\/\\//i.test(x.imageUrl||"")||/^data:image\\/(jpeg|png|webp);base64,/i.test(x.imageUrl||"")?x.imageUrl:"")+'" alt="'+esc(x.title)+'"><div class="info"><h3>'+esc(x.title)+'</h3><div class="price">'+money(x.price)+'</div><div class="muted">'+esc(x.shopName||"ရောင်းသူ")+' · '+esc(x.category||"အထွေထွေ")+'</div><div class="muted">'+esc([x.township,x.city].filter(Boolean).join(" · "))+'</div><div class="actions"><button type="button" onclick="buyItem(\\''+esc(x.id)+'\\')">ဝယ်ယူရန်</button><button type="button" class="alt" onclick="contactSeller(\\''+esc(x.phone||"")+'\\')">ဖုန်းဆက်ရန်</button></div></div></article>').join(""):'<div class="empty" style="grid-column:1/-1">ကိုက်ညီသော ပစ္စည်းမတွေ့ပါ။ ရှာဖွေမှုကို ပြောင်းကြည့်ပါ။</div>';
+ $("feed").innerHTML=rows.length?rows.map(x=>'<article class="product"><img loading="lazy" src="'+esc(/^https:\/\//i.test(x.imageUrl||"")||/^data:image\/(jpeg|png|webp);base64,/i.test(x.imageUrl||"")?x.imageUrl:"")+'" alt="'+esc(x.title)+'"><div class="info"><h3>'+esc(x.title)+'</h3><div class="price">'+money(x.price)+'</div><div class="muted">'+esc(x.shopName||"ရောင်းသူ")+' · '+esc(x.category||"အထွေထွေ")+'</div><div class="muted">'+esc([x.township,x.city].filter(Boolean).join(" · "))+'</div><div class="actions"><button type="button" onclick="buyItem(\''+esc(x.id)+'\')">ဝယ်ယူရန်</button><button type="button" class="alt" onclick="contactSeller(\''+esc(x.phone||"")+'\')">ဖုန်းဆက်ရန်</button></div></div></article>').join(""):'<div class="empty" style="grid-column:1/-1">ကိုက်ညီသော ပစ္စည်းမတွေ့ပါ။ ရှာဖွေမှုကို ပြောင်းကြည့်ပါ။</div>';
 }
 function clearFilters(){$("q").value="";$("category").value="";$("city").value="";$("sort").value="new";render()}
 ["q","category","city","sort"].forEach(id=>$(id).addEventListener(id==="q"||id==="city"?"input":"change",render));
 $("photo").addEventListener("change",async e=>{
  const f=e.target.files?.[0];photoData="";$("preview").classList.add("hidden");if(!f)return;
- if(!/^image\\/(jpeg|png|webp)$/.test(f.type)||f.size>2*1024*1024){e.target.value="";alert("JPG/PNG/WebP ပုံ 2MB အောက်သာ ရွေးပါ။");return}
+ if(!/^image\/(jpeg|png|webp)$/.test(f.type)||f.size>2*1024*1024){e.target.value="";alert("JPG/PNG/WebP ပုံ 2MB အောက်သာ ရွေးပါ။");return}
  const raw=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(f)});
  const im=await new Promise((res,rej)=>{const x=new Image();x.onload=()=>res(x);x.onerror=rej;x.src=raw});
  const c=document.createElement("canvas"),scale=Math.min(1,720/Math.max(im.width,im.height));c.width=Math.max(1,Math.round(im.width*scale));c.height=Math.max(1,Math.round(im.height*scale));c.getContext("2d").drawImage(im,0,0,c.width,c.height);
@@ -104,7 +104,7 @@ $("sellForm").addEventListener("submit",async e=>{
   if(!db)throw Error("Cloud Database မချိတ်ဆက်ရသေးပါ");
   const title=$("title").value.trim(),shopName=$("shop").value.trim(),price=Number($("price").value),city=$("cityInput").value.trim(),township=$("township").value.trim(),phone=$("phone").value.trim();
   if(title.length<2||shopName.length<2||!Number.isFinite(price)||price<1)throw Error("ပစ္စည်းအမည်၊ ဆိုင်အမည်နှင့် ဈေးနှုန်းကို စစ်ပါ");
-  if(phone.replace(/\\D/g,"").length<7)throw Error("ဖုန်း/Viber နံပါတ် မှန်ကန်စွာထည့်ပါ");
+  if(phone.replace(/\D/g,"").length<7)throw Error("ဖုန်း/Viber နံပါတ် မှန်ကန်စွာထည့်ပါ");
   const ref=db.collection("marketListings").doc();
   await ref.set({title,shopName,price,currency:"MMK",category:$("cat").value,city,township,address:$("address").value.trim(),phone,description:$("description").value.trim(),imageUrl:photoData,ownerUid:deviceId,status:"published",createdAt:firebase.firestore.FieldValue.serverTimestamp()});
   $("sellForm").reset();photoData="";$("preview").classList.add("hidden");status.textContent="ကြော်ငြာတင်ပြီးပါပြီ။ အများပြည်သူစာရင်းတွင် ပေါ်လာပါမည်။";await loadListings();$("catalog").scrollIntoView({behavior:"smooth"});
@@ -115,10 +115,10 @@ function contactSeller(phone){const n=String(phone||"").replace(/[^0-9+]/g,"");i
 async function buyItem(id){
  const x=items.find(v=>v.id===id);if(!x)return;
  const buyer=prompt("ဝယ်ယူသူအမည် ထည့်ပါ");if(!buyer||buyer.trim().length<2)return;
- const phone=prompt("သင့်ဖုန်း/Viber နံပါတ် ထည့်ပါ");if(!phone||phone.replace(/\\D/g,"").length<7){alert("ဖုန်းနံပါတ် မှန်ကန်စွာထည့်ပါ");return}
+ const phone=prompt("သင့်ဖုန်း/Viber နံပါတ် ထည့်ပါ");if(!phone||phone.replace(/\D/g,"").length<7){alert("ဖုန်းနံပါတ် မှန်ကန်စွာထည့်ပါ");return}
  const qty=Number(prompt("မှာယူမည့် အရေအတွက်","1"));if(!Number.isInteger(qty)||qty<1||qty>9999)return;
  const note=(prompt("မှတ်ချက် (မထည့်လည်းရသည်)")||"").slice(0,300);
- const msg=["AK Market Order မေးမြန်းမှု","ပစ္စည်း: "+x.title,"ဆိုင်: "+(x.shopName||""),"ဈေးနှုန်း: "+money(x.price),"အရေအတွက်: "+qty,"စုစုပေါင်းခန့်မှန်း: "+money(Number(x.price)*qty),"ဝယ်သူ: "+buyer.trim(),"ဖုန်း: "+phone,"မှတ်ချက်: "+(note||"မရှိ"),"Market: "+location.href].join("\\n");
+ const msg=["AK Market Order မေးမြန်းမှု","ပစ္စည်း: "+x.title,"ဆိုင်: "+(x.shopName||""),"ဈေးနှုန်း: "+money(x.price),"အရေအတွက်: "+qty,"စုစုပေါင်းခန့်မှန်း: "+money(Number(x.price)*qty),"ဝယ်သူ: "+buyer.trim(),"ဖုန်း: "+phone,"မှတ်ချက်: "+(note||"မရှိ"),"Market: "+location.href].join("\n");
  try{if(navigator.share){await navigator.share({title:"AK Market Order",text:msg});return}}catch(e){if(e.name==="AbortError")return}
  try{await navigator.clipboard.writeText(msg);alert("Order စာသား Copy လုပ်ပြီးပါပြီ။ ရောင်းသူ၏ Viber သို့ ပို့ပါ။")}catch(e){prompt("Order စာသားကို Copy လုပ်ပြီး ရောင်းသူထံပို့ပါ",msg)}
 }

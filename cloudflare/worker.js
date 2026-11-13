@@ -1,5 +1,5 @@
 // AK Sale Cloudflare gateway for the existing Firebase callable backend.
-// Deployment smoke-test revision: 2026-11-13.
+// Owner provisioning authorization and email validation hardened: 2026-11-13.
 // This is a restricted proxy, NOT a replacement for Firebase Functions.
 // Keep Firebase Auth, Admin SDK checks, Firestore transactions and licenses in Firebase.
 const PROJECT_ID = "ak-onlin-sales";

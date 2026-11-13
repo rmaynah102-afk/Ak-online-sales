@@ -45,7 +45,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
 <div class="card"><h2>ဆိုင်ရှင်အကောင့်အသစ် ဖန်တီးရန်</h2>
 <div class="grid"><div><label>ဆိုင်အမည်</label><input id="shopName" placeholder="AK Hardware"></div><div><label>ဆိုင်ရှင် Gmail</label><input id="newEmail" type="email" placeholder="owner@gmail.com"></div><div><label>ယာယီ Password (အနည်းဆုံး ၈ လုံး)</label><input id="newPassword" type="password" autocomplete="new-password"></div><div><label>Package</label><select id="plan"><option value="30-days">၃၀ ရက် — ၃၀,၀၀၀ ကျပ်</option><option value="90-days">၉၀ ရက် — ၉၀,၀၀၀ ကျပ်</option><option value="180-days">၁၈၀ ရက် — ၁၈၀,၀၀၀ ကျပ်</option><option value="365-days">၃၆၅ ရက် — ၃၆၀,၀၀၀ ကျပ်</option></select></div></div>
 <div class="row" style="margin-top:10px"><button id="createShopBtn">ဆိုင်ရှင်အကောင့် ဖန်တီးမည်</button></div>
-<p class="muted">အကောင့်ဖန်တီးပြီးနောက် ဆိုင်ရှင်၏ Gmail သို့ Verification Link ပို့မည်။ ငွေလက်ခံခြင်းကို App အပြင်တွင်သာ ဆောင်ရွက်ပါ။</p><div id="ownerStatus" class="muted"></div></div>
+<p class="muted">အကောင့်ဖန်တီးပြီးနောက် ဆိုင်ရှင်၏ Gmail သို့ Verification Link ပို့မည်။ ငွေလက်ခံခြင်းကို App အပြင်တွင်သာ ဆောင်ရွက်ပါ။</p><div id="ownerStatus" class="muted"></div><button id="verifyOwnerBtn" class="secondary">Owner Gmail Verification Link ပြန်ပို့ရန်</button></div>
 <div class="card"><h2>ဆိုင်ရှင်စာရင်း / သက်တမ်းထိန်းချုပ်မှု</h2><div class="tablewrap"><table><thead><tr><th>ဆိုင် / Gmail</th><th>Package</th><th>သက်တမ်းကုန်ရက်</th><th>အခြေအနေ</th><th>လုပ်ဆောင်ချက်</th></tr></thead><tbody id="licenseRows"></tbody></table></div></div>
 </section>
 <section id="shopPanel" class="hidden">
@@ -87,8 +87,10 @@ async function boot(){
    // Platform Owner is the fixed, password-authenticated control account; do not block Owner login on email verification.
    if(!u.emailVerified && email!==OWNER){await auth.signOut();show("loginPanel");status("အကောင့်အတည်ပြုမှု မပြီးသေးပါ။ Gmail Inbox/Spam မှ Verification Link ကိုအရင်ဖွင့်ပါ။");return}
    if(email===OWNER){
+    await u.reload();
     staffRole="owner";show("ownerPanel");$("userBadge").textContent="Platform Owner";
-    $("ownerStatus").textContent=u.emailVerified?"Owner အကောင့်ဝင်ပြီးပါပြီ။":"Owner Login အောင်မြင်ပါသည်။ Gmail အတည်ပြုမှု မပြီးသေးပါ။ ဆိုင်ရှင်အကောင့်ဖန်တီးရန် Verification လိုအပ်နိုင်သည်။";
+    $("ownerStatus").textContent=u.emailVerified?"Owner အကောင့်ဝင်ပြီးပါပြီ။":"Owner Login အောင်မြင်ပါသည်။ ဆိုင်ရှင်အကောင့်ဖန်တီးရန် Owner Gmail ကို Verify လုပ်ပါ။ အောက်ပါခလုတ်ဖြင့် Link ပြန်ပို့နိုင်သည်။";
+    $("verifyOwnerBtn").classList.toggle("hidden",!!u.emailVerified);
     await loadLicenses();
    }
    else if(email.endsWith("@akstaff.app")){
@@ -142,6 +144,7 @@ $("loginBtn").onclick=async()=>{
  }catch(e){status("Login မအောင်မြင်: "+friendlyAuthError(e))}
 };
 $("resetBtn").onclick=async()=>{try{await auth.sendPasswordResetEmail($("email").value.trim());status("Password Reset Link ပို့ပြီးပါပြီ။ Gmail Inbox/Spam စစ်ပါ။")}catch(e){status(errText(e))}};
+$("verifyOwnerBtn").onclick=async()=>{try{const current=auth.currentUser;if(!current||current.email.toLowerCase()!==OWNER)throw Error("Owner အကောင့်ဖြင့် အရင်ဝင်ပါ");await current.reload();if(current.emailVerified){$("ownerStatus").textContent="Owner Gmail အတည်ပြုပြီးပါပြီ။";$("verifyOwnerBtn").classList.add("hidden");return}await current.sendEmailVerification();$("ownerStatus").textContent="Verification Link ပို့ပြီးပါပြီ။ "+OWNER+" Gmail Inbox/Spam ထဲက Link ကိုဖွင့်ပြီး ပြန် Login ဝင်ပါ။"}catch(e){$("ownerStatus").textContent="Verification မပို့နိုင်ပါ: "+friendlyAuthError(e)}};
 $("logoutOwner").onclick=$("logoutShop").onclick=()=>auth.signOut();
 function planDays(p){return Number(p.split("-")[0])}
 async function ownerToken(){const t=await user.getIdToken(true);return t}

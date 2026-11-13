@@ -3,7 +3,8 @@ service cloud.firestore {
   match /databases/{database}/documents {
     function isVerifiedOwner() {
       return request.auth != null
-        && request.auth.token.email == 'painglin102@gmail.com';
+        && request.auth.token.email == 'painglin102@gmail.com'
+        && request.auth.token.email_verified == true;
     }
 
     // Marketplace is a separate public web service: verified Gmail users do not need a POS license or APK device slot.

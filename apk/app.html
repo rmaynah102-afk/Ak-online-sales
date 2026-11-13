@@ -2190,7 +2190,7 @@ async function firebaseRegister(){
    if(createError.code==="auth/email-already-in-use"){
     try{
      await registrationAuth.sendPasswordResetEmail(email,{url:location.origin+location.pathname+"?app=1",handleCodeInApp:false});
-     throw Error("ဤ Gmail ဖြင့် Account ရှိပြီးသားဖြစ်သည်။ Account အသစ်ထပ်မဖွင့်ပါ။ Password Reset Link ကို Gmail Inbox/Spam သို့ ပို့ပြီးပါပြီ။ Password အသစ်သတ်မှတ်ပြီး "+(type==="staff"?"Staff Login မှ ဝင်ကာ Merchant Code ထည့်ပါ။":"ဆိုင်ရှင် Login ဝင်ပါ။"));
+     throw Error("ဤ Gmail ဖြင့် Account ရှိပြီးသားဖြစ်သည်။ Account အသစ်ထပ်မဖွင့်ပါ။ Password Reset Link ကို Gmail Inbox/Spam သို့ ပို့ပြီးပါပြီ။ Password အသစ်သတ်မှတ်ပြီး "+(type==="staff"?"Staff Login ကိုရွေးပြီး မူလ Password နှင့် Merchant Code ထည့်ပါ။":"ဆိုင်ရှင် Login ဝင်ပါ။"));
     }catch(resetError){
      if(String(resetError.message||"").includes("Password Reset Link ကို Gmail"))throw resetError;
      throw Error("ဤ Gmail ဖြင့် Account ရှိပြီးသားဖြစ်သည်။ Password Reset Email မပို့နိုင်ပါ ("+(resetError.code||"")+"): "+(resetError.message||resetError));

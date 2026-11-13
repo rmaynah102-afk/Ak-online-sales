@@ -118,7 +118,7 @@ test("provisions a Merchant Code staff account through Firebase Auth REST and at
     assert.match(body.code,/^[A-F0-9]{12}$/);
     assert.equal(body.slot,1);
     const signUp= calls.find(x=>x.url.includes("accounts:signUp"));
-    assert.match(JSON.parse(signUp.options.body).email,/^staff\\.[a-f0-9]{12}@akstaff\\.app$/);
+    assert.equal(JSON.parse(signUp.options.body).email,"staff."+body.code.toLowerCase()+"@akstaff.app");
     const update= calls.find(x=>x.url.includes("accounts:update"));
     assert.equal(JSON.parse(update.options.body).emailVerified,true);
     const commit=calls.find(x=>x.url.includes("documents:commit"));

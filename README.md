@@ -19,7 +19,7 @@ Myanmar-first shop POS and public product market for hardware, electrical and ge
 - Platform Owner creates shop-owner accounts; shop owners sign in with Gmail and password.
 - Shop owners create up to 3 staff accounts using Merchant Code and password.
 - Subscription periods and manual renewals are controlled by Platform Owner. No in-app payment checkout is included.
-- This is the new POS 2.0 line; Bluetooth thermal printing still requires testing against the actual printer model.
+- This is the new POS 2.0 line; The APK now includes a native Bluetooth/Wi-Fi ESC/POS bridge; the actual printer model and paper width still need a physical test.
 
 ## Web + Android
 

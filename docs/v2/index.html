@@ -32,14 +32,14 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
 <main>
 <section id="loginPanel" class="card">
 <h2>အကောင့်ဝင်ရန်</h2>
-<div class="notice">Platform Owner / ဆိုင်ရှင်သည် Gmail နှင့် Password သုံးပါ။ ဝန်ထမ်းသည် Merchant Code နှင့် Password ဖြင့် ဝင်ပါ။</div>
-<label>Login အမျိုးအစား</label><select id="loginType"><option value="shop">ဆိုင်ရှင်</option><option value="owner">Platform Owner</option><option value="staff">ဝန်ထမ်း (Merchant Code)</option></select>
-<div class="grid"><div id="emailLoginFields"><label>Gmail</label><input id="email" type="email" autocomplete="username" placeholder="name@gmail.com"></div><div id="staffLoginFields" class="hidden"><label>Merchant Code</label><input id="merchantCode" autocomplete="username" placeholder="ဥပမာ A1B2C3D4E5F6"></div><div><label>Password</label><input id="password" type="password" autocomplete="current-password" placeholder="Password"></div></div>
-<div class="row" style="margin-top:12px"><button id="loginBtn">Login ဝင်မည်</button><button id="resetBtn" class="secondary">Password Reset</button></div>
+<div class="notice">Platform Owner သည် မိမိသတ်မှတ်ထားသော Google Gmail ဖြင့်ဝင်ပါ။ ဆိုင်ရှင်သည် Owner ပေးထားသော Gmail/Password ဖြင့်ဝင်ပါ။ ဝန်ထမ်းသည် Merchant Code/Password ဖြင့်ဝင်ပါ။</div>
+<label>Login အမျိုးအစား</label><select id="loginType"><option value="shop">ဆိုင်ရှင်</option><option value="owner">Platform Owner · Google</option><option value="staff">ဝန်ထမ်း (Merchant Code)</option></select>
+<div class="grid"><div id="emailLoginFields"><label>Gmail</label><input id="email" type="email" autocomplete="username" placeholder="name@gmail.com"></div><div id="staffLoginFields" class="hidden"><label>Merchant Code</label><input id="merchantCode" autocomplete="username" placeholder="ဥပမာ A1B2C3D4E5F6"></div><div id="passwordLoginFields"><label>Password</label><input id="password" type="password" autocomplete="current-password" placeholder="Password"></div></div>
+<div class="row" style="margin-top:12px"><button id="loginBtn">Login ဝင်မည်</button><button id="ownerGoogleBtn" class="hidden">Google ဖြင့် Platform Owner ဝင်မည်</button><button id="resetBtn" class="secondary">Password Reset</button></div>
 <div id="status"></div>
 </section>
 <section id="ownerPanel" class="hidden">
-<div class="card"><div class="row"><h2 style="flex:2">Platform Owner Dashboard</h2><button id="logoutOwner" class="secondary">Logout</button></div>
+<div class="card"><div class="row"><h2 style="flex:2">Platform Owner Control Center</h2><button id="ownerPOSBtn" class="secondary">Owner POS သို့</button><button id="logoutOwner" class="secondary">Logout</button></div>
 <div class="stats"><div class="stat">အသုံးပြုနေသော ဆိုင်<b id="shopCount">0</b></div><div class="stat">ဆိုင်အများဆုံး<b>100</b></div></div>
 </div>
 <div class="card"><h2>ဆိုင်ရှင်အကောင့်အသစ် ဖန်တီးရန်</h2>
@@ -49,7 +49,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
 <div class="card"><h2>ဆိုင်ရှင်စာရင်း / သက်တမ်းထိန်းချုပ်မှု</h2><div class="tablewrap"><table><thead><tr><th>ဆိုင် / Gmail</th><th>Package</th><th>သက်တမ်းကုန်ရက်</th><th>အခြေအနေ</th><th>လုပ်ဆောင်ချက်</th></tr></thead><tbody id="licenseRows"></tbody></table></div></div>
 </section>
 <section id="shopPanel" class="hidden">
-<div class="card"><div class="row"><div style="flex:2"><h2 id="shopTitle">ဆိုင် Dashboard</h2><span class="pill" id="licenseBadge">Active</span></div><button id="logoutShop" class="secondary">Logout</button></div>
+<div class="card"><div class="row"><div style="flex:2"><h2 id="shopTitle">ဆိုင် Dashboard</h2><span class="pill" id="licenseBadge">Active</span></div><button id="ownerControlBtn" class="secondary hidden">Owner Control Center</button><button id="logoutShop" class="secondary">Logout</button></div>
 <div class="stats"><div class="stat">ကုန်ပစ္စည်း<b id="productCount">0</b></div><div class="stat">ယနေ့အရောင်း<b id="todaySales">0 ကျပ်</b></div><div class="stat">လက်ကျန်တန်ဖိုး<b id="stockValue">0 ကျပ်</b></div><div class="stat">ကုန်နည်း<b id="lowStock">0</b></div></div></div>
 <nav class="tabs no-print" id="tabs"><button data-tab="products" class="active">ကုန်ပစ္စည်း</button><button data-tab="sales">အရောင်း</button><button data-tab="purchases">အဝယ်</button><button data-tab="people">ဖောက်သည်/ပေးသွင်းသူ</button><button data-tab="expenses">အသုံးစရိတ်</button><button data-tab="reports">စာရင်းချုပ်</button><button data-tab="backup">Backup</button></nav>
 <section id="staffManagement" class="card hidden"><h2>ဝန်ထမ်းအကောင့် စီမံခန့်ခွဲမှု</h2><p class="muted">ဝန်ထမ်းအတွက် ကိုယ်ပိုင် Gmail မလိုပါ။ Merchant Code နှင့် Password ဖြင့် ဝင်နိုင်သည်။ ဝန်ထမ်း ၃ ဦးအထိ ဖန်တီးနိုင်သည်။ Code ကို တစ်ကြိမ်သာ ပြသမည်။</p><div class="grid"><div><label>ဝန်ထမ်းအမည်</label><input id="staffName" placeholder="ဝန်ထမ်းအမည်"></div><div><label>ရာထူး</label><select id="staffRole"><option value="cashier">ငွေကိုင်</option><option value="manager">မန်နေဂျာ</option><option value="employee">ပစ္စည်းကြည့်ရှုသူ</option></select></div><div><label>Password (အနည်းဆုံး ၈ လုံး)</label><input id="staffPassword" type="password" minlength="8"></div></div><div class="row" style="margin-top:10px"><button id="createStaffBtn">Merchant Code ဖန်တီးမည်</button><button id="refreshStaffBtn" class="secondary">စာရင်းပြန်ဖတ်မည်</button></div><div id="staffStatus" class="muted"></div><div class="tablewrap"><table><thead><tr><th>အမည်</th><th>ရာထူး</th><th>အခြေအနေ</th><th></th></tr></thead><tbody id="staffRows"></tbody></table></div></section><section id="tab-products" class="card">
@@ -79,7 +79,7 @@ async function boot(){
  if(!firebase.apps.length)firebase.initializeApp(PROJECT);
  auth=firebase.auth();db=firebase.firestore();auth.languageCode="my";
  await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
- $("loginBtn").disabled=false;
+ $("loginBtn").disabled=false;$("ownerGoogleBtn").disabled=false;
  auth.onAuthStateChanged(async u=>{
   user=u;if(!u){show("loginPanel");$("userBadge").textContent="";return}
   try{
@@ -88,9 +88,11 @@ async function boot(){
    if(!u.emailVerified && email!==OWNER){await auth.signOut();show("loginPanel");status("အကောင့်အတည်ပြုမှု မပြီးသေးပါ။ Gmail Inbox/Spam မှ Verification Link ကိုအရင်ဖွင့်ပါ။");return}
    if(email===OWNER){
     await u.reload();
-    staffRole="owner";show("ownerPanel");$("userBadge").textContent="Platform Owner";
-    $("ownerStatus").textContent=u.emailVerified?"Owner အကောင့်ဝင်ပြီးပါပြီ။":"Owner Login အောင်မြင်ပါသည်။ ဆိုင်ရှင်အကောင့်ဖန်တီးရန် Owner Gmail ကို Verify လုပ်ပါ။ အောက်ပါခလုတ်ဖြင့် Link ပြန်ပို့နိုင်သည်။";
-    $("verifyOwnerBtn").classList.toggle("hidden",!!u.emailVerified);
+    staffRole="owner";shopId=u.uid;
+    $("userBadge").textContent="Platform Owner";
+    $("ownerControlBtn").classList.remove("hidden");
+    await loadShop();
+    $("ownerStatus").textContent="Platform Owner အကောင့်ဝင်ပြီးပါပြီ။ မိမိ၏ POS ဒေတာကို သီးခြားအသုံးပြုနိုင်သည်။";
     await loadLicenses();
    }
    else if(email.endsWith("@akstaff.app")){
@@ -123,7 +125,61 @@ function friendlyAuthError(e){
  };
  return map[code]||e?.message||String(e);
 }
-$("loginType").onchange=()=>{const staff=$("loginType").value==="staff";$("emailLoginFields").classList.toggle("hidden",staff);$("staffLoginFields").classList.toggle("hidden",!staff);$("resetBtn").classList.toggle("hidden",staff)};
+function isPlatformOwner(u=user){return !!u&&String(u.email||"").trim().toLowerCase()===OWNER}
+$("loginType").onchange=()=>{
+ const mode=$("loginType").value,staff=mode==="staff",owner=mode==="owner";
+ $("emailLoginFields").classList.toggle("hidden",staff);
+ $("staffLoginFields").classList.toggle("hidden",!staff);
+ $("passwordLoginFields").classList.toggle("hidden",owner);
+ $("ownerGoogleBtn").classList.toggle("hidden",!owner);
+ $("loginBtn").classList.toggle("hidden",owner);
+ $("resetBtn").classList.toggle("hidden",staff||owner);
+ $("email").readOnly=owner;
+ if(owner)$("email").value=OWNER;
+ else if($("email").value.toLowerCase()===OWNER)$("email").value="";
+ status(owner?"Platform Owner သည် "+OWNER+" Google အကောင့်ဖြင့် ဝင်ပါ။":staff?"Merchant Code နှင့် Password ဖြည့်ပါ။":"ဆိုင်ရှင် Gmail နှင့် Password ဖြည့်ပါ။");
+};
+$("ownerGoogleBtn").onclick=async()=>{
+ const button=$("ownerGoogleBtn");
+ try{
+  if(!auth)throw Error("Firebase စနစ် မစတင်ရသေးပါ။");
+  button.disabled=true;button.textContent="Google အကောင့်အတည်ပြုနေသည်...";
+  status("Platform Owner Google Login စစ်ဆေးနေသည်...");
+  await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+  let signed;
+  const cap=window.Capacitor,nativeAuth=cap&&cap.Plugins&&cap.Plugins.FirebaseAuthentication;
+  if(cap&&typeof cap.isNativePlatform==="function"&&cap.isNativePlatform()){
+   if(!nativeAuth||typeof nativeAuth.signInWithGoogle!=="function")throw Error("ဒီ APK ထဲတွင် Native Google Login Plugin မပါပါ။ Google Login ပါဝင်သော APK အသစ်ကို Install လုပ်ပါ။");
+   const result=await nativeAuth.signInWithGoogle({skipNativeAuth:true});
+   const idToken=result&&result.credential&&result.credential.idToken;
+   if(!idToken)throw Error("Google ID Token မရပါ။ Firebase Android App ID / SHA-1 / Google Provider ကိုစစ်ရန်လိုသည်။");
+   signed=await auth.signInWithCredential(firebase.auth.GoogleAuthProvider.credential(idToken));
+  }else{
+   const provider=new firebase.auth.GoogleAuthProvider();
+   provider.setCustomParameters({prompt:"select_account"});
+   signed=await auth.signInWithPopup(provider);
+  }
+  const actual=String(signed&&signed.user&&signed.user.email||"").trim().toLowerCase();
+  if(!signed||!signed.user||actual!==OWNER||signed.user.emailVerified!==true){
+   await auth.signOut();
+   throw Error("ရွေးချယ်ထားသော Google Gmail သည် Verified Platform Owner "+OWNER+" မဟုတ်ပါ။");
+  }
+  status("Owner Gmail အတည်ပြုပြီးပါပြီ။ Owner POS ဖွင့်နေသည်...");
+ }catch(e){
+  const code=e&&e.code||"";
+  const messages={
+   "auth/operation-not-allowed":"Firebase Authentication ထဲတွင် Google Provider ကို Enable လုပ်ရန်လိုသည်။",
+   "auth/unauthorized-domain":"Firebase Authorized Domains ထဲတွင် Website Domain ကို ထည့်ရန်လိုသည်။",
+   "auth/popup-blocked":"Google Login Popup ပိတ်ထားသည်။ Browser ပြင်ပမှ Website ကိုဖွင့်ပြီး ထပ်စမ်းပါ။",
+   "auth/popup-closed-by-user":"Google Login ကို မပြီးဆုံးမီ ပိတ်လိုက်သည်။",
+   "auth/account-exists-with-different-credential":"ဤ Gmail အကောင့်တွင် အခြား Login Provider ရှိပြီးသားဖြစ်သည်။"
+  };
+  status("Owner Google Login မအောင်မြင် ("+code+"): "+(messages[code]||errText(e)));
+ }finally{button.disabled=false;button.textContent="Google ဖြင့် Platform Owner ဝင်မည်"}
+};
+$("ownerPOSBtn").onclick=async()=>{try{shopId=user.uid;staffRole="owner";await loadShop()}catch(e){status("Owner POS မဖွင့်နိုင်ပါ: "+errText(e),"ownerStatus")}};
+$("ownerControlBtn").onclick=async()=>{try{show("ownerPanel");$("userBadge").textContent="Platform Owner";await loadLicenses()}catch(e){status("Control Center မဖွင့်နိုင်ပါ: "+errText(e),"ownerStatus")}};
+$("loginType").onchange();
 $("loginBtn").onclick=async()=>{
  try{
   status("Login စစ်ဆေးနေသည်...");
@@ -156,7 +212,7 @@ window.toggleLicense=async id=>{try{const x=licenses.find(a=>a.id===id),statusNe
 
 function applyRoleUI(){
  const manager=staffRole==="owner"||staffRole==="manager",cashier=staffRole==="cashier";
- $("staffManagement").classList.toggle("hidden",staffRole!=="owner");
+ $("staffManagement").classList.toggle("hidden",staffRole!=="owner"||isPlatformOwner());
  $("productForm").classList.toggle("hidden",!manager);
  const allowed={products:true,sales:manager||cashier,purchases:manager,people:manager||cashier,expenses:manager,reports:manager,backup:staffRole==="owner"};
  for(const [tab,ok] of Object.entries(allowed)){const b=document.querySelector('#tabs button[data-tab="'+tab+'"]');if(b)b.classList.toggle("hidden",!ok);const panel=$("tab-"+tab);if(panel)panel.classList.toggle("hidden",!ok||tab!=="products")}
@@ -183,7 +239,24 @@ window.removeMerchantStaff=async uid=>{if(!confirm("ဤဝန်ထမ်းအ�
 
 const col=name=>db.collection("shops").doc(shopId).collection("pos").doc(name).collection("records");
 async function getRows(name){const s=await col(name).get();return s.docs.map(d=>({id:d.id,...d.data()}))}
-async function loadShop(){const lic=await db.collection("licenses").doc(shopId).get();if(!lic.exists||lic.data().status!=="active"||!lic.data().expiresAt||lic.data().expiresAt.toDate()<=new Date())throw Error("ဆိုင်သက်တမ်းကုန်နေပါသည်။ Platform Owner ထံ သက်တမ်းတိုးရန် ဆက်သွယ်ပါ။");$("shopTitle").textContent=lic.data().shopName||"ဆိုင် Dashboard";$("licenseBadge").textContent="သက်တမ်းကုန်ရက် "+dateText(lic.data().expiresAt);show("shopPanel");$("userBadge").textContent=staffRole==="owner"?"ဆိုင်ရှင်":("ဝန်ထမ်း · "+staffRole);applyRoleUI();if(staffRole==="owner")await loadMerchantStaff();await reloadAll()}
+async function loadShop(){
+ const platformOwner=isPlatformOwner();
+ if(platformOwner){
+  $("shopTitle").textContent="AK Hardware & Electrical · Owner POS";
+  $("licenseBadge").textContent="Platform Owner · ကိုယ်ပိုင်ဆိုင်";
+  $("ownerControlBtn").classList.remove("hidden");
+ }else{
+  const lic=await db.collection("licenses").doc(shopId).get();
+  if(!lic.exists||lic.data().status!=="active"||!lic.data().expiresAt||lic.data().expiresAt.toDate()<=new Date())throw Error("ဆိုင်သက်တမ်းကုန်နေပါသည်။ Platform Owner ထံ သက်တမ်းတိုးရန် ဆက်သွယ်ပါ။");
+  $("shopTitle").textContent=lic.data().shopName||"ဆိုင် Dashboard";
+  $("licenseBadge").textContent="သက်တမ်းကုန်ရက် "+dateText(lic.data().expiresAt);
+  $("ownerControlBtn").classList.add("hidden");
+ }
+ show("shopPanel");$("userBadge").textContent=platformOwner?"Platform Owner · POS":staffRole==="owner"?"ဆိုင်ရှင်":("ဝန်ထမ်း · "+staffRole);
+ applyRoleUI();
+ if(staffRole==="owner"&&!platformOwner)await loadMerchantStaff();
+ await reloadAll();
+}
 async function reloadAll(){const manager=staffRole==="owner"||staffRole==="manager",cashier=staffRole==="cashier";products=await getRows("products");sales=(manager||cashier)?await getRows("sales"):[];purchases=manager?await getRows("purchases"):[];people=(manager||cashier)?await getRows("people"):[];expenses=manager?await getRows("expenses"):[];if(manager){const [costs,saleCostRows]=await Promise.all([getRows("productCosts"),getRows("saleCosts")]);const costMap=new Map(costs.map(x=>[x.id,x.cost||0])),saleCostMap=new Map(saleCostRows.map(x=>[x.id,x]));products=products.map(p=>({...p,cost:costMap.get(p.id)||0}));sales=sales.map(x=>({...x,cost:saleCostMap.get(x.id)?.cost||0,profit:saleCostMap.get(x.id)?.profit||0}))}else{products=products.map(p=>({...p,cost:0}));sales=sales.map(x=>({...x,cost:0,profit:0}))}renderAll()}
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 function renderAll(){ $("productCount").textContent=products.length;$("todaySales").textContent=money(sales.filter(x=>new Date(x.createdAt?.toDate?.()||x.createdAt||0).toDateString()===new Date().toDateString()).reduce((a,x)=>a+x.total,0));$("stockValue").textContent=money(products.reduce((a,x)=>a+x.stock*(x.cost||0),0));$("lowStock").textContent=products.filter(x=>x.stock<=x.alert).length;$("productRows").innerHTML=products.map(p=>'<tr><td>'+esc(p.name)+'<br><small>'+esc(p.sku||"")+'</small></td><td>'+esc(p.category)+'</td><td>'+p.stock+'</td><td>'+money(p.retail)+'</td><td>'+money(p.wholesale)+'</td><td>'+money(p.cost)+'</td><td><button class="secondary" onclick="editProduct(\''+p.id+'\')">ပြင်</button></td></tr>').join("");const opts=products.map(p=>'<option value="'+p.id+'">'+esc(p.name)+' (လက်ကျန် '+p.stock+')</option>').join("");$("saleProduct").innerHTML=$("buyProduct").innerHTML=opts;$("saleRows").innerHTML=sales.slice().sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0)).map(x=>'<tr><td>'+dateText(x.createdAt)+'</td><td>'+esc(x.productName)+'</td><td>'+x.qty+'</td><td>'+money(x.total)+'</td><td>'+money(x.paid)+'</td><td>'+money(x.due)+'</td></tr>').join("");$("purchaseRows").innerHTML=purchases.map(x=>'<tr><td>'+dateText(x.createdAt)+'</td><td>'+esc(x.productName)+'</td><td>'+x.qty+'</td><td>'+money(x.total)+'</td><td>'+esc(x.supplier||"")+'</td></tr>').join("");$("peopleRows").innerHTML=people.map(x=>'<p>'+esc(x.name)+' · '+esc(x.phone||"")+' · '+esc(x.type)+'</p>').join("");$("expenseRows").innerHTML=expenses.map(x=>'<p>'+esc(x.name)+' · '+money(x.amount)+' · '+dateText(x.createdAt)+'</p>').join("");const totalSales=sales.reduce((a,x)=>a+x.total,0),totalPurch=purchases.reduce((a,x)=>a+x.total,0),totalExp=expenses.reduce((a,x)=>a+x.amount,0),debt=sales.reduce((a,x)=>a+x.due,0),profit=sales.reduce((a,x)=>a+(x.profit||0),0)-totalExp;$("reportSales").textContent=money(totalSales);$("reportPurchases").textContent=money(totalPurch);$("reportExpenses").textContent=money(totalExp);$("reportProfit").textContent=money(profit);$("reportDebt").textContent=money(debt)}
@@ -233,6 +306,6 @@ $("saveExpense").onclick=async()=>{try{if(!$("expenseName").value.trim()||+$("ex
 $("tabs").onclick=e=>{const b=e.target.closest("button[data-tab]");if(!b)return;document.querySelectorAll("#tabs button").forEach(x=>x.classList.toggle("active",x===b));["products","sales","purchases","people","expenses","reports","backup"].forEach(t=>$("tab-"+t).classList.toggle("hidden",t!==b.dataset.tab))};
 $("exportData").onclick=()=>{const blob=new Blob([JSON.stringify({products,sales,purchases,people,expenses},null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="ak-sale-backup-"+new Date().toISOString().slice(0,10)+".json";a.click();URL.revokeObjectURL(a.href)};
 $("restoreData").onclick=async()=>{try{const f=$("importFile").files[0];if(!f)throw Error("Backup ဖိုင်ရွေးပါ");if(!confirm("လက်ရှိစာရင်းကို Backup ဒေတာဖြင့် အစားထိုးမည်။ ဆက်လုပ်မလား?"))return;const d=JSON.parse(await f.text()),batch=db.batch();for(const [key,arr] of Object.entries({products:d.products||[],sales:d.sales||[],purchases:d.purchases||[],people:d.people||[],expenses:d.expenses||[]})){for(const raw of arr){const x={...raw},id=x.id||db.collection("_ids").doc().id;delete x.id;if(key==="products"){const cost=Number(x.cost||0);delete x.cost;batch.set(col("products").doc(id),x);batch.set(col("productCosts").doc(id),{cost})}else if(key==="sales"){const cost=Number(x.cost||0),profit=Number(x.profit||0);delete x.cost;delete x.profit;batch.set(col("sales").doc(id),x);batch.set(col("saleCosts").doc(id),{cost,profit})}else{batch.set(col(key).doc(id),x)}}}await batch.commit();await reloadAll();alert("Restore ပြီးပါပြီ")}catch(e){alert(errText(e))}};
-boot().catch(e=>{ $("loginBtn").disabled=true; status("စနစ်စတင်မရပါ: "+friendlyAuthError(e)); });
+boot().catch(e=>{ $("loginBtn").disabled=true;$("ownerGoogleBtn").disabled=true; status("စနစ်စတင်မရပါ: "+friendlyAuthError(e)); });
 if("serviceWorker" in navigator)navigator.serviceWorker.register("./sw.js").catch(()=>{});
 </script></body></html>

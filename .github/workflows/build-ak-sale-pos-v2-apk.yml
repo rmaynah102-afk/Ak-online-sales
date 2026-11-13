@@ -138,9 +138,9 @@ jobs:
           const versionName='2.0.'+run;
           const p='android/app/build.gradle';
           let g=fs.readFileSync(p,'utf8');
-          if(!/versionCode\\s+\\d+/.test(g)||!/versionName\\s+"[^"]+"/.test(g)) throw new Error('Android version fields not found');
-          g=g.replace(/versionCode\\s+\\d+/,'versionCode '+versionCode);
-          g=g.replace(/versionName\\s+"[^"]+"/,'versionName "'+versionName+'"');
+          if(!/versionCode\s+\d+/.test(g)||!/versionName\s+"[^"]+"/.test(g)) throw new Error('Android version fields not found');
+          g=g.replace(/versionCode\s+\d+/,'versionCode '+versionCode);
+          g=g.replace(/versionName\s+"[^"]+"/,'versionName "'+versionName+'"');
           if(!g.includes('applicationId "com.ak.hardware.sales"')) throw new Error('APK package ID is not the registered AK Sale app');
           fs.writeFileSync(p,g);
           console.log('AK Sale Android version',versionName,'code',versionCode);

@@ -8,7 +8,7 @@ Myanmar-first shop management system for AK Hardware & Electrical.
 - Only Platform Owner can create shop-owner accounts.
 - Platform Owner enters each shop owner's Gmail and initial password.
 - Firebase sends the shop owner an email-verification link.
-- Shop owners sign in with verified Gmail and password.
+- Shop owners sign in with verified Gmail and password. If an earlier build already created the Firebase account, the Owner can reuse it with the matching password; otherwise the app sends password-recovery instructions instead of silently failing.
 - Each shop owner can create up to 3 staff accounts.
 - Staff sign in using a 12-character Merchant Code and password; personal Gmail is not required.
 - Staff roles: manager, cashier and employee.
@@ -38,7 +38,7 @@ Payments are handled outside the app. There is no in-app KPay, WavePay or paymen
 
 ## POS features
 
-Products, Hardware/Electrical categories, SKU, cost/retail/wholesale prices, stock, low-stock alerts, sales, purchases, customers/suppliers, payments, expenses, reports and JSON backup/restore.
+Products, Hardware/Electrical categories, SKU, camera Barcode/QR scanning, cost/retail/wholesale prices, stock, low-stock alerts, sales, purchases, customers/suppliers, payments, expenses, CSV export, Print/PDF, JSON backup/restore, Bluetooth/Wi-Fi ESC/POS and Android System Print, 1080×1080 social advert creation and Viber/TikTok share-sheet handoff.
 
 ## Owner access
 

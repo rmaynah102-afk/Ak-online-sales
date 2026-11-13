@@ -90,19 +90,40 @@ jobs:
         run: |
           test -s google-services.json
           cp google-services.json android/app/google-services.json
-          node - <<'NODE'
-          const fs=require('fs');
-          const cfg=JSON.parse(fs.readFileSync('google-services.json','utf8'));
-          const packages=cfg.client.map(c=>c.client_info.android_client_info.package_name);
-          if(!packages.includes('com.ak.hardware.sales')) throw new Error('google-services.json does not register com.ak.hardware.sales');
-          console.log('Firebase Android package registration OK');
-          NODE
+          python3 - <<'PY'
+          from pathlib import Path
+          import json, re
+          cfg=json.loads(Path('google-services.json').read_text())
+          packages=[c['client_info']['android_client_info']['package_name'] for c in cfg['client']]
+          if 'com.ak.hardware.sales' not in packages:
+              raise SystemExit('google-services.json does not register com.ak.hardware.sales')
+          root=Path('android/build.gradle'); app=Path('android/app/build.gradle')
+          rs=root.read_text(); aps=app.read_text()
+          if 'com.google.gms:google-services' not in rs:
+              m=re.search(r'(dependencies\\s*\\{)',rs)
+              if not m: raise SystemExit('Root Gradle dependencies block not found')
+              rs=rs[:m.end()]+"\\n        classpath 'com.google.gms:google-services:4.4.4'"+rs[m.end():]
+              root.write_text(rs)
+          if 'com.google.gms.google-services' not in aps:
+              app.write_text(aps+"\\n\\napply plugin: 'com.google.gms.google-services'\\n")
+          variables=Path('android/variables.gradle')
+          vs=variables.read_text()
+          for key,value in [('rgcfaIncludeGoogle','true'),('androidxCredentialsVersion',"'1.3.0'")]:
+              if not re.search(r'\\b'+re.escape(key)+r'\\s*=',vs):
+                  m=re.search(r'(ext\\s*\\{)',vs)
+                  if not m: raise SystemExit('variables.gradle ext block not found')
+                  vs=vs[:m.end()]+'\\n    '+key+' = '+value+vs[m.end():]
+          variables.write_text(vs)
+          print('Firebase Android package, Google Services plugin and native Google auth dependencies configured')
+          PY
       - name: Sync Android project
         run: npx cap sync android
       - name: Install AK native Bluetooth / Wi-Fi printer bridge
         run: node scripts/install-native-printer.js
       - name: Bundle local ZXing barcode scanner
         run: node scripts/copy-zxing.js
+      - name: Generate AK Sale Android launcher icons
+        run: node scripts/generate-android-icons.js
       - name: Check release signing secrets
         id: signing
         env:

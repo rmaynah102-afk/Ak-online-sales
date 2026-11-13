@@ -53,3 +53,6 @@ GitHub Actions builds a debug APK artifact from this directory. Debug APK is for
 ## Release checks
 
 The repository CI validates JavaScript, runs POS adapter unit tests and Firestore Emulator security tests, builds the Android debug APK, and deploys tested Firestore rules from `main`. The first on-device end-to-end test is still required before treating the build as production-ready.
+
+
+Owner sign-in is available directly on the login screen through the always-visible Google Owner button; selecting the login type is not required for Platform Owner access.

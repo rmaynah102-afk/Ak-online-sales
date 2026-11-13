@@ -2411,7 +2411,7 @@ async function akProvisionShopOwner(){
   if(!provisionResponse.ok||!provisionData.ok||!provisionData.uid){
    const reason=String(provisionData.error||("HTTP_"+provisionResponse.status));
    if(reason==="platform_owner_verification_failed")throw Error("Platform Owner Gmail ကို Verify လုပ်ထားသောအကောင့်ဖြင့် ပြန်ဝင်ပါ။");
-   if(reason==="firebase_service_account_secret_missing")throw Error("Backend Service Account ချိတ်ဆက်မှု မပြီးသေးပါ။");
+   if(reason==="shop_owner_email_already_registered")throw Error("ဤ Gmail ဖြင့် Firebase အကောင့်ရှိပြီးသားဖြစ်သည်။ Password Reset ပြုလုပ်ပြီး Shop Login ဝင်ပါ။");
    throw Error("Backend မှ ဆိုင်ရှင်အကောင့်ဖွင့်မရပါ: "+reason);
   }
   const uid=String(provisionData.uid);
@@ -2437,7 +2437,7 @@ async function akProvisionShopOwner(){
     const count=Number(capacitySnap.data()?.activeShopCount);
     if(!Number.isInteger(count)||count<0)throw Error("Shop capacity စာရင်း မမှန်ပါ။");
     if(count>=100)throw Error("ဆိုင်အကောင့် ၁၀၀ ပြည့်နေပါသည်။ အသစ်ထပ်ဖွင့်မရပါ။");
-    tx.set(licenseRef,{uid,email,emailVerified:true,status:"active",plan:planMap[days],expiresAt:firebase.firestore.Timestamp.fromDate(expiresAt),priceMMK:priceMap[days],issuedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:fbAuth.currentUser.email});
+    tx.set(licenseRef,{uid,email,emailVerified:false,status:"active",plan:planMap[days],expiresAt:firebase.firestore.Timestamp.fromDate(expiresAt),priceMMK:priceMap[days],issuedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:fbAuth.currentUser.email});
     tx.update(capacityRef,{activeShopCount:count+1,lastIssuedUid:uid,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
    });
   }else{
@@ -2447,7 +2447,7 @@ async function akProvisionShopOwner(){
    await licenseRef.update({email,status:"active",plan:planMap[days],expiresAt:firebase.firestore.Timestamp.fromDate(nextExpiry),priceMMK:priceMap[days],updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:fbAuth.currentUser.email});
   }
   $("akProvisionPassword").value="";
-  setStatus("အောင်မြင်ပါပြီ။ "+email+" ဆိုင်ရှင်အကောင့်နှင့် License သတ်မှတ်ပြီးပါပြီ။ "+"Owner က အကောင့်ကို ခွင့်ပြုပြီးပါပြီ။ သတ်မှတ်ထားသော Gmail + Password ဖြင့် Login ဝင်နိုင်ပါပြီ။"+" သတ်မှတ်သက်တမ်းကုန်ရက်: "+(finalExpiry||expiresAt).toLocaleDateString("en-GB"));
+  setStatus("အောင်မြင်ပါပြီ။ "+email+" ဆိုင်ရှင်အကောင့်နှင့် License သတ်မှတ်ပြီးပါပြီ။ "+"Gmail ထဲသို့ Verification Link ပို့ထားသည်။ ဆိုင်ရှင်က Gmail ကို Verify လုပ်ပြီးမှ Login ဝင်ရမည်။"+" သတ်မှတ်သက်တမ်းကုန်ရက်: "+(finalExpiry||expiresAt).toLocaleDateString("en-GB"));
   await loadPlatformUsers();
  }catch(e){
   console.error("AK shop-owner provisioning failed",e);

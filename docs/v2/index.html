@@ -343,7 +343,7 @@ async function akStartBarcodeScanner(target="product",cameraId=""){
  box.innerHTML='<div style="background:white;border-radius:16px;padding:14px;width:min(100%,560px);color:#172820"><h3>Barcode / QR Camera Scanner</h3><label>Camera ရွေးရန်</label><select id="akCameraSelect" style="width:100%;padding:10px;margin:6px 0 10px"></select><video id="akBarcodeVideo" autoplay muted playsinline style="width:100%;border-radius:12px;background:#111;min-height:220px;object-fit:contain"></video><p id="akBarcodeStatus">Camera စတင်နေသည်...</p><small>QR · EAN · UPC · Code 128 · Code 39 · ITF စသည်</small><br><button type="button" id="akBarcodeClose">ပိတ်မည်</button></div>';
  document.body.appendChild(box);$("akBarcodeClose").onclick=akStopBarcodeScanner;
  try{
-  akBarcodeStream=await navigator.mediaDevices.getUserMedia({audio:false,video:cameraId?{deviceId:{exact:cameraId}}:{facingMode:{ideal:"environment"},width:{ideal:1280},height:{ideal:720}});
+  akBarcodeStream=await navigator.mediaDevices.getUserMedia({audio:false,video:cameraId?{deviceId:{exact:cameraId}}:{facingMode:{ideal:"environment"},width:{ideal:1280},height:{ideal:720}}});
   const video=$("akBarcodeVideo");video.srcObject=akBarcodeStream;await video.play();akBarcodeActive=true;
   const select=$("akCameraSelect"),cams=(await navigator.mediaDevices.enumerateDevices()).filter(x=>x.kind==="videoinput");
   select.innerHTML=cams.map((x,i)=>'<option value="'+esc(x.deviceId)+'">'+esc(x.label||("Camera "+(i+1)))+'</option>').join("");

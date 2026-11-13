@@ -3,6 +3,7 @@ const fs = require('fs');
 const html = fs.readFileSync('www/index.html', 'utf8');
 const sparkStore = fs.readFileSync('www/spark-pos-store.js', 'utf8');
 const functions = fs.readFileSync('functions/index.js', 'utf8');
+const worker = fs.readFileSync('cloudflare/worker.js', 'utf8');
 const rules = fs.readFileSync('firestore.rules', 'utf8');
 const printer = fs.readFileSync('native/android/AkPrinterPlugin.java', 'utf8');
 const config = JSON.parse(fs.readFileSync('capacitor.config.json', 'utf8'));
@@ -67,12 +68,12 @@ const checks = [
  ['Platform Owner shop-account creation panel is present', html.includes('id="akPlatformShopProvisionPanel"') && html.includes('async function akProvisionShopOwner()')],
  ['Owner account list shows sequential numbers', html.includes('id="akOwnerShopRows"') && html.includes('function akRenderOwnerShopRows()')],
  ['Shop owners can self-register; Platform Owner cannot register a shop', html.includes('reg.style.display=ownerMode?"none":""') && html.includes('async function firebaseRegister()')],
- ['Platform Owner creates shop-owner Auth accounts in a separate Firebase session', html.includes('AKOwnerProvisioning') && html.includes('createUserWithEmailAndPassword(email,password)') && html.includes('firebase.auth.Auth.Persistence.NONE')],
- ['Existing shop-owner Gmail with a mismatched password gets a reset path instead of auth/invalid-credential dead end', html.includes('sendPasswordResetEmail(email)') && html.includes('ထည့်ထားသော Password မကိုက်ပါ')],
+ ['Platform Owner creates shop-owner Auth accounts through the protected Cloudflare Worker', html.includes('https://ak-sale-backend.painglin102.workers.dev/owner/provision') && html.includes('fbAuth.currentUser.getIdToken(true)') && html.includes('provisionData.uid') && worker.includes('platform_owner_verification_failed') && worker.includes('projects/" + PROJECT_ID + "/accounts')],
+ ['Existing shop-owner Gmail can be securely updated by the Platform Owner backend', worker.includes('accounts:update') && worker.includes('localId: uid, password, emailVerified: true') && html.includes('Backend မှ ဆိုင်ရှင်အကောင့်ဖွင့်မရပါ')],
  ['Shop-owner and staff registration use a separate Auth session and preserve the signed-in Owner', html.includes('const appName="AKAccountRegistration"') && html.includes('registrationAuth.createUserWithEmailAndPassword(email,pass)') && html.includes('Owner Login ကို ထိခိုက်မထားပါ။')],
  ['Existing staff Gmail is directed to Staff Login and Merchant Code claim', html.includes('Staff Login ကိုရွေးပြီး မူလ Password နှင့် Merchant Code ထည့်ပါ။')],
 
- ['Owner provisions shop license and sends email verification without exposing password', html.includes('sendEmailVerification({url:location.origin+location.pathname+"?app=1"})') && html.includes('activeShopCount:count+1') && html.includes('emailVerified:false')],
+ ['Owner provisions verified shop-owner Auth and Spark license without storing the password', html.includes('activeShopCount:count+1') && html.includes('emailVerified:true,status:"active"') && html.includes('Owner က အကောင့်ကို ခွင့်ပြုပြီးပါပြီ') && worker.includes('emailVerified: true')],
  ['License package pricing is represented in Spark grant flow', html.includes('prices={30:30000,90:90000,180:180000,365:360000}') && html.includes('plans={30:"30-days",90:"90-days",180:"180-days",365:"365-days"}')],
  ['Shop-owner self-registration is activated only by an Owner-issued license', html.includes('createUserWithEmailAndPassword(email,pass)') && html.includes('subscriptionAccessRequests') && html.includes('fbStore.collection("licenses").doc(uid)')],
  ['Merchant Code is generated from the shop-owner Spark workspace', html.includes('async function akCreateStaffInvite()') && html.includes('sparkStore.createInvite(role)') && html.includes('sparkStore.listStaff()')],

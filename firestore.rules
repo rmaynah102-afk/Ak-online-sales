@@ -282,8 +282,9 @@ service cloud.firestore {
 
     match /shopStaffSlots/{slotId} {
       allow read: if request.auth != null
-        && (resource.data.uid == request.auth.uid
-          || resource.data.shopId == request.auth.uid);
+        && ((resource.data != null && resource.data.uid == request.auth.uid)
+          || (slotId in [request.auth.uid + '_1', request.auth.uid + '_2', request.auth.uid + '_3']
+            && activeShopLicense(request.auth.uid)));
       allow create: if (
         request.auth != null
         && request.auth.token.email_verified == true

@@ -41,7 +41,7 @@ test("rejects malformed shop-owner email before contacting Firebase", async () =
   } finally { globalThis.fetch = originalFetch; }
 });
 
-test("creates a shop owner after Platform Owner lookup even if the Owner Gmail is unverified", async () => {
+test("creates a shop owner only after verified Platform Owner lookup", async () => {
   const originalFetch = globalThis.fetch;
   const calls = [];
   globalThis.fetch = async (url, options) => {
@@ -112,7 +112,22 @@ test("sends password recovery for an existing account when the entered password 
   } finally { globalThis.fetch = originalFetch; }
 });
 
-test("rejects an unverified or non-Platform Owner caller", async () => {
+test("rejects an unverified Platform Owner before provisioning a shop", async () => {
+  const originalFetch = globalThis.fetch;
+  let calls = 0;
+  globalThis.fetch = async () => {
+    calls++;
+    return new Response(JSON.stringify({ users: [{ email: "painglin102@gmail.com", emailVerified: false }] }), { status: 200 });
+  };
+  try {
+    const response = await worker.fetch(request({ email: "shop@example.com", password: "password123", apiKey: "test-api-key" }), {});
+    assert.equal(response.status, 403);
+    assert.equal((await response.json()).error, "platform_owner_verification_failed");
+    assert.equal(calls, 1);
+  } finally { globalThis.fetch = originalFetch; }
+});
+
+test("rejects a non-Platform Owner caller", async () => {
   const originalFetch = globalThis.fetch;
   let calls = 0;
   globalThis.fetch = async () => {

@@ -2169,7 +2169,39 @@ async function firebaseLogin(){
  }finally{if(button){button.disabled=false;button.textContent="Login ဝင်မည်"}}
 }
 function akUpdateAccountTypeHint(){const type=$("akAccountType")?.value||"shop-owner";const hint=$("akAccountTypeHint");if(hint)hint.textContent=type==="staff"?"ဝန်ထမ်းသည် ကိုယ်ပိုင် Gmail နှင့် Password ဖြင့် Register လုပ်ပါ။ Email အတည်ပြုပြီးနောက် ဆိုင်ရှင်ထံမှ Merchant Code ဖြင့် ချိတ်ဆက်ပါ။":"ဆိုင်ရှင် Gmail ဖြင့် Register လုပ်ပြီး Email အတည်ပြုပါ။ 5 ရက် Trial ကို Gmail တစ်ခုလျှင် တစ်ကြိမ်သာ အသုံးပြုနိုင်မည်။"}
-async function firebaseRegister(){try{if(!fbAuth||!fbStore)await firebaseConnect();if(!fbAuth)return;const email=$("fbEmail").value.trim().toLowerCase(),pass=$("fbPassword").value,type=$("akAccountType")?.value||"shop-owner";if(!email||pass.length<8)throw Error("Email နှင့် Password အနည်းဆုံး ၈ လုံးထည့်ပါ");const credential=await fbAuth.createUserWithEmailAndPassword(email,pass);await credential.user.sendEmailVerification();await fbAuth.signOut();$("fbStatus").textContent=(type==="staff"?"ဝန်ထမ်း Gmail အကောင့်":"ဆိုင်ရှင်အကောင့်")+" ဖွင့်ပြီးပါပြီ။ "+email+" သို့ Verification Link ပို့ထားသည်။ Email အတည်ပြုပြီး "+(type==="staff"?"Staff Login တွင် Merchant Code ဖြင့် ဆိုင်နှင့်ချိတ်ပါ။":"Login ပြန်ဝင်ပါ။ 5 ရက် Free Trial ကို Gmail တစ်ခုလျှင် တစ်ကြိမ်သာ ရရှိမည်။");}catch(e){$("fbStatus").textContent="Account ဖွင့်မရပါ ("+(e.code||"")+"): "+e.message}}
+async function firebaseRegister(){
+ let registrationApp=null,registrationAuth=null;
+ try{
+  if(!fbAuth||!fbStore)await firebaseConnect();
+  if(!fbAuth)throw Error("Firebase မချိတ်နိုင်ပါ။ Internet စစ်ပါ။");
+  const email=$("fbEmail").value.trim().toLowerCase(),pass=$("fbPassword").value,type=$("akAccountType")?.value||"shop-owner";
+  if(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email))throw Error("Gmail / Email မှန်ကန်စွာထည့်ပါ။");
+  if(pass.length<8)throw Error("Password အနည်းဆုံး ၈ လုံးထည့်ပါ။");
+  const rawConfig=window.AK_FIREBASE_PUBLIC_CONFIG||localStorage.getItem("ak_firebase_config");
+  const cfg=typeof rawConfig==="string"?JSON.parse(rawConfig):rawConfig;
+  if(!cfg?.apiKey||!cfg?.projectId||!cfg?.appId)throw Error("Firebase Web App Config မပြည့်စုံပါ။");
+  const appName="AKAccountRegistration";
+  registrationApp=firebase.apps.some(app=>app.name===appName)?firebase.app(appName):firebase.initializeApp(cfg,appName);
+  registrationAuth=registrationApp.auth();
+  await registrationAuth.setPersistence(firebase.auth.Auth.Persistence.NONE);
+  let credential;
+  try{credential=await registrationAuth.createUserWithEmailAndPassword(email,pass);}
+  catch(createError){
+   if(createError.code==="auth/email-already-in-use"){
+    throw Error("ဤ Gmail ဖြင့် Account ရှိပြီးသားဖြစ်သည်။ Account အသစ်ထပ်မဖွင့်ပါနှင့်။ "+(type==="staff"?"Staff Login ကိုရွေးပြီး မူလ Password နှင့် Merchant Code ထည့်ပါ။":"ဆိုင်ရှင် Login ဝင်ပါ သို့မဟုတ် Password Reset ကို အသုံးပြုပါ။"));
+   }
+   throw createError;
+  }
+  await credential.user.sendEmailVerification({url:location.origin+location.pathname+"?app=1"});
+  await registrationAuth.signOut();
+  $("fbStatus").textContent=(type==="staff"?"ဝန်ထမ်း Gmail အကောင့်":"ဆိုင်ရှင်အကောင့်")+" ဖွင့်ပြီးပါပြီ။ "+email+" သို့ Verification Link ပို့ထားသည်။ Owner Login ကို ထိခိုက်မထားပါ။ Email အတည်ပြုပြီး "+(type==="staff"?"Staff Login တွင် Merchant Code ဖြင့် ဆိုင်နှင့်ချိတ်ပါ။":"ဆိုင်ရှင် Login ပြန်ဝင်ပါ။");
+ }catch(e){
+  $("fbStatus").textContent="Account ဖွင့်မရပါ ("+(e.code||"")+"): "+(e.message||e);
+ }finally{
+  if(registrationAuth)try{await registrationAuth.signOut()}catch(_){}
+  if(registrationApp)try{await registrationApp.delete()}catch(_){}
+ }
+}
 async function firebaseResetPassword(){try{if(!fbAuth||!fbStore)await firebaseConnect();if(!fbAuth)return;const email=$("fbEmail").value.trim();if(!email)throw Error("Password ပြန်သတ်မှတ်ရန် Email ထည့်ပါ");await fbAuth.sendPasswordResetEmail(email);$("fbStatus").textContent=email+" သို့ Password Reset Link ပို့ပြီးပါပြီ။ Inbox/Spam စစ်ပါ။"}catch(e){$("fbStatus").textContent="Password Reset မအောင်မြင် ("+(e.code||"")+"): "+e.message}}
 async function firebaseLogout(){try{if(!fbAuth)await firebaseConnect();if(fbAuth)await fbAuth.signOut();const pass=$("fbPassword");if(pass)pass.value="";$("fbStatus").textContent="အကောင့်မှ ထွက်ပြီးပါပြီ။ နောက်တစ်ကြိမ် Gmail ဖြင့် ပြန်ဝင်နိုင်ပါသည်။"}catch(e){$("fbStatus").textContent="Logout မအောင်မြင်: "+e.message}}
 function renderLicenseCalendar(expiry,status){const dateEl=$("licenseExpiryDate"),daysEl=$("licenseRemainingDays"),stateEl=$("licenseCalendarState");if(!dateEl||!daysEl||!stateEl)return;const valid=expiry instanceof Date&&!Number.isNaN(expiry.getTime());dateEl.value=valid?expiry.toISOString().slice(0,10):"";if(!valid){daysEl.textContent="—";stateEl.textContent="သက်တမ်းရက် မသတ်မှတ်ရသေးပါ";return}const remaining=Math.max(0,Math.ceil((expiry.getTime()-Date.now())/86400000));daysEl.textContent=String(remaining)+" ရက်";stateEl.textContent=status==="active"&&remaining>0?"အသုံးပြုခွင့် ဖွင့်ထားသည်": "သက်တမ်းကုန် / ပိတ်ထားသည်"}
@@ -2371,8 +2403,17 @@ async function akProvisionShopOwner(){
    createdUser=credential.user;
   }catch(authError){
    if(authError.code!=="auth/email-already-in-use")throw authError;
-   const credential=await secondaryAuth.signInWithEmailAndPassword(email,password);
-   createdUser=credential.user;
+   try{
+    const credential=await secondaryAuth.signInWithEmailAndPassword(email,password);
+    createdUser=credential.user;
+   }catch(existingAccountError){
+    if(["auth/invalid-credential","auth/wrong-password","auth/user-not-found"].includes(existingAccountError.code)){
+     try{await secondaryAuth.sendPasswordResetEmail(email);}
+     catch(resetError){console.warn("Existing shop-owner password reset email failed:",resetError);}
+     throw Error("ဤ Gmail ဖြင့် Firebase အကောင့် ရှိပြီးသားဖြစ်သည်။ ထည့်ထားသော Password မကိုက်ပါ။ Gmail Inbox/Spam မှ Password Reset Link ကိုဖွင့်ပြီး Password အသစ်သတ်မှတ်ပါ။ ပြီးလျှင် Owner က အကောင့်ကို ပြန် Verify လုပ်ပါ။");
+    }
+    throw existingAccountError;
+   }
   }
   if(!createdUser)throw Error("Firebase မှ ဆိုင်ရှင် UID မရပါ။");
   const uid=createdUser.uid;

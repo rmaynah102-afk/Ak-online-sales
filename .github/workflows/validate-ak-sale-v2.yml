@@ -1,7 +1,7 @@
 name: Validate AK Sale POS 2.0
 on:
   push:
-    branches: [ak-sale-pos-v2]
+    branches: [ak-sale-pos-v2-main]
     paths:
       - "v2/**"
       - "firebase-config.js"

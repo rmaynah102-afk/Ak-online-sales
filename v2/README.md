@@ -4,7 +4,7 @@ Myanmar-first shop management system for AK Hardware & Electrical.
 
 ## Account model
 
-- Platform Owner signs in with the configured Owner Gmail.
+- Platform Owner signs in with Google using the configured Owner Gmail (`painglin102@gmail.com`); Android uses the Firebase Authentication native Google plugin and the registered Android package/signing identity.
 - Only Platform Owner can create shop-owner accounts.
 - Platform Owner enters each shop owner's Gmail and initial password.
 - Firebase sends the shop owner an email-verification link.
@@ -39,6 +39,12 @@ Payments are handled outside the app. There is no in-app KPay, WavePay or paymen
 ## POS features
 
 Products, Hardware/Electrical categories, SKU, cost/retail/wholesale prices, stock, low-stock alerts, sales, purchases, customers/suppliers, payments, expenses, reports and JSON backup/restore.
+
+## Owner access
+
+- Owner login uses the original Google provider identity, not a newly assumed email/password account.
+- Owner opens their own POS workspace first, scoped to the Owner UID, and can switch to the separate Control Center.
+- The Owner's own POS workspace is license-exempt only for that same Owner UID; other shops remain independently licensed and isolated.
 
 ## Android build
 

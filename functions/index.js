@@ -1243,4 +1243,3 @@ exports.akAiSecurityReview = functions.runWith({ secrets: [OPENAI_API_KEY], time
     });
     return { ok: true, text };
   });
-

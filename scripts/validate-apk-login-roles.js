@@ -4,6 +4,7 @@ const html = fs.readFileSync('www/index.html', 'utf8');
 const sparkStore = fs.readFileSync('www/spark-pos-store.js', 'utf8');
 const functions = fs.readFileSync('functions/index.js', 'utf8');
 const rules = fs.readFileSync('firestore.rules', 'utf8');
+const storageRules = fs.readFileSync('storage.rules', 'utf8');
 const printer = fs.readFileSync('native/android/AkPrinterPlugin.java', 'utf8');
 const config = JSON.parse(fs.readFileSync('capacitor.config.json', 'utf8'));
 const owner = 'painglin102@gmail.com';
@@ -45,7 +46,8 @@ const checks = [
  ['Paid and trial accounts share the 100-shop limit', functions.includes('trialQuery = db.collection("freeBetaUsers")') && functions.includes('activeUids.size >= 100')],
  ['APK shows 100-shop platform capacity', html.includes('အများဆုံး ၁၀၀ ဆိုင်')],
  ['Login sessions persist across app restarts', html.includes('fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)')],
- ['No in-app KBZPay or payment screenshot form in APK', !html.includes('KBZPay') && !html.includes('paymentProofs') && html.includes('App အတွင်း ငွေပေးချေမှု')],
+ ['KBZPay transaction reference and screenshot proof are required', html.includes('id="akPaymentTransactionReference"') && html.includes('id="akPaymentProofFile"') && html.includes('firebase.storage().ref().child(proofPath).put(file') && html.includes('akOpenPaymentProof') && html.includes('request.transactionReference') && html.includes('request.proofPath')],
+ ['Payment proof Storage rule is UID-scoped and Owner-readable', storageRules.includes('match /paymentProofs/{userId}/{fileName}') && storageRules.includes('request.auth.uid == userId') && storageRules.includes("request.auth.token.email == 'painglin102@gmail.com'") && storageRules.includes('request.resource.size < 4 * 1024 * 1024') && storageRules.includes("request.resource.contentType.matches('image/(jpeg|png|webp)')")],
  ['Trial expiry is not bypassed by a permanent-free plan flag', !html.includes('isFreeBeta') && html.includes('!currentLicense.expiresAt')],
  ['Expired five-day trials cannot be reactivated by client controls', rules.includes("get(/databases/$(database)/documents/freeBetaUsers/$(uid)).data.createdAt + duration.value(5, 'd') > request.time") && rules.includes('freeTrialClaims') && html.includes('akFreeTrialExpiryTimer') && html.includes('5 ရက် Trial')],
  ['No malformed literal newline in Owner trial controls', !html.includes('if(target.plan==="free-trial"){\\n')],

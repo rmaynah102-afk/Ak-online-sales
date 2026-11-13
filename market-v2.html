@@ -93,8 +93,50 @@ button.gold{background:linear-gradient(110deg,#ffdc83,#f4ad43);color:#1b2232}
 .screenfoot{color:#b1c2db}
 footer{color:#8f9eb7}
 @media(max-width:560px){.owner-google-account{font-size:13px}.google-login{width:100%}}
-.comment-box{margin-top:10px;padding:10px;border:1px solid #34435f;border-radius:12px;background:#0b1424}.comment-box textarea,.comment-box input{margin:5px 0}.comment-list{max-height:210px;overflow:auto}.comment-item{padding:8px 2px;border-bottom:1px solid #34435f}.comment-item p{margin:3px 0;white-space:pre-wrap;overflow-wrap:anywhere}.comment-item small{color:#9aa9bf}</style></head><body>
-<header><div class="top"><div class="brand"><img src="./ak-logo.svg" alt="AK"><div><h1>AK Market <small style="color:#ffd27b">V2</small></h1><small>Live Marketplace · ဆိုင်လမ်းညွှန်</small></div></div><button class="gold" onclick="document.getElementById('sell').scrollIntoView({behavior:'smooth'})">+ ပစ္စည်းတင်ရန်</button></div></header>
+.comment-box{margin-top:10px;padding:10px;border:1px solid #34435f;border-radius:12px;background:#0b1424}.comment-box textarea,.comment-box input{margin:5px 0}.comment-list{max-height:210px;overflow:auto}.comment-item{padding:8px 2px;border-bottom:1px solid #34435f}.comment-item p{margin:3px 0;white-space:pre-wrap;overflow-wrap:anywhere}.comment-item small{color:#9aa9bf}
+/* Nationwide marketplace UX refinement */
+html{scroll-behavior:smooth;scroll-padding-top:112px}
+.main-nav{max-width:1240px;margin:9px auto 0;padding:0 16px;display:flex;gap:8px;align-items:center;overflow-x:auto;scrollbar-width:none}
+.main-nav::-webkit-scrollbar{display:none}
+.main-nav a{flex:0 0 auto;color:#dce7ff;text-decoration:none;font-size:13px;font-weight:750;padding:8px 13px;border:1px solid #ffffff20;border-radius:999px;background:#ffffff0b}
+.main-nav a:hover,.main-nav a:focus-visible{background:#ffffff1b;border-color:#8fa7ff;color:#fff}
+.brand img{filter:drop-shadow(0 4px 10px #0006)}
+.panel{backdrop-filter:blur(8px)}
+.section-title{padding-bottom:8px;border-bottom:1px solid #ffffff14}
+.filters{margin-top:12px}
+.product,.shop{min-height:100%;overflow:hidden}
+.product img{transition:transform .25s ease}
+.product:hover img{transform:scale(1.025)}
+.product .info,.shop .info{gap:7px}
+.product .price{letter-spacing:.1px}
+.card-actions button{min-height:38px}
+button:focus-visible,.btn:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #91a7ff;outline-offset:2px}
+button:active,.btn:active{transform:scale(.98)}
+#catalog,#shops,#sell,#shopFormPanel,#adRequest,.admin{scroll-margin-top:115px}
+#loadStatus,#shopStatus{padding-top:6px}
+footer{border-top:1px solid #27344d;margin-top:22px}
+@media(max-width:560px){
+ html{scroll-padding-top:100px}
+ header{padding:10px 10px 8px}
+ .top{gap:8px}
+ .brand{gap:8px;min-width:0}
+ .brand img{width:36px;height:36px}
+ .brand h1{font-size:17px}
+ .brand small{display:block;line-height:1.35}
+ .top>button{padding:9px 10px;font-size:12px;white-space:nowrap}
+ .main-nav{margin-top:8px;padding:0 2px;gap:6px}
+ .main-nav a{font-size:12px;padding:7px 11px}
+ .panel{margin:10px 0}
+ .products,.shops{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .card-actions{gap:5px}
+ .card-actions button{font-size:11px;padding:7px 5px}
+}
+@media(prefers-reduced-motion:reduce){
+ html{scroll-behavior:auto}
+ *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+</style></head><body>
+<header><div class="top"><div class="brand"><img src="./ak-logo.svg" alt="AK"><div><h1>AK Market <small style="color:#ffd27b">NATIONWIDE</small></h1><small>Myanmar Marketplace · နိုင်ငံတစ်ဝန်း အရောင်းအဝယ်ဈေးကွက်</small></div></div><button class="gold" onclick="document.getElementById('sell').scrollIntoView({behavior:'smooth'})">+ ပစ္စည်းတင်ရန်</button></div><nav class="main-nav" aria-label="အဓိကမီနူး"><a href="#catalog">ပစ္စည်းများ</a><a href="#shops">ဆိုင်များ</a><a href="#sell">ပစ္စည်းတင်ရန်</a><a href="#adRequest">ကြော်ငြာ</a></nav></header>
 <main>
 <section class="livebox"><div class="livehead"><h2>AK Market Live ကြော်ငြာ</h2><span class="livebadge">LIVE ADS</span></div><div id="liveScreen" class="screen live-grid"><div class="placeholder"><strong>AK MARKET</strong>ငွေပေး Live ကြော်ငြာ ၁ ခုတည်း ပြသမည်။</div></div><div class="screenfoot"><span id="liveCount">Sponsored Ads</span><span>AK Market Advertising</span></div><div class="actions"><button class="gold" onclick="document.getElementById('adRequest').scrollIntoView({behavior:'smooth'})">ကြော်ငြာခ မေးမြန်း / တင်ရန်</button></div></section>
 

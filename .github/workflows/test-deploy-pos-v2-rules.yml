@@ -1,7 +1,13 @@
-name: Test and deploy AK Sale POS 2.0 Firestore rules
+name: Test AK Sale POS 2.0 Firestore rules
 on:
   push:
     branches: [ak-sale-pos-v2-main]
+    paths:
+      - "firestore.rules"
+      - "tests/firestore/**"
+      - ".github/workflows/test-deploy-pos-v2-rules.yml"
+  pull_request:
+    branches: [main]
     paths:
       - "firestore.rules"
       - "tests/firestore/**"
@@ -30,11 +36,3 @@ jobs:
           ./tests/firestore/node_modules/.bin/firebase emulators:exec \
             --project demo-ak-sale-rules --only firestore \
             "./tests/firestore/node_modules/.bin/mocha tests/firestore/firestore.rules.test.js"
-      - name: Authenticate Firebase deployment
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_AK_ONLIN_SALES }}
-      - name: Install Firebase CLI
-        run: npm install --global firebase-tools
-      - name: Deploy tested Firestore rules
-        run: firebase deploy --only firestore:rules --project ak-onlin-sales --non-interactive

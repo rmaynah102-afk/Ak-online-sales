@@ -5,6 +5,7 @@ on:
     paths:
       - "v2/**"
       - "firebase-config.js"
+      - "google-services.json"
       - "firestore.rules"
       - "tests/firestore/**"
       - "capacitor.config.json"
@@ -77,7 +78,11 @@ jobs:
           const scripts=[...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)].filter(([,a])=>!/\bsrc\s*=/.test(a));
           if(!scripts.length)throw new Error('No inline JavaScript found');
           scripts.forEach(([, , code],i)=>new vm.Script(code,{filename:'v2-inline-'+(i+1)}));
-          console.log('Validated',scripts.length,'inline script block(s)');
+          if(!html.includes('id="ownerGoogleBtn"')||!html.includes('nativeAuth.signInWithGoogle({skipNativeAuth:true})')||!html.includes('GoogleAuthProvider.credential(idToken)')) throw new Error('Native Google Platform Owner login bridge is missing');
+          if(!html.includes('function isPlatformOwner')||!html.includes('AK Hardware & Electrical · Owner POS')||!html.includes('ownerControlBtn')) throw new Error('Separate Owner POS and Control Center routing is missing');
+          const config=JSON.parse(fs.readFileSync('capacitor.config.json','utf8'));
+          if(config.appId!=='com.ak.hardware.sales'||config.plugins?.FirebaseAuthentication?.providers?.includes('google.com')!==true) throw new Error('Capacitor Android package or Google provider config is invalid');
+          console.log('Validated',scripts.length,'inline script block(s), Owner Google login and Owner POS contract');
           NODE
       - name: Generate Android project
         run: npx cap add android

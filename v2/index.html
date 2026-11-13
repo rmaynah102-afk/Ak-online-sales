@@ -67,24 +67,27 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
 </main><footer>AK Sale POS 2.0 · Hardware & Electrical · MMK</footer>
 <script>
 const OWNER="painglin102@gmail.com", GATEWAY="https://ak-sale-backend.painglin102.workers.dev", PROJECT=window.AK_FIREBASE_PUBLIC_CONFIG;
-let auth,db,functions,user,shopId="",staffRole="owner",products=[],sales=[],purchases=[],people=[],expenses=[],editingProduct=null,licenses=[];
+let auth,db,user,shopId="",staffRole="owner",products=[],sales=[],purchases=[],people=[],expenses=[],editingProduct=null,licenses=[];
 const $=id=>document.getElementById(id), money=n=>(Number(n)||0).toLocaleString("en-US")+" ကျပ်", dateText=d=>{const x=d?.toDate?d.toDate():new Date(d||Date.now());return isNaN(x)? "-":x.toLocaleDateString("en-GB")};
 function status(msg,where="status"){ $(where).textContent=msg; }
 function show(id){$("loginPanel").classList.toggle("hidden",id!=="loginPanel");$("ownerPanel").classList.toggle("hidden",id!=="ownerPanel");$("shopPanel").classList.toggle("hidden",id!=="shopPanel");}
 async function boot(){
  if(!PROJECT?.apiKey)throw Error("Firebase config မတွေ့ပါ");
  await new Promise((resolve,reject)=>{const x=document.createElement("script");x.src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js";x.onload=resolve;x.onerror=reject;document.head.appendChild(x)});
- await Promise.all(["firebase-auth-compat.js","firebase-firestore-compat.js","firebase-functions-compat.js"].map(name=>new Promise((resolve,reject)=>{const x=document.createElement("script");x.src="https://www.gstatic.com/firebasejs/10.12.2/"+name;x.onload=resolve;x.onerror=reject;document.head.appendChild(x)})));
+ await Promise.all(["firebase-auth-compat.js","firebase-firestore-compat.js"].map(name=>new Promise((resolve,reject)=>{const x=document.createElement("script");x.src="https://www.gstatic.com/firebasejs/10.12.2/"+name;x.onload=resolve;x.onerror=reject;document.head.appendChild(x)})));
  if(!firebase.apps.length)firebase.initializeApp(PROJECT);
- auth=firebase.auth();db=firebase.firestore();functions=firebase.app().functions("us-central1");auth.languageCode="my";
+ auth=firebase.auth();db=firebase.firestore();auth.languageCode="my";
  auth.onAuthStateChanged(async u=>{
   user=u;if(!u){show("loginPanel");$("userBadge").textContent="";return}
   try{
    if(!u.emailVerified){await auth.signOut();show("loginPanel");status("အကောင့်အတည်ပြုမှု မပြီးသေးပါ။");return}
-   const token=await u.getIdTokenResult(true),claims=token.claims||{};
-   if((u.email||"").toLowerCase()===OWNER){staffRole="owner";show("ownerPanel");$("userBadge").textContent="Platform Owner";await loadLicenses()}
-   else if(claims.merchantStaff===true&&claims.shopId){shopId=claims.shopId;staffRole=claims.shopRole||"employee";await loadShop()}
-   else{shopId=u.uid;staffRole="owner";await loadShop()}
+   const email=(u.email||"").toLowerCase();
+   if(email===OWNER){staffRole="owner";show("ownerPanel");$("userBadge").textContent="Platform Owner";await loadLicenses()}
+   else if(email.endsWith("@akstaff.app")){
+    const memberSnap=await db.collection("shopMembers").doc(u.uid).get(),member=memberSnap.data()||{};
+    if(!memberSnap.exists||member.merchantStaff!==true||member.status!=="active"||!member.shopId){await auth.signOut();show("loginPanel");status("ဝန်ထမ်းအကောင့် ပိတ်ထားခြင်း သို့မဟုတ် မမှန်ကန်ပါ။");return}
+    shopId=member.shopId;staffRole=member.role||"employee";await loadShop()
+   }else{shopId=u.uid;staffRole="owner";await loadShop()}
   }catch(e){await auth.signOut();show("loginPanel");status("ဝင်ရောက်မှု မအောင်မြင်: "+errText(e))}
  });
 }
@@ -96,8 +99,8 @@ $("loginBtn").onclick=async()=>{
   const password=$("password").value;
   if($("loginType").value==="staff"){
    const code=$("merchantCode").value.trim().toUpperCase();
-   const result=await functions.httpsCallable("resolveMerchantCodeLogin")({code});
-   await auth.signInWithEmailAndPassword(result.data.email,password);
+   if(!/^[A-F0-9]{12}$/.test(code))throw Error("Merchant Code ၁၂ လုံး မှန်ကန်စွာထည့်ပါ");
+   await auth.signInWithEmailAndPassword("staff."+code.toLowerCase()+"@akstaff.app",password);
   }else{
    const c=await auth.signInWithEmailAndPassword($("email").value.trim(),password);
    if($("loginType").value==="owner"&&c.user.email.toLowerCase()!==OWNER)throw Error("Platform Owner Gmail မဟုတ်ပါ");
@@ -124,16 +127,23 @@ function applyRoleUI(){
  document.querySelectorAll("#tabs button").forEach(b=>{if(!b.classList.contains("hidden"))b.classList.toggle("active",b.dataset.tab==="products")});
  ["saveSale","savePurchase","savePerson","saveExpense"].forEach(id=>{const b=$(id);if(b)b.disabled=(id==="saveSale"?! (manager||cashier):id==="savePurchase"||id==="saveExpense"?!manager:!(manager||cashier))});
 }
+async function staffGateway(path,data={}){
+ const token=await user.getIdToken(true);
+ const response=await fetch(GATEWAY+path,{method:"POST",headers:{"Authorization":"Bearer "+token,"Content-Type":"application/json"},body:JSON.stringify({...data,apiKey:PROJECT.apiKey})});
+ const result=await response.json().catch(()=>({}));
+ if(!response.ok||!result.ok)throw Error(result.error||"Backend တုံ့ပြန်မှု မမှန်ပါ");
+ return result;
+}
 async function loadMerchantStaff(){
  try{
-  const r=await functions.httpsCallable("listMerchantCodeStaff")({});
-  $("staffRows").innerHTML=(r.data.members||[]).map(m=>'<tr><td>'+esc(m.name)+'</td><td>'+esc(m.role)+'</td><td>'+esc(m.status)+'</td><td><button class="danger" data-remove-staff="'+esc(m.uid)+'">ဖယ်ရှား</button></td></tr>').join("")||'<tr><td colspan="4">ဝန်ထမ်း မရှိသေးပါ</td></tr>';
+  const r=await staffGateway("/staff/list");
+  $("staffRows").innerHTML=(r.members||[]).map(m=>'<tr><td>'+esc(m.name)+'</td><td>'+esc(m.role)+'</td><td>'+esc(m.status)+'</td><td><button class="danger" data-remove-staff="'+esc(m.uid)+'">ဖယ်ရှား</button></td></tr>').join("")||'<tr><td colspan="4">ဝန်ထမ်း မရှိသေးပါ</td></tr>';
   $("staffRows").querySelectorAll("[data-remove-staff]").forEach(button=>button.onclick=()=>removeMerchantStaff(button.dataset.removeStaff));
  }catch(e){$("staffStatus").textContent="ဝန်ထမ်းစာရင်း ဖတ်မရပါ: "+errText(e)}
 }
-$("createStaffBtn").onclick=async()=>{try{const name=$("staffName").value.trim(),role=$("staffRole").value,password=$("staffPassword").value;if(!name||password.length<8)throw Error("အမည်နှင့် အနည်းဆုံး ၈ လုံး Password ဖြည့်ပါ");$("createStaffBtn").disabled=true;$("staffStatus").textContent="Merchant Code ဖန်တီးနေသည်...";const r=await functions.httpsCallable("createMerchantCodeStaff")({name,role,password});$("staffStatus").textContent="အောင်မြင်ပါသည်။ Merchant Code: "+r.data.code+" · ဒီ Code ကို ဝန်ထမ်းထံ တစ်ကြိမ်သာ ပေးပါ။";try{await navigator.clipboard.writeText(r.data.code)}catch(_){}$("staffPassword").value="";await loadMerchantStaff()}catch(e){$("staffStatus").textContent="ဖန်တီးမရပါ: "+errText(e)}finally{$("createStaffBtn").disabled=false}};
+$("createStaffBtn").onclick=async()=>{try{const name=$("staffName").value.trim(),role=$("staffRole").value,password=$("staffPassword").value;if(!name||password.length<8)throw Error("အမည်နှင့် အနည်းဆုံး ၈ လုံး Password ဖြည့်ပါ");$("createStaffBtn").disabled=true;$("staffStatus").textContent="Merchant Code ဖန်တီးနေသည်...";const r=await staffGateway("/staff/provision",{name,role,password});$("staffStatus").textContent="အောင်မြင်ပါသည်။ Merchant Code: "+r.code+" · ဒီ Code ကို ဝန်ထမ်းထံ တစ်ကြိမ်သာ ပေးပါ။";try{await navigator.clipboard.writeText(r.code)}catch(_){}$("staffPassword").value="";await loadMerchantStaff()}catch(e){$("staffStatus").textContent="ဖန်တီးမရပါ: "+errText(e)}finally{$("createStaffBtn").disabled=false}};
 $("refreshStaffBtn").onclick=loadMerchantStaff;
-window.removeMerchantStaff=async uid=>{if(!confirm("ဤဝန်ထမ်းအကောင့်ကို ပိတ်မလား။"))return;try{await functions.httpsCallable("removeMerchantCodeStaff")({memberUid:uid});await loadMerchantStaff();$("staffStatus").textContent="ဝန်ထမ်းအကောင့် ပိတ်ပြီးပါပြီ။"}catch(e){$("staffStatus").textContent="ပိတ်မရပါ: "+errText(e)}};
+window.removeMerchantStaff=async uid=>{if(!confirm("ဤဝန်ထမ်းအကောင့်ကို ပိတ်မလား။"))return;try{await staffGateway("/staff/revoke",{memberUid:uid});await loadMerchantStaff();$("staffStatus").textContent="ဝန်ထမ်းအကောင့် ပိတ်ပြီးပါပြီ။"}catch(e){$("staffStatus").textContent="ပိတ်မရပါ: "+errText(e)}};
 
 const col=name=>db.collection("shops").doc(shopId).collection("pos").doc(name).collection("records");
 async function getRows(name){const s=await col(name).get();return s.docs.map(d=>({id:d.id,...d.data()}))}

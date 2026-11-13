@@ -38,7 +38,7 @@ input,select,textarea{width:100%;border:1px solid #cbd8e4;border-radius:10px;pad
 </main><footer>AK Market V2 · Marketplace သီးသန့် Web Version · APK ဖိုင်များကို မပြင်ဆင်ထားပါ။</footer>
 <script>
 "use strict";
-const $=id=>document.getElementById(id);let db=null,auth=null,items=[],shops=[],ads=[],deviceId=localStorage.getItem("ak_market_v2_device");
+const $=id=>document.getElementById(id);let db=null,auth=null,items=[],shops=[],ads=[],photoData="",deviceId=localStorage.getItem("ak_market_v2_device");
 if(!deviceId){deviceId="browser-"+(crypto.randomUUID?crypto.randomUUID():Date.now()+"-"+Math.random());localStorage.setItem("ak_market_v2_device",deviceId)}
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const money=n=>Number(n||0).toLocaleString("en-US")+" ကျပ်";

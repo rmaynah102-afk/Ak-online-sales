@@ -62,3 +62,13 @@ The AI Assistant is a distinct screen/section, not embedded inside the POS, sale
 - Add UI smoke tests for both the root website shell and dedicated APK shell.
 - Build APK only after all CI checks pass. Verify the APK artifact and version. Then perform real Android sign-in, owner/shop separation, staff invite/claim, POS read/write, sync, license expiry/renewal, and printer checks before calling it production-ready.
 - Keep the existing production branch and live Firestore data untouched until migration and rollback are verified.
+
+## Implementation status — 2026-11-13
+
+- Implemented a separate APK AI Diagnostics screen and owner/shop-owner navigation gate.
+- Added local event capture for JavaScript errors, rejected asynchronous tasks, and online/offline transitions. Diagnostic text is bounded and redacts common API-key/token/password patterns and email addresses.
+- Added status summary, issue table, event history, CSV export, and a manual Cloud Sync action that delegates to the existing POS sync function. The monitor does not write financial, inventory, license, role, or security-rule data.
+- Added desktop-style table and panel styling to the dedicated APK shell, with horizontal table scrolling and compact two-column diagnostics tiles on narrow screens.
+- Added Node tests for secret redaction and issue detection. The latest APK workflow passed JavaScript validation, diagnostics tests, login/role validation, Android sync, and release APK build.
+- This is a local rule-based diagnostics assistant, not a connected generative-AI service. It does not yet perform autonomous repairs; it can surface issues and request the existing manual sync action. A protected AI server endpoint and real-device UI tests remain future release gates.
+- The signed APK artifact was built from commit `4da682cdec8fb5cabc06020eb4f84b2cd134ad45`. Do not label it production-verified until real Android tests cover authentication, tenant isolation, shop staff, POS writes, sync, license expiry/renewal, and printer behavior.

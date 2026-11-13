@@ -2335,7 +2335,7 @@ function akRenderOwnerShopRows(){
 }
 async function akProvisionShopOwner(){
  const status=$("akProvisionStatus"),button=$("akProvisionVerifyButton");
- let secondaryApp=null,secondaryAuth=null,createdUser=null;
+ let secondaryApp=null,secondaryAuth=null,createdUser=null,verificationSent=false,finalExpiry=null;
  const setStatus=message=>{if(status)status.textContent=message};
  try{
   if(!akIsPlatformOwner()||!fbAuth?.currentUser||!fbStore)throw Error("Verified Platform Owner ဖြင့် အရင် Login ဝင်ပါ။");
@@ -2356,6 +2356,7 @@ async function akProvisionShopOwner(){
    expiresAt=new Date(parts[0],parts[1]-1,parts[2],23,59,59,999);
   }else expiresAt=new Date(Date.now()+days*86400000);
   if(!Number.isFinite(expiresAt.getTime())||expiresAt.getTime()<=Date.now())throw Error("သက်တမ်းကုန်ရက်သည် ယနေ့ထက် နောက်ကျရမည်။");
+  finalExpiry=expiresAt;
   if(button){button.disabled=true;button.textContent="ဆိုင်ရှင်အကောင့် ဖန်တီးနေသည်...";}
   setStatus("Firebase Authentication တွင် ဆိုင်ရှင်အကောင့် ဖန်တီးနေသည်...");
   const rawConfig=window.AK_FIREBASE_PUBLIC_CONFIG||localStorage.getItem("ak_firebase_config");
@@ -2376,7 +2377,7 @@ async function akProvisionShopOwner(){
   if(!createdUser)throw Error("Firebase မှ ဆိုင်ရှင် UID မရပါ။");
   const uid=createdUser.uid;
   if(!createdUser.emailVerified){
-   try{await createdUser.sendEmailVerification({url:location.origin+location.pathname+"?app=1"});}
+   try{await createdUser.sendEmailVerification({url:location.origin+location.pathname+"?app=1"});verificationSent=true;}
    catch(verifyError){console.warn("Verification email could not be sent:",verifyError);}
   }
   await secondaryAuth.signOut();
@@ -2411,7 +2412,7 @@ async function akProvisionShopOwner(){
    await licenseRef.update({email,status:"active",plan:planMap[days],expiresAt:firebase.firestore.Timestamp.fromDate(nextExpiry),priceMMK:priceMap[days],updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:fbAuth.currentUser.email});
   }
   $("akProvisionPassword").value="";
-  setStatus("အောင်မြင်ပါပြီ။ "+email+" ဆိုင်ရှင်အကောင့် ဖန်တီး/ပြန်ဖွင့်ပြီး License သတ်မှတ်ပြီးပါပြီ။ Gmail Inbox ထဲမှ Verification Link ကိုနှိပ်ပြီးမှ ဆိုင်ရှင် Login ဝင်နိုင်ပါမည်။ သက်တမ်းကုန်ရက်: "+expiresAt.toLocaleDateString("en-GB"));
+  setStatus("အောင်မြင်ပါပြီ။ "+email+" ဆိုင်ရှင်အကောင့်နှင့် License သတ်မှတ်ပြီးပါပြီ။ "+(verificationSent?"Gmail Inbox/Spam ထဲမှ Verification Link ကိုနှိပ်ပြီးမှ Login ဝင်ပါ။":"Verification Email မပို့နိုင်သေးပါ။ ဆိုင်ရှင်အကောင့်မှ Password Reset/Verification ပြန်တောင်းပါ။")+" သတ်မှတ်သက်တမ်းကုန်ရက်: "+(finalExpiry||expiresAt).toLocaleDateString("en-GB"));
   await loadPlatformUsers();
  }catch(e){
   console.error("AK shop-owner provisioning failed",e);

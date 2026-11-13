@@ -2421,7 +2421,7 @@ async function akProvisionShopOwner(){
   }
   const uid=String(provisionData.uid);
   if(provisionData.email!==email)throw Error("Backend ပြန်ပေးသော Gmail မကိုက်ညီပါ။");
-  verificationSent=false;
+  verificationSent=provisionData.verificationEmailSent===true;
   setStatus("ဆိုင်ရှင် Auth Account ရပါပြီ။ License နှင့် ဆိုင်သက်တမ်းကို သိမ်းနေသည်...");
   const licenseRef=fbStore.collection("licenses").doc(uid);
   const capacityRef=fbStore.collection("platformMeta").doc("shopCapacity");
@@ -2452,7 +2452,8 @@ async function akProvisionShopOwner(){
    await licenseRef.update({email,status:"active",plan:planMap[days],expiresAt:firebase.firestore.Timestamp.fromDate(nextExpiry),priceMMK:priceMap[days],updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:fbAuth.currentUser.email});
   }
   $("akProvisionPassword").value="";
-  setStatus("အောင်မြင်ပါပြီ။ "+email+" ဆိုင်ရှင်အကောင့်နှင့် License သတ်မှတ်ပြီးပါပြီ။ "+"Gmail ထဲသို့ Verification Link ပို့ထားသည်။ ဆိုင်ရှင်က Gmail ကို Verify လုပ်ပြီးမှ Login ဝင်ရမည်။"+" သတ်မှတ်သက်တမ်းကုန်ရက်: "+(finalExpiry||expiresAt).toLocaleDateString("en-GB"));
+  const verificationMessage=verificationSent?"Gmail ထဲသို့ Verification Link ပို့ပြီးပါပြီ။ ဆိုင်ရှင်က Gmail ကို Verify လုပ်ပြီးမှ Login ဝင်ရမည်.":"Verification Email ပို့မအောင်မြင်ပါ။ ဆိုင်ရှင်သည် Login စာမျက်နှာတွင် Gmail/Password ဖြင့် ဝင်ကြည့်ပြီး Verification Link အသစ်တောင်းနိုင်သည်။";
+  setStatus("အောင်မြင်ပါပြီ။ "+email+" ဆိုင်ရှင်အကောင့်နှင့် License သတ်မှတ်ပြီးပါပြီ။ "+verificationMessage+" သတ်မှတ်သက်တမ်းကုန်ရက်: "+(finalExpiry||expiresAt).toLocaleDateString("en-GB"));
   await loadPlatformUsers();
  }catch(e){
   console.error("AK shop-owner provisioning failed",e);
@@ -2509,7 +2510,7 @@ async function loadPlatformUsers(){
   const active=akPlatformUserRows.filter(u=>u.status==="active"&&!u.disabled&&u.expiresAt&&new Date(u.expiresAt).getTime()>Date.now()).length;
   if($("akOwnerUserCount"))$("akOwnerUserCount").textContent=akPlatformUserRows.length+" ခု";
   if(status)status.textContent="လိုင်စင်စာရင်း "+akPlatformUserRows.length+" ခု · Active "+active+" ခု · အများဆုံး ၁၀၀ ဆိုင်";
-  if(ownerStatus)ownerStatus.textContent="ဆိုင်ရှင်များသည် ကိုယ်တိုင် Register လုပ်ပါ။ Owner သည် ငွေပေးချေမှုစစ်ပြီး License ကိုသာ ဖွင့်ပေးသည်။";
+  if(ownerStatus)ownerStatus.textContent="Platform Owner သည် ဆိုင်ရှင် Gmail နှင့် Password သတ်မှတ်ပြီး အကောင့်ဖွင့်ပေးသည်။ သက်တမ်းတိုးခြင်းနှင့် ရပ်ဆိုင်းခြင်းကို Owner က စီမံသည်။";
  }catch(e){
   akPlatformUserListLoaded=false;akPlatformUserListError=String(e?.message||e||"အမည်မသိ အမှား");
   akUpdateOwnerDashboardStats();

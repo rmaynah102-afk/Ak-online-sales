@@ -1,9 +1,10 @@
 name: Build AK Sale POS 2.0 Android APK
 on:
   push:
-    branches: [ak-sale-pos-v2-main]
+    branches: [ak-sale-pos-v2-main, main]
     paths:
       - "v2/**"
+      - "firebase-config.js"
       - "firestore.rules"
       - "tests/firestore/**"
       - "capacitor.config.json"

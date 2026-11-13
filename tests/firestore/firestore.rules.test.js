@@ -516,4 +516,40 @@ describe('AK Sale Firestore security baseline', function () {
     }, { merge: true }));
   });
 
+  it('supports Worker-created Merchant Code staff and owner slot probes without Firebase Functions', async () => {
+    await seedLicense('shop-a');
+    const ownerDb = testEnv.authenticatedContext('shop-a', {
+      email: 'shop-a@example.com', email_verified: true,
+    }).firestore();
+    const emptySlot = await assertSucceeds(getDoc(doc(ownerDb, 'shopStaffSlots', 'shop-a_1')));
+    assert.equal(emptySlot.exists(), false);
+    const createdAt = Timestamp.now();
+    const batch = writeBatch(ownerDb);
+    batch.set(doc(ownerDb, 'shopMembers', 'staff-uid-001'), {
+      shopId: 'shop-a', role: 'cashier', status: 'active',
+      email: 'staff.0123456789ab@akstaff.app', createdAt,
+      createdBy: 'shop-a', merchantStaff: true, name: 'Cashier One',
+      merchantCodeHash: 'a'.repeat(64), slotId: 'shop-a_1', canPrint: false,
+    });
+    batch.set(doc(ownerDb, 'shopStaffSlots', 'shop-a_1'), {
+      shopId: 'shop-a', uid: 'staff-uid-001', slot: 1,
+      createdAt, merchantStaff: true,
+    });
+    await assertSucceeds(batch.commit());
+    const staffDb = testEnv.authenticatedContext('staff-uid-001', {
+      email: 'staff.0123456789ab@akstaff.app', email_verified: true,
+    }).firestore();
+    const member = await assertSucceeds(getDoc(doc(staffDb, 'shopMembers', 'staff-uid-001')));
+    assert.equal(member.data().shopId, 'shop-a');
+    assert.equal(member.data().merchantStaff, true);
+    const revoke = writeBatch(ownerDb);
+    revoke.update(doc(ownerDb, 'shopMembers', 'staff-uid-001'), {
+      status: 'suspended', revokedAt: Timestamp.now(),
+    });
+    revoke.delete(doc(ownerDb, 'shopStaffSlots', 'shop-a_1'));
+    await assertSucceeds(revoke.commit());
+    await assertFails(getDoc(doc(staffDb, 'shopMembers', 'staff-uid-001')));
+  });
+
+
 });

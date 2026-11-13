@@ -4,6 +4,7 @@ const html = fs.readFileSync('www/index.html', 'utf8');
 const sparkStore = fs.readFileSync('www/spark-pos-store.js', 'utf8');
 const functions = fs.readFileSync('functions/index.js', 'utf8');
 const rules = fs.readFileSync('firestore.rules', 'utf8');
+const storageRules = fs.readFileSync('storage.rules', 'utf8');
 const printer = fs.readFileSync('native/android/AkPrinterPlugin.java', 'utf8');
 const config = JSON.parse(fs.readFileSync('capacitor.config.json', 'utf8'));
 const owner = 'painglin102@gmail.com';
@@ -45,7 +46,8 @@ const checks = [
  ['Paid and trial accounts share the 100-shop limit', functions.includes('trialQuery = db.collection("freeBetaUsers")') && functions.includes('activeUids.size >= 100')],
  ['APK shows 100-shop platform capacity', html.includes('အများဆုံး ၁၀၀ ဆိုင်')],
  ['Login sessions persist across app restarts', html.includes('fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)')],
- ['No in-app KBZPay or payment screenshot form in APK', !html.includes('KBZPay') && !html.includes('paymentProofs') && html.includes('App အတွင်း ငွေပေးချေမှု')],
+ ['KBZPay transaction reference and screenshot proof are required', html.includes('id="akPaymentTransactionReference"') && html.includes('id="akPaymentProofFile"') && html.includes('firebase.storage().ref().child(proofPath).put(file') && html.includes('akOpenPaymentProof') && html.includes('request.transactionReference') && html.includes('request.proofPath')],
+ ['Payment proof Storage rule is UID-scoped and Owner-readable', storageRules.includes('match /paymentProofs/{userId}/{fileName}') && storageRules.includes('request.auth.uid == userId') && storageRules.includes("request.auth.token.email == 'painglin102@gmail.com'") && storageRules.includes('request.resource.size < 4 * 1024 * 1024') && storageRules.includes("request.resource.contentType.matches('image/(jpeg|png|webp)')")],
  ['Trial expiry is not bypassed by a permanent-free plan flag', !html.includes('isFreeBeta') && html.includes('!currentLicense.expiresAt')],
  ['Expired five-day trials cannot be reactivated by client controls', rules.includes("get(/databases/$(database)/documents/freeBetaUsers/$(uid)).data.createdAt + duration.value(5, 'd') > request.time") && rules.includes('freeTrialClaims') && html.includes('akFreeTrialExpiryTimer') && html.includes('5 ရက် Trial')],
  ['No malformed literal newline in Owner trial controls', !html.includes('if(target.plan==="free-trial"){\\n')],
@@ -68,9 +70,9 @@ const checks = [
  ['Owner account list shows sequential numbers', html.includes('id="akOwnerShopRows"') && html.includes('function akRenderOwnerShopRows()')],
  ['Shop owners can self-register; Platform Owner cannot register a shop', html.includes('reg.style.display=ownerMode?"none":""') && html.includes('async function firebaseRegister()')],
  ['Platform Owner creates shop-owner Auth accounts in a separate Firebase session', html.includes('AKOwnerProvisioning') && html.includes('createUserWithEmailAndPassword(email,password)') && html.includes('firebase.auth.Auth.Persistence.NONE')],
- ['Existing shop-owner Gmail with a mismatched password gets a reset path instead of auth/invalid-credential dead end', html.includes('sendPasswordResetEmail(email)') && html.includes('ထည့်ထားသော Password မကိုက်ပါ')],
+ ['Existing shop-owner Gmail with a mismatched password gets a reset path instead of auth/invalid-credential dead end', html.includes('secondaryAuth.sendPasswordResetEmail(email,{url:location.origin+location.pathname+"?app=1",handleCodeInApp:false})') && html.includes('ဒီ Gmail ဖြင့် ဆိုင်ရှင်အကောင့် ရှိပြီးသားဖြစ်သည်။ အကောင့်အသစ်ထပ်မဖန်တီးပါ။') && html.includes('Password Reset Email မပို့နိုင်ပါ')],
  ['Shop-owner and staff registration use a separate Auth session and preserve the signed-in Owner', html.includes('const appName="AKAccountRegistration"') && html.includes('registrationAuth.createUserWithEmailAndPassword(email,pass)') && html.includes('Owner Login ကို ထိခိုက်မထားပါ။')],
- ['Existing staff Gmail is directed to Staff Login and Merchant Code claim', html.includes('Staff Login ကိုရွေးပြီး မူလ Password နှင့် Merchant Code ထည့်ပါ။')],
+ ['Existing staff Gmail is directed to Staff Login and Merchant Code claim', html.includes('registrationAuth.sendPasswordResetEmail(email,{url:location.origin+location.pathname+"?app=1",handleCodeInApp:false})') && html.includes('type==="staff"?"Staff Login မှ ဝင်ကာ Merchant Code ထည့်ပါ။":"ဆိုင်ရှင် Login ဝင်ပါ။"')],
 
  ['Owner provisions shop license and sends email verification without exposing password', html.includes('sendEmailVerification({url:location.origin+location.pathname+"?app=1"})') && html.includes('activeShopCount:count+1') && html.includes('emailVerified:false')],
  ['License package pricing is represented in Spark grant flow', html.includes('prices={30:30000,90:90000,180:180000,365:360000}') && html.includes('plans={30:"30-days",90:"90-days",180:"180-days",365:"365-days"}')],

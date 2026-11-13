@@ -176,6 +176,29 @@ describe('AK Sale Firestore security baseline', function () {
     await assertSucceeds(batch.commit());
   });
 
+  it('allows only the verified Platform Owner to reconcile a stale shop-capacity counter', async () => {
+    const ownerDb = testEnv.authenticatedContext('platform-owner-uid', {
+      email: 'painglin102@gmail.com', email_verified: true,
+    }).firestore();
+    const counter = doc(ownerDb, 'platformMeta', 'shopCapacity');
+    await assertSucceeds(setDoc(counter, { activeShopCount: 4, updatedAt: serverTimestamp() }));
+    await assertSucceeds(setDoc(counter, { activeShopCount: 2, updatedAt: serverTimestamp() }, { merge: true }));
+
+    const unverifiedOwnerDb = testEnv.authenticatedContext('platform-owner-uid', {
+      email: 'painglin102@gmail.com', email_verified: false,
+    }).firestore();
+    await assertFails(setDoc(doc(unverifiedOwnerDb, 'platformMeta', 'shopCapacity'), {
+      activeShopCount: 3, updatedAt: serverTimestamp(),
+    }, { merge: true }));
+
+    const customerDb = testEnv.authenticatedContext('shop-a', {
+      email: 'shop-a@example.com', email_verified: true,
+    }).firestore();
+    await assertFails(setDoc(doc(customerDb, 'platformMeta', 'shopCapacity'), {
+      activeShopCount: 3, updatedAt: serverTimestamp(),
+    }, { merge: true }));
+  });
+
   it('denies Platform Owner administration to an unverified account using the Owner email', async () => {
     const db = testEnv.authenticatedContext('platform-owner-uid', {
       email: 'painglin102@gmail.com',

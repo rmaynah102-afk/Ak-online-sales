@@ -48,7 +48,7 @@ Products, Hardware/Electrical categories, SKU, camera Barcode/QR scanning, cost/
 
 ## Android build
 
-GitHub Actions builds a debug APK artifact from this directory. Debug APK is for installation/testing, not a signed production release. Wi-Fi/Android Print Service is the current printing fallback; Bluetooth thermal printing needs device-specific validation.
+GitHub Actions builds a debug APK artifact from this directory. Debug APK is for installation/testing, not a signed production release. The Android APK includes native Bluetooth Classic ESC/POS and Wi-Fi RAW TCP 9100 printing, plus Android/System Print fallback. The exact printer model, paper width and Bluetooth pairing still require an on-device test.
 
 ## Release checks
 

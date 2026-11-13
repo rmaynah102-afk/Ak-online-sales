@@ -2396,43 +2396,27 @@ async function akProvisionShopOwner(){
   if(!Number.isFinite(expiresAt.getTime())||expiresAt.getTime()<=Date.now())throw Error("သက်တမ်းကုန်ရက်သည် ယနေ့ထက် နောက်ကျရမည်။");
   finalExpiry=expiresAt;
   if(button){button.disabled=true;button.textContent="ဆိုင်ရှင်အကောင့် ဖန်တီးနေသည်...";}
-  setStatus("Firebase Authentication တွင် ဆိုင်ရှင်အကောင့် ဖန်တီးနေသည်...");
+  setStatus("Cloudflare Backend မှတစ်ဆင့် ဆိုင်ရှင်အကောင့် ဖန်တီးနေသည်...");
   const rawConfig=window.AK_FIREBASE_PUBLIC_CONFIG||localStorage.getItem("ak_firebase_config");
   const cfg=typeof rawConfig==="string"?JSON.parse(rawConfig):rawConfig;
   if(!cfg?.apiKey||!cfg?.projectId||!cfg?.appId)throw Error("Firebase Web App Config မပြည့်စုံပါ။");
-  const appName="AKOwnerProvisioning";
-  secondaryApp=firebase.apps.some(app=>app.name===appName)?firebase.app(appName):firebase.initializeApp(cfg,appName);
-  secondaryAuth=secondaryApp.auth();
-  await secondaryAuth.setPersistence(firebase.auth.Auth.Persistence.NONE);
-  try{
-   const credential=await secondaryAuth.createUserWithEmailAndPassword(email,password);
-   createdUser=credential.user;
-  }catch(authError){
-   if(authError.code!=="auth/email-already-in-use")throw authError;
-   try{
-    const credential=await secondaryAuth.signInWithEmailAndPassword(email,password);
-    createdUser=credential.user;
-   }catch(existingAccountError){
-    if(["auth/invalid-credential","auth/wrong-password","auth/user-not-found"].includes(existingAccountError.code)){
-     try{
-      await secondaryAuth.sendPasswordResetEmail(email,{url:location.origin+location.pathname+"?app=1",handleCodeInApp:false});
-      setStatus("ဒီ Gmail ဖြင့် ဆိုင်ရှင်အကောင့် ရှိပြီးသားဖြစ်သည်။ အကောင့်အသစ်ထပ်မဖန်တီးပါ။ "+email+" သို့ Password Reset Link ပို့ပြီးပါပြီ။ Gmail Inbox နှင့် Spam ထဲမှ Link ကိုဖွင့်ပြီး Password အသစ်သတ်မှတ်ပါ။ ပြီးလျှင် Owner Dashboard သို့ပြန်လာ၍ Password အသစ်ထည့်ပြီး နံပါတ် (၃) ကို ထပ်နှိပ်ပါ။");
-      return;
-     }catch(resetError){
-      throw Error("ဒီ Gmail အကောင့် ရှိပြီးသားဖြစ်ပြီး Password မကိုက်ပါ။ Password Reset Email မပို့နိုင်ပါ ("+(resetError.code||"")+"): "+(resetError.message||resetError));
-     }
-    }
-    throw existingAccountError;
-   }
+  if(cfg.projectId!=="ak-onlin-sales")throw Error("Firebase Project ID မကိုက်ညီပါ။");
+  const ownerIdToken=await fbAuth.currentUser.getIdToken(true);
+  const provisionResponse=await fetch("https://ak-sale-backend.painglin102.workers.dev/owner/provision",{
+   method:"POST",
+   headers:{"Authorization":"Bearer "+ownerIdToken,"Content-Type":"application/json"},
+   body:JSON.stringify({email,password,apiKey:cfg.apiKey})
+  });
+  const provisionData=await provisionResponse.json().catch(()=>({}));
+  if(!provisionResponse.ok||!provisionData.ok||!provisionData.uid){
+   const reason=String(provisionData.error||("HTTP_"+provisionResponse.status));
+   if(reason==="platform_owner_verification_failed")throw Error("Platform Owner Gmail ကို Verify လုပ်ထားသောအကောင့်ဖြင့် ပြန်ဝင်ပါ။");
+   if(reason==="firebase_service_account_secret_missing")throw Error("Backend Service Account ချိတ်ဆက်မှု မပြီးသေးပါ။");
+   throw Error("Backend မှ ဆိုင်ရှင်အကောင့်ဖွင့်မရပါ: "+reason);
   }
-  if(!createdUser)throw Error("Firebase မှ ဆိုင်ရှင် UID မရပါ။");
-  const uid=createdUser.uid;
-  if(!createdUser.emailVerified){
-   try{await createdUser.sendEmailVerification({url:location.origin+location.pathname+"?app=1"});verificationSent=true;}
-   catch(verifyError){console.warn("Verification email could not be sent:",verifyError);}
-  }
-  await secondaryAuth.signOut();
-  await secondaryApp.delete();secondaryApp=null;secondaryAuth=null;
+  const uid=String(provisionData.uid);
+  if(provisionData.email!==email)throw Error("Backend ပြန်ပေးသော Gmail မကိုက်ညီပါ။");
+  verificationSent=false;
   setStatus("ဆိုင်ရှင် Auth Account ရပါပြီ။ License နှင့် ဆိုင်သက်တမ်းကို သိမ်းနေသည်...");
   const licenseRef=fbStore.collection("licenses").doc(uid);
   const capacityRef=fbStore.collection("platformMeta").doc("shopCapacity");
@@ -2453,7 +2437,7 @@ async function akProvisionShopOwner(){
     const count=Number(capacitySnap.data()?.activeShopCount);
     if(!Number.isInteger(count)||count<0)throw Error("Shop capacity စာရင်း မမှန်ပါ။");
     if(count>=100)throw Error("ဆိုင်အကောင့် ၁၀၀ ပြည့်နေပါသည်။ အသစ်ထပ်ဖွင့်မရပါ။");
-    tx.set(licenseRef,{uid,email,emailVerified:false,status:"active",plan:planMap[days],expiresAt:firebase.firestore.Timestamp.fromDate(expiresAt),priceMMK:priceMap[days],issuedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:fbAuth.currentUser.email});
+    tx.set(licenseRef,{uid,email,emailVerified:true,status:"active",plan:planMap[days],expiresAt:firebase.firestore.Timestamp.fromDate(expiresAt),priceMMK:priceMap[days],issuedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:fbAuth.currentUser.email});
     tx.update(capacityRef,{activeShopCount:count+1,lastIssuedUid:uid,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
    });
   }else{
@@ -2463,7 +2447,7 @@ async function akProvisionShopOwner(){
    await licenseRef.update({email,status:"active",plan:planMap[days],expiresAt:firebase.firestore.Timestamp.fromDate(nextExpiry),priceMMK:priceMap[days],updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:fbAuth.currentUser.email});
   }
   $("akProvisionPassword").value="";
-  setStatus("အောင်မြင်ပါပြီ။ "+email+" ဆိုင်ရှင်အကောင့်နှင့် License သတ်မှတ်ပြီးပါပြီ။ "+(verificationSent?"Gmail Inbox/Spam ထဲမှ Verification Link ကိုနှိပ်ပြီးမှ Login ဝင်ပါ။":"Verification Email မပို့နိုင်သေးပါ။ ဆိုင်ရှင်အကောင့်မှ Password Reset/Verification ပြန်တောင်းပါ။")+" သတ်မှတ်သက်တမ်းကုန်ရက်: "+(finalExpiry||expiresAt).toLocaleDateString("en-GB"));
+  setStatus("အောင်မြင်ပါပြီ။ "+email+" ဆိုင်ရှင်အကောင့်နှင့် License သတ်မှတ်ပြီးပါပြီ။ "+"Owner က အကောင့်ကို ခွင့်ပြုပြီးပါပြီ။ သတ်မှတ်ထားသော Gmail + Password ဖြင့် Login ဝင်နိုင်ပါပြီ။"+" သတ်မှတ်သက်တမ်းကုန်ရက်: "+(finalExpiry||expiresAt).toLocaleDateString("en-GB"));
   await loadPlatformUsers();
  }catch(e){
   console.error("AK shop-owner provisioning failed",e);

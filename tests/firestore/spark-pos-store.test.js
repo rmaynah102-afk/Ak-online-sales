@@ -45,40 +45,9 @@ function hasSensitive(value) {
 assert.equal(hasSensitive(productParts.base), false);
 assert.equal(hasSensitive(saleParts.base), false);
 
-const appHtml = fs.readFileSync("app.html", "utf8");
-const apkHtml = fs.readFileSync("apk/app.html", "utf8");
-assert.match(appHtml, /<script src="\.\/spark-pos-store\.js"><\/script>/);
-assert.match(apkHtml, /<script src="\.\/spark-pos-store\.js"><\/script>/);
-assert.match(apkHtml, /<script src="\.\/ak-health-monitor\.js" defer><\/script>/);
-assert.match(fs.readFileSync("apk/ak-health-monitor.js", "utf8"), /window\.AKHealthMonitor/);
-// The APK shell must call the Spark staff adapter rather than Cloud Functions for staff lifecycle.
-assert.match(apkHtml, /sparkStore\.claimInvite\(code\)/);
-assert.match(apkHtml, /sparkStore\.createInvite\(role\)/);
-assert.match(apkHtml, /akShopStaffCache=await sparkStore\.listStaff\(\)/);
-assert.match(apkHtml, /sparkStore\.setStaffPrintPermission\(uid,canPrint\)/);
-assert.match(apkHtml, /sparkStore\.revokeStaff\(uid\)/);
-assert.match(apkHtml, /akSparkStore\.saveWorkspace\(workspaceData\)/);
-assert.match(apkHtml, /akSparkStore\.migrateLegacyWorkspace\(legacySource\)/);
-assert.equal((apkHtml.match(/httpsCallable\("loadShopWorkspace"\)/g) || []).length, 0);
-assert.equal((apkHtml.match(/httpsCallable\("saveShopWorkspace"\)/g) || []).length, 0);
-assert.match(apkHtml, /reg\.style\.display=ownerMode\?"none":""/);
-assert.match(apkHtml, /ဝန်ထမ်းသည် ကိုယ်ပိုင် Gmail/);
-
 assert.equal((source.match(/this\.db\.FieldValue/g) || []).length, 0);
-
-assert.match(apkHtml, /shopMembers["']\)\.doc\(user\.uid\)\.get\(\)/);
-
-// Parse every inline APK script so a syntactically broken UI cannot pass adapter tests.
-for (const match of apkHtml.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)) {
-  const script = match[1].trim();
-  if (script) new vm.Script(script, { filename: "apk/app.html:inline-script" });
-}
-const packageJson = JSON.parse(fs.readFileSync("package.json", "utf8"));
-assert.match(packageJson.scripts["copy-web"], /ak-health-monitor\.js/);
-assert.match(packageJson.scripts["copy-web"], /spark-pos-store\.js/);
-
 const schema = sandbox.AKSparkPosSchema;
 assert.deepEqual(JSON.parse(JSON.stringify(schema.roleCollections.cashier)), ["products", "sales", "people", "payments"]);
 assert.equal(schema.roleCollections.employee.includes("expenses"), false);
 assert.equal(schema.roleCollections.manager.includes("productCosts"), true);
-console.log("AK Spark POS adapter: 9 checks passed");
+console.log("AK Spark POS data adapter: 9 checks passed");

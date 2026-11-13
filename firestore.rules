@@ -418,8 +418,17 @@ service cloud.firestore {
     }
 
     match /licenses/{userId} {
-      allow read: if request.auth != null && (request.auth.uid == userId || isVerifiedOwner()
-        || (request.auth.token.shopId == userId && request.auth.token.merchantStaff == true));
+      allow read: if request.auth != null && (
+        request.auth.uid == userId
+        || isVerifiedOwner()
+        || (exists(/databases/$(database)/documents/shopMembers/$(request.auth.uid))
+          && get(/databases/$(database)/documents/shopMembers/$(request.auth.uid)).data.shopId == userId
+          && get(/databases/$(database)/documents/shopMembers/$(request.auth.uid)).data.merchantStaff == true
+          && get(/databases/$(database)/documents/shopMembers/$(request.auth.uid)).data.status == 'active'
+          && resource.data.status == 'active'
+          && resource.data.expiresAt is timestamp
+          && resource.data.expiresAt > request.time)
+      );
       // Only the verified Platform Owner may issue or suspend a license after manual payment review.
       allow create: if isVerifiedOwner()
         && request.resource.data.uid == userId

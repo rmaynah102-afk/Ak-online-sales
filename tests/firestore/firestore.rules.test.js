@@ -287,7 +287,7 @@ describe('AK Sale Firestore security baseline', function () {
 
   it('allows the verified Platform Owner to create staff invites in their own workspace without a customer license', async () => {
     const ownerDb = testEnv.authenticatedContext('platform-owner', {
-      email: 'painglin102@gmail.com', email_verified: false,
+      email: 'painglin102@gmail.com', email_verified: true,
     }).firestore();
     const inviteRef = doc(ownerDb, 'shopInvites', 'FEDCBA9876543210FEDCBA9876543210');
     await assertSucceeds(setDoc(inviteRef, {

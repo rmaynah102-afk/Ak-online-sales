@@ -24,6 +24,7 @@ const checks = [
  ['Owner identity requires verified email', html.includes('emailVerified===true')],
  ['Owner Gmail uses Google verification without password entry', html.includes('id="akOwnerGoogleLoginBtn"') && html.includes('async function akOwnerGoogleLogin()') && html.includes('if(mode==="owner")throw Error("Platform Owner သည် Google ဖြင့်သာ Login ဝင်ပါ။");') && html.includes('passwordWrap.classList.toggle("hidden",ownerMode)')],
  ['Role-based navigation', html.includes('function akApplyRoleNavigation()')],
+ ['Employee navigation is read-only and excludes sales entry', html.includes('akUserRole==="employee"?["home"]') && html.includes('const allowed=role==="employee"?["home"]')],
  ['Shop owner staff management panel', html.includes('id="akOwnerStaffPanel"')],
  ['Separate Market website mode disabled', html.includes('const publicMode=false;') && !html.includes('document.documentElement.classList.add("ak-public-market");')],
  ['Market navigation hidden in APK', html.includes('html.ak-apk-pos-only #nav button[data-view="market"]')],

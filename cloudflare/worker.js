@@ -89,6 +89,174 @@ async function provisionShopOwner(request, env, origin) {
   }, 200, origin);
 }
 
+
+const STAFF_EMAIL_DOMAIN = "akstaff.app";
+
+function bearerToken(request) {
+  const match = (request.headers.get("Authorization") || "").match(/^Bearer\s+(\S+)$/i);
+  return match ? match[1] : "";
+}
+async function verifyShopOwner(request, body, origin) {
+  const idToken = bearerToken(request);
+  const apiKey = String(body.apiKey || "");
+  if (!idToken) return { response: json({ ok:false, error:"unauthenticated" },401,origin) };
+  if (!apiKey || apiKey.length > 200) return { response: json({ ok:false, error:"firebase_api_key_required" },400,origin) };
+  const response = await fetch("https://identitytoolkit.googleapis.com/v1/accounts:lookup?key="+encodeURIComponent(apiKey), {
+    method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({idToken})
+  });
+  const payload = await response.json().catch(()=>({}));
+  const user = payload.users && payload.users[0];
+  if (!response.ok || !user || user.emailVerified !== true || !user.localId ||
+      !String(user.email||"").includes("@") || String(user.email).toLowerCase() === "painglin102@gmail.com") {
+    return { response: json({ok:false,error:"verified_shop_owner_required"},403,origin) };
+  }
+  return { idToken, apiKey, shopId:user.localId, email:String(user.email).toLowerCase() };
+}
+function firestoreDocUrl(path) {
+  return "https://firestore.googleapis.com/v1/projects/"+PROJECT_ID+"/databases/(default)/documents/"+path;
+}
+async function firestoreGet(path, idToken) {
+  const response=await fetch(firestoreDocUrl(path),{headers:{Authorization:"Bearer "+idToken}});
+  const data=await response.json().catch(()=>({}));
+  return {response,data};
+}
+async function verifyActiveShopLicense(shopId,idToken) {
+  const {response,data}=await firestoreGet("licenses/"+encodeURIComponent(shopId),idToken);
+  if(!response.ok)return false;
+  const fields=data.fields||{};
+  const expiry=Date.parse(fields.expiresAt?.timestampValue||"");
+  return fields.status?.stringValue==="active" && Number.isFinite(expiry) && expiry>Date.now();
+}
+function randomMerchantCode() {
+  const bytes=new Uint8Array(6);crypto.getRandomValues(bytes);
+  return Array.from(bytes,x=>x.toString(16).padStart(2,"0")).join("").toUpperCase();
+}
+async function firebaseCreateStaff(apiKey,code,password,name) {
+  const email="staff."+code.toLowerCase()+"@"+STAFF_EMAIL_DOMAIN;
+  const create=await fetch("https://identitytoolkit.googleapis.com/v1/accounts:signUp?key="+encodeURIComponent(apiKey),{
+    method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email,password,displayName:name,returnSecureToken:true})
+  });
+  const created=await create.json().catch(()=>({}));
+  if(!create.ok||!created.localId||!created.idToken) {
+    const reason=String(created.error?.message||"staff_account_create_failed");
+    throw new Error(reason==="EMAIL_EXISTS"?"merchant_code_collision":reason.slice(0,120));
+  }
+  const verified=await fetch("https://identitytoolkit.googleapis.com/v1/accounts:update?key="+encodeURIComponent(apiKey),{
+    method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({idToken:created.idToken,emailVerified:true,returnSecureToken:true})
+  });
+  const verification=await verified.json().catch(()=>({}));
+  if(!verified.ok||verification.emailVerified!==true) {
+    await fetch("https://identitytoolkit.googleapis.com/v1/accounts:delete?key="+encodeURIComponent(apiKey),{
+      method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({idToken:created.idToken})
+    }).catch(()=>{});
+    throw new Error("staff_email_verification_setup_failed");
+  }
+  return {uid:created.localId,email,createdToken:created.idToken};
+}
+async function cleanupStaffAuth(apiKey,idToken) {
+  if(!idToken)return;
+  await fetch("https://identitytoolkit.googleapis.com/v1/accounts:delete?key="+encodeURIComponent(apiKey),{
+    method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({idToken})
+  }).catch(()=>{});
+}
+async function staffProvision(request,origin) {
+  let body;try{body=await request.json()}catch{return json({ok:false,error:"invalid_json"},400,origin)}
+  const owner=await verifyShopOwner(request,body,origin);if(owner.response)return owner.response;
+  const name=String(body.name||"").trim().slice(0,80),role=String(body.role||"cashier").toLowerCase(),password=String(body.password||"");
+  if(name.length<2)return json({ok:false,error:"staff_name_required"},400,origin);
+  if(!["manager","cashier","employee"].includes(role))return json({ok:false,error:"invalid_staff_role"},400,origin);
+  if(password.length<8||password.length>128)return json({ok:false,error:"password_must_be_8_to_128_characters"},400,origin);
+  if(!await verifyActiveShopLicense(owner.shopId,owner.idToken))return json({ok:false,error:"active_shop_license_required"},403,origin);
+  const slots=await Promise.all([1,2,3].map(async slot=>{
+    const result=await firestoreGet("shopStaffSlots/"+encodeURIComponent(owner.shopId+"_"+slot),owner.idToken);
+    if(result.response.status===404)return slot;
+    if(!result.response.ok)throw new Error("staff_slot_read_failed");
+    return null;
+  }));
+  const slot=slots.find(x=>x!==null);
+  if(!slot)return json({ok:false,error:"staff_limit_3_reached"},409,origin);
+  let created;
+  try {
+    let lastError;
+    for(let attempt=0;attempt<4;attempt++){
+      const code=randomMerchantCode();
+      try{created=await firebaseCreateStaff(owner.apiKey,code,password,name);created.code=code;break}
+      catch(e){lastError=e;if(e.message!=="merchant_code_collision")throw e}
+    }
+    if(!created)throw lastError||new Error("staff_account_create_failed");
+    const now=new Date().toISOString(),slotId=owner.shopId+"_"+slot;
+    const memberPath="projects/"+PROJECT_ID+"/databases/(default)/documents/shopMembers/"+created.uid;
+    const slotPath="projects/"+PROJECT_ID+"/databases/(default)/documents/shopStaffSlots/"+slotId;
+    const hashBytes=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(created.code));
+    const codeHash=Array.from(new Uint8Array(hashBytes),x=>x.toString(16).padStart(2,"0")).join("");
+    const commit=await fetch("https://firestore.googleapis.com/v1/projects/"+PROJECT_ID+"/databases/(default)/documents:commit",{
+      method:"POST",headers:{"Authorization":"Bearer "+owner.idToken,"Content-Type":"application/json"},
+      body:JSON.stringify({writes:[
+        {update:{name:memberPath,fields:{
+          shopId:{stringValue:owner.shopId},role:{stringValue:role},status:{stringValue:"active"},
+          email:{stringValue:created.email},createdAt:{timestampValue:now},createdBy:{stringValue:owner.shopId},
+          merchantStaff:{booleanValue:true},name:{stringValue:name},merchantCodeHash:{stringValue:codeHash},
+          slotId:{stringValue:slotId},canPrint:{booleanValue:false}
+        }},currentDocument:{exists:false}},
+        {update:{name:slotPath,fields:{
+          shopId:{stringValue:owner.shopId},uid:{stringValue:created.uid},slot:{integerValue:String(slot)},
+          createdAt:{timestampValue:now},merchantStaff:{booleanValue:true}
+        }},currentDocument:{exists:false}}
+      ]})
+    });
+    const result=await commit.json().catch(()=>({}));
+    if(!commit.ok)throw new Error(String(result.error?.message||"staff_membership_write_failed").slice(0,180));
+    return json({ok:true,uid:created.uid,code:created.code,name,role,slot},200,origin);
+  } catch(e) {
+    if(created)await cleanupStaffAuth(owner.apiKey,created.createdToken);
+    const reason=String(e.message||"staff_provision_failed");
+    const status=reason.includes("ALREADY_EXISTS")||reason.includes("FAILED_PRECONDITION")?409:400;
+    return json({ok:false,error:reason},status,origin);
+  }
+}
+async function staffList(request,origin) {
+  let body;try{body=await request.json()}catch{return json({ok:false,error:"invalid_json"},400,origin)}
+  const owner=await verifyShopOwner(request,body,origin);if(owner.response)return owner.response;
+  if(!await verifyActiveShopLicense(owner.shopId,owner.idToken))return json({ok:false,error:"active_shop_license_required"},403,origin);
+  const response=await fetch("https://firestore.googleapis.com/v1/projects/"+PROJECT_ID+"/databases/(default)/documents:runQuery",{
+    method:"POST",headers:{"Authorization":"Bearer "+owner.idToken,"Content-Type":"application/json"},
+    body:JSON.stringify({structuredQuery:{from:[{collectionId:"shopMembers"}],where:{fieldFilter:{
+      field:{fieldPath:"shopId"},op:"EQUAL",value:{stringValue:owner.shopId}
+    }}}})
+  });
+  const data=await response.json().catch(()=>[]);
+  if(!response.ok)return json({ok:false,error:"staff_list_failed"},response.status,origin);
+  const members=(Array.isArray(data)?data:[]).filter(x=>x.document).map(x=>{
+    const d=x.document,fields=d.fields||{};
+    return {uid:d.name.split("/").pop(),name:fields.name?.stringValue||"",role:fields.role?.stringValue||"",
+      status:fields.status?.stringValue||"",merchantStaff:fields.merchantStaff?.booleanValue===true};
+  }).filter(x=>x.merchantStaff);
+  return json({ok:true,maxStaff:3,members},200,origin);
+}
+async function staffRevoke(request,origin) {
+  let body;try{body=await request.json()}catch{return json({ok:false,error:"invalid_json"},400,origin)}
+  const owner=await verifyShopOwner(request,body,origin);if(owner.response)return owner.response;
+  if(!await verifyActiveShopLicense(owner.shopId,owner.idToken))return json({ok:false,error:"active_shop_license_required"},403,origin);
+  const uid=String(body.memberUid||"").trim();
+  if(!/^[A-Za-z0-9_-]{10,128}$/.test(uid)||uid===owner.shopId)return json({ok:false,error:"invalid_staff_uid"},400,origin);
+  const {response,data}=await firestoreGet("shopMembers/"+encodeURIComponent(uid),owner.idToken);
+  if(!response.ok)return json({ok:false,error:"staff_not_found"},404,origin);
+  const fields=data.fields||{};
+  if(fields.shopId?.stringValue!==owner.shopId||fields.merchantStaff?.booleanValue!==true)
+    return json({ok:false,error:"staff_not_found"},404,origin);
+  const slotId=fields.slotId?.stringValue,now=new Date().toISOString();
+  const memberPath="projects/"+PROJECT_ID+"/databases/(default)/documents/shopMembers/"+uid;
+  const writes=[{update:{name:memberPath,fields:{...fields,status:{stringValue:"suspended"},revokedAt:{timestampValue:now}}},updateMask:{fieldPaths:["status","revokedAt"]}}];
+  if(slotId&&slotId.startsWith(owner.shopId+"_")){
+    writes.push({delete:"projects/"+PROJECT_ID+"/databases/(default)/documents/shopStaffSlots/"+slotId});
+  }
+  const commit=await fetch("https://firestore.googleapis.com/v1/projects/"+PROJECT_ID+"/databases/(default)/documents:commit",{
+    method:"POST",headers:{"Authorization":"Bearer "+owner.idToken,"Content-Type":"application/json"},body:JSON.stringify({writes})
+  });
+  if(!commit.ok){const error=await commit.json().catch(()=>({}));return json({ok:false,error:String(error.error?.message||"staff_revoke_failed").slice(0,180)},400,origin)}
+  return json({ok:true},200,origin);
+}
+
 function corsHeaders(origin) {
   // The native Android app and GitHub Pages site both call this gateway.
   // Authentication and authorization remain enforced by Firebase upstream.
@@ -123,12 +291,15 @@ export default {
     }
 
     if (url.pathname === "/owner/provision" && request.method === "POST") return provisionShopOwner(request, env, origin);
+    if (url.pathname === "/staff/provision" && request.method === "POST") return staffProvision(request, origin);
+    if (url.pathname === "/staff/list" && request.method === "POST") return staffList(request, origin);
+    if (url.pathname === "/staff/revoke" && request.method === "POST") return staffRevoke(request, origin);
 
     if (url.pathname === "/health" && request.method === "GET") {
       return json({
         ok: true,
         service: "ak-sale-gateway",
-        status: "owner-provision-ready",
+        status: "owner-and-staff-provision-ready",
         serviceAccountConfigured: false,
         serviceAccountRequired: false,
         upstream: "Cloudflare Worker Firebase Admin REST",

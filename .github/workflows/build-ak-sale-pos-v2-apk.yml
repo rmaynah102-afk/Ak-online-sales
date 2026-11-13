@@ -100,19 +100,19 @@ jobs:
           root=Path('android/build.gradle'); app=Path('android/app/build.gradle')
           rs=root.read_text(); aps=app.read_text()
           if 'com.google.gms:google-services' not in rs:
-              m=re.search(r'(dependencies\\s*\\{)',rs)
+              m=re.search(r'(dependencies\s*\{)',rs)
               if not m: raise SystemExit('Root Gradle dependencies block not found')
-              rs=rs[:m.end()]+"\\n        classpath 'com.google.gms:google-services:4.4.4'"+rs[m.end():]
+              rs=rs[:m.end()]+"\n        classpath 'com.google.gms:google-services:4.4.4'"+rs[m.end():]
               root.write_text(rs)
           if 'com.google.gms.google-services' not in aps:
-              app.write_text(aps+"\\n\\napply plugin: 'com.google.gms.google-services'\\n")
+              app.write_text(aps+"\n\napply plugin: 'com.google.gms.google-services'\n")
           variables=Path('android/variables.gradle')
           vs=variables.read_text()
           for key,value in [('rgcfaIncludeGoogle','true'),('androidxCredentialsVersion',"'1.3.0'")]:
-              if not re.search(r'\\b'+re.escape(key)+r'\\s*=',vs):
-                  m=re.search(r'(ext\\s*\\{)',vs)
+              if not re.search(r'\b'+re.escape(key)+r'\s*=',vs):
+                  m=re.search(r'(ext\s*\{)',vs)
                   if not m: raise SystemExit('variables.gradle ext block not found')
-                  vs=vs[:m.end()]+'\\n    '+key+' = '+value+vs[m.end():]
+                  vs=vs[:m.end()]+'\n    '+key+' = '+value+vs[m.end():]
           variables.write_text(vs)
           print('Firebase Android package, Google Services plugin and native Google auth dependencies configured')
           PY

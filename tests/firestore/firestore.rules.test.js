@@ -9,6 +9,8 @@ const {
 const {
   doc,
   getDoc,
+  getDocs,
+  collection,
   setDoc,
   deleteDoc,
   writeBatch,
@@ -418,19 +420,19 @@ describe('AK Sale Firestore security baseline', function () {
     await seedMember('manager-a', 'shop-a', 'manager');
     await testEnv.withSecurityRulesDisabled(async (context) => {
       await setDoc(doc(context.firestore(), 'shops', 'shop-a', 'pos', 'products', 'records', 'secret-product'), {
-        name: 'Drill', cost: 15000, retail: 20000,
+        name: 'Drill', retail: 20000, stock: 5,
       });
       await setDoc(doc(context.firestore(), 'shops', 'shop-a', 'pos', 'productCosts', 'records', 'p1'), {
         productId: 'secret-product', cost: 15000,
       });
     });
-    const cashier = testEnv.authenticatedContext('cashier-a', {
+      await setDoc(doc(context.firestore(), 'shops', 'shop-a', 'pos', 'sales', 'records', 's1'), { total: 20000 });\n      await setDoc(doc(context.firestore(), 'shops', 'shop-a', 'pos', 'saleCosts', 'records', 's1'), { cost: 15000, profit: 5000 });\n    });\n    const cashier = testEnv.authenticatedContext('cashier-a', {
       email: 'cashier-a@example.com', email_verified: true,
     }).firestore();
     const manager = testEnv.authenticatedContext('manager-a', {
       email: 'manager-a@example.com', email_verified: true,
     }).firestore();
-    await assertFails(getDoc(doc(cashier, 'shops', 'shop-a', 'pos', 'products', 'records', 'secret-product')));
+    await assertSucceeds(getDoc(doc(cashier, 'shops', 'shop-a', 'pos', 'products', 'records', 'secret-product')));\n    await assertSucceeds(getDocs(collection(cashier, 'shops', 'shop-a', 'pos', 'products', 'records')));\n    await assertSucceeds(getDoc(doc(cashier, 'shops', 'shop-a', 'pos', 'sales', 'records', 's1')));\n    await assertFails(getDoc(doc(cashier, 'shops', 'shop-a', 'pos', 'saleCosts', 'records', 's1')));
     await assertFails(getDoc(doc(cashier, 'shops', 'shop-a', 'pos', 'productCosts', 'records', 'p1')));
     await assertSucceeds(getDoc(doc(manager, 'shops', 'shop-a', 'pos', 'productCosts', 'records', 'p1')));
     await assertFails(setDoc(doc(manager, 'shops', 'shop-a', 'pos', 'products', 'records', 'p2'), {

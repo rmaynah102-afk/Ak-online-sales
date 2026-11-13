@@ -173,7 +173,8 @@ service cloud.firestore {
             && activeShopLicense(resource.data.shopId))
           || (request.auth.uid == resource.data.shopId
             && activeShopLicense(resource.data.shopId)));
-      allow create: if request.auth != null
+      allow create: if (
+        request.auth != null
         && request.auth.uid == memberUid
         && request.auth.token.email_verified == true
         && request.resource.data.keys().hasOnly(['shopId','role','status','email','createdAt','createdBy','inviteCode','slotId','canPrint'])
@@ -197,12 +198,40 @@ service cloud.firestore {
         && existsAfter(/databases/$(database)/documents/shopStaffSlots/$(request.resource.data.slotId))
         && getAfter(/databases/$(database)/documents/shopStaffSlots/$(request.resource.data.slotId)).data.uid == memberUid
         && getAfter(/databases/$(database)/documents/shopStaffSlots/$(request.resource.data.slotId)).data.shopId == request.resource.data.shopId
-        && getAfter(/databases/$(database)/documents/shopStaffSlots/$(request.resource.data.slotId)).data.inviteCode == request.resource.data.inviteCode;
+        && getAfter(/databases/$(database)/documents/shopStaffSlots/$(request.resource.data.slotId)).data.inviteCode == request.resource.data.inviteCode
+      ) || (
+        request.auth != null
+        && request.auth.uid == request.resource.data.shopId
+        && activeShopLicense(request.resource.data.shopId)
+        && request.resource.data.keys().hasOnly(['shopId','role','status','email','createdAt','createdBy','merchantStaff','name','merchantCodeHash','slotId','canPrint'])
+        && request.resource.data.merchantStaff == true
+        && request.resource.data.email is string
+        && request.resource.data.email.matches('^staff\\.[a-f0-9]{12}@akstaff\\.app$')
+        && request.resource.data.role in ['manager','cashier','employee']
+        && request.resource.data.status == 'active'
+        && request.resource.data.name is string
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.createdAt <= request.time
+        && request.resource.data.createdAt > request.time - duration.value(5, 'm')
+        && request.resource.data.merchantCodeHash is string
+        && request.resource.data.merchantCodeHash.size() == 64
+        && !request.resource.data.merchantCodeHash.matches('.*[^a-f0-9].*')
+        && request.resource.data.slotId in [request.auth.uid + '_1', request.auth.uid + '_2', request.auth.uid + '_3']
+        && existsAfter(/databases/$(database)/documents/shopStaffSlots/$(request.resource.data.slotId))
+        && getAfter(/databases/$(database)/documents/shopStaffSlots/$(request.resource.data.slotId)).data.uid == memberUid
+        && getAfter(/databases/$(database)/documents/shopStaffSlots/$(request.resource.data.slotId)).data.shopId == request.auth.uid
+        && getAfter(/databases/$(database)/documents/shopStaffSlots/$(request.resource.data.slotId)).data.merchantStaff == true
+      );
       allow update: if request.auth != null
         && request.auth.uid == resource.data.shopId
         && activeShopLicense(resource.data.shopId)
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['canPrint'])
-        && request.resource.data.canPrint is bool;
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['canPrint','status','revokedAt'])
+        && ((request.resource.data.diff(resource.data).affectedKeys().hasOnly(['canPrint'])
+              && request.resource.data.canPrint is bool)
+          || (resource.data.merchantStaff == true
+              && request.resource.data.status == 'suspended'
+              && request.resource.data.revokedAt is timestamp));
       allow delete: if request.auth != null
         && request.auth.uid == resource.data.shopId
         && activeShopLicense(resource.data.shopId);
@@ -255,7 +284,8 @@ service cloud.firestore {
       allow read: if request.auth != null
         && (resource.data.uid == request.auth.uid
           || resource.data.shopId == request.auth.uid);
-      allow create: if request.auth != null
+      allow create: if (
+        request.auth != null
         && request.auth.token.email_verified == true
         && request.resource.data.keys().hasOnly(['shopId','uid','slot','createdAt','inviteCode'])
         && request.resource.data.uid == request.auth.uid
@@ -272,12 +302,30 @@ service cloud.firestore {
         && exists(/databases/$(database)/documents/shopInvites/$(request.resource.data.inviteCode))
         && get(/databases/$(database)/documents/shopInvites/$(request.resource.data.inviteCode)).data.shopId == request.resource.data.shopId
         && get(/databases/$(database)/documents/shopInvites/$(request.resource.data.inviteCode)).data.status == 'open'
-        && get(/databases/$(database)/documents/shopInvites/$(request.resource.data.inviteCode)).data.expiresAt > request.time
         && existsAfter(/databases/$(database)/documents/shopInvites/$(request.resource.data.inviteCode))
         && getAfter(/databases/$(database)/documents/shopInvites/$(request.resource.data.inviteCode)).data.status == 'claimed'
         && existsAfter(/databases/$(database)/documents/shopMembers/$(request.auth.uid))
         && getAfter(/databases/$(database)/documents/shopMembers/$(request.auth.uid)).data.shopId == request.resource.data.shopId
-        && getAfter(/databases/$(database)/documents/shopMembers/$(request.auth.uid)).data.inviteCode == request.resource.data.inviteCode;
+        && getAfter(/databases/$(database)/documents/shopMembers/$(request.auth.uid)).data.inviteCode == request.resource.data.inviteCode
+      ) || (
+        request.auth != null
+        && request.auth.uid == request.resource.data.shopId
+        && activeShopLicense(request.resource.data.shopId)
+        && request.resource.data.keys().hasOnly(['shopId','uid','slot','createdAt','merchantStaff'])
+        && request.resource.data.uid is string
+        && request.resource.data.slot in [1,2,3]
+        && ((request.resource.data.slot == 1 && slotId == request.auth.uid + '_1')
+          || (request.resource.data.slot == 2 && slotId == request.auth.uid + '_2')
+          || (request.resource.data.slot == 3 && slotId == request.auth.uid + '_3'))
+        && request.resource.data.merchantStaff == true
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.createdAt <= request.time
+        && request.resource.data.createdAt > request.time - duration.value(5, 'm')
+        && existsAfter(/databases/$(database)/documents/shopMembers/$(request.resource.data.uid))
+        && getAfter(/databases/$(database)/documents/shopMembers/$(request.resource.data.uid)).data.shopId == request.auth.uid
+        && getAfter(/databases/$(database)/documents/shopMembers/$(request.resource.data.uid)).data.slotId == slotId
+        && getAfter(/databases/$(database)/documents/shopMembers/$(request.resource.data.uid)).data.merchantStaff == true
+      );
       allow update: if false;
       allow delete: if request.auth != null
         && request.auth.uid == resource.data.shopId

@@ -56,11 +56,24 @@ jobs:
           echo "CLOUDFLARE_API_TOKEN_CLEAN=$TOKEN" >> "$GITHUB_ENV"
           echo "CLOUDFLARE_ACCOUNT_ID_CLEAN=$ACCOUNT" >> "$GITHUB_ENV"
 
-      - name: Deploy to Cloudflare Workers
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ env.CLOUDFLARE_API_TOKEN_CLEAN }}
-          accountId: ${{ env.CLOUDFLARE_ACCOUNT_ID_CLEAN }}
-          workingDirectory: "cloudflare"
-          wranglerVersion: "3.114.17"
-          command: deploy
+      - name: Upload Worker through Cloudflare Script API
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          RESPONSE="$(curl --silent --show-error --request PUT \
+            "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/workers/scripts/ak-sale-backend" \
+            --header "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+            --form 'metadata={"main_module":"worker.js","compatibility_date":"2026-11-12"};type=application/json' \
+            --form 'worker.js=@cloudflare/worker.js;filename=worker.js;type=application/javascript+module')"
+          printf '%s' "$RESPONSE" | node -e '
+            let s=""; process.stdin.on("data",d=>s+=d).on("end",()=>{
+              const j=JSON.parse(s);
+              if (!j.success) {
+                for (const e of (j.errors || [])) console.error("Cloudflare API error", e.code, e.message);
+                process.exit(1);
+              }
+              console.log("Worker upload successful:", j.result && j.result.id);
+            });
+          '

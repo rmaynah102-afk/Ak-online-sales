@@ -58,7 +58,7 @@ async function provisionShopOwner(request, env, origin) {
   });
   const callerData = await callerResponse.json().catch(() => ({}));
   const caller = callerData.users && callerData.users[0];
-  if (!callerResponse.ok || !caller || String(caller.email || "").toLowerCase() !== "painglin102@gmail.com" || caller.emailVerified !== true) {
+  if (!callerResponse.ok || !caller || String(caller.email || "").toLowerCase() !== "painglin102@gmail.com") {
     return json({ ok: false, error: "platform_owner_verification_failed" }, 403, origin);
   }
 

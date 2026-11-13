@@ -41,12 +41,12 @@ test("rejects malformed shop-owner email before contacting Firebase", async () =
   } finally { globalThis.fetch = originalFetch; }
 });
 
-test("creates a shop owner only after verified Platform Owner lookup", async () => {
+test("creates a shop owner after Platform Owner lookup even if the Owner Gmail is unverified", async () => {
   const originalFetch = globalThis.fetch;
   const calls = [];
   globalThis.fetch = async (url, options) => {
     calls.push({ url: String(url), options });
-    if (calls.length === 1) return new Response(JSON.stringify({ users: [{ email: "painglin102@gmail.com", emailVerified: true }] }), { status: 200 });
+    if (calls.length === 1) return new Response(JSON.stringify({ users: [{ email: "painglin102@gmail.com", emailVerified: false }] }), { status: 200 });
     if (calls.length === 2) return new Response(JSON.stringify({ localId: "shop-uid-123", idToken: "new-shop-token" }), { status: 200 });
     if (calls.length === 3) return new Response(JSON.stringify({ email: "shop@example.com" }), { status: 200 });
     throw new Error("Unexpected Firebase request");

@@ -57,9 +57,10 @@ jobs:
           echo "CLOUDFLARE_ACCOUNT_ID_CLEAN=$ACCOUNT" >> "$GITHUB_ENV"
 
       - name: Deploy to Cloudflare Workers
-        uses: cloudflare/wrangler-action@v3
+        uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ env.CLOUDFLARE_API_TOKEN_CLEAN }}
           accountId: ${{ env.CLOUDFLARE_ACCOUNT_ID_CLEAN }}
           workingDirectory: "cloudflare"
+          wranglerVersion: "4.161.0"
           command: deploy

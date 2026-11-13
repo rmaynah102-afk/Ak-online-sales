@@ -423,7 +423,6 @@ service cloud.firestore {
         || isVerifiedOwner()
         || (exists(/databases/$(database)/documents/shopMembers/$(request.auth.uid))
           && get(/databases/$(database)/documents/shopMembers/$(request.auth.uid)).data.shopId == userId
-          && get(/databases/$(database)/documents/shopMembers/$(request.auth.uid)).data.merchantStaff == true
           && get(/databases/$(database)/documents/shopMembers/$(request.auth.uid)).data.status == 'active'
           && resource.data.status == 'active'
           && resource.data.expiresAt is timestamp

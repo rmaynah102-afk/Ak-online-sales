@@ -404,16 +404,25 @@ service cloud.firestore {
         && request.resource.data.updatedAt == request.time;
       allow update: if isVerifiedOwner()
         && documentId == 'shopCapacity'
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['activeShopCount','updatedAt','lastIssuedUid'])
-        && resource.data.activeShopCount is int
-        && request.resource.data.activeShopCount == resource.data.activeShopCount + 1
-        && request.resource.data.activeShopCount <= 100
-        && request.resource.data.lastIssuedUid is string
-        && !exists(/databases/$(database)/documents/licenses/$(request.resource.data.lastIssuedUid))
-        && existsAfter(/databases/$(database)/documents/licenses/$(request.resource.data.lastIssuedUid))
-        && getAfter(/databases/$(database)/documents/licenses/$(request.resource.data.lastIssuedUid)).data.uid == request.resource.data.lastIssuedUid
-        && getAfter(/databases/$(database)/documents/licenses/$(request.resource.data.lastIssuedUid)).data.status == 'active'
-        && request.resource.data.updatedAt == request.time;
+        && (
+          // Normal issuance: increment the counter atomically with a new license.
+          (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['activeShopCount','updatedAt','lastIssuedUid'])
+            && resource.data.activeShopCount is int
+            && request.resource.data.activeShopCount == resource.data.activeShopCount + 1
+            && request.resource.data.activeShopCount <= 100
+            && request.resource.data.lastIssuedUid is string
+            && !exists(/databases/$(database)/documents/licenses/$(request.resource.data.lastIssuedUid))
+            && existsAfter(/databases/$(database)/documents/licenses/$(request.resource.data.lastIssuedUid))
+            && getAfter(/databases/$(database)/documents/licenses/$(request.resource.data.lastIssuedUid)).data.uid == request.resource.data.lastIssuedUid
+            && getAfter(/databases/$(database)/documents/licenses/$(request.resource.data.lastIssuedUid)).data.status == 'active'
+            && request.resource.data.updatedAt == request.time)
+          // Owner-only repair: reconcile a stale counter to the actual license collection size.
+          || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['activeShopCount','updatedAt'])
+            && request.resource.data.activeShopCount is int
+            && request.resource.data.activeShopCount >= 0
+            && request.resource.data.activeShopCount <= 100
+            && request.resource.data.updatedAt == request.time)
+        );
       allow delete: if false;
     }
 

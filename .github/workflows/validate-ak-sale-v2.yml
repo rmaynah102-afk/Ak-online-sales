@@ -7,6 +7,13 @@ on:
       - "firebase-config.js"
       - "firestore.rules"
       - ".github/workflows/validate-ak-sale-v2.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "v2/**"
+      - "firebase-config.js"
+      - "firestore.rules"
+      - ".github/workflows/validate-ak-sale-v2.yml"
   workflow_dispatch:
 permissions:
   contents: read

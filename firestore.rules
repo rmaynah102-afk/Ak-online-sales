@@ -799,7 +799,29 @@ service cloud.firestore {
     match /globalCommunityPosts/{postId} {
       allow read: if resource.data.status == 'published'
         || (request.auth != null && resource.data.ownerUid == request.auth.uid);
-      allow create: if request.auth != null
+      allow create: if (
+        request.auth == null
+        && request.resource.data.keys().hasOnly(['ownerUid','displayName','kind','body','country','product','price','currency','link','status','createdAt'])
+        && request.resource.data.ownerUid == 'public'
+        && request.resource.data.displayName is string
+        && request.resource.data.displayName.size() >= 2
+        && request.resource.data.displayName.size() <= 100
+        && request.resource.data.kind == 'business'
+        && request.resource.data.body is string
+        && request.resource.data.body.size() >= 1
+        && request.resource.data.body.size() <= 1000
+        && request.resource.data.country == 'Myanmar'
+        && request.resource.data.product is string
+        && request.resource.data.product.size() <= 100
+        && request.resource.data.price == null
+        && request.resource.data.currency == 'MMK'
+        && request.resource.data.link is string
+        && request.resource.data.link.size() <= 400
+        && (request.resource.data.link == '' || request.resource.data.link.matches('https://[^ ]+'))
+        && request.resource.data.status == 'published'
+        && request.resource.data.createdAt == request.time
+      ) || (
+        request.auth != null
         && request.auth.token.email_verified == true
         && request.resource.data.keys().hasOnly(['ownerUid','displayName','kind','body','country','product','price','currency','link','status','createdAt'])
         && request.resource.data.ownerUid == request.auth.uid
@@ -819,7 +841,7 @@ service cloud.firestore {
         && request.resource.data.link.size() <= 400
         && (request.resource.data.link == '' || request.resource.data.link.matches('https://[^ ]+'))
         && request.resource.data.status == 'published'
-        && request.resource.data.createdAt == request.time;
+        && request.resource.data.createdAt == request.time);
       allow delete: if request.auth != null && resource.data.ownerUid == request.auth.uid;
       allow update: if false;
 

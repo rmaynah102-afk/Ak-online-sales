@@ -144,8 +144,44 @@ function renderAll(){ $("productCount").textContent=products.length;$("todaySale
 $("saveProduct").onclick=async()=>{try{const name=$("pName").value.trim();if(!name)throw Error("ပစ္စည်းအမည် ဖြည့်ပါ");const id=editingProduct||db.collection("_ids").doc().id, data={name,sku:$("pSku").value.trim(),category:$("pCategory").value,retail:+$("pRetail").value||0,wholesale:+$("pWholesale").value||0,stock:+$("pStock").value||0,alert:+$("pAlert").value||0};const batch=db.batch();batch.set(col("products").doc(id),data);batch.set(col("productCosts").doc(id),{cost:+$("pCost").value||0});await batch.commit();editingProduct=null;["pName","pSku","pCost","pRetail","pWholesale","pStock"].forEach(id=>$ (id).value="");await reloadAll()}catch(e){alert(errText(e))}};
 window.editProduct=id=>{const p=products.find(x=>x.id===id);editingProduct=id;$("pName").value=p.name;$("pSku").value=p.sku||"";$("pCategory").value=p.category;$("pRetail").value=p.retail;$("pWholesale").value=p.wholesale;$("pStock").value=p.stock;$("pAlert").value=p.alert;col("productCosts").doc(id).get().then(s=>$("pCost").value=s.data()?.cost||0)};
 $("clearProduct").onclick=()=>{editingProduct=null;["pName","pSku","pCost","pRetail","pWholesale","pStock"].forEach(id=>$(id).value="")};
-$("saveSale").onclick=async()=>{try{const p=products.find(x=>x.id===$("saleProduct").value),qty=+$("saleQty").value;if(!p||qty<1||qty>p.stock)throw Error("ပစ္စည်း/အရေအတွက် မမှန်ပါ၊ လက်ကျန်စစ်ပါ");const price=$("salePriceType").value==="wholesale"?p.wholesale:p.retail,total=price*qty,payType=$("salePay").value,paid=payType==="cash"?total:payType==="credit"?0:Math.min(total,Math.max(0,+$("salePaid").value||0)),cost=p.cost||0,id=db.collection("_ids").doc().id,batch=db.batch();batch.update(col("products").doc(p.id),{stock:p.stock-qty});batch.set(col("sales").doc(id),{productId:p.id,productName:p.name,qty,price,total,paid,due:total-paid,customer:$("saleCustomer").value.trim(),payment:$("salePay").value,createdAt:firebase.firestore.FieldValue.serverTimestamp()});if(staffRole==="owner"||staffRole==="manager")batch.set(col("saleCosts").doc(id),{cost:cost*qty,profit:(price-cost)*qty});await batch.commit();await reloadAll()}catch(e){alert(errText(e))}};
-$("savePurchase").onclick=async()=>{try{const p=products.find(x=>x.id===$("buyProduct").value),qty=+$("buyQty").value,cost=+$("buyCost").value;if(!p||qty<1||cost<0)throw Error("အချက်အလက် မမှန်ပါ");const batch=db.batch(),id=db.collection("_ids").doc().id;batch.update(col("products").doc(p.id),{stock:p.stock+qty});batch.set(col("productCosts").doc(p.id),{cost});batch.set(col("purchases").doc(id),{productId:p.id,productName:p.name,qty,cost,total:qty*cost,supplier:$("buySupplier").value,createdAt:firebase.firestore.FieldValue.serverTimestamp()});await batch.commit();await reloadAll()}catch(e){alert(errText(e))}};
+$("saveSale").onclick=async()=>{
+ try{
+  const selectedId=$("saleProduct").value,qty=Number($("saleQty").value),priceType=$("salePriceType").value,payType=$("salePay").value;
+  if(!selectedId||!Number.isInteger(qty)||qty<1)throw Error("ပစ္စည်းနှင့် အရေအတွက် မှန်ကန်စွာရွေးပါ");
+  const saleRef=col("sales").doc(),productRef=col("products").doc(selectedId),costRef=col("productCosts").doc(selectedId),saleCostRef=col("saleCosts").doc(saleRef.id);
+  await db.runTransaction(async tx=>{
+   const productSnap=await tx.get(productRef);
+   if(!productSnap.exists)throw Error("ပစ္စည်းမတွေ့ပါ");
+   const p=productSnap.data(),stock=Number(p.stock||0);
+   if(qty>stock)throw Error("လက်ကျန်မလုံလောက်ပါ။ လက်ရှိလက်ကျန်: "+stock);
+   let cost=0;
+   if(staffRole==="owner"||staffRole==="manager"){const costSnap=await tx.get(costRef);cost=Number(costSnap.data()?.cost||0)}
+   const price=priceType==="wholesale"?Number(p.wholesale||0):Number(p.retail||0);
+   const total=price*qty;
+   const paid=payType==="cash"?total:payType==="credit"?0:Math.min(total,Math.max(0,Number($("salePaid").value)||0));
+   tx.update(productRef,{stock:stock-qty});
+   tx.set(saleRef,{productId:selectedId,productName:p.name,qty,price,total,paid,due:total-paid,customer:$("saleCustomer").value.trim(),payment:payType,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+   if(staffRole==="owner"||staffRole==="manager")tx.set(saleCostRef,{cost:cost*qty,profit:(price-cost)*qty});
+  });
+  await reloadAll();
+ }catch(e){alert(errText(e))}
+};
+$("savePurchase").onclick=async()=>{
+ try{
+  const selectedId=$("buyProduct").value,qty=Number($("buyQty").value),cost=Number($("buyCost").value),supplier=$("buySupplier").value.trim();
+  if(!selectedId||!Number.isInteger(qty)||qty<1||!Number.isFinite(cost)||cost<0)throw Error("အဝယ်အချက်အလက် မမှန်ပါ");
+  const purchaseRef=col("purchases").doc(),productRef=col("products").doc(selectedId),costRef=col("productCosts").doc(selectedId);
+  await db.runTransaction(async tx=>{
+   const productSnap=await tx.get(productRef);
+   if(!productSnap.exists)throw Error("ပစ္စည်းမတွေ့ပါ");
+   const p=productSnap.data();
+   tx.update(productRef,{stock:Number(p.stock||0)+qty});
+   tx.set(costRef,{cost});
+   tx.set(purchaseRef,{productId:selectedId,productName:p.name,qty,cost,total:qty*cost,supplier,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+  });
+  await reloadAll();
+ }catch(e){alert(errText(e))}
+};
 $("savePerson").onclick=async()=>{try{if(!$("personName").value.trim())throw Error("အမည်ဖြည့်ပါ");await col("people").add({name:$("personName").value.trim(),phone:$("personPhone").value.trim(),type:$("personType").value,createdAt:firebase.firestore.FieldValue.serverTimestamp()});await reloadAll()}catch(e){alert(errText(e))}};
 $("saveExpense").onclick=async()=>{try{if(!$("expenseName").value.trim()||+$("expenseAmount").value<=0)throw Error("အချက်အလက် ဖြည့်ပါ");await col("expenses").add({name:$("expenseName").value.trim(),amount:+$("expenseAmount").value,createdAt:firebase.firestore.FieldValue.serverTimestamp()});await reloadAll()}catch(e){alert(errText(e))}};
 $("tabs").onclick=e=>{const b=e.target.closest("button[data-tab]");if(!b)return;document.querySelectorAll("#tabs button").forEach(x=>x.classList.toggle("active",x===b));["products","sales","purchases","people","expenses","reports","backup"].forEach(t=>$("tab-"+t).classList.toggle("hidden",t!==b.dataset.tab))};

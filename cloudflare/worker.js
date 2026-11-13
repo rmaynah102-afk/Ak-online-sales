@@ -41,14 +41,14 @@ const ALLOWED_FUNCTIONS = new Set([
 
 const ALLOWED_ORIGINS = new Set(["https://rmaynah102-afk.github.io","capacitor://localhost","https://localhost","http://localhost","http://localhost:8100"]);
 async function provisionShopOwner(request, env, origin) {
-  const auth = (request.headers.get("Authorization") || "").match(/^Bearer\\s+(\\S+)$/i);
+  const auth = (request.headers.get("Authorization") || "").match(/^Bearer\s+(\S+)$/i);
   if (!auth) return json({ ok: false, error: "unauthenticated" }, 401, origin);
   let body;
   try { body = await request.json(); } catch { return json({ ok: false, error: "invalid_json" }, 400, origin); }
   const email = String(body.email || "").trim().toLowerCase();
   const password = String(body.password || "");
   const apiKey = String(body.apiKey || "");
-  if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email) || email === "painglin102@gmail.com") return json({ ok: false, error: "invalid_shop_owner_email" }, 400, origin);
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email === "painglin102@gmail.com") return json({ ok: false, error: "invalid_shop_owner_email" }, 400, origin);
   if (password.length < 8 || password.length > 128) return json({ ok: false, error: "password_must_be_8_to_128_characters" }, 400, origin);
   if (!apiKey || apiKey.length > 200) return json({ ok: false, error: "firebase_api_key_required" }, 400, origin);
 

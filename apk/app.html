@@ -2139,6 +2139,11 @@ async function firebaseLogin(){
    await fbAuth.signOut();throw Error("Owner Login ကို ရွေးပြီး ပြန်ဝင်ပါ။");
   }
   if(mode==="shop"){
+   if(!credential.user.emailVerified){
+    try{await credential.user.sendEmailVerification({url:location.origin+location.pathname+"?app=1"});}catch(_){}
+    await fbAuth.signOut();
+    throw Error("ဆိုင်ရှင် Gmail ကို Verify မလုပ်ရသေးပါ။ Inbox/Spam ထဲမှ Verification Link ကိုနှိပ်ပြီး ပြန် Login ဝင်ပါ။ Link အသစ်လည်း ပို့ထားသည်။");
+   }
    const shopToken=await credential.user.getIdTokenResult(true);
    const shopMemberSnap=await fbStore.collection("shopMembers").doc(credential.user.uid).get();
    const shopMember=shopMemberSnap.exists?(shopMemberSnap.data()||{}):{};

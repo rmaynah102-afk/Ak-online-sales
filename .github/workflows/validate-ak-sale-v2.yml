@@ -1,0 +1,44 @@
+name: Validate AK Sale POS 2.0
+on:
+  push:
+    branches: [ak-sale-pos-v2]
+    paths:
+      - "v2/**"
+      - "firebase-config.js"
+      - "firestore.rules"
+      - ".github/workflows/validate-ak-sale-v2.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validate inline JavaScript
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          const vm = require('vm');
+          const html = fs.readFileSync('v2/index.html', 'utf8');
+          const scripts = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)]
+            .filter(([, attrs]) => !/\bsrc\s*=/.test(attrs));
+          if (!scripts.length) throw new Error('No inline JavaScript found');
+          scripts.forEach(([, , code], i) => new vm.Script(code, { filename: 'v2:inline-' + (i + 1) }));
+          console.log('Validated', scripts.length, 'inline JavaScript block(s).');
+          NODE
+      - name: Validate PWA manifest and required app sections
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          const m = JSON.parse(fs.readFileSync('v2/manifest.webmanifest', 'utf8'));
+          if (m.name !== 'AK Sale POS 2.0' || m.display !== 'standalone') throw new Error('Invalid PWA manifest');
+          const h = fs.readFileSync('v2/index.html', 'utf8');
+          for (const id of ['loginPanel','ownerPanel','shopPanel','licenseRows','productRows','saleRows','purchaseRows','reportProfit','exportData']) {
+            if (!h.includes('id="' + id + '"')) throw new Error('Missing required app element: ' + id);
+          }
+          console.log('PWA manifest and core screens verified.');
+          NODE

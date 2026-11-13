@@ -7,7 +7,7 @@ on:
       - "capacitor.config.json"
       - "package.json"
       - "package-lock.json"
-      - ".github/workflows/build-ak-sale-pos-v2-main-apk.yml"
+      - ".github/workflows/build-ak-sale-pos-v2-apk.yml"
   workflow_dispatch:
 permissions:
   contents: read

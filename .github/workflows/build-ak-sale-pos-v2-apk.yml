@@ -129,6 +129,22 @@ jobs:
         run: npx cap sync android
       - name: Verify local barcode scanner is packaged in Android assets
         run: test -s android/app/src/main/assets/public/vendor/zxing.min.js
+      - name: Set Android update-compatible version
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          const run=Number(process.env.GITHUB_RUN_NUMBER||1);
+          const versionCode=1000000+run;
+          const versionName='2.0.'+run;
+          const p='android/app/build.gradle';
+          let g=fs.readFileSync(p,'utf8');
+          if(!/versionCode\\s+\\d+/.test(g)||!/versionName\\s+"[^"]+"/.test(g)) throw new Error('Android version fields not found');
+          g=g.replace(/versionCode\\s+\\d+/,'versionCode '+versionCode);
+          g=g.replace(/versionName\\s+"[^"]+"/,'versionName "'+versionName+'"');
+          if(!g.includes('applicationId "com.ak.hardware.sales"')) throw new Error('APK package ID is not the registered AK Sale app');
+          fs.writeFileSync(p,g);
+          console.log('AK Sale Android version',versionName,'code',versionCode);
+          NODE
       - name: Install AK native Bluetooth / Wi-Fi printer bridge
         run: node scripts/install-native-printer.js
       - name: Generate AK Sale Android launcher icons

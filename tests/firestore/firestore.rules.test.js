@@ -482,4 +482,28 @@ describe('AK Sale Firestore security baseline', function () {
     await assertSucceeds(deleteDoc(doc(ownerDb, 'shopMembers', 'staff-a')));
     await assertSucceeds(deleteDoc(doc(ownerDb, 'shopStaffSlots', 'shop-a_1')));
   });
+
+  it('allows Merchant Code staff claims to read their shop license and cashier stock-only updates', async () => {
+    await seedLicense('shop-a');
+    await seedLicense('shop-b');
+    await seedMember('merchant-cashier', 'shop-a', 'cashier');
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), 'shops', 'shop-a', 'pos', 'products', 'records', 'p1'), {
+        name: 'Hammer', stock: 8, retail: 5000,
+      });
+    });
+    const db = testEnv.authenticatedContext('merchant-cashier', {
+      email: 'staff.abc@akstaff.app', email_verified: true,
+      shopId: 'shop-a', merchantStaff: true, shopRole: 'cashier',
+    }).firestore();
+    await assertSucceeds(getDoc(doc(db, 'licenses', 'shop-a')));
+    await assertFails(getDoc(doc(db, 'licenses', 'shop-b')));
+    await assertSucceeds(setDoc(doc(db, 'shops', 'shop-a', 'pos', 'products', 'records', 'p1'), {
+      stock: 7,
+    }, { merge: true }));
+    await assertFails(setDoc(doc(db, 'shops', 'shop-a', 'pos', 'products', 'records', 'p1'), {
+      retail: 4000,
+    }, { merge: true }));
+  });
+
 });

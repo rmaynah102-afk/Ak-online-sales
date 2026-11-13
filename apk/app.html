@@ -860,7 +860,7 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
 </section>
 
 <section id="backup" class="view active">
-<div id="akPaywallNotice" class="panel notice"><h2>AK Sale Software · အသုံးပြုခွင့်တောင်းရန်</h2><p id="akPaywallDetail">Gmail ဖြင့် Register / Login ဝင်ပြီး Email ကို အတည်ပြုပါ။ ငွေပေးချေမှုကို App ပြင်ပတွင် ဆောင်ရွက်ပါ။ Owner က ငွေလက်ခံရရှိကြောင်း စစ်ဆေးပြီး ၃၀ / ၉၀ / ၁၈၀ / ၃၆၅ ရက် သတ်မှတ်ကာ အသုံးပြုခွင့်ဖွင့်ပေးမည်။</p><div class="actions"><button type="button" onclick="akRequestSubscriptionAccess()">အသုံးပြုခွင့် တောင်းမည်</button></div><p id="akAccessRequestStatus" class="muted">Login ဝင်ပြီး Gmail အတည်ပြုထားမှ တောင်းဆိုနိုင်သည်။</p></div>
+<div id="akPaywallNotice" class="panel notice"><h2>AK Sale Software · အသုံးပြုခွင့်တောင်းရန်</h2><p id="akPaywallDetail">KBZPay ဖြင့် ငွေလွှဲပြီး Transaction Reference နှင့် Screenshot ကို တင်ပါ။ Platform Owner က ငွေလွှဲအထောက်အထား စစ်ဆေးပြီးမှ Package အသုံးပြုခွင့် ဖွင့်ပေးမည်။</p><div class="actions"><button type="button" onclick="document.getElementById('akAccessRequestPanel')?.scrollIntoView({behavior:'smooth',block:'center'})">Package / ငွေလွှဲအထောက်အထား တင်ရန်</button></div><p id="akAccessRequestStatus" class="muted">Gmail အတည်ပြုပြီး Login ဝင်ထားပါ။</p></div>
 <div class="panel"><h2>အခမဲ့စနစ် · လုံခြုံရေးအချက်အလက်</h2><p class="muted">AI API နှင့် အခပေး Cloud Functions မသုံးပါ။ အောက်ပါအချက်များသည် လုပ်ဆောင်ချက်ကန့်သတ်ချက်များကို ရှင်းပြထားခြင်းဖြစ်ပြီး Live Security Audit မဟုတ်ပါ။</p><div class="actions"><button type="button" onclick="akRunSecurityReview()">လုံခြုံရေးအချက်အလက် ပြရန်</button><button type="button" class="alt" onclick="akOpenChatGPT()">ChatGPT ဖွင့်ရန်</button></div><p id="akSecurityStatus" class="muted">Local အချက်အလက်များကို ပြရန်နှိပ်ပါ။</p><div id="akSecurityResult" style="white-space:pre-wrap;overflow-wrap:anywhere"></div></div>
 <div class="panel"><h2>Online / Offline အသုံးပြုမှု</h2><div class="grid"><div><label>အလုပ်လုပ်မည့်စနစ်</label><select id="akSyncModeSelect" onchange="akSetSyncMode(this.value)"><option value="auto">အလိုအလျောက် (Online ရှိလျှင် Cloud Sync)</option><option value="offline">Offline သီးသန့် · ဖုန်းထဲသိမ်း</option><option value="online">Online သီးသန့် · Cloud Sync</option></select></div><div><label>ချိတ်ဆက်မှုအခြေအနေ</label><p id="akConnectionStatus" class="pill">စစ်ဆေးနေသည်…</p></div></div><p class="muted">အရောင်း၊ ပစ္စည်း၊ ဝယ်ယူမှုနှင့် ဓာတ်ပုံများကို အရင်ဆုံး ဒီဖုန်း/ကွန်ပျူတာထဲတွင် သိမ်းသည်။ Offline ရွေးထားလျှင် Cloud သို့ အလိုအလျောက်မပို့ပါ။ Online ပြန်ဖွင့်ပြီး Internet ရှိလျှင် ပြန် Sync လုပ်နိုင်သည်။ ပထမဆုံး Login နှင့် အကောင့်/အသုံးပြုခွင့် စစ်ဆေးရန် Internet လိုအပ်သည်။</p><div class="actions"><button type="button" onclick="akSyncNow()">Cloud သို့ ယခုပြန် Sync လုပ်မည်</button><button type="button" class="alt" onclick="akCheckBrowserStorage()">ဖုန်း Storage စစ်မည်</button></div></div><div class="panel"><h2>Backup / Restore</h2><p class="muted">ပစ္စည်းဓာတ်ပုံများအပါအဝင် ပစ္စည်း၊ အရောင်း၊ အဝယ်၊ Customer/Supplier၊ အကြွေး၊ အသုံးစရိတ်နှင့် ကောင်တာ/ဝန်ထမ်းစာရင်းတို့ကို JSON မိတ္တူတစ်ခုတည်းဖြင့် ထုတ်နိုင်သည်။ ဒီ JSON ဖိုင်ကို ဖုန်းထဲ Files/Downloads တွင် သိမ်းထားပါ။ ဖုန်းပြောင်းလျှင် အဲဒီဖိုင်ကို Restore လုပ်ပါ။ Restore မလုပ်မီ လက်ရှိဒေတာကိုလည်း Pre-restore snapshot အဖြစ် သိမ်းပေးမည်။</p><div class="actions"><button onclick="backup()">ဓာတ်ပုံနှင့်စာရင်း Backup ထုတ်မည်</button><label class="btn">Backup ပြန်ယူမည်<input type="file" accept=".json,application/json" id="restoreInput" hidden onchange="restore(event)"></label><button class="alt" onclick="csvExport()">အရောင်း CSV ထုတ်မည်</button><button class="alt" type="button" onclick="akShareCsvToViber()">CSV ကို Viber သို့ မျှဝေမည်</button></div><p id="akBackupStatus" class="muted">Backup ဖိုင်ထုတ်ပြီး ဖုန်းထဲသိမ်းထားပါ။</p></div>
 <div class="panel owner-only" id="akOwnerPromoPanel">
@@ -876,7 +876,7 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
 <p class="muted">Gmail ဖြင့် Login ဝင်ပြီး POS အသုံးပြုခွင့် တောင်းထားသော User များကို ဒီစာရင်းတွင် မြင်နိုင်သည်။ Owner အတည်ပြုရန်သော Request ဖြစ်ပြီး Approve မလုပ်သေးပါနှင့်။</p>
 <div class="actions"><button type="button" onclick="loadAdminAccessRequests()">Access Request ပြန်ဖတ်မည်</button></div>
 <p id="adminAccessStatus" class="muted">စာရင်း မဖတ်ရသေးပါ။</p>
-<div class="tablewrap"><table><thead><tr><th>တင်သည့်အချိန်</th><th>User Gmail</th><th>Package</th><th>အခြေအနေ</th><th>လုပ်ဆောင်ချက်</th></tr></thead><tbody id="adminAccessRows"><tr><td colspan="5">စာရင်းမဖတ်ရသေးပါ။</td></tr></tbody></table></div>
+<div class="tablewrap"><table><thead><tr><th>တင်သည့်အချိန်</th><th>User Gmail</th><th>Package</th><th>KBZPay Transaction Reference</th><th>Screenshot</th><th>လုပ်ဆောင်ချက်</th></tr></thead><tbody id="adminAccessRows"><tr><td colspan="6">စာရင်းမဖတ်ရသေးပါ။</td></tr></tbody></table></div>
 </div>
 <div class="tablewrap"><table><thead><tr><th>Gmail</th><th>Subscription အခြေအနေ</th><th>သက်တမ်းကုန်မည့်ရက်</th><th>အသုံးပြုခွင့် / ထိန်းချုပ်မှု</th></tr></thead><tbody id="akPlatformUserRows"><tr><td colspan="4">စာရင်းမဖတ်ရသေးပါ</td></tr></tbody></table></div>
 <div class="panel" id="akMarketReportsPanel" style="margin-top:12px">
@@ -886,7 +886,7 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
 <p id="akMarketReportsStatus" class="muted">စာရင်း မဖတ်ရသေးပါ။</p>
 <div id="akMarketReportsRows"><p class="muted">တိုင်ကြားချက်များ မဖတ်ရသေးပါ။</p></div>
 </div></div></div><div class="panel" id="akFirebasePanel"><h2>အကောင့်ဝင်ရန် · Cloud စနစ်</h2><div class="notice">ဆိုင်ရှင်သည် ကိုယ်ပိုင် Gmail ဖြင့် အကောင့်ဖွင့်ပြီး Email အတည်ပြုပါ။ Platform Owner သည် Access Request နှင့် ပြင်ပငွေပေးချေမှုကို စစ်ဆေးပြီး License သက်တမ်းကိုသာ ဖွင့်ပေးသည်။</div><div class="panel" id="akAccountTypeWrap" style="margin:10px 0"><label for="akAccountType">ဖွင့်မည့်အကောင့်အမျိုးအစား</label><select id="akAccountType" onchange="akUpdateAccountTypeHint()"><option value="shop-owner">ဆိုင်ရှင်အကောင့် (ဆိုင်ကို စီမံမည်)</option><option value="staff">ဝန်ထမ်း Gmail အကောင့် (Merchant Code ဖြင့်ချိတ်မည်)</option></select><p id="akAccountTypeHint" class="muted">ဆိုင်ရှင်အကောင့်ဖြင့် Register လုပ်ပြီး Email အတည်ပြုပါ။ ထို့နောက် Package ဝယ်ယူပြီး Owner အတည်ပြုချက်ရယူပါ။</p></div><div class="panel" style="margin:10px 0"><label for="akLoginMode">Login အမျိုးအစား</label><select id="akLoginMode" onchange="akSetLoginMode()"><option value="owner">Platform Owner Login · painglin102@gmail.com</option><option value="shop" selected>ဆိုင်ရှင် Login</option><option value="staff">ဝန်ထမ်း Login · Merchant Code</option></select><p id="akLoginModeHint" class="muted">ဆိုင်ရှင်သည် Owner ပေးထားသော Gmail နှင့် Password ဖြင့် ဝင်ပါ။</p><button type="button" id="akOwnerGoogleLoginBtn" class="alt hidden" onclick="akOwnerGoogleLogin()">Google ဖြင့် Platform Owner ဝင်မည်</button><div id="akStaffLoginCodeWrap" class="hidden"><label>ဝန်ထမ်း Merchant Code (ပထမဆုံးချိတ်ဆက်ချိန်)</label><input id="akStaffLoginCode" maxlength="32" autocomplete="off" placeholder="ဆိုင်ရှင်ထံမှ ရရှိသော Code" style="text-transform:uppercase"></div></div><div class="grid"><div><label>အကောင့် Gmail / Email</label><input id="fbEmail" type="email" value="" autocomplete="username" inputmode="email" onkeydown="if(event.key==='Enter')firebaseLogin()"></div><div id="akPasswordLoginWrap"><label>Password</label><div class="actions" style="gap:6px;flex-wrap:nowrap"><input id="fbPassword" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')firebaseLogin()" style="min-width:0;flex:1"><button type="button" class="alt" aria-label="Password ပြရန်/ဖျောက်ရန်" onclick="const p=document.getElementById('fbPassword');p.type=p.type==='password'?'text':'password';this.textContent=p.type==='password'?'ပြရန်':'ဖျောက်ရန်'">ပြရန်</button></div></div></div><div class="actions"><button type="button" id="akPasswordLoginButton" onclick="firebaseLogin()">Login ဝင်မည်</button><button type="button" id="akRegisterButton" class="alt" onclick="firebaseRegister()">User အကောင့်အသစ်ဖွင့်ရန်</button><button class="alt" type="button" onclick="firebaseResetPassword()">Password မေ့နေပါက</button><button class="alt" type="button" onclick="firebaseLogout()">Logout ထွက်မည်</button></div><p class="muted">Gmail / Email နှင့် Password ကို လုံခြုံစွာ သိမ်းထားပါ။ Password ကို မည်သူ့ကိုမျှ မပေးပါနှင့်။</p><p class="muted" id="fbStatus">Cloud စနစ် အဆင်သင့်ဖြစ်သည်။ Gmail ဖြင့် ဝင်ပါ။</p>
-<div class="panel" id="akAccessRequestPanel" style="margin-top:12px"><h3>Package / အသုံးပြုခွင့်တောင်းရန်</h3><p class="muted">App အတွင်း ငွေပေးချေမှု၊ Transaction ID သို့မဟုတ် Screenshot တင်စနစ် မရှိပါ။ ငွေပေးချေမှုကို App အပြင်တွင် သီးခြားဆောင်ရွက်ပါ။ Platform Owner က စစ်ဆေးပြီး Package အသုံးပြုခွင့်ကို ကိုယ်တိုင်ဖွင့်ပေးမည်။</p><div class="grid"><div><label>အသုံးပြုခွင့်ကာလ</label><select id="payPlan"><option value="30">30 ရက်</option><option value="90">90 ရက်</option><option value="180">180 ရက်</option><option value="365">365 ရက်</option></select></div></div><div class="actions"><button type="button" onclick="akRequestSubscriptionAccess()">အသုံးပြုခွင့်တောင်းမည်</button></div><p id="akAccessRequestStatusPayment" class="muted">Gmail အတည်ပြုပြီး Login ဝင်ထားပါ။ Owner က စစ်ဆေးပြီးမှ POS ကို ဖွင့်ပေးမည်။</p></div></div>
+<div class="panel" id="akAccessRequestPanel" style="margin-top:12px"><h3>Package / KBZPay ငွေလွှဲအထောက်အထား တင်ရန်</h3><p class="muted">KBZPay ဖြင့် ငွေလွှဲပြီး Transaction Reference နှင့် Screenshot ကို မဖြစ်မနေတင်ပါ။ Screenshot ကို သင့် Gmail UID အောက်ရှိ Private Firebase Storage path တွင် သိမ်းပြီး Platform Owner သာ ဖတ်နိုင်သည်။ Owner က အထောက်အထားစစ်ဆေးပြီး License ဖွင့်ပေးမည်။</p><div class="grid"><div><label>အသုံးပြုခွင့်ကာလ</label><select id="payPlan"><option value="30">30 ရက် · 30,000 MMK</option><option value="90">90 ရက် · 90,000 MMK</option><option value="180">180 ရက် · 180,000 MMK</option><option value="365">365 ရက် · 360,000 MMK</option></select></div><div><label>KBZPay Transaction Reference *</label><input id="akPaymentTransactionReference" maxlength="100" autocomplete="off" placeholder="KBZPay Transaction ID / Reference"></div><div><label>ငွေလွှဲ Screenshot *</label><input id="akPaymentProofFile" type="file" accept="image/jpeg,image/png,image/webp"><small class="muted">JPG / PNG / WebP · 4MB အောက်သာ လက်ခံမည်။</small></div></div><div class="actions"><button type="button" onclick="akRequestSubscriptionAccess()">ငွေလွှဲအထောက်အထား တင်ပြီး အသုံးပြုခွင့်တောင်းမည်</button></div><p id="akAccessRequestStatusPayment" class="muted">Gmail အတည်ပြုပြီး Login ဝင်ထားပါ။ Owner စစ်ဆေးပြီးမှ POS ကို ဖွင့်ပေးမည်။</p></div></div>
 <div class="panel"><h2>အရောင်ဒီဇိုင်း ပြောင်းရန်</h2><p class="muted">ဒီဖုန်း / Browser အတွက် ဆော့ဖ်ဝဲလ် Theme အရောင်ကို ရွေးပါ။</p><label>အရောင် Theme</label><select id="akThemeSelect" onchange="localStorage.setItem('ak_sale_theme_v1',this.value);applyAkTheme()"><option value="green">အစိမ်း</option><option value="blue">အပြာ</option><option value="purple">ခရမ်း</option><option value="orange">လိမ္မော်</option></select></div><div class="panel"><h2>လုပ်ငန်းအမှတ်တံဆိပ်နှင့် တည်နေရာ</h2><div class="grid"><div><label>လုပ်ငန်းအမည် (စနစ်အတွင်း)</label><input id="shopName" placeholder="ဥပမာ - AK Hardware"></div><div><label>ဘောင်ချာပေါ်ပြမည့် ဆိုင်ရှင် / ဆိုင်အမည်</label><input id="receiptName" maxlength="80" placeholder="ဥပမာ - ကိုအောင် / Aung Store"><small class="muted">ဘောင်ချာခေါင်းစီးတွင် AK Hardware အစား ဒီအမည်ကို ပြမည်။</small></div><div><label>ငွေကြေး</label><input id="currency" value="MMK"></div><div><label>မြို့</label><input id="shopCity" placeholder="ဥပမာ - မန္တလေး"></div><div><label>မြို့နယ်</label><input id="shopTownship" placeholder="မြို့နယ်အမည်"></div><div><label>ဆိုင်လိပ်စာ</label><input id="shopAddress" placeholder="လမ်း၊ ရပ်ကွက်၊ အဆောက်အအုံ"></div><div><label>ဆက်သွယ်ရန်ဖုန်း</label><input id="shopPhone" inputmode="tel" placeholder="09xxxxxxxxx"></div><div><label>Logo ပုံ URL (မဖြစ်မနေမဟုတ်)</label><input id="shopLogo" type="url" placeholder="https://..."></div></div><div class="actions"><button onclick="saveShop()">အချက်အလက် သိမ်းမည်</button><button class="red" onclick="clearAll()">ဒေတာအားလုံးဖျက်ရန်</button></div><p class="muted">ဆိုင်ခွဲတစ်ခုချင်းစီ၏ လိပ်စာကို Shopping Center ထဲတွင် သီးခြားသတ်မှတ်နိုင်သည်။</p></div>
 
 </section>
@@ -2308,13 +2308,29 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden)akCheckSub
 setInterval(akCheckSubscriptionExpiry,30000);
 
 let akAccessQueueUnsubscribe=null;
+async function akOpenPaymentProof(uid){
+ let popup=null;
+ try{
+  if(!akIsPlatformOwner()||!fbStore)throw Error("Platform Owner Gmail ဖြင့် Login ဝင်ပါ။");
+  const safeUid=String(uid||"").replace(/[^A-Za-z0-9_-]/g,"");
+  if(!safeUid)throw Error("User UID မမှန်ပါ။");
+  popup=window.open("about:blank","_blank");
+  if(!popup)throw Error("Popup ပိတ်ထားသည်။ Browser တွင် Popup ခွင့်ပြုပြီး ပြန်နှိပ်ပါ။");
+  const snap=await fbStore.collection("subscriptionAccessRequests").doc(safeUid).get();
+  if(!snap.exists)throw Error("Payment Request မတွေ့ပါ။");
+  const proofPath=String((snap.data()||{}).proofPath||"");
+  if(!proofPath.startsWith("paymentProofs/"+safeUid+"/"))throw Error("Screenshot Path မမှန်ပါ။");
+  const url=await firebase.storage().ref().child(proofPath).getDownloadURL();
+  popup.location.href=url;
+ }catch(e){if(popup&&!popup.closed)popup.close();alert("Screenshot ဖွင့်မရပါ: "+(e.message||e))}
+}
 async function loadAdminAccessRequests(){
  try{
   if(!akIsPlatformOwner()||!fbStore)throw Error("Platform Owner Gmail ဖြင့် Login ဝင်ပါ။");
   $("adminAccessStatus").textContent="Access Request များ ဖတ်နေသည်...";
   const snap=await fbStore.collection("subscriptionAccessRequests").where("status","==","pending").orderBy("createdAt","desc").limit(100).get();
-  const rows=snap.docs.map(doc=>{const x=doc.data()||{};return{uid:doc.id,email:x.email||"",days:Number(x.days||30),createdAt:x.createdAt&&x.createdAt.toDate?x.createdAt.toDate().toLocaleString():""}});
-  $("adminAccessRows").innerHTML=rows.length?rows.map(x=>"<tr><td>"+esc(x.createdAt)+"</td><td>"+esc(x.email)+"</td><td>"+x.days+" ရက်</td><td>ငွေပေးချေမှုစစ်ရန်</td><td><button class=\"alt\" data-uid=\""+esc(x.uid)+"\" data-days=\""+x.days+"\" onclick=\"akGrantRequestSubscription(this.dataset.uid,Number(this.dataset.days))\">ငွေလွှဲစစ်ပြီး License ဖွင့်ရန်</button></td></tr>").join(""):"<tr><td colspan=\"5\">Pending Access Request မရှိပါ။</td></tr>";
+  const rows=snap.docs.map(doc=>{const x=doc.data()||{};return{uid:String(doc.id).replace(/[^A-Za-z0-9_-]/g,""),email:x.email||"",days:Number(x.days||30),transactionReference:String(x.transactionReference||""),proofPath:String(x.proofPath||""),createdAt:x.createdAt&&x.createdAt.toDate?x.createdAt.toDate().toLocaleString():""}});
+  $("adminAccessRows").innerHTML=rows.length?rows.map(x=>"<tr><td>"+esc(x.createdAt)+"</td><td>"+esc(x.email)+"</td><td>"+x.days+" ရက်</td><td>"+esc(x.transactionReference||"မရှိသေး")+"</td><td>"+(x.proofPath?'<button type="button" class="alt" data-uid="'+x.uid+'" onclick="akOpenPaymentProof(this.dataset.uid)">Screenshot ကြည့်ရန်</button>':"Screenshot မတင်ရသေး")+"</td><td>"+(x.transactionReference&&x.proofPath?'<button class="alt" data-uid="'+x.uid+'" data-days="'+x.days+'" onclick="akGrantRequestSubscription(this.dataset.uid,Number(this.dataset.days))">ငွေလွှဲစစ်ပြီး License ဖွင့်ရန်</button>':'<button type="button" disabled>အထောက်အထားလိုအပ်</button>')+"</td></tr>").join(""):"<tr><td colspan=\"6\">Pending Access Request မရှိပါ။</td></tr>";
   $("adminAccessStatus").textContent="Owner ကြည့်ရန် Access Request "+rows.length+" ခု ရှိသည်။";
  }catch(e){$("adminAccessStatus").textContent="Access Request ဖတ်မရပါ: "+e.message}
 }
@@ -2580,6 +2596,7 @@ async function akGrantRequestSubscription(uid,requestedDays){
    if(!requestSnap.exists||requestSnap.data().status!=="pending")throw Error("Access Request မရှိတော့ပါ။");
    const request=requestSnap.data()||{},current=licenseSnap.exists?licenseSnap.data()||{}:{};
    if(!request.email||!request.uid||request.uid!==uid)throw Error("Request အချက်အလက် မမှန်ပါ။");
+    if(!String(request.transactionReference||"").trim()||!String(request.proofPath||"").startsWith("paymentProofs/"+uid+"/"))throw Error("KBZPay Transaction Reference နှင့် Screenshot အထောက်အထား မပြည့်စုံသေးပါ။");
    if(!licenseSnap.exists){
     if(!counterSnap.exists)throw Error("Shop capacity စာရင်း မစတင်ရသေးပါ။");
     const count=Number((counterSnap.data()||{}).activeShopCount||0);
@@ -2604,15 +2621,28 @@ async function akRequestSubscriptionAccess(){
   if(!fbAuth.currentUser.emailVerified)throw Error("Gmail ထဲမှ Email Verification Link ကို အရင်နှိပ်ပါ။");
   const uid=fbAuth.currentUser.uid,email=String(fbAuth.currentUser.email||"").trim();
   const days=Number($("payPlan")?.value||30);
+  const transactionReference=String($("akPaymentTransactionReference")?.value||"").trim();
+  const proofInput=$("akPaymentProofFile"),file=proofInput?.files?.[0];
   if(![30,90,180,365].includes(days))throw Error("Package ရွေးချယ်မှု မမှန်ပါ။");
-  await fbStore.collection("subscriptionAccessRequests").doc(uid).set({
-   uid,email,days,status:"pending",
-   createdAt:firebase.firestore.FieldValue.serverTimestamp(),
-   updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-  },{merge:true});
-  const message="Access Request ကို Owner Dashboard ထဲသို့ ပို့ပြီးပါပြီ။ Owner က Package အသုံးပြုခွင့်ကို အတည်မပြုမချင်း POS ကို မဖွင့်သေးပါ။";
-  ["akAccessRequestStatus","akAccessRequestStatusPayment"].forEach(id=>{const node=$(id);if(node)node.textContent=message});
-  alert("Owner ထံ Access Request ပို့ပြီးပါပြီ။ Owner Dashboard မှာ မြင်နိုင်ပါပြီ။");
+  if(transactionReference.length<3||transactionReference.length>100)throw Error("KBZPay Transaction Reference ကို ၃ မှ ၁၀၀ လုံးအတွင်း ထည့်ပါ။");
+  if(!file)throw Error("ငွေလွှဲ Screenshot ကို မဖြစ်မနေရွေးပါ။");
+  if(!["image/jpeg","image/png","image/webp"].includes(file.type))throw Error("JPG / PNG / WebP Screenshot သာ လက်ခံသည်။");
+  if(file.size<=0||file.size>=4*1024*1024)throw Error("Screenshot သည် 4MB အောက်ဖြစ်ရမည်။");
+  const statusNodes=["akAccessRequestStatus","akAccessRequestStatusPayment"];
+  statusNodes.forEach(id=>{const node=$(id);if(node)node.textContent="Payment Request ကို သိမ်းပြီး Screenshot ကို Private Cloud သို့ တင်နေသည်...";});
+  const requestRef=fbStore.collection("subscriptionAccessRequests").doc(uid);
+  await requestRef.set({uid,email,days,status:"pending",transactionReference,createdAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+  if(!firebase.storage)throw Error("Firebase Storage SDK မရနိုင်ပါ။");
+  const bytes=new Uint8Array(12);crypto.getRandomValues(bytes);
+  const token=Array.from(bytes,x=>x.toString(16).padStart(2,"0")).join("");
+  const extension=file.type==="image/png"?"png":file.type==="image/webp"?"webp":"jpg";
+  const proofPath="paymentProofs/"+uid+"/"+Date.now()+"-"+token+"."+extension;
+  await firebase.storage().ref().child(proofPath).put(file,{contentType:file.type});
+  await requestRef.update({proofPath,proofContentType:file.type,proofSize:file.size,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+  const message="KBZPay Transaction Reference နှင့် Screenshot ကို Owner Dashboard သို့ ပို့ပြီးပါပြီ။ Owner က အထောက်အထားစစ်ဆေးပြီး License ဖွင့်ပေးမည်။";
+  statusNodes.forEach(id=>{const node=$(id);if(node)node.textContent=message;});
+  if(proofInput)proofInput.value="";
+  alert("KBZPay ငွေလွှဲအထောက်အထား တင်ပြီးပါပြီ။ Owner အတည်ပြုရန် စောင့်ပါ။");
  }catch(e){["akAccessRequestStatus","akAccessRequestStatusPayment"].forEach(id=>{const node=$(id);if(node)node.textContent="တောင်းဆိုမရပါ: "+(e.message||e)})}
 }
 

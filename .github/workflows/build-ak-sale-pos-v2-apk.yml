@@ -4,6 +4,8 @@ on:
     branches: [ak-sale-pos-v2-main]
     paths:
       - "v2/**"
+      - "firestore.rules"
+      - "tests/firestore/**"
       - "capacitor.config.json"
       - "package.json"
       - "package-lock.json"

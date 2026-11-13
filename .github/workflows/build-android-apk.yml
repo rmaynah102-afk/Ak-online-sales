@@ -6,7 +6,7 @@ concurrency:
 
 on:
   push:
-    branches: [ak-main-apk-login-v2, ak-v105570-owner-viber-fixes, ak-105570-final-owner-viber-verified, ak-owner-pos-default-mode, ak-free-backend-migration]
+    branches: [ak-main-apk-login-v2, ak-v105570-owner-viber-fixes, ak-105570-final-owner-viber-verified, ak-owner-pos-default-mode, ak-free-backend-migration, 'apk/fix-login-role-validator-20261113']
     paths:
       - "apk/**"
       - "scripts/**"

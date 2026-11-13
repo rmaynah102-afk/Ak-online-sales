@@ -138,7 +138,11 @@ service cloud.firestore {
           || posRecordHasNoCostFields(request.resource.data));
       allow update: if canUpdatePosCollection(shopId, collection)
         && ((collection != 'products' && collection != 'sales')
-          || posRecordHasNoCostFields(request.resource.data));
+          || posRecordHasNoCostFields(request.resource.data))
+        && (collection != 'products' || isPosShopOwner(shopId)
+          || hasShopMemberRole(shopId, ['manager'])
+          || (hasShopMemberRole(shopId, ['cashier'])
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stock'])));
       allow delete: if canDeletePosCollection(shopId, collection);
     }
 
@@ -367,7 +371,8 @@ service cloud.firestore {
     }
 
     match /licenses/{userId} {
-      allow read: if request.auth != null && (request.auth.uid == userId || isVerifiedOwner());
+      allow read: if request.auth != null && (request.auth.uid == userId || isVerifiedOwner()
+        || (request.auth.token.shopId == userId && request.auth.token.merchantStaff == true));
       // Only the verified Platform Owner may issue or suspend a license after manual payment review.
       allow create: if isVerifiedOwner()
         && request.resource.data.uid == userId

@@ -263,7 +263,7 @@ async function loadShop(){
   $("ownerControlBtn").classList.add("hidden");
  }
  show("shopPanel");$("userBadge").textContent=platformOwner?"Platform Owner · POS":staffRole==="owner"?"ဆိုင်ရှင်":("ဝန်ထမ်း · "+staffRole);
- applyRoleUI();
+ printerRender();applyRoleUI();
  if(staffRole==="owner"&&!platformOwner)await loadMerchantStaff();
  await reloadAll();
 }

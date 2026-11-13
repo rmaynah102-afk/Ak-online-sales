@@ -77,3 +77,15 @@ jobs:
               console.log("Worker upload successful:", j.result && j.result.id);
             });
           '
+
+      - name: Verify deployed Worker health
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error "https://ak-sale-backend.painglin102.workers.dev/health" | node -e '
+            let s=""; process.stdin.on("data",d=>s+=d).on("end",()=>{
+              const j=JSON.parse(s);
+              console.log("Worker health:", j.status || "unknown");
+              console.log("Firebase service account configured:", Boolean(j.serviceAccountConfigured));
+              if (!j.ok) process.exit(1);
+            });
+          '

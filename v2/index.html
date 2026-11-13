@@ -32,7 +32,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
 <main>
 <section id="loginPanel" class="card">
 <h2>အကောင့်ဝင်ရန်</h2>
-<div class="notice">Platform Owner သို့မဟုတ် ဆိုင်ရှင် Gmail နှင့် Password ဖြင့် ဝင်ပါ။ ဆိုင်ရှင်အကောင့်ကို Platform Owner ကသာ ဖန်တီးပေးသည်။</div>
+<div class="notice">Platform Owner / ဆိုင်ရှင်သည် Gmail နှင့် Password သုံးပါ။ ဝန်ထမ်းသည် Merchant Code နှင့် Password ဖြင့် ဝင်ပါ။</div>
 <label>Login အမျိုးအစား</label><select id="loginType"><option value="shop">ဆိုင်ရှင်</option><option value="owner">Platform Owner</option><option value="staff">ဝန်ထမ်း (Merchant Code)</option></select>
 <div class="grid"><div id="emailLoginFields"><label>Gmail</label><input id="email" type="email" autocomplete="username" placeholder="name@gmail.com"></div><div id="staffLoginFields" class="hidden"><label>Merchant Code</label><input id="merchantCode" autocomplete="username" placeholder="ဥပမာ A1B2C3D4E5F6"></div><div><label>Password</label><input id="password" type="password" autocomplete="current-password" placeholder="Password"></div></div>
 <div class="row" style="margin-top:12px"><button id="loginBtn">Login ဝင်မည်</button><button id="resetBtn" class="secondary">Password Reset</button></div>
@@ -89,7 +89,7 @@ async function boot(){
  });
 }
 function errText(e){return e?.message||String(e)}
-$("loginType").onchange=()=>{const staff=$("loginType").value==="staff";$("emailLoginFields").classList.toggle("hidden",staff);$("staffLoginFields").classList.toggle("hidden",!staff)};
+$("loginType").onchange=()=>{const staff=$("loginType").value==="staff";$("emailLoginFields").classList.toggle("hidden",staff);$("staffLoginFields").classList.toggle("hidden",!staff);$("resetBtn").classList.toggle("hidden",staff)};
 $("loginBtn").onclick=async()=>{
  try{
   status("Login စစ်ဆေးနေသည်...");

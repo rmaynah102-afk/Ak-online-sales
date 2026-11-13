@@ -55,7 +55,25 @@ jobs:
           cp v2/manifest.webmanifest www/manifest.webmanifest
           cp v2/sw.js www/sw.js
           cp v2/icon.svg www/icon.svg
-          sed -i 's#../firebase-config.js#./firebase-config.js#g' www/index.html
+          # Keep the copied Firebase config script URL intact. The old sed pattern used
+          # unescaped dots and stripped the quotes from src="./firebase-config.js".
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("www/index.html")
+          s = p.read_text()
+          old_tabs = '["products","sales","purchases","people","expenses","reports","backup"]'
+          new_tabs = '["products","sales","purchases","people","expenses","reports","printer","ads","backup"]'
+          if old_tabs not in s:
+              raise SystemExit("Expected shop tab handler not found")
+          s = s.replace(old_tabs, new_tabs, 1)
+          old_catch = 'boot().catch(e=>{ $("loginBtn").disabled=true;$("ownerGoogleBtn").disabled=true; status("စနစ်စတင်မရပါ: "+friendlyAuthError(e)); });'
+          new_catch = 'boot().catch(e=>{ $("loginBtn").disabled=false;$("ownerGoogleBtn").disabled=false; status("စနစ်စတင်မရပါ: "+friendlyAuthError(e)); });'
+          if old_catch not in s:
+              raise SystemExit("Expected boot error handler not found")
+          s = s.replace(old_catch, new_catch, 1)
+          p.write_text(s)
+          print("APK-only runtime patch applied: Firebase config URL preserved, Printer/Ads tabs enabled, startup errors remain actionable")
+          PY
           cat > capacitor.config.json <<'JSON'
           {
             "appId": "com.ak.hardware.sales",
@@ -82,6 +100,9 @@ jobs:
           if(!scripts.length)throw new Error('No inline JavaScript found');
           scripts.forEach(([, , code],i)=>new vm.Script(code,{filename:'v2-inline-'+(i+1)}));
           if(!html.includes('id="ownerGoogleBtn"')||!html.includes('nativeAuth.signInWithGoogle()')||!html.includes('GoogleAuthProvider.credential(idToken)')) throw new Error('Native Google Platform Owner login bridge is missing');
+          if(!html.includes('src="./firebase-config.js"')) throw new Error('Firebase config script URL is malformed in APK bundle');
+          if(!html.includes('["products","sales","purchases","people","expenses","reports","printer","ads","backup"]')) throw new Error('Printer/Ads tab click routing is missing');
+          if(!html.includes('boot().catch(e=>{ $("loginBtn").disabled=false;$("ownerGoogleBtn").disabled=false;')) throw new Error('Login buttons must remain responsive when startup fails');
           if(!html.includes('function isPlatformOwner')||!html.includes('AK Hardware & Electrical · Owner POS')||!html.includes('ownerControlBtn')) throw new Error('Separate Owner POS and Control Center routing is missing');
           if(!html.includes('async function akStartBarcodeScanner')||!html.includes('window.akPrintRawToDefault')||!html.includes('shareReceiptImage')||!html.includes('id="adCanvas"')||!html.includes('id="exportCsv"')) throw new Error('Barcode, native printer, social advertising or CSV/PDF modules are missing');
           const config=JSON.parse(fs.readFileSync('capacitor.config.json','utf8'));

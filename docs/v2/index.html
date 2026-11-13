@@ -45,7 +45,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
 <div class="card"><h2>ဆိုင်ရှင်အကောင့်အသစ် ဖန်တီးရန်</h2>
 <div class="grid"><div><label>ဆိုင်အမည်</label><input id="shopName" placeholder="AK Hardware"></div><div><label>ဆိုင်ရှင် Gmail</label><input id="newEmail" type="email" placeholder="owner@gmail.com"></div><div><label>ယာယီ Password (အနည်းဆုံး ၈ လုံး)</label><input id="newPassword" type="password" autocomplete="new-password"></div><div><label>Package</label><select id="plan"><option value="30-days">၃၀ ရက် — ၃၀,၀၀၀ ကျပ်</option><option value="90-days">၉၀ ရက် — ၉၀,၀၀၀ ကျပ်</option><option value="180-days">၁၈၀ ရက် — ၁၈၀,၀၀၀ ကျပ်</option><option value="365-days">၃၆၅ ရက် — ၃၆၀,၀၀၀ ကျပ်</option></select></div></div>
 <div class="row" style="margin-top:10px"><button id="createShopBtn">ဆိုင်ရှင်အကောင့် ဖန်တီးမည်</button></div>
-<p class="muted">အကောင့်ဖန်တီးပြီးနောက် ဆိုင်ရှင်၏ Gmail သို့ Verification Link ပို့မည်။ ငွေလက်ခံခြင်းကို App အပြင်တွင်သာ ဆောင်ရွက်ပါ။</p><div id="ownerStatus" class="muted"></div></div>
+<p class="muted">အကောင့်ဖန်တီးပြီးနောက် ဆိုင်ရှင်၏ Gmail သို့ Verification Link ပို့မည်။ ငွေလက်ခံခြင်းကို App အပြင်တွင်သာ ဆောင်ရွက်ပါ။</p><div id="ownerStatus" class="muted"></div><button id="verifyOwnerBtn" class="secondary">Owner Gmail Verification Link ပြန်ပို့ရန်</button></div>
 <div class="card"><h2>ဆိုင်ရှင်စာရင်း / သက်တမ်းထိန်းချုပ်မှု</h2><div class="tablewrap"><table><thead><tr><th>ဆိုင် / Gmail</th><th>Package</th><th>သက်တမ်းကုန်ရက်</th><th>အခြေအနေ</th><th>လုပ်ဆောင်ချက်</th></tr></thead><tbody id="licenseRows"></tbody></table></div></div>
 </section>
 <section id="shopPanel" class="hidden">
@@ -72,27 +72,57 @@ const $=id=>document.getElementById(id), money=n=>(Number(n)||0).toLocaleString(
 function status(msg,where="status"){ $(where).textContent=msg; }
 function show(id){$("loginPanel").classList.toggle("hidden",id!=="loginPanel");$("ownerPanel").classList.toggle("hidden",id!=="ownerPanel");$("shopPanel").classList.toggle("hidden",id!=="shopPanel");}
 async function boot(){
+ $("loginBtn").disabled=true;
  if(!PROJECT?.apiKey)throw Error("Firebase config မတွေ့ပါ");
  await new Promise((resolve,reject)=>{const x=document.createElement("script");x.src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js";x.onload=resolve;x.onerror=reject;document.head.appendChild(x)});
  await Promise.all(["firebase-auth-compat.js","firebase-firestore-compat.js"].map(name=>new Promise((resolve,reject)=>{const x=document.createElement("script");x.src="https://www.gstatic.com/firebasejs/10.12.2/"+name;x.onload=resolve;x.onerror=reject;document.head.appendChild(x)})));
  if(!firebase.apps.length)firebase.initializeApp(PROJECT);
  auth=firebase.auth();db=firebase.firestore();auth.languageCode="my";
+ await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+ $("loginBtn").disabled=false;
  auth.onAuthStateChanged(async u=>{
   user=u;if(!u){show("loginPanel");$("userBadge").textContent="";return}
   try{
    const email=(u.email||"").toLowerCase();
    // Platform Owner is the fixed, password-authenticated control account; do not block Owner login on email verification.
    if(!u.emailVerified && email!==OWNER){await auth.signOut();show("loginPanel");status("အကောင့်အတည်ပြုမှု မပြီးသေးပါ။ Gmail Inbox/Spam မှ Verification Link ကိုအရင်ဖွင့်ပါ။");return}
-   if(email===OWNER){staffRole="owner";show("ownerPanel");$("userBadge").textContent="Platform Owner";await loadLicenses()}
+   if(email===OWNER){
+    await u.reload();
+    staffRole="owner";show("ownerPanel");$("userBadge").textContent="Platform Owner";
+    $("ownerStatus").textContent=u.emailVerified?"Owner အကောင့်ဝင်ပြီးပါပြီ။":"Owner Login အောင်မြင်ပါသည်။ ဆိုင်ရှင်အကောင့်ဖန်တီးရန် Owner Gmail ကို Verify လုပ်ပါ။ အောက်ပါခလုတ်ဖြင့် Link ပြန်ပို့နိုင်သည်။";
+    $("verifyOwnerBtn").classList.toggle("hidden",!!u.emailVerified);
+    await loadLicenses();
+   }
    else if(email.endsWith("@akstaff.app")){
     const memberSnap=await db.collection("shopMembers").doc(u.uid).get(),member=memberSnap.data()||{};
     if(!memberSnap.exists||member.merchantStaff!==true||member.status!=="active"||!member.shopId){await auth.signOut();show("loginPanel");status("ဝန်ထမ်းအကောင့် ပိတ်ထားခြင်း သို့မဟုတ် မမှန်ကန်ပါ။");return}
     shopId=member.shopId;staffRole=member.role||"employee";await loadShop()
    }else{shopId=u.uid;staffRole="owner";await loadShop()}
-  }catch(e){await auth.signOut();show("loginPanel");status("ဝင်ရောက်မှု မအောင်မြင်: "+errText(e))}
+  }catch(e){
+   const email=(u.email||"").toLowerCase();
+   if(email===OWNER){
+    show("ownerPanel");$("userBadge").textContent="Platform Owner";
+    $("ownerStatus").textContent="Owner Login အောင်မြင်သော်လည်း Dashboard ဒေတာဖတ်မရပါ: "+friendlyAuthError(e);
+   }else{
+    await auth.signOut();show("loginPanel");status("ဝင်ရောက်မှု မအောင်မြင်: "+friendlyAuthError(e));
+   }
+  }
  });
 }
 function errText(e){return e?.message||String(e)}
+function friendlyAuthError(e){
+ const code=e?.code||"",map={
+  "auth/invalid-credential":"Gmail သို့မဟုတ် Password မမှန်ပါ။",
+  "auth/wrong-password":"Password မမှန်ပါ။",
+  "auth/user-not-found":"ဤ Gmail ဖြင့် Firebase အကောင့်မရှိပါ။",
+  "auth/invalid-email":"Gmail ပုံစံ မမှန်ပါ။",
+  "auth/too-many-requests":"အကြိမ်များစွာ မှားယွင်းနေပါသည်။ ခဏစောင့်ပြီး ပြန်ဝင်ပါ။",
+  "auth/network-request-failed":"အင်တာနက်ချိတ်ဆက်မှု မကောင်းပါ။",
+  "auth/operation-not-allowed":"Firebase မှ Email/Password Login ကို Enable မလုပ်ရသေးပါ။",
+  "auth/api-key-not-valid.-please-pass-a-valid-api-key.":"Firebase API Key မမှန်ပါ။"
+ };
+ return map[code]||e?.message||String(e);
+}
 $("loginType").onchange=()=>{const staff=$("loginType").value==="staff";$("emailLoginFields").classList.toggle("hidden",staff);$("staffLoginFields").classList.toggle("hidden",!staff);$("resetBtn").classList.toggle("hidden",staff)};
 $("loginBtn").onclick=async()=>{
  try{
@@ -103,13 +133,18 @@ $("loginBtn").onclick=async()=>{
    if(!/^[A-F0-9]{12}$/.test(code))throw Error("Merchant Code ၁၂ လုံး မှန်ကန်စွာထည့်ပါ");
    await auth.signInWithEmailAndPassword("staff."+code.toLowerCase()+"@akstaff.app",password);
   }else{
-   const c=await auth.signInWithEmailAndPassword($("email").value.trim(),password);
-   if($("loginType").value==="owner"&&c.user.email.toLowerCase()!==OWNER)throw Error("Platform Owner Gmail မဟုတ်ပါ");
-   if($("loginType").value==="shop"&&c.user.email.toLowerCase()===OWNER)throw Error("Owner Login အမျိုးအစားကို ရွေးပါ");
+   const email=$("email").value.trim().toLowerCase();
+   const c=await auth.signInWithEmailAndPassword(email,password);
+   if(email===OWNER){
+    status("Platform Owner အကောင့်ကို အတည်ပြုနေသည်...");
+   }else if($("loginType").value==="owner"){
+    await auth.signOut();throw Error("Platform Owner Gmail မဟုတ်ပါ။ Owner Gmail သည် "+OWNER+" ဖြစ်ရပါမည်။");
+   }
   }
- }catch(e){status("Login မအောင်မြင်: "+errText(e))}
+ }catch(e){status("Login မအောင်မြင်: "+friendlyAuthError(e))}
 };
 $("resetBtn").onclick=async()=>{try{await auth.sendPasswordResetEmail($("email").value.trim());status("Password Reset Link ပို့ပြီးပါပြီ။ Gmail Inbox/Spam စစ်ပါ။")}catch(e){status(errText(e))}};
+$("verifyOwnerBtn").onclick=async()=>{try{const current=auth.currentUser;if(!current||current.email.toLowerCase()!==OWNER)throw Error("Owner အကောင့်ဖြင့် အရင်ဝင်ပါ");await current.reload();if(current.emailVerified){$("ownerStatus").textContent="Owner Gmail အတည်ပြုပြီးပါပြီ။";$("verifyOwnerBtn").classList.add("hidden");return}await current.sendEmailVerification();$("ownerStatus").textContent="Verification Link ပို့ပြီးပါပြီ။ "+OWNER+" Gmail Inbox/Spam ထဲက Link ကိုဖွင့်ပြီး ပြန် Login ဝင်ပါ။"}catch(e){$("ownerStatus").textContent="Verification မပို့နိုင်ပါ: "+friendlyAuthError(e)}};
 $("logoutOwner").onclick=$("logoutShop").onclick=()=>auth.signOut();
 function planDays(p){return Number(p.split("-")[0])}
 async function ownerToken(){const t=await user.getIdToken(true);return t}
@@ -198,6 +233,6 @@ $("saveExpense").onclick=async()=>{try{if(!$("expenseName").value.trim()||+$("ex
 $("tabs").onclick=e=>{const b=e.target.closest("button[data-tab]");if(!b)return;document.querySelectorAll("#tabs button").forEach(x=>x.classList.toggle("active",x===b));["products","sales","purchases","people","expenses","reports","backup"].forEach(t=>$("tab-"+t).classList.toggle("hidden",t!==b.dataset.tab))};
 $("exportData").onclick=()=>{const blob=new Blob([JSON.stringify({products,sales,purchases,people,expenses},null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="ak-sale-backup-"+new Date().toISOString().slice(0,10)+".json";a.click();URL.revokeObjectURL(a.href)};
 $("restoreData").onclick=async()=>{try{const f=$("importFile").files[0];if(!f)throw Error("Backup ဖိုင်ရွေးပါ");if(!confirm("လက်ရှိစာရင်းကို Backup ဒေတာဖြင့် အစားထိုးမည်။ ဆက်လုပ်မလား?"))return;const d=JSON.parse(await f.text()),batch=db.batch();for(const [key,arr] of Object.entries({products:d.products||[],sales:d.sales||[],purchases:d.purchases||[],people:d.people||[],expenses:d.expenses||[]})){for(const raw of arr){const x={...raw},id=x.id||db.collection("_ids").doc().id;delete x.id;if(key==="products"){const cost=Number(x.cost||0);delete x.cost;batch.set(col("products").doc(id),x);batch.set(col("productCosts").doc(id),{cost})}else if(key==="sales"){const cost=Number(x.cost||0),profit=Number(x.profit||0);delete x.cost;delete x.profit;batch.set(col("sales").doc(id),x);batch.set(col("saleCosts").doc(id),{cost,profit})}else{batch.set(col(key).doc(id),x)}}}await batch.commit();await reloadAll();alert("Restore ပြီးပါပြီ")}catch(e){alert(errText(e))}};
-boot().catch(e=>status("စနစ်စတင်မရပါ: "+errText(e)));
+boot().catch(e=>{ $("loginBtn").disabled=true; status("စနစ်စတင်မရပါ: "+friendlyAuthError(e)); });
 if("serviceWorker" in navigator)navigator.serviceWorker.register("./sw.js").catch(()=>{});
 </script></body></html>

@@ -56,11 +56,17 @@ jobs:
           sed -i 's#../firebase-config.js#./firebase-config.js#g' www/index.html
           cat > capacitor.config.json <<'JSON'
           {
-            "appId": "com.ak.hardware.sales.v2",
+            "appId": "com.ak.hardware.sales",
             "appName": "AK Sale POS 2.0",
             "webDir": "www",
             "bundledWebRuntime": false,
-            "server": { "androidScheme": "https" }
+            "server": { "androidScheme": "https" },
+            "plugins": {
+              "FirebaseAuthentication": {
+                "skipNativeAuth": true,
+                "providers": ["google.com"]
+              }
+            }
           }
           JSON
       - name: Validate app JavaScript
@@ -75,15 +81,116 @@ jobs:
           NODE
       - name: Generate Android project
         run: npx cap add android
+      - name: Add Firebase Android OAuth configuration
+        run: |
+          test -s google-services.json
+          cp google-services.json android/app/google-services.json
+          node - <<'NODE'
+          const fs=require('fs');
+          const cfg=JSON.parse(fs.readFileSync('google-services.json','utf8'));
+          const packages=cfg.client.map(c=>c.client_info.android_client_info.package_name);
+          if(!packages.includes('com.ak.hardware.sales')) throw new Error('google-services.json does not register com.ak.hardware.sales');
+          console.log('Firebase Android package registration OK');
+          NODE
       - name: Sync Android project
         run: npx cap sync android
-      - name: Build Android debug APK
+      - name: Check release signing secrets
+        id: signing
+        env:
+          AK_RELEASE_KEYSTORE_BASE64: ${{ secrets.AK_RELEASE_KEYSTORE_BASE64 }}
+          AK_RELEASE_STORE_PASSWORD: ${{ secrets.AK_RELEASE_STORE_PASSWORD }}
+          AK_RELEASE_KEY_ALIAS: ${{ secrets.AK_RELEASE_KEY_ALIAS }}
+          AK_RELEASE_KEY_PASSWORD: ${{ secrets.AK_RELEASE_KEY_PASSWORD }}
+        run: |
+          if [ -n "$AK_RELEASE_KEYSTORE_BASE64" ] && [ -n "$AK_RELEASE_STORE_PASSWORD" ] && [ -n "$AK_RELEASE_KEY_ALIAS" ] && [ -n "$AK_RELEASE_KEY_PASSWORD" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "Release signing secrets are not configured; native Google sign-in may not work in a debug APK."
+          fi
+      - name: Configure Android release signing
+        if: steps.signing.outputs.ready == 'true'
         working-directory: android
-        run: ./gradlew assembleDebug --no-daemon
-      - name: Publish test APK artifact
+        env:
+          AK_RELEASE_KEYSTORE_BASE64: ${{ secrets.AK_RELEASE_KEYSTORE_BASE64 }}
+          AK_RELEASE_STORE_PASSWORD: ${{ secrets.AK_RELEASE_STORE_PASSWORD }}
+          AK_RELEASE_KEY_ALIAS: ${{ secrets.AK_RELEASE_KEY_ALIAS }}
+          AK_RELEASE_KEY_PASSWORD: ${{ secrets.AK_RELEASE_KEY_PASSWORD }}
+        run: |
+          echo "$AK_RELEASE_KEYSTORE_BASE64" | base64 --decode > app/ak-release.keystore
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p = Path("app/build.gradle")
+          s = p.read_text()
+          signing = '''
+              signingConfigs {
+                  release {
+                      storeFile file("ak-release.keystore")
+                      storePassword System.getenv("AK_RELEASE_STORE_PASSWORD")
+                      keyAlias System.getenv("AK_RELEASE_KEY_ALIAS")
+                      keyPassword System.getenv("AK_RELEASE_KEY_PASSWORD")
+                  }
+              }
+          '''
+          if "signingConfigs {" not in s:
+              s = s.replace("android {", "android {\\n" + signing, 1)
+          if "signingConfig signingConfigs.release" not in s:
+              s, count = re.subn(r'(buildTypes\\s*\\{\\s*release\\s*\\{)', r'\\1\\n            signingConfig signingConfigs.release', s, count=1)
+              if count != 1:
+                  raise SystemExit("Could not find release build type")
+          p.write_text(s)
+          PY
+      - name: Verify release certificate matches Firebase Google OAuth
+        if: steps.signing.outputs.ready == 'true'
+        working-directory: android
+        env:
+          AK_RELEASE_STORE_PASSWORD: ${{ secrets.AK_RELEASE_STORE_PASSWORD }}
+          AK_RELEASE_KEY_ALIAS: ${{ secrets.AK_RELEASE_KEY_ALIAS }}
+        run: |
+          ACTUAL=$(keytool -list -v -keystore app/ak-release.keystore -storepass "$AK_RELEASE_STORE_PASSWORD" -alias "$AK_RELEASE_KEY_ALIAS" | awk '/SHA1:/{print $2; exit}' | tr -d ':')
+          EXPECTED=$(python3 - <<'PY'
+          import json
+          d=json.load(open('../google-services.json'))
+          for c in d['client']:
+            for o in c.get('oauth_client',[]):
+              a=o.get('android_info',{})
+              if a.get('package_name')=='com.ak.hardware.sales':
+                print(a.get('certificate_hash','').upper()); raise SystemExit
+          PY
+          )
+          if [ -z "$EXPECTED" ] || [ "$ACTUAL" != "$EXPECTED" ]; then
+            echo "Release signing SHA-1 does not match Firebase Android OAuth client."
+            echo "Expected: $EXPECTED"
+            echo "Actual:   $ACTUAL"
+            exit 1
+          fi
+          echo "Release signing SHA-1 matches Firebase Android OAuth."
+      - name: Build signed release APK
+        if: steps.signing.outputs.ready == 'true'
+        working-directory: android
+        env:
+          AK_RELEASE_STORE_PASSWORD: ${{ secrets.AK_RELEASE_STORE_PASSWORD }}
+          AK_RELEASE_KEY_ALIAS: ${{ secrets.AK_RELEASE_KEY_ALIAS }}
+          AK_RELEASE_KEY_PASSWORD: ${{ secrets.AK_RELEASE_KEY_PASSWORD }}
+        run: ./gradlew assembleRelease --no-daemon
+      - name: Upload signed release APK
+        if: steps.signing.outputs.ready == 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: AK-Sale-POS-2.0-TEST-APK
+          name: AK-Sale-POS-2.0-SIGNED-RELEASE-APK
+          path: android/app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
+          retention-days: 30
+      - name: Build temporary debug APK when release key is unavailable
+        if: steps.signing.outputs.ready != 'true'
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon
+      - name: Upload temporary debug APK
+        if: steps.signing.outputs.ready != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: AK-Sale-POS-2.0-TEST-DEBUG-APK
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 30

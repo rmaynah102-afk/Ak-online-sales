@@ -66,6 +66,52 @@ test("creates a shop owner after Platform Owner lookup even if the Owner Gmail i
   } finally { globalThis.fetch = originalFetch; }
 });
 
+test("reuses an existing shop-owner account when the Owner-supplied password authenticates", async () => {
+  const originalFetch = globalThis.fetch;
+  const calls = [];
+  globalThis.fetch = async (url, options) => {
+    const u = String(url); calls.push({ url: u, options });
+    if (u.includes("accounts:lookup") && calls.length === 1) return new Response(JSON.stringify({ users: [{ email: "painglin102@gmail.com" }] }), { status: 200 });
+    if (u.includes("accounts:signUp")) return new Response(JSON.stringify({ error: { message: "EMAIL_EXISTS" } }), { status: 400 });
+    if (u.includes("accounts:signInWithPassword")) return new Response(JSON.stringify({ localId: "existing-shop-uid", idToken: "existing-shop-token" }), { status: 200 });
+    if (u.includes("accounts:lookup")) return new Response(JSON.stringify({ users: [{ localId: "existing-shop-uid", email: "shop@example.com", emailVerified: true }] }), { status: 200 });
+    throw new Error("Unexpected Firebase request: " + u);
+  };
+  try {
+    const response = await worker.fetch(request({ email: "shop@example.com", password: "password123", apiKey: "test-api-key" }), {});
+    const body = await response.json();
+    assert.equal(response.status, 200);
+    assert.equal(body.ok, true);
+    assert.equal(body.uid, "existing-shop-uid");
+    assert.equal(body.accountReused, true);
+    assert.equal(body.emailVerified, true);
+    assert.equal(body.verificationEmailSent, false);
+    assert.equal(calls.length, 4);
+  } finally { globalThis.fetch = originalFetch; }
+});
+
+test("sends password recovery for an existing account when the entered password does not match", async () => {
+  const originalFetch = globalThis.fetch;
+  const calls = [];
+  globalThis.fetch = async (url, options) => {
+    const u = String(url); calls.push({ url: u, options });
+    if (u.includes("accounts:lookup")) return new Response(JSON.stringify({ users: [{ email: "painglin102@gmail.com" }] }), { status: 200 });
+    if (u.includes("accounts:signUp")) return new Response(JSON.stringify({ error: { message: "EMAIL_EXISTS" } }), { status: 400 });
+    if (u.includes("accounts:signInWithPassword")) return new Response(JSON.stringify({ error: { message: "INVALID_LOGIN_CREDENTIALS" } }), { status: 400 });
+    if (u.includes("accounts:sendOobCode")) return new Response(JSON.stringify({ email: "shop@example.com" }), { status: 200 });
+    throw new Error("Unexpected Firebase request: " + u);
+  };
+  try {
+    const response = await worker.fetch(request({ email: "shop@example.com", password: "wrong-pass-123", apiKey: "test-api-key" }), {});
+    const body = await response.json();
+    assert.equal(response.status, 409);
+    assert.equal(body.error, "shop_owner_email_exists_password_reset_sent");
+    assert.equal(body.passwordResetSent, true);
+    const reset = calls.find(x => x.url.includes("accounts:sendOobCode"));
+    assert.equal(JSON.parse(reset.options.body).requestType, "PASSWORD_RESET");
+  } finally { globalThis.fetch = originalFetch; }
+});
+
 test("rejects an unverified or non-Platform Owner caller", async () => {
   const originalFetch = globalThis.fetch;
   let calls = 0;

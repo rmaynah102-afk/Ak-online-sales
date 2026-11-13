@@ -70,8 +70,10 @@ async function getGoogleAccessToken(env) {
   cachedGoogleToken = { token: data.access_token, exp: now + Number(data.expires_in || 3600) };
   return cachedGoogleToken.token;
 }
-async function firebaseAdminRequest(path, token, body) {
-  const response = await fetch("https://identitytoolkit.googleapis.com/v1/" + path, { method: "POST", headers: { Authorization: "Bearer " + token, "Content-Type": "application/json" }, body: JSON.stringify(body) });
+async function firebaseAdminRequest(path, token, body, apiKey) {
+  if (!apiKey) throw new Error("firebase_api_key_missing");
+  const endpoint = "https://identitytoolkit.googleapis.com/v1/" + path + "?key=" + encodeURIComponent(apiKey);
+  const response = await fetch(endpoint, { method: "POST", headers: { Authorization: "Bearer " + token, "Content-Type": "application/json" }, body: JSON.stringify(body) });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
     const error = new Error(data.error && data.error.message ? String(data.error.message).slice(0, 120) : "firebase_admin_request_failed");
@@ -97,7 +99,7 @@ async function provisionShopOwner(request, env, origin) {
   if (!callerResponse.ok || !caller || String(caller.email || "").toLowerCase() !== "painglin102@gmail.com" || caller.emailVerified !== true) return json({ ok: false, error: "platform_owner_verification_failed" }, 403, origin);
   try {
     const token = await getGoogleAccessToken(env);
-    const lookup = await firebaseAdminRequest("projects/" + PROJECT_ID + "/accounts:lookup", token, { email: [email] });
+    const lookup = await firebaseAdminRequest("projects/" + PROJECT_ID + "/accounts:lookup", token, { email: [email] }, apiKey);
     const existing = lookup.users && lookup.users[0];
     let uid;
     if (existing) {
@@ -105,9 +107,9 @@ async function provisionShopOwner(request, env, origin) {
       try { claims = JSON.parse(existing.customAttributes || "{}"); } catch {}
       if (claims.platformAdmin || claims.shopId) return json({ ok: false, error: "target_account_is_reserved" }, 409, origin);
       uid = existing.localId;
-      await firebaseAdminRequest("projects/" + PROJECT_ID + "/accounts:batchUpdate", token, { localIds: [uid], password, emailVerified: true, disableUser: false });
+      await firebaseAdminRequest("projects/" + PROJECT_ID + "/accounts:update", token, { localId: uid, password, emailVerified: true, disableUser: false }, apiKey);
     } else {
-      const created = await firebaseAdminRequest("projects/" + PROJECT_ID + "/accounts", token, { email, password, emailVerified: true, disabled: false });
+      const created = await firebaseAdminRequest("projects/" + PROJECT_ID + "/accounts", token, { email, password, emailVerified: true, disabled: false }, apiKey);
       uid = created.localId;
     }
     if (!uid) throw new Error("firebase_uid_missing");
@@ -158,6 +160,7 @@ export default {
         ok: true,
         service: "ak-sale-gateway",
         status: "owner-provision-ready",
+        serviceAccountConfigured: Boolean(env.FIREBASE_SERVICE_ACCOUNT_JSON),
         upstream: "Cloudflare Worker Firebase Admin REST",
         firebaseCallableProxy: "legacy-only; still requires Firebase Functions",
         project: PROJECT_ID,

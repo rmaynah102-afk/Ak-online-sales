@@ -86,6 +86,7 @@ jobs:
           if(!html.includes('async function akStartBarcodeScanner')||!html.includes('window.akPrintRawToDefault')||!html.includes('shareReceiptImage')||!html.includes('id="adCanvas"')||!html.includes('id="exportCsv"')) throw new Error('Barcode, native printer, social advertising or CSV/PDF modules are missing');
           const config=JSON.parse(fs.readFileSync('capacitor.config.json','utf8'));
           if(config.appId!=='com.ak.hardware.sales'||config.plugins?.FirebaseAuthentication?.providers?.includes('google.com')!==true) throw new Error('Capacitor Android package or Google provider config is invalid');
+          if(!/if\(email===OWNER\)[\s\S]*?await loadLicenses\(\)/.test(html)) throw new Error('Platform Owner auth route does not load the Control Center licenses');
           console.log('Validated',scripts.length,'inline script block(s), Owner Google login and Owner POS contract');
           NODE
       - name: Validate native printer installer

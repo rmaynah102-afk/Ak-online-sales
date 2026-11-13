@@ -101,9 +101,12 @@ async function boot(){
     staffRole="owner";shopId=u.uid;
     $("userBadge").textContent="Platform Owner";
     $("ownerControlBtn").classList.remove("hidden");
-    await loadShop();
-    $("ownerStatus").textContent="Platform Owner အကောင့်ဝင်ပြီးပါပြီ။ မိမိ၏ POS ဒေတာကို သီးခြားအသုံးပြုနိုင်သည်။";
+    // Keep Owner administration independent from the Owner's own POS data.
+    // A missing/empty POS collection must never prevent access to shop licenses.
+    show("ownerPanel");
+    $("ownerStatus").textContent="Platform Owner Login အောင်မြင်ပါပြီ။ ဆိုင်အကောင့်စာရင်းကို ဖတ်နေသည်...";
     await loadLicenses();
+    $("ownerStatus").textContent="Platform Owner အကောင့်ဝင်ပြီးပါပြီ။ ဆိုင်ရှင်အကောင့်များကို စီမံနိုင်ပါသည်။";
    }
    else if(email.endsWith("@akstaff.app")){
     const memberSnap=await db.collection("shopMembers").doc(u.uid).get(),member=memberSnap.data()||{};
@@ -157,12 +160,15 @@ $("ownerGoogleBtn").onclick=async()=>{
   status("Platform Owner Google Login စစ်ဆေးနေသည်...");
   await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
   let signed;
-  const cap=window.Capacitor,nativeAuth=cap&&cap.Plugins&&cap.Plugins.FirebaseAuthentication;
+  const cap=window.Capacitor;
+  const nativeAuth=cap&&(cap.Plugins?.FirebaseAuthentication||cap.registerPlugin?.("FirebaseAuthentication"));
   if(cap&&typeof cap.isNativePlatform==="function"&&cap.isNativePlatform()){
-   if(!nativeAuth||typeof nativeAuth.signInWithGoogle!=="function")throw Error("ဒီ APK ထဲတွင် Native Google Login Plugin မပါပါ။ Google Login ပါဝင်သော APK အသစ်ကို Install လုပ်ပါ။");
-   const result=await nativeAuth.signInWithGoogle({skipNativeAuth:true});
-   const idToken=result&&result.credential&&result.credential.idToken;
-   if(!idToken)throw Error("Google ID Token မရပါ။ Firebase Android App ID / SHA-1 / Google Provider ကိုစစ်ရန်လိုသည်။");
+   if(!nativeAuth||typeof nativeAuth.signInWithGoogle!=="function")throw Error("APK ထဲတွင် Firebase Authentication Native Plugin မတွေ့ပါ။ Native Plugin ထည့်သွင်းမှုကို ပြန်စစ်ရန်လိုသည်။");
+   // The plugin's documented Google flow returns credential.idToken.
+   // skipNativeAuth is enabled in capacitor.config.json so Firebase JS Auth remains the app session.
+   const result=await nativeAuth.signInWithGoogle();
+   const idToken=result?.credential?.idToken;
+   if(!idToken)throw Error("Google ID Token မရပါ။ Firebase Android OAuth SHA-1 နှင့် Google Provider ကိုစစ်ရန်လိုသည်။");
    signed=await auth.signInWithCredential(firebase.auth.GoogleAuthProvider.credential(idToken));
   }else{
    const provider=new firebase.auth.GoogleAuthProvider();
@@ -188,7 +194,7 @@ $("ownerGoogleBtn").onclick=async()=>{
  }finally{button.disabled=false;button.textContent="Google ဖြင့် Platform Owner ဝင်မည်"}
 };
 $("ownerPOSBtn").onclick=async()=>{try{shopId=user.uid;staffRole="owner";await loadShop()}catch(e){status("Owner POS မဖွင့်နိုင်ပါ: "+errText(e),"ownerStatus")}};
-$("ownerControlBtn").onclick=async()=>{try{show("ownerPanel");$("userBadge").textContent="Platform Owner";await loadLicenses()}catch(e){status("Control Center မဖွင့်နိုင်ပါ: "+errText(e),"ownerStatus")}};
+$("ownerControlBtn").onclick=async()=>{try{if(!isPlatformOwner())throw Error("Platform Owner အကောင့်ဖြင့်သာ ဝင်နိုင်သည်။");show("ownerPanel");$("userBadge").textContent="Platform Owner";await loadLicenses()}catch(e){status("Control Center မဖွင့်နိုင်ပါ: "+errText(e),"ownerStatus")}};
 $("loginType").onchange();
 $("loginBtn").onclick=async()=>{
  try{

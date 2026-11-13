@@ -32,7 +32,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
 <main>
 <section id="loginPanel" class="card">
 <h2>အကောင့်ဝင်ရန်</h2>
-<div class="notice">Platform Owner သည် မိမိသတ်မှတ်ထားသော Google Gmail ဖြင့်ဝင်ပါ။ ဆိုင်ရှင်သည် Owner ပေးထားသော Gmail/Password ဖြင့်ဝင်ပါ။ ဝန်ထမ်းသည် Merchant Code/Password ဖြင့်ဝင်ပါ။</div>
+<div class="notice">Platform Owner သည် မိမိသတ်မှတ်ထားသော Gmail/Password သို့မဟုတ် Google Login ဖြင့်ဝင်ပါ။ ဆိုင်ရှင်သည် Owner ပေးထားသော Gmail/Password ဖြင့်ဝင်ပါ။ ဝန်ထမ်းသည် Merchant Code/Password ဖြင့်ဝင်ပါ။</div>
 <label>Login အမျိုးအစား</label><select id="loginType"><option value="shop">ဆိုင်ရှင်</option><option value="owner">Platform Owner · Google</option><option value="staff">ဝန်ထမ်း (Merchant Code)</option></select>
 <div class="grid"><div id="emailLoginFields"><label>Gmail</label><input id="email" type="email" autocomplete="username" placeholder="name@gmail.com"></div><div id="staffLoginFields" class="hidden"><label>Merchant Code</label><input id="merchantCode" autocomplete="username" placeholder="ဥပမာ A1B2C3D4E5F6"></div><div id="passwordLoginFields"><label>Password</label><input id="password" type="password" autocomplete="current-password" placeholder="Password"></div></div>
 <div class="row" style="margin-top:12px"><button id="loginBtn">Login ဝင်မည်</button><button id="ownerGoogleBtn" class="hidden">Google ဖြင့် Platform Owner ဝင်မည်</button><button id="resetBtn" class="secondary">Password Reset</button></div>
@@ -140,14 +140,14 @@ $("loginType").onchange=()=>{
  const mode=$("loginType").value,staff=mode==="staff",owner=mode==="owner";
  $("emailLoginFields").classList.toggle("hidden",staff);
  $("staffLoginFields").classList.toggle("hidden",!staff);
- $("passwordLoginFields").classList.toggle("hidden",owner);
+ $("passwordLoginFields").classList.toggle("hidden",false);
  $("ownerGoogleBtn").classList.toggle("hidden",!owner);
- $("loginBtn").classList.toggle("hidden",owner);
- $("resetBtn").classList.toggle("hidden",staff||owner);
+ $("loginBtn").classList.toggle("hidden",false);
+ $("resetBtn").classList.toggle("hidden",staff);
  $("email").readOnly=owner;
  if(owner)$("email").value=OWNER;
  else if($("email").value.toLowerCase()===OWNER)$("email").value="";
- status(owner?"Platform Owner သည် "+OWNER+" Google အကောင့်ဖြင့် ဝင်ပါ။":staff?"Merchant Code နှင့် Password ဖြည့်ပါ။":"ဆိုင်ရှင် Gmail နှင့် Password ဖြည့်ပါ။");
+ status(owner?"Platform Owner သည် "+OWNER+" Gmail နှင့် Password ဖြင့် ဝင်နိုင်သည်။ မရပါက Google Login ကို အသုံးပြုပါ။":staff?"Merchant Code နှင့် Password ဖြည့်ပါ။":"ဆိုင်ရှင် Gmail နှင့် Password ဖြည့်ပါ။");
 };
 $("ownerGoogleBtn").onclick=async()=>{
  const button=$("ownerGoogleBtn");

@@ -12,6 +12,15 @@ Myanmar-first shop POS and public product market for hardware, electrical and ge
 - [Firebase Deploy Secret ထည့်သွင်းနည်း](./FIREBASE-DEPLOY-SETUP-MY.md)
 - [Bluetooth / Wi-Fi Printer Setup (မြန်မာ)](./PRINTER-SETUP-MY.md)
 
+## AK Sale POS 2.0 (new rebuild)
+
+- **New POS web app:** https://rmaynah102-afk.github.io/Ak-online-sales/v2/
+- **Android test APK builds:** [GitHub Actions](https://github.com/rmaynah102-afk/Ak-online-sales/actions/workflows/build-ak-sale-pos-v2-apk.yml)
+- Platform Owner creates shop-owner accounts; shop owners sign in with Gmail and password.
+- Shop owners create up to 3 staff accounts using Merchant Code and password.
+- Subscription periods and manual renewals are controlled by Platform Owner. No in-app payment checkout is included.
+- This is the new POS 2.0 line; Bluetooth thermal printing still requires testing against the actual printer model.
+
 ## Web + Android
 
 - Firebase Web App client config is bundled from `firebase-config.js` for automatic sign-in setup. This config is public client data; private service-account keys are never bundled.

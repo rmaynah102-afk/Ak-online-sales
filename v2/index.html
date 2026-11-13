@@ -100,10 +100,17 @@ async function boot(){
     await u.reload();
     staffRole="owner";shopId=u.uid;
     $("userBadge").textContent="Platform Owner";
+    show("ownerPanel");
+    if(!u.emailVerified){
+     $("ownerPOSBtn").disabled=true;
+     $("ownerControlBtn").classList.add("hidden");
+     $("ownerStatus").textContent="Owner Gmail အတည်ပြုရန်လိုသည်။ Verification Link ကိုပို့ပြီး Gmail Inbox/Spam မှ အတည်ပြုပြီးနောက် ပြန် Login ဝင်ပါ။ အတည်မပြုမီ ဆိုင်အကောင့်များကို စီမံခွင့်မပေးပါ။";
+     return;
+    }
+    $("ownerPOSBtn").disabled=false;
     $("ownerControlBtn").classList.remove("hidden");
     // Keep Owner administration independent from the Owner's own POS data.
     // A missing/empty POS collection must never prevent access to shop licenses.
-    show("ownerPanel");
     $("ownerStatus").textContent="Platform Owner Login အောင်မြင်ပါပြီ။ ဆိုင်အကောင့်စာရင်းကို ဖတ်နေသည်...";
     await loadLicenses();
     $("ownerStatus").textContent="Platform Owner အကောင့်ဝင်ပြီးပါပြီ။ ဆိုင်ရှင်အကောင့်များကို စီမံနိုင်ပါသည်။";
@@ -216,7 +223,7 @@ $("loginBtn").onclick=async()=>{
  }catch(e){status("Login မအောင်မြင်: "+friendlyAuthError(e))}
 };
 $("resetBtn").onclick=async()=>{try{await auth.sendPasswordResetEmail($("email").value.trim());status("Password Reset Link ပို့ပြီးပါပြီ။ Gmail Inbox/Spam စစ်ပါ။")}catch(e){status(errText(e))}};
-$("verifyOwnerBtn").onclick=async()=>{try{const current=auth.currentUser;if(!current||current.email.toLowerCase()!==OWNER)throw Error("Owner အကောင့်ဖြင့် အရင်ဝင်ပါ");await current.reload();if(current.emailVerified){$("ownerStatus").textContent="Owner Gmail အတည်ပြုပြီးပါပြီ။";$("verifyOwnerBtn").classList.add("hidden");return}await current.sendEmailVerification();$("ownerStatus").textContent="Verification Link ပို့ပြီးပါပြီ။ "+OWNER+" Gmail Inbox/Spam ထဲက Link ကိုဖွင့်ပြီး ပြန် Login ဝင်ပါ။"}catch(e){$("ownerStatus").textContent="Verification မပို့နိုင်ပါ: "+friendlyAuthError(e)}};
+$("verifyOwnerBtn").onclick=async()=>{try{const current=auth.currentUser;if(!current||current.email.toLowerCase()!==OWNER)throw Error("Owner အကောင့်ဖြင့် အရင်ဝင်ပါ");await current.reload();if(current.emailVerified){await auth.signOut();status("Owner Gmail အတည်ပြုပြီးပါပြီ။ Platform Owner အဖြစ် ပြန် Login ဝင်ပါ။");return}await current.sendEmailVerification();$("ownerStatus").textContent="Verification Link ပို့ပြီးပါပြီ။ "+OWNER+" Gmail Inbox/Spam ထဲက Link ကိုဖွင့်ပြီးနောက် ဤနေရာတွင် ထပ်နှိပ်ပါ။"}catch(e){$("ownerStatus").textContent="Verification မပို့နိုင်ပါ: "+friendlyAuthError(e)}};
 $("logoutOwner").onclick=$("logoutShop").onclick=()=>auth.signOut();
 function planDays(p){return Number(p.split("-")[0])}
 async function ownerToken(){const t=await user.getIdToken(true);return t}

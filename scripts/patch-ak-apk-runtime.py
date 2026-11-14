@@ -73,5 +73,46 @@ if "APK-only neutral high-contrast theme" not in s:
     if css_anchor not in s: raise SystemExit("APK patch failed: CSS insertion point missing")
     s=s.replace(css_anchor,css+"\n"+css_anchor,1)
 
+
+# APK-only receipt and advertising improvements.
+globals_old = 'let auth,db,user,shopId="",staffRole="owner",products=[],sales=[],purchases=[],people=[],expenses=[],editingProduct=null,licenses=[];'
+globals_new = 'let auth,db,user,shopId="",staffRole="owner",products=[],sales=[],purchases=[],people=[],expenses=[],editingProduct=null,licenses=[],activeShopName="ဆိုင်အမည်";'
+if globals_old not in s: raise SystemExit("APK patch failed: app globals anchor missing")
+s=s.replace(globals_old,globals_new,1)
+
+owner_title = '$("shopTitle").textContent="AK Hardware & Electrical · Owner POS";'
+if owner_title not in s: raise SystemExit("APK patch failed: owner shop title anchor missing")
+s=s.replace(owner_title,'activeShopName="AK Hardware & Electrical";'+owner_title,1)
+license_title = '$("shopTitle").textContent=lic.data().shopName||"ဆိုင် Dashboard";'
+if license_title not in s: raise SystemExit("APK patch failed: licensed shop title anchor missing")
+s=s.replace(license_title,'activeShopName=String(lic.data().shopName||"ဆိုင်အမည်");'+license_title,1)
+
+# Add a shop/brand name field to the ad composer, rather than hard-coding AK branding.
+ad_contact = '<div><label>ဆက်သွယ်ရန်</label><input id="adContact" placeholder="ဖုန်း / Viber"></div>'
+ad_contact_new = '<div><label>ကြော်ငြာပေါ် ဆိုင်အမည်</label><input id="adBrand" placeholder="ဆိုင်အမည်"></div>'+ad_contact
+if ad_contact not in s: raise SystemExit("APK patch failed: ad contact field anchor missing")
+s=s.replace(ad_contact,ad_contact_new,1)
+s=s.replace('const name=$("adName").value.trim(),price=$("adPrice").value,contact=$("adContact").value.trim(),file=$("adPhoto").files[0],canvas=$("adCanvas"),ctx=canvas.getContext("2d");',
+            'const name=$("adName").value.trim(),price=$("adPrice").value,contact=$("adContact").value.trim(),brand=$("adBrand").value.trim()||activeShopName||"ဆိုင်အမည်",file=$("adPhoto").files[0],canvas=$("adCanvas"),ctx=canvas.getContext("2d");',1)
+s=s.replace('ctx.fillText("AK HARDWARE & ELECTRICAL",540,105);','ctx.fillText(brand.slice(0,32),540,105);',1)
+s=s.replace('ctx.fillText("AK",540,540);ctx.font="bold 38px system-ui";ctx.fillText("Hardware & Electrical",540,610);','ctx.fillText(brand.slice(0,24),540,540);',1)
+s=s.replace('contact||"ဆက်သွယ်ရန် · AK Hardware & Electrical"','contact||"ဆက်သွယ်ရန်",1')
+s=s.replace('($("adContact").value||"AK Hardware & Electrical")','($("adContact").value||$("adBrand").value||activeShopName||"")',1)
+
+# Use the actual shop name on all sale receipt outputs.
+s=s.replace('push("AK Hardware & Electrical",27,true,"center");','push(activeShopName||"ဆိုင်အမည်",27,true,"center");',1)
+s=s.replace('const text=["AK Hardware & Electrical","ဘောင်ချာ: "','const text=[activeShopName||"ဆိုင်အမည်","ဘောင်ချာ: "',1)
+s=s.replace('c.fillText("AK Hardware & Electrical",360,82);','c.fillText(activeShopName||"ဆိုင်အမည်",360,82);',1)
+s=s.replace('<h2>AK Hardware & Electrical</h2><p>ဘောင်ချာ: ','<h2>'+esc(activeShopName||"ဆိုင်အမည်")+'</h2><p>ဘောင်ချာ: ',1)
+
+# After a successful sale, immediately open that sale's receipt for print/PDF.
+sale_end = '   await reloadAll();\n  }catch(e){alert(errText(e))}\n };\n $("savePurchase").onclick=async()=>'
+sale_end_new = '   await reloadAll();\n   await window.printSaleReceipt(saleRef.id);\n  }catch(e){alert(errText(e))}\n };\n $("savePurchase").onclick=async()=>'
+if sale_end not in s: raise SystemExit("APK patch failed: post-sale receipt insertion point missing")
+s=s.replace(sale_end,sale_end_new,1)
+
+p.write_text(s,encoding="utf-8")
+print("APK-only additions applied: immediate post-sale receipt, dynamic shop branding on receipts and ad artwork.")
+
 p.write_text(s,encoding="utf-8")
 print("APK-only patch applied: shop-owner provisioning no longer depends on Cloudflare Worker; secondary Firebase Auth preserves Owner session; retry existing Gmail with matching password; password reset fallback; white/black high-contrast theme.")

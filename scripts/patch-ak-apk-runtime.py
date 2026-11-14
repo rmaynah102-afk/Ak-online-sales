@@ -96,7 +96,7 @@ s=s.replace('const name=$("adName").value.trim(),price=$("adPrice").value,contac
             'const name=$("adName").value.trim(),price=$("adPrice").value,contact=$("adContact").value.trim(),brand=$("adBrand").value.trim()||activeShopName||"ဆိုင်အမည်",file=$("adPhoto").files[0],canvas=$("adCanvas"),ctx=canvas.getContext("2d");',1)
 s=s.replace('ctx.fillText("AK HARDWARE & ELECTRICAL",540,105);','ctx.fillText(brand.slice(0,32),540,105);',1)
 s=s.replace('ctx.fillText("AK",540,540);ctx.font="bold 38px system-ui";ctx.fillText("Hardware & Electrical",540,610);','ctx.fillText(brand.slice(0,24),540,540);',1)
-s=s.replace('contact||"ဆက်သွယ်ရန် · AK Hardware & Electrical"','contact||"ဆက်သွယ်ရန်",1')
+s=s.replace('contact||"ဆက်သွယ်ရန် · AK Hardware & Electrical"','contact||"ဆက်သွယ်ရန်"',1)
 s=s.replace('($("adContact").value||"AK Hardware & Electrical")','($("adContact").value||$("adBrand").value||activeShopName||"")',1)
 
 # Use the actual shop name on all sale receipt outputs.
@@ -104,7 +104,7 @@ s=s.replace('push("AK Hardware & Electrical",27,true,"center");','push(activeSho
 s=s.replace('const text=["AK Hardware & Electrical","ဘောင်ချာ: "','const text=[activeShopName||"ဆိုင်အမည်","ဘောင်ချာ: "',1)
 s=s.replace('c.fillText("AK Hardware & Electrical",360,82);','c.fillText(activeShopName||"ဆိုင်အမည်",360,82);',1)
 old_receipt = '<h2>AK Hardware & Electrical</h2><p>ဘောင်ချာ: '
-new_receipt = "<h2>'+esc(activeShopName||\\"ဆိုင်အမည်\\")+'</h2><p>ဘောင်ချာ: "
+new_receipt = """<h2>'+esc(activeShopName||"ဆိုင်အမည်")+'</h2><p>ဘောင်ချာ: """
 s=s.replace(old_receipt,new_receipt,1)
 
 # After a successful sale, immediately open that sale's receipt for print/PDF.

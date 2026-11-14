@@ -105,6 +105,7 @@ jobs:
           if(!html.includes('src="./firebase-config.js"')) throw new Error('Firebase config script URL is malformed in APK bundle');
           if(!html.includes("async function apkProvisionShopOwner")||html.includes('fetch(GATEWAY+"/owner/provision"')) throw new Error("APK owner account creation still depends on Cloudflare Worker");
           if(!html.includes("firebase-secondary-auth")||!html.includes("APK-only neutral high-contrast theme")) throw new Error("APK-only Firebase provisioning or theme patch is missing");
+          if(!html.includes('await window.printSaleReceipt(saleRef.id)')||!html.includes('id="adBrand"')||!html.includes("ctx.fillText(brand.slice(0,32),540,105)")||!html.includes('activeShopName||"ဆိုင်အမည်"')) throw new Error("APK receipt auto-print or editable shop advertising brand patch is missing");
           if(!html.includes('["products","sales","purchases","people","expenses","reports","printer","ads","backup"]')) throw new Error('Printer/Ads tab click routing is missing');
           if(!html.includes('boot().catch(e=>{ $("loginBtn").disabled=false;$("ownerGoogleBtn").disabled=false;')) throw new Error('Login buttons must remain responsive when startup fails');
           if(!html.includes('function isPlatformOwner')||!html.includes('AK Hardware & Electrical · Owner POS')||!html.includes('ownerControlBtn')) throw new Error('Separate Owner POS and Control Center routing is missing');

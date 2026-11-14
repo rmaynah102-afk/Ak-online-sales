@@ -712,9 +712,7 @@ service cloud.firestore {
         && request.resource.data.category is string
         && request.resource.data.category.size() >= 2
         && request.resource.data.category.size() <= 100
-        && request.resource.data.city is string
-        && request.resource.data.city.size() >= 2
-        && request.resource.data.city.size() <= 100
+        && request.resource.data.city in ['မန္တလေးတိုင်း','ရန်ကုန်တိုင်း']
         && request.resource.data.township is string
         && request.resource.data.township.size() >= 2
         && request.resource.data.township.size() <= 80
@@ -740,10 +738,8 @@ service cloud.firestore {
         && request.resource.data.endsAt is timestamp
         && request.resource.data.endsAt > request.time
         && request.resource.data.endsAt <= request.time + duration.value(30, 'd')
-        && isVerifiedOwner()
-        && request.auth.token.email_verified == true
-        && request.resource.data.ownerUid == request.auth.uid
-        && request.resource.data.email == request.auth.token.email;
+        && ((request.auth == null && request.resource.data.ownerUid == 'public' && request.resource.data.email == '')
+          || (isVerifiedMarketplaceUser() && request.resource.data.ownerUid == request.auth.uid && request.resource.data.email == request.auth.token.email));
       allow update: if isVerifiedOwner()
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','paymentReference','reviewedAt','startsAt','endsAt'])
         && request.resource.data.reviewedAt == request.time

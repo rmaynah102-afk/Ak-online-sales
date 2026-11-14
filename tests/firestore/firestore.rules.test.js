@@ -176,9 +176,44 @@ describe('AK Sale Firestore security baseline', function () {
     await assertSucceeds(batch.commit());
   });
 
+  it('allows only the verified Platform Owner to reconcile a stale shop-capacity counter', async () => {
+    const ownerDb = testEnv.authenticatedContext('platform-owner-uid', {
+      email: 'painglin102@gmail.com', email_verified: true,
+    }).firestore();
+    const counter = doc(ownerDb, 'platformMeta', 'shopCapacity');
+    await assertSucceeds(setDoc(counter, { activeShopCount: 4, updatedAt: serverTimestamp() }));
+    await assertSucceeds(setDoc(counter, { activeShopCount: 2, updatedAt: serverTimestamp() }, { merge: true }));
+
+    const unverifiedOwnerDb = testEnv.authenticatedContext('platform-owner-uid', {
+      email: 'painglin102@gmail.com', email_verified: false,
+    }).firestore();
+    await assertFails(setDoc(doc(unverifiedOwnerDb, 'platformMeta', 'shopCapacity'), {
+      activeShopCount: 3, updatedAt: serverTimestamp(),
+    }, { merge: true }));
+
+    const customerDb = testEnv.authenticatedContext('shop-a', {
+      email: 'shop-a@example.com', email_verified: true,
+    }).firestore();
+    await assertFails(setDoc(doc(customerDb, 'platformMeta', 'shopCapacity'), {
+      activeShopCount: 3, updatedAt: serverTimestamp(),
+    }, { merge: true }));
+  });
+
+  it('denies Platform Owner administration to an unverified account using the Owner email', async () => {
+    const db = testEnv.authenticatedContext('platform-owner-uid', {
+      email: 'painglin102@gmail.com',
+      email_verified: false,
+    }).firestore();
+    await assertFails(setDoc(doc(db, 'platformMeta', 'shopCapacity'), {
+      activeShopCount: 0, updatedAt: serverTimestamp(),
+    }));
+    await assertFails(getDoc(doc(db, 'licenses', 'shop-a')));
+    await assertFails(getDoc(doc(db, 'shops', 'platform-owner-uid', 'pos', 'products', 'records', 'item-1')));
+  });
+
   it('enforces the 100-shop capacity limit and rejects a counter-only increment', async () => {
     const db = testEnv.authenticatedContext('platform-owner-uid', {
-      email: 'painglin102@gmail.com', email_verified: false,
+      email: 'painglin102@gmail.com', email_verified: true,
     }).firestore();
     const counter = doc(db, 'platformMeta', 'shopCapacity');
     await assertSucceeds(setDoc(counter, { activeShopCount: 100, updatedAt: serverTimestamp() }));
@@ -275,7 +310,7 @@ describe('AK Sale Firestore security baseline', function () {
 
   it('allows the verified Platform Owner to create staff invites in their own workspace without a customer license', async () => {
     const ownerDb = testEnv.authenticatedContext('platform-owner', {
-      email: 'painglin102@gmail.com', email_verified: false,
+      email: 'painglin102@gmail.com', email_verified: true,
     }).firestore();
     const inviteRef = doc(ownerDb, 'shopInvites', 'FEDCBA9876543210FEDCBA9876543210');
     await assertSucceeds(setDoc(inviteRef, {

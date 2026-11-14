@@ -41,12 +41,12 @@ test("rejects malformed shop-owner email before contacting Firebase", async () =
   } finally { globalThis.fetch = originalFetch; }
 });
 
-test("creates a shop owner after Platform Owner lookup even if the Owner Gmail is unverified", async () => {
+test("creates a shop owner only after verified Platform Owner lookup", async () => {
   const originalFetch = globalThis.fetch;
   const calls = [];
   globalThis.fetch = async (url, options) => {
     calls.push({ url: String(url), options });
-    if (calls.length === 1) return new Response(JSON.stringify({ users: [{ email: "painglin102@gmail.com", emailVerified: false }] }), { status: 200 });
+    if (calls.length === 1) return new Response(JSON.stringify({ users: [{ email: "painglin102@gmail.com", emailVerified: true }] }), { status: 200 });
     if (calls.length === 2) return new Response(JSON.stringify({ localId: "shop-uid-123", idToken: "new-shop-token" }), { status: 200 });
     if (calls.length === 3) return new Response(JSON.stringify({ email: "shop@example.com" }), { status: 200 });
     throw new Error("Unexpected Firebase request");
@@ -71,7 +71,7 @@ test("reuses an existing shop-owner account when the Owner-supplied password aut
   const calls = [];
   globalThis.fetch = async (url, options) => {
     const u = String(url); calls.push({ url: u, options });
-    if (u.includes("accounts:lookup") && calls.length === 1) return new Response(JSON.stringify({ users: [{ email: "painglin102@gmail.com" }] }), { status: 200 });
+    if (u.includes("accounts:lookup") && calls.length === 1) return new Response(JSON.stringify({ users: [{ email: "painglin102@gmail.com", emailVerified: true }] }), { status: 200 });
     if (u.includes("accounts:signUp")) return new Response(JSON.stringify({ error: { message: "EMAIL_EXISTS" } }), { status: 400 });
     if (u.includes("accounts:signInWithPassword")) return new Response(JSON.stringify({ localId: "existing-shop-uid", idToken: "existing-shop-token" }), { status: 200 });
     if (u.includes("accounts:lookup")) return new Response(JSON.stringify({ users: [{ localId: "existing-shop-uid", email: "shop@example.com", emailVerified: true }] }), { status: 200 });
@@ -95,7 +95,7 @@ test("sends password recovery for an existing account when the entered password 
   const calls = [];
   globalThis.fetch = async (url, options) => {
     const u = String(url); calls.push({ url: u, options });
-    if (u.includes("accounts:lookup")) return new Response(JSON.stringify({ users: [{ email: "painglin102@gmail.com" }] }), { status: 200 });
+    if (u.includes("accounts:lookup")) return new Response(JSON.stringify({ users: [{ email: "painglin102@gmail.com", emailVerified: true }] }), { status: 200 });
     if (u.includes("accounts:signUp")) return new Response(JSON.stringify({ error: { message: "EMAIL_EXISTS" } }), { status: 400 });
     if (u.includes("accounts:signInWithPassword")) return new Response(JSON.stringify({ error: { message: "INVALID_LOGIN_CREDENTIALS" } }), { status: 400 });
     if (u.includes("accounts:sendOobCode")) return new Response(JSON.stringify({ email: "shop@example.com" }), { status: 200 });
@@ -112,7 +112,22 @@ test("sends password recovery for an existing account when the entered password 
   } finally { globalThis.fetch = originalFetch; }
 });
 
-test("rejects an unverified or non-Platform Owner caller", async () => {
+test("rejects an unverified Platform Owner before provisioning a shop", async () => {
+  const originalFetch = globalThis.fetch;
+  let calls = 0;
+  globalThis.fetch = async () => {
+    calls++;
+    return new Response(JSON.stringify({ users: [{ email: "painglin102@gmail.com", emailVerified: false }] }), { status: 200 });
+  };
+  try {
+    const response = await worker.fetch(request({ email: "shop@example.com", password: "password123", apiKey: "test-api-key" }), {});
+    assert.equal(response.status, 403);
+    assert.equal((await response.json()).error, "platform_owner_verification_failed");
+    assert.equal(calls, 1);
+  } finally { globalThis.fetch = originalFetch; }
+});
+
+test("rejects a non-Platform Owner caller", async () => {
   const originalFetch = globalThis.fetch;
   let calls = 0;
   globalThis.fetch = async () => {

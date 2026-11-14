@@ -5,8 +5,24 @@ concurrency:
   cancel-in-progress: false
 
 on:
-  # APK is built manually only after free-tier backend checks are complete.
   workflow_dispatch:
+  # Only APK-specific branch pushes run automatically; Web/Marketplace paths are excluded.
+  push:
+    branches:
+      - 'apk/**'
+    paths:
+      - 'apk/**'
+      - 'scripts/**'
+      - 'native/**'
+      - 'capacitor.config.json'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'google-services.json'
+      - 'firebase-config.js'
+      - 'functions/**'
+      - 'firestore.rules'
+      - 'storage.rules'
+      - '.github/workflows/build-android-apk.yml'
 
 permissions:
   contents: write
@@ -49,6 +65,12 @@ jobs:
         run: sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0"
       - name: Install dependencies
         run: npm install
+      - name: Validate APK build scripts
+        run: |
+          for file in scripts/patch-apk-*.js scripts/validate-apk-*.js scripts/install-native-printer.js; do
+            [ -f "$file" ] || continue
+            node --check "$file"
+          done
       - name: Prepare web app
         run: npm run copy-web
       - name: Apply APK-only Cloud startup guard (does not modify website source)
@@ -108,8 +130,11 @@ jobs:
           if (!html.includes('<option value="30">30 ရက် · 30,000 MMK</option>') || !html.includes('<option value="365">365 ရက် · 360,000 MMK</option>')) {
             throw new Error('APK subscription duration and amount options are missing');
           }
-          if (!html.includes('Owner အတည်ပြုပြီးမှ Cloud POS အသုံးပြုခွင့်ရမည်')) {
-            throw new Error('APK is missing owner-approved subscription gate messaging');
+          if (!html.includes('function akCheckSubscriptionExpiry()') ||
+              !html.includes('akSetLicenseGate(false') ||
+              !html.includes('currentLicense&&currentLicense.expiresAt') ||
+              !html.includes('ak-license-locked')) {
+            throw new Error('APK is missing the online owner-approved subscription expiry lock');
           }
           console.log('Generated APK POS bundle validated:', scriptCount, 'script tags; Market isolated; login, payment and printer UI present.');
           NODE
@@ -215,7 +240,11 @@ jobs:
           gradle = gradle.replace(/versionCode\s+\d+/, 'versionCode ' + versionCode);
           gradle = gradle.replace(/versionName\s+"[^"]+"/, 'versionName "' + versionName + '"');
           fs.writeFileSync(gradlePath, gradle);
-          console.log('Android version:', versionName, 'code:', versionCode);
+          const written = fs.readFileSync(gradlePath, 'utf8');
+          const codeMatch = written.match(/versionCode\s+(\d+)/);
+          const nameMatch = written.match(/versionName\s+"([^"]+)"/);
+          if (Number(codeMatch?.[1]) !== versionCode || nameMatch?.[1] !== versionName) throw new Error('Android versionCode/versionName verification failed');
+          console.log('Android version:', versionName, 'code:', versionCode, '(verified)');
           NODE
       - name: Sync Android project
         run: npx cap sync android
@@ -281,7 +310,15 @@ jobs:
           AK_RELEASE_STORE_PASSWORD: ${{ secrets.AK_RELEASE_STORE_PASSWORD }}
           AK_RELEASE_KEY_ALIAS: ${{ secrets.AK_RELEASE_KEY_ALIAS }}
         run: |
-          keytool -list -v -keystore app/ak-release.keystore -storepass "$AK_RELEASE_STORE_PASSWORD" -alias "$AK_RELEASE_KEY_ALIAS" | grep -E 'Alias name:|SHA1:|SHA-1:'
+          KEY_SHA1=$(keytool -list -v -keystore app/ak-release.keystore -storepass "$AK_RELEASE_STORE_PASSWORD" -alias "$AK_RELEASE_KEY_ALIAS" | awk -F': ' '/SHA1:/{gsub(":","",$2); print tolower($2)}')
+          CONFIG_SHA1=$(node -e "const g=require('../google-services.json');const c=(g.client||[]).find(x=>x.client_info?.android_client_info?.package_name==='com.ak.hardware.sales');const o=(c?.oauth_client||[]).find(x=>x.client_type===1&&x.android_info?.package_name==='com.ak.hardware.sales');if(!o)process.exit(1);process.stdout.write(String(o.android_info.certificate_hash||'').toLowerCase())")
+          if [ -z "$KEY_SHA1" ] || [ "$KEY_SHA1" != "$CONFIG_SHA1" ]; then
+            echo "Release signing SHA-1 does not match Firebase Android OAuth certificate hash."
+            echo "Key SHA-1: $KEY_SHA1"
+            echo "Firebase SHA-1: $CONFIG_SHA1"
+            exit 1
+          fi
+          echo "Release signing SHA-1 matches Firebase Android OAuth config: $KEY_SHA1"
 
       - name: Build signed release APK
         if: steps.signing.outputs.ready == 'true'
@@ -299,7 +336,7 @@ jobs:
           cp android/app/build/outputs/bundle/release/app-release.aab AK-Sale-Software-PlayStore.aab
 
       - name: Publish signed universal AK Sale APK to GitHub Release
-        if: steps.signing.outputs.ready == 'true' && vars.AK_PUBLIC_APK_RELEASE_APPROVED == 'true'
+        if: steps.signing.outputs.ready == 'true' && github.ref == 'refs/heads/main' && vars.AK_PUBLIC_APK_RELEASE_APPROVED == 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ak-sale-v${{ github.run_number }}

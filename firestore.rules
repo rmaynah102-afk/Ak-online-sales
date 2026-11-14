@@ -712,7 +712,9 @@ service cloud.firestore {
         && request.resource.data.category is string
         && request.resource.data.category.size() >= 2
         && request.resource.data.category.size() <= 100
-        && request.resource.data.city in ['မန္တလေးတိုင်း','ရန်ကုန်တိုင်း']
+        && request.resource.data.city is string
+        && request.resource.data.city.size() >= 2
+        && request.resource.data.city.size() <= 80
         && request.resource.data.township is string
         && request.resource.data.township.size() >= 2
         && request.resource.data.township.size() <= 80
@@ -801,7 +803,7 @@ service cloud.firestore {
         || (request.auth != null && resource.data.ownerUid == request.auth.uid);
       allow create: if (
         request.auth == null
-        && request.resource.data.keys().hasOnly(['ownerUid','displayName','kind','body','country','product','price','currency','link','status','createdAt'])
+        && request.resource.data.keys().hasOnly(['ownerUid','displayName','kind','body','country','product','price','currency','link','imageData','status','createdAt'])
         && request.resource.data.ownerUid == 'public'
         && request.resource.data.displayName is string
         && request.resource.data.displayName.size() >= 2
@@ -818,12 +820,14 @@ service cloud.firestore {
         && request.resource.data.link is string
         && request.resource.data.link.size() <= 400
         && (request.resource.data.link == '' || request.resource.data.link.matches('https://[^ ]+'))
+        && request.resource.data.imageData is string
+        && request.resource.data.imageData.size() <= 150000
         && request.resource.data.status == 'published'
         && request.resource.data.createdAt == request.time
       ) || (
         request.auth != null
         && request.auth.token.email_verified == true
-        && request.resource.data.keys().hasOnly(['ownerUid','displayName','kind','body','country','product','price','currency','link','status','createdAt'])
+        && request.resource.data.keys().hasOnly(['ownerUid','displayName','kind','body','country','product','price','currency','link','imageData','status','createdAt'])
         && request.resource.data.ownerUid == request.auth.uid
         && request.resource.data.displayName is string
         && request.resource.data.displayName.size() <= 100
@@ -840,6 +844,8 @@ service cloud.firestore {
         && request.resource.data.link is string
         && request.resource.data.link.size() <= 400
         && (request.resource.data.link == '' || request.resource.data.link.matches('https://[^ ]+'))
+        && request.resource.data.imageData is string
+        && request.resource.data.imageData.size() <= 150000
         && request.resource.data.status == 'published'
         && request.resource.data.createdAt == request.time);
       allow delete: if request.auth != null && resource.data.ownerUid == request.auth.uid;

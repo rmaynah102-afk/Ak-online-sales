@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="index,follow">
-<meta name="theme-color" content="#0b1f46">
+<meta name="theme-color" content="#080d18">
 <title>AK Market | မြန်မာ့အရောင်းအဝယ်</title>
 <meta name="description" content="AK Market — မြန်မာနိုင်ငံတစ်ဝန်း အများပြည်သူ Login မလိုဘဲ ရောင်းဝယ်နိုင်သော အွန်လိုင်းဈေးကွက်။">
 <link rel="canonical" href="https://rmaynah102-afk.github.io/Ak-online-sales/">
@@ -12,15 +12,21 @@
 (function () {
   "use strict";
   var params = new URLSearchParams(window.location.search);
-  if (!params.has("market") && !params.has("app")) params.set("market", "1");
-  var target = new URL("./app.html", window.location.href);
+  var hash = window.location.hash;
+  var target;
+  if (params.has("app")) {
+    target = new URL("./app.html", window.location.href);
+  } else {
+    target = new URL("./market-v2.html", window.location.href);
+    if (!params.has("market")) params.set("market", "1");
+  }
   target.search = params.toString();
-  target.hash = window.location.hash;
+  target.hash = hash;
   window.location.replace(target.toString());
 })();
 </script>
 </head>
 <body>
-<p>AK Market ကို ဖွင့်နေသည်။ အလိုအလျောက်မပြောင်းပါက <a href="./app.html?market=1">ဒီနေရာကိုနှိပ်ပါ</a>။</p>
+<p>AK Market ကို ဖွင့်နေသည်။ အလိုအလျောက်မပြောင်းပါက <a href="./market-v2.html?market=1">AK Market ဖွင့်ရန်</a>။</p>
 </body>
 </html>

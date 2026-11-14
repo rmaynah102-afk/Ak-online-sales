@@ -5,6 +5,7 @@ on:
     branches: [ak-sale-pos-v2-main, main, ak-pos-rebuild-1.0.5-restore]
     paths:
       - "v2/**"
+      - "scripts/patch-ak-apk-runtime.py"
       - "firebase-config.js"
       - "google-services.json"
       - "firestore.rules"
@@ -74,6 +75,7 @@ jobs:
           p.write_text(s)
           print("APK-only runtime patch applied: Firebase config URL preserved, Printer/Ads tabs enabled, startup errors remain actionable")
           PY
+          python3 scripts/patch-ak-apk-runtime.py
           cat > capacitor.config.json <<'JSON'
           {
             "appId": "com.ak.hardware.sales",
@@ -101,6 +103,8 @@ jobs:
           scripts.forEach(([, , code],i)=>new vm.Script(code,{filename:'v2-inline-'+(i+1)}));
           if(!html.includes('id="ownerGoogleBtn"')||!html.includes('nativeAuth.signInWithGoogle()')||!html.includes('GoogleAuthProvider.credential(idToken)')) throw new Error('Native Google Platform Owner login bridge is missing');
           if(!html.includes('src="./firebase-config.js"')) throw new Error('Firebase config script URL is malformed in APK bundle');
+          if(!html.includes("async function apkProvisionShopOwner")||html.includes('fetch(GATEWAY+"/owner/provision"')) throw new Error("APK owner account creation still depends on Cloudflare Worker");
+          if(!html.includes("firebase-secondary-auth")||!html.includes("APK-only neutral high-contrast theme")) throw new Error("APK-only Firebase provisioning or theme patch is missing");
           if(!html.includes('["products","sales","purchases","people","expenses","reports","printer","ads","backup"]')) throw new Error('Printer/Ads tab click routing is missing');
           if(!html.includes('boot().catch(e=>{ $("loginBtn").disabled=false;$("ownerGoogleBtn").disabled=false;')) throw new Error('Login buttons must remain responsive when startup fails');
           if(!html.includes('function isPlatformOwner')||!html.includes('AK Hardware & Electrical · Owner POS')||!html.includes('ownerControlBtn')) throw new Error('Separate Owner POS and Control Center routing is missing');

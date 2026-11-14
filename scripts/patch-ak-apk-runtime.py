@@ -104,7 +104,7 @@ s=s.replace('push("AK Hardware & Electrical",27,true,"center");','push(activeSho
 s=s.replace('const text=["AK Hardware & Electrical","ဘောင်ချာ: "','const text=[activeShopName||"ဆိုင်အမည်","ဘောင်ချာ: "',1)
 s=s.replace('c.fillText("AK Hardware & Electrical",360,82);','c.fillText(activeShopName||"ဆိုင်အမည်",360,82);',1)
 old_receipt = '<h2>AK Hardware & Electrical</h2><p>ဘောင်ချာ: '
-new_receipt = '<h2>\\'+esc(activeShopName||"ဆိုင်အမည်")+\\'</h2><p>ဘောင်ချာ: '
+new_receipt = "<h2>'+esc(activeShopName||\\"ဆိုင်အမည်\\")+'</h2><p>ဘောင်ချာ: "
 s=s.replace(old_receipt,new_receipt,1)
 
 # After a successful sale, immediately open that sale's receipt for print/PDF.

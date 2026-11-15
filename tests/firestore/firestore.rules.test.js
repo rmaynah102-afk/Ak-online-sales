@@ -211,6 +211,38 @@ describe('AK Sale Firestore security baseline', function () {
     await assertFails(getDoc(doc(db, 'shops', 'platform-owner-uid', 'pos', 'products', 'records', 'item-1')));
   });
 
+  it('requires each Owner Free Beta slot to be atomically paired with a new profile and one-time claim', async () => {
+    const db = testEnv.authenticatedContext('platform-owner-uid', {
+      email: 'painglin102@gmail.com', email_verified: true,
+    }).firestore();
+    const capacity = doc(db, 'freeBetaCapacity', 'slots');
+    const addBetaShop = (batch, uid, email, count, createCapacity = false) => {
+      const now = serverTimestamp();
+      batch.set(doc(db, 'freeBetaUsers', uid), {
+        uid, email, shopName: 'Beta Shop', status: 'active', plan: 'free-beta',
+        createdAt: now, lastLoginAt: now,
+      });
+      batch.set(doc(db, 'freeTrialClaims', email), { uid, email, createdAt: now });
+      if (createCapacity) batch.set(capacity, { count, updatedAt: now, lastIssuedUid: uid });
+      else batch.update(capacity, { count, updatedAt: now, lastIssuedUid: uid });
+    };
+    const first = writeBatch(db);
+    addBetaShop(first, 'beta-1', 'beta-1@example.com', 1, true);
+    await assertSucceeds(first.commit());
+
+    await assertFails(setDoc(capacity, {
+      count: 2, updatedAt: serverTimestamp(), lastIssuedUid: 'beta-2',
+    }, { merge: true }));
+
+    const second = writeBatch(db);
+    addBetaShop(second, 'beta-2', 'beta-2@example.com', 2);
+    await assertSucceeds(second.commit());
+
+    await assertFails(setDoc(capacity, {
+      count: 101, updatedAt: serverTimestamp(), lastIssuedUid: 'beta-101',
+    }, { merge: true }));
+  });
+
   it('allows paid shop issuance after 100 free-beta slots while rejecting counter-only increments', async () => {
     const db = testEnv.authenticatedContext('platform-owner-uid', {
       email: 'painglin102@gmail.com', email_verified: true,

@@ -115,7 +115,7 @@ new_receipt = """<h2>'+esc(activeShopName||"ဆိုင်အမည်")+'</h2>
 s=s.replace(old_receipt,new_receipt,1)
 
 # After a successful sale, immediately open that sale's receipt for print/PDF.
-sale_end = '   await reloadAll();\n  }catch(e){alert(errText(e))}\n };\n $("savePurchase").onclick=async()=>'
+sale_end = '  await reloadAll();\n }catch(e){alert(errText(e))}\n};\n$("savePurchase").onclick=async()=>'
 sale_end_new = '   await reloadAll();\n   await window.printSaleReceipt(saleRef.id);\n  }catch(e){alert(errText(e))}\n };\n $("savePurchase").onclick=async()=>'
 if sale_end not in s: raise SystemExit("APK patch failed: post-sale receipt insertion point missing")
 s=s.replace(sale_end,sale_end_new,1)

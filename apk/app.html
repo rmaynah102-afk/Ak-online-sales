@@ -834,7 +834,7 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
 <div class="actions"><button type="button" onclick="loadMarketReports()">တိုင်ကြားချက်စာရင်းဖတ်မည်</button></div>
 <p id="akMarketReportsStatus" class="muted">စာရင်း မဖတ်ရသေးပါ။</p>
 <div id="akMarketReportsRows"><p class="muted">တိုင်ကြားချက်များ မဖတ်ရသေးပါ။</p></div>
-</div></div></div><div class="panel" id="akFirebasePanel"><h2>အကောင့်ဝင်ရန် · Cloud စနစ်</h2><div class="notice">Gmail / Email ဖြင့် Register လုပ်ပြီး Email အတည်ပြုပါ။ ပထမဆုံး ဆိုင်အကောင့် ၃၀ ခုကို Free Beta အဖြစ် အခမဲ့ဖွင့်ပေးမည်။ ထိုအကောင့်များ၏ ဒေတာကို ကိုယ်ပိုင် UID အောက်တွင် Cloud Sync လုပ်မည်။ ၃၀ ပြည့်ပါက Subscription လိုအပ်သည်။</div><div class="panel" style="margin:10px 0"><label for="akAccountType">ဖွင့်မည့်အကောင့်အမျိုးအစား</label><select id="akAccountType" onchange="akUpdateAccountTypeHint()"><option value="shop-owner">ဆိုင်ရှင်အကောင့် (ဆိုင်ကို စီမံမည်)</option><option value="staff">ဝန်ထမ်း Gmail အကောင့် (Merchant Code ဖြင့်ချိတ်မည်)</option></select><p id="akAccountTypeHint" class="muted">ဆိုင်ရှင်အကောင့်ဖြင့် Register လုပ်ပြီး Email အတည်ပြုပါ။ ထို့နောက် Package ဝယ်ယူပြီး Owner အတည်ပြုချက်ရယူပါ။</p></div><div class="panel" style="margin:10px 0"><label for="akLoginMode">Login အမျိုးအစား</label><select id="akLoginMode" onchange="akSetLoginMode()"><option value="shop">Owner / ဆိုင်ရှင် User Login</option><option value="staff">ဝန်ထမ်း Merchant Login</option></select><p id="akLoginModeHint" class="muted">Owner သည် သတ်မှတ်ထားသော Owner Gmail နှင့် Password ဖြင့် ဝင်ပါ။ ဆိုင်ရှင် User သည် မိမိ Gmail နှင့် Password ဖြင့် ဝင်ပါ။</p><div id="akStaffLoginCodeWrap" class="hidden"><label>ဝန်ထမ်း Merchant Code (ပထမဆုံးချိတ်ဆက်ချိန်)</label><input id="akStaffLoginCode" maxlength="10" autocomplete="off" placeholder="ဆိုင်ရှင်ထံမှ ရရှိသော Code" style="text-transform:uppercase"></div></div><div class="grid"><div><label>အကောင့် Gmail / Email</label><input id="fbEmail" type="email" value="" autocomplete="username" inputmode="email" onkeydown="if(event.key==='Enter')firebaseLogin()"></div><div><label>AK POS Password (Gmail Password မဟုတ်ပါ)</label><div class="actions" style="gap:6px;flex-wrap:nowrap"><input id="fbPassword" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')firebaseLogin()" style="min-width:0;flex:1"><button type="button" class="alt" aria-label="Password ပြရန်/ဖျောက်ရန်" onclick="const p=document.getElementById('fbPassword');p.type=p.type==='password'?'text':'password';this.textContent=p.type==='password'?'ပြရန်':'ဖျောက်ရန်'">ပြရန်</button></div></div></div><div class="actions"><button type="button" onclick="firebaseLogin()">Login ဝင်မည်</button><button type="button" id="akRegisterButton" class="alt" onclick="firebaseRegister()">User အကောင့်အသစ်ဖွင့်ရန်</button><button class="alt" type="button" onclick="firebaseResetPassword()">AK POS Password မေ့နေပါက</button><button class="alt" type="button" onclick="firebaseLogout()">Logout ထွက်မည်</button></div><p class="muted">Gmail / Email နှင့် Password ကို လုံခြုံစွာ သိမ်းထားပါ။ Password ကို မည်သူ့ကိုမျှ မပေးပါနှင့်။</p><p class="muted" id="fbStatus">Cloud စနစ် အဆင်သင့်ဖြစ်သည်။ Gmail ဖြင့် ဝင်ပါ။</p>
+</div></div></div><div class="panel" id="akFirebasePanel"><h2>အကောင့်ဝင်ရန် · Cloud စနစ်</h2><div class="notice">Gmail / Email ဖြင့် Register လုပ်ပြီး Email အတည်ပြုပါ။ ပထမဆုံး ဆိုင်အကောင့် ၁၀၀ ခုကို Free Beta အဖြစ် အခမဲ့ဖွင့်ပေးမည်။ ထိုအကောင့်များ၏ ဒေတာကို ကိုယ်ပိုင် UID အောက်တွင် Cloud Sync လုပ်မည်။ ၁၀၀ ပြည့်ပါက Subscription လိုအပ်သည်။</div><div class="panel" style="margin:10px 0"><label for="akAccountType">ဖွင့်မည့်အကောင့်အမျိုးအစား</label><select id="akAccountType" onchange="akUpdateAccountTypeHint()"><option value="shop-owner">ဆိုင်ရှင်အကောင့် (ဆိုင်ကို စီမံမည်)</option><option value="staff">ဝန်ထမ်း Gmail အကောင့် (Merchant Code ဖြင့်ချိတ်မည်)</option></select><p id="akAccountTypeHint" class="muted">ဆိုင်ရှင်အကောင့်ဖြင့် Register လုပ်ပြီး Email အတည်ပြုပါ။ ထို့နောက် Package ဝယ်ယူပြီး Owner အတည်ပြုချက်ရယူပါ။</p></div><div class="panel" style="margin:10px 0"><label for="akLoginMode">Login အမျိုးအစား</label><select id="akLoginMode" onchange="akSetLoginMode()"><option value="shop">Owner / ဆိုင်ရှင် User Login</option><option value="staff">ဝန်ထမ်း Merchant Login</option></select><p id="akLoginModeHint" class="muted">Owner သည် သတ်မှတ်ထားသော Owner Gmail နှင့် Password ဖြင့် ဝင်ပါ။ ဆိုင်ရှင် User သည် မိမိ Gmail နှင့် Password ဖြင့် ဝင်ပါ။</p><div id="akStaffLoginCodeWrap" class="hidden"><label>ဝန်ထမ်း Merchant Code (ပထမဆုံးချိတ်ဆက်ချိန်)</label><input id="akStaffLoginCode" maxlength="10" autocomplete="off" placeholder="ဆိုင်ရှင်ထံမှ ရရှိသော Code" style="text-transform:uppercase"></div></div><div class="grid"><div><label>အကောင့် Gmail / Email</label><input id="fbEmail" type="email" value="" autocomplete="username" inputmode="email" onkeydown="if(event.key==='Enter')firebaseLogin()"></div><div><label>AK POS Password (Gmail Password မဟုတ်ပါ)</label><div class="actions" style="gap:6px;flex-wrap:nowrap"><input id="fbPassword" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')firebaseLogin()" style="min-width:0;flex:1"><button type="button" class="alt" aria-label="Password ပြရန်/ဖျောက်ရန်" onclick="const p=document.getElementById('fbPassword');p.type=p.type==='password'?'text':'password';this.textContent=p.type==='password'?'ပြရန်':'ဖျောက်ရန်'">ပြရန်</button></div></div></div><div class="actions"><button type="button" onclick="firebaseLogin()">Login ဝင်မည်</button><button type="button" id="akRegisterButton" class="alt" onclick="firebaseRegister()">User အကောင့်အသစ်ဖွင့်ရန်</button><button class="alt" type="button" onclick="firebaseResetPassword()">AK POS Password မေ့နေပါက</button><button class="alt" type="button" onclick="firebaseLogout()">Logout ထွက်မည်</button></div><p class="muted">Gmail / Email နှင့် Password ကို လုံခြုံစွာ သိမ်းထားပါ။ Password ကို မည်သူ့ကိုမျှ မပေးပါနှင့်။</p><p class="muted" id="fbStatus">Cloud စနစ် အဆင်သင့်ဖြစ်သည်။ Gmail ဖြင့် ဝင်ပါ။</p>
 <div class="panel" id="akAccessRequestPanel" style="margin-top:12px"><h3>Package / အသုံးပြုခွင့်တောင်းရန်</h3><p class="muted">App အတွင်း ငွေပေးချေမှု၊ Transaction ID သို့မဟုတ် Screenshot တင်စနစ် မရှိပါ။ ငွေပေးချေမှုကို App အပြင်တွင် သီးခြားဆောင်ရွက်ပါ။ Platform Owner က စစ်ဆေးပြီး Package အသုံးပြုခွင့်ကို ကိုယ်တိုင်ဖွင့်ပေးမည်။</p><div class="grid"><div><label>အသုံးပြုခွင့်ကာလ</label><select id="payPlan"><option value="30">30 ရက်</option><option value="90">90 ရက်</option><option value="180">180 ရက်</option><option value="365">365 ရက်</option></select></div></div><div class="actions"><button type="button" onclick="akRequestSubscriptionAccess()">အသုံးပြုခွင့်တောင်းမည်</button></div><p id="akAccessRequestStatusPayment" class="muted">Gmail အတည်ပြုပြီး Login ဝင်ထားပါ။ Owner က စစ်ဆေးပြီးမှ POS ကို ဖွင့်ပေးမည်။</p></div></div>
 <div class="panel"><h2>အရောင်ဒီဇိုင်း ပြောင်းရန်</h2><p class="muted">ဒီဖုန်း / Browser အတွက် ဆော့ဖ်ဝဲလ် Theme အရောင်ကို ရွေးပါ။</p><label>အရောင် Theme</label><select id="akThemeSelect" onchange="localStorage.setItem('ak_sale_theme_v1',this.value);applyAkTheme()"><option value="green">အစိမ်း</option><option value="blue">အပြာ</option><option value="purple">ခရမ်း</option><option value="orange">လိမ္မော်</option></select></div><div class="panel"><h2>လုပ်ငန်းအမှတ်တံဆိပ်နှင့် တည်နေရာ</h2><div class="grid"><div><label>လုပ်ငန်းအမည် (စနစ်အတွင်း)</label><input id="shopName" placeholder="ဥပမာ - AK Hardware"></div><div><label>ဘောင်ချာပေါ်ပြမည့် ဆိုင်ရှင် / ဆိုင်အမည်</label><input id="receiptName" maxlength="80" placeholder="ဥပမာ - ကိုအောင် / Aung Store"><small class="muted">ဘောင်ချာခေါင်းစီးတွင် AK Hardware အစား ဒီအမည်ကို ပြမည်။</small></div><div><label>ငွေကြေး</label><input id="currency" value="MMK"></div><div><label>မြို့</label><input id="shopCity" placeholder="ဥပမာ - မန္တလေး"></div><div><label>မြို့နယ်</label><input id="shopTownship" placeholder="မြို့နယ်အမည်"></div><div><label>ဆိုင်လိပ်စာ</label><input id="shopAddress" placeholder="လမ်း၊ ရပ်ကွက်၊ အဆောက်အအုံ"></div><div><label>ဆက်သွယ်ရန်ဖုန်း</label><input id="shopPhone" inputmode="tel" placeholder="09xxxxxxxxx"></div><div><label>Logo ပုံ URL (မဖြစ်မနေမဟုတ်)</label><input id="shopLogo" type="url" placeholder="https://..."></div></div><div class="actions"><button onclick="saveShop()">အချက်အလက် သိမ်းမည်</button><button class="red" onclick="clearAll()">ဒေတာအားလုံးဖျက်ရန်</button></div><p class="muted">ဆိုင်ခွဲတစ်ခုချင်းစီ၏ လိပ်စာကို Shopping Center ထဲတွင် သီးခြားသတ်မှတ်နိုင်သည်။</p></div>
 
@@ -2002,22 +2002,33 @@ async function firebaseResetPassword(){try{if(!fbAuth||!fbStore)await firebaseCo
 async function firebaseLogout(){try{if(!fbAuth)await firebaseConnect();if(fbAuth)await fbAuth.signOut();const pass=$("fbPassword");if(pass)pass.value="";$("fbStatus").textContent="အကောင့်မှ ထွက်ပြီးပါပြီ။ နောက်တစ်ကြိမ် Gmail ဖြင့် ပြန်ဝင်နိုင်ပါသည်။"}catch(e){$("fbStatus").textContent="Logout မအောင်မြင်: "+e.message}}
 function renderLicenseCalendar(expiry,status){const dateEl=$("licenseExpiryDate"),daysEl=$("licenseRemainingDays"),stateEl=$("licenseCalendarState");if(!dateEl||!daysEl||!stateEl)return;const valid=expiry instanceof Date&&!Number.isNaN(expiry.getTime());dateEl.value=valid?expiry.toISOString().slice(0,10):"";if(!valid){daysEl.textContent="—";stateEl.textContent="သက်တမ်းရက် မသတ်မှတ်ရသေးပါ";return}const remaining=Math.max(0,Math.ceil((expiry.getTime()-Date.now())/86400000));daysEl.textContent=String(remaining)+" ရက်";stateEl.textContent=status==="active"&&remaining>0?"အသုံးပြုခွင့် ဖွင့်ထားသည်": "သက်တမ်းကုန် / ပိတ်ထားသည်"}
 async function akEnsureFreeBetaAccess(user){
+ const email=String(user.email||"").trim().toLowerCase();
+ if(!email)return false;
  const profileRef=fbStore.collection("freeBetaUsers").doc(user.uid);
+ const claimRef=fbStore.collection("freeTrialClaims").doc(email);
  const capacityRef=fbStore.collection("freeBetaCapacity").doc("slots");
  return fbStore.runTransaction(async tx=>{
-  const profile=await tx.get(profileRef);
+  const [profile,claim,capacity]=await Promise.all([
+   tx.get(profileRef),tx.get(claimRef),tx.get(capacityRef)
+  ]);
   if(profile.exists){
    const existing=profile.data()||{};
-   if(existing.status!=="active")return false;
+   if(existing.status!=="active"||String(existing.email||"").toLowerCase()!==email)return false;
+   if(!claim.exists){
+    if(!existing.createdAt)throw Error("Free Beta စာရင်းအချက်အလက် မပြည့်စုံပါ။ Owner ထံ ဆက်သွယ်ပါ။");
+    tx.set(claimRef,{uid:user.uid,email,createdAt:existing.createdAt});
+   }else if(claim.data().uid!==user.uid)return false;
    tx.update(profileRef,{lastLoginAt:firebase.firestore.FieldValue.serverTimestamp()});
    return true;
   }
-  const capacity=await tx.get(capacityRef);
+  if(claim.exists)return false;
   const current=capacity.exists?Number((capacity.data()||{}).count):0;
-  if(!Number.isInteger(current)||current<0||current>=30)return false;
-  tx.set(profileRef,{uid:user.uid,email:String(user.email||""),status:"active",createdAt:firebase.firestore.FieldValue.serverTimestamp(),lastLoginAt:firebase.firestore.FieldValue.serverTimestamp()});
-  if(capacity.exists)tx.update(capacityRef,{count:current+1,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
-  else tx.set(capacityRef,{count:1,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+  if(!Number.isInteger(current)||current<0||current>=100)return false;
+  const serverTime=firebase.firestore.FieldValue.serverTimestamp();
+  tx.set(profileRef,{uid:user.uid,email,status:"active",createdAt:serverTime,lastLoginAt:serverTime});
+  tx.set(claimRef,{uid:user.uid,email,createdAt:serverTime});
+  if(capacity.exists)tx.update(capacityRef,{count:current+1,updatedAt:serverTime});
+  else tx.set(capacityRef,{count:1,updatedAt:serverTime});
   return true;
  });
 }
@@ -2037,18 +2048,18 @@ async function refreshLicense(){
    return false;
   }
   const licenseSnap=await fbStore.collection("licenses").doc(user.uid).get();
-  if(!licenseSnap.exists){
+  if(!licenseSnap.exists || (licenseSnap.data()||{}).status==="pending_payment"){
    const betaActive=await akEnsureFreeBetaAccess(user);
    if(betaActive){
     currentLicense={uid:user.uid,status:"active",plan:"free-beta",expiresAt:null};
     $("shopUid").textContent=user.uid;
     renderLicenseCalendar(null,"active");
-    $("licenseStatus").textContent="Free Beta · ပထမဆုံး ဆိုင်အကောင့် ၃၀ ခုအတွင်း ပါဝင်သည်။";
+    $("licenseStatus").textContent="Free Beta · ပထမဆုံး ဆိုင်အကောင့် ၁၀၀ ခုအတွင်း ပါဝင်သည်။";
     akSetLicenseGate(true,"Free Beta အသုံးပြုခွင့် ဖွင့်ထားသည်။ ဆိုင်ဒေတာကို ကိုယ်ပိုင် Gmail အကောင့်အောက်တွင် သီးခြားသိမ်းမည်။");
     return true;
    }
    currentLicense=null;renderLicenseCalendar(null,"pending");
-   $("licenseStatus").textContent="Free Beta ဆိုင်အကောင့် ၃၀ ခု ပြည့်သွားပါပြီ။";
+   $("licenseStatus").textContent="Free Beta ဆိုင်အကောင့် ၁၀၀ ခု ပြည့်သွားပါပြီ။";
    akSetLicenseGate(false,"Free Beta နေရာပြည့်နေပါသည်။ Subscription အတွက် Owner ထံ ဆက်သွယ်ပါ။");
    return false;
   }
@@ -2175,7 +2186,7 @@ async function loadPlatformUsers(){
   akRenderPlatformUsers();
   const betaUsed=capacitySnap.exists?Number((capacitySnap.data()||{}).count||0):betaSnap.size;
   $("akOwnerUserCount").textContent=akPlatformUserRows.length+" ခု";
-  $("akPlatformUserStatus").textContent="ဆိုင်အကောင့် "+akPlatformUserRows.length+" ခု · Free Beta "+betaUsed+"/30 နေရာ အသုံးပြုပြီး။ App အပြင်တွင် သီးခြားစစ်ဆေးပြီး Owner က Package သက်တမ်းကို ကိုယ်တိုင်ပေးပါ။";
+  $("akPlatformUserStatus").textContent="ဆိုင်အကောင့် "+akPlatformUserRows.length+" ခု · Free Beta "+betaUsed+"/100 နေရာ အသုံးပြုပြီး။ App အပြင်တွင် သီးခြားစစ်ဆေးပြီး Owner က Package သက်တမ်းကို ကိုယ်တိုင်ပေးပါ။";
  }catch(e){$("akPlatformUserStatus").textContent="Customer စာရင်းဖတ်မရပါ: "+e.message}
 }
 async function akSetCustomerAccess(uid,action){

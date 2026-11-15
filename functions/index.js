@@ -45,13 +45,13 @@ async function enforceCustomerShopCapacity(tx, uid, currentLicenseSnap) {
     return email !== OWNER_EMAIL && expiry > now;
   });
   const targetAlreadyActive = activeOwners.some(doc => doc.id === uid);
-  if (!targetAlreadyActive && activeOwners.length >= 30) {
+  if (!targetAlreadyActive && activeOwners.length >= 100) {
     throw new functions.https.HttpsError("resource-exhausted",
-      "Platform Owner က ခွင့်ပြုထားသော ဆိုင် ၃၀ ဆိုင် ပြည့်နေပါပြီ။ ဆိုင်ဟောင်းတစ်ဆိုင်ကို Suspend လုပ်ခြင်း သို့မဟုတ် သက်တမ်းကုန်ပြီးမှ အသစ်ဖွင့်နိုင်ပါမည်။");
+      "Platform Owner က ခွင့်ပြုထားသော ဆိုင် ၁၀၀ ဆိုင် ပြည့်နေပါပြီ။ ဆိုင်ဟောင်းတစ်ဆိုင်ကို Suspend လုပ်ခြင်း သို့မဟုတ် သက်တမ်းကုန်ပြီးမှ အသစ်ဖွင့်နိုင်ပါမည်။");
   }
   tx.set(capacityRef, {
     activeCount: activeOwners.length + (targetAlreadyActive ? 0 : 1),
-    limit: 30,
+    limit: 100,
     updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     lastActivatedUid: uid
   }, { merge: true });
@@ -75,11 +75,14 @@ async function requireActiveShop(context) {
   const email = String(context.auth.token.email || "").trim().toLowerCase();
   // The sole verified Platform Owner may administer their own shop without a paid license.
   if (email === OWNER_EMAIL && context.auth.token.email_verified === true) return uid;
+  const beta = await db.collection("freeBetaUsers").doc(uid).get();
+  if (context.auth.token.email_verified === true && beta.exists &&
+      beta.data().status === "active" && beta.data().email === email) return uid;
   const snap = await db.collection("licenses").doc(uid).get();
   const license = snap.data() || {};
   if (!snap.exists || license.status !== "active" || !license.expiresAt ||
       license.expiresAt.toMillis() <= Date.now()) {
-    throw new functions.https.HttpsError("permission-denied", "ငွေပေးချေမှုအတည်ပြုထားသော Subscription လိုအပ်သည်။");
+    throw new functions.https.HttpsError("permission-denied", "Free Beta အကောင့်မဟုတ်ပါက သက်တမ်းရှိ Subscription လိုအပ်သည်။");
   }
   return uid;
 }
@@ -1048,11 +1051,13 @@ async function verifyWorkspaceMember(context, identity) {
       member.data().role!==identity.role) {
     throw new functions.https.HttpsError("permission-denied","ဆိုင်ဝန်ထမ်းအဖွဲ့ဝင်ခွင့် မမှန်ပါ။");
   }
+  const beta=await db.collection("freeBetaUsers").doc(identity.shopId).get();
+  if (beta.exists && beta.data().status==="active") return;
   const license=await db.collection("licenses").doc(identity.shopId).get();
   const l=license.data()||{};
   if (!license.exists || l.status!=="active" || !l.expiresAt ||
       l.expiresAt.toMillis()<=Date.now()) {
-    throw new functions.https.HttpsError("permission-denied","ဆိုင် Subscription သက်တမ်း မရှိပါ။");
+    throw new functions.https.HttpsError("permission-denied","ဆိုင် Free Beta သို့မဟုတ် Subscription အသုံးပြုခွင့် မရှိပါ။");
   }
 }
 function workspaceCanWrite(role,key) {

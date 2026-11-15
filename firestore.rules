@@ -41,11 +41,14 @@ service cloud.firestore {
     function activeShopLicense(shopId) {
       return (isVerifiedOwner() && request.auth.uid == shopId)
         || (request.auth != null
-          && request.auth.uid == shopId
           && request.auth.token.email_verified == true
           && exists(/databases/$(database)/documents/freeBetaUsers/$(shopId))
           && get(/databases/$(database)/documents/freeBetaUsers/$(shopId)).data.status == 'active'
-          && get(/databases/$(database)/documents/freeBetaUsers/$(shopId)).data.email == request.auth.token.email)
+          && ((request.auth.uid == shopId
+              && get(/databases/$(database)/documents/freeBetaUsers/$(shopId)).data.email == request.auth.token.email)
+            || (exists(/databases/$(database)/documents/shopMembers/$(request.auth.uid))
+              && get(/databases/$(database)/documents/shopMembers/$(request.auth.uid)).data.shopId == shopId
+              && get(/databases/$(database)/documents/shopMembers/$(request.auth.uid)).data.status == 'active')))
         || (exists(/databases/$(database)/documents/licenses/$(shopId))
           && get(/databases/$(database)/documents/licenses/$(shopId)).data.status == 'active'
           && get(/databases/$(database)/documents/licenses/$(shopId)).data.expiresAt is timestamp
@@ -352,6 +355,10 @@ service cloud.firestore {
         && !exists(/databases/$(database)/documents/freeBetaUsers/$(userId))
         && !exists(freeTrialClaimPath(request.auth.token.email))
         && existsAfter(freeTrialClaimPath(request.auth.token.email))
+        && existsAfter(/databases/$(database)/documents/freeBetaCapacity/slots)
+        && getAfter(/databases/$(database)/documents/freeBetaCapacity/slots).data.count is int
+        && getAfter(/databases/$(database)/documents/freeBetaCapacity/slots).data.count <= 100
+        && getAfter(/databases/$(database)/documents/freeBetaCapacity/slots).data.updatedAt == request.time
         && getAfter(freeTrialClaimPath(request.auth.token.email)).data.uid == userId
         && getAfter(freeTrialClaimPath(request.auth.token.email)).data.email == request.auth.token.email
         && getAfter(freeTrialClaimPath(request.auth.token.email)).data.createdAt == request.time;

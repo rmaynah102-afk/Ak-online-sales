@@ -136,3 +136,182 @@ print("APK-only additions applied: immediate post-sale receipt, dynamic shop bra
 
 p.write_text(s,encoding="utf-8")
 print("APK-only patch applied: shop-owner provisioning no longer depends on Cloudflare Worker; secondary Firebase Auth preserves Owner session; retry existing Gmail with matching password; password reset fallback; white/black high-contrast theme.")
+
+
+# APK-only user-selectable color themes and spreadsheet-style sales/purchase ledgers.
+p = Path("www/index.html")
+s = p.read_text(encoding="utf-8")
+
+theme_css = r"""
+/* User-selectable shop themes and spreadsheet-like ledgers */
+:root{--table-head:#e8eef6;--table-alt:#f7f9fc;--table-hover:#edf4fb;--accent-soft:#fff0df}
+.tablewrap{border:1px solid var(--line);border-radius:10px;background:#fff;max-height:68vh;overflow:auto}
+.tablewrap table{min-width:760px;border-collapse:separate;border-spacing:0;font-variant-numeric:tabular-nums}
+.tablewrap th{position:sticky;top:0;z-index:2;background:var(--table-head);color:var(--navy);font-weight:750;white-space:nowrap;border-bottom:2px solid var(--blue)}
+.tablewrap td{padding:10px 11px;border-bottom:1px solid var(--line);vertical-align:middle}
+.tablewrap tbody tr:nth-child(even){background:var(--table-alt)}
+.tablewrap tbody tr:hover{background:var(--table-hover)}
+.tablewrap td:nth-child(n+3){font-variant-numeric:tabular-nums}
+.table-tools{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:12px 0 8px}
+.table-tools input{flex:1 1 220px;max-width:440px}
+.table-summary{font-size:13px;font-weight:700;color:var(--navy);background:var(--accent-soft);border:1px solid var(--line);border-radius:8px;padding:9px 12px}
+.theme-card{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.theme-card label{margin:0;min-width:110px}
+.theme-card select{max-width:250px}
+.theme-card input[type=color]{width:54px;min-width:54px;height:44px;padding:4px}
+@media(max-width:599px){.tablewrap{max-height:60vh}.tablewrap table{min-width:720px}.table-tools>*{width:100%;max-width:none}.theme-card>*{flex:1 1 100%}.theme-card input[type=color]{width:64px;flex:0 0 64px}}
+"""
+if "User-selectable shop themes and spreadsheet-like ledgers" not in s:
+    if "</style>" not in s: raise SystemExit("Theme patch: style end marker missing")
+    s = s.replace("</style>", theme_css + "\n</style>", 1)
+
+theme_panel = r"""
+<section id="appearancePanel" class="card no-print">
+  <h3>အရောင်နှင့် ပုံစံပြင်ရန်</h3>
+  <div class="theme-card">
+    <label for="themePreset">အရောင် Theme</label>
+    <select id="themePreset">
+      <option value="navy">AK Navy & Orange</option>
+      <option value="green">အစိမ်း</option>
+      <option value="blue">အပြာ</option>
+      <option value="purple">ခရမ်း</option>
+      <option value="teal">စိမ်းပြာ</option>
+      <option value="dark">Dark</option>
+      <option value="custom">ကိုယ်ပိုင်အရောင်</option>
+    </select>
+    <label for="themeAccent">အဓိကအရောင်</label>
+    <input id="themeAccent" type="color" value="#174a7e" aria-label="အဓိကအရောင်ရွေးရန်">
+    <span id="themeStatus" class="muted">ရွေးထားသောအရောင်ကို ဒီဆိုင်အတွက် သိမ်းထားမည်</span>
+  </div>
+</section>
+"""
+nav_anchor = '<nav class="tabs no-print" id="tabs">'
+if "id=\"appearancePanel\"" not in s:
+    if nav_anchor not in s: raise SystemExit("Theme patch: shop navigation insertion point missing")
+    s = s.replace(nav_anchor, theme_panel + "\n" + nav_anchor, 1)
+
+sales_tools = '<div class="table-tools no-print"><input id="salesSearch" type="search" placeholder="အရောင်းစာရင်း ရှာရန် — ပစ္စည်း / ဖောက်သည် / ရက်စွဲ"><span id="salesSummary" class="table-summary">အရောင်းစာရင်း</span></div>'
+purchases_tools = '<div class="table-tools no-print"><input id="purchasesSearch" type="search" placeholder="အဝယ်စာရင်း ရှာရန် — ပစ္စည်း / ပေးသွင်းသူ / ရက်စွဲ"><span id="purchasesSummary" class="table-summary">အဝယ်စာရင်း</span></div>'
+sale_table_anchor = '<div class="tablewrap"><table><thead><tr><th>ရက်စွဲ</th><th>ပစ္စည်း</th><th>အရေအတွက်</th><th>စုစုပေါင်း</th><th>ရရှိငွေ</th><th>ကျန်အကြွေး</th><th>ဘောင်ချာ</th></tr>'
+purchase_table_anchor = '<div class="tablewrap"><table><thead><tr><th>ရက်စွဲ</th><th>ပစ္စည်း</th><th>အရေအတွက်</th><th>စုစုပေါင်း</th><th>ပေးသွင်းသူ</th><th>ပေးရန်ကျန်</th><th>လုပ်ဆောင်ချက်</th></tr>'
+if "id=\"salesSearch\"" not in s:
+    if sale_table_anchor not in s: raise SystemExit("Ledger patch: sales table anchor missing")
+    s = s.replace(sale_table_anchor, sales_tools + sale_table_anchor, 1)
+if "id=\"purchasesSearch\"" not in s:
+    if purchase_table_anchor not in s: raise SystemExit("Ledger patch: purchase table anchor missing")
+    s = s.replace(purchase_table_anchor, purchases_tools + purchase_table_anchor, 1)
+
+# Replace only the two ledger render blocks; payment calculations remain based on original records.
+start = s.find(' $("saleRows").innerHTML=sales.slice()')
+end = s.find(' $("peopleRows").innerHTML=', start)
+if start < 0 or end < 0:
+    raise SystemExit("Ledger patch: renderAll sales/purchase block not found")
+ledger_js = r"""
+ const saleQuery=String($("salesSearch")?.value||"").trim().toLowerCase();
+ const purchaseQuery=String($("purchasesSearch")?.value||"").trim().toLowerCase();
+ const visibleSales=sales.slice().sort((a,b)=>new Date(b.createdAt?.toDate?.()||b.createdAt||0)-new Date(a.createdAt?.toDate?.()||a.createdAt||0)).filter(x=>{
+  const itemNames=(Array.isArray(x.lines)&&x.lines.length?x.lines.map(v=>v.name).join(" "):x.productName||"ပစ္စည်းများ");
+  return !saleQuery||[itemNames,x.customer,x.customerName,dateText(x.createdAt),x.id].some(v=>String(v||"").toLowerCase().includes(saleQuery));
+ });
+ const saleTotals=visibleSales.reduce((a,x)=>{const extra=payments.filter(p=>p.kind==="sale"&&p.saleId===x.id).reduce((z,p)=>z+Number(p.amount||0),0);a.total+=Number(x.total||0);a.paid+=Number(x.paid||0)+extra;a.due+=Math.max(0,Number(x.total||0)-Number(x.paid||0)-extra);return a},{total:0,paid:0,due:0});
+ $("salesSummary").textContent=visibleSales.length+" ဘောင်ချာ · အရောင်း "+money(saleTotals.total)+" · ရရှိ "+money(saleTotals.paid)+" · ကျန် "+money(saleTotals.due);
+ $("saleRows").innerHTML=visibleSales.map(x=>{
+  const extra=payments.filter(p=>p.kind==="sale"&&p.saleId===x.id).reduce((a,p)=>a+Number(p.amount||0),0);
+  const paid=Number(x.paid||0)+extra,due=Math.max(0,Number(x.total||0)-paid);
+  const lines=Array.isArray(x.lines)&&x.lines.length?x.lines:[{name:x.productName||"ပစ္စည်းများ",qty:x.qty||0}];
+  const names=lines.map(v=>esc(v.name||"ပစ္စည်း")).join("<br>");
+  const quantities=lines.map(v=>String(v.qty??0)).join("<br>");
+  return '<tr><td>'+dateText(x.createdAt)+'</td><td>'+names+'</td><td>'+quantities+'</td><td>'+money(x.total)+'</td><td>'+money(paid)+'</td><td>'+money(due)+'</td><td>'+(due>0?'<button class="secondary" data-sale-pay="'+x.id+'">အကြွေးကောက်</button> ':"")+'<button class="secondary" data-receipt-print="'+x.id+'">ဘောင်ချာ / PDF</button> <button class="secondary" data-receipt-share="'+x.id+'">Share</button></td></tr>';
+ }).join("")||'<tr><td colspan="7">ရှာဖွေမှုနှင့် ကိုက်ညီသော အရောင်းစာရင်းမရှိပါ</td></tr>';
+ $("saleRows").querySelectorAll("[data-sale-pay]").forEach(b=>b.onclick=()=>collectSalePayment(b.dataset.salePay));
+ $("saleRows").querySelectorAll("[data-receipt-print]").forEach(b=>b.onclick=()=>printSaleReceipt(b.dataset.receiptPrint));
+ $("saleRows").querySelectorAll("[data-receipt-share]").forEach(b=>b.onclick=()=>shareSaleReceipt(b.dataset.receiptShare));
+ const visiblePurchases=purchases.slice().sort((a,b)=>new Date(b.createdAt?.toDate?.()||b.createdAt||0)-new Date(a.createdAt?.toDate?.()||a.createdAt||0)).filter(x=>
+  !purchaseQuery||[x.productName,x.supplier,dateText(x.createdAt),x.id].some(v=>String(v||"").toLowerCase().includes(purchaseQuery))
+ );
+ const purchaseTotals=visiblePurchases.reduce((a,x)=>{const extra=payments.filter(p=>p.kind==="purchase"&&p.purchaseId===x.id).reduce((z,p)=>z+Number(p.amount||0),0);a.total+=Number(x.total||0);a.paid+=Number(x.paid||0)+extra;a.due+=Math.max(0,Number(x.total||0)-Number(x.paid||0)-extra);return a},{total:0,paid:0,due:0});
+ $("purchasesSummary").textContent=visiblePurchases.length+" ဘောင်ချာ · အဝယ် "+money(purchaseTotals.total)+" · ပေးပြီး "+money(purchaseTotals.paid)+" · ကျန် "+money(purchaseTotals.due);
+ $("purchaseRows").innerHTML=visiblePurchases.map(x=>{
+  const extra=payments.filter(p=>p.kind==="purchase"&&p.purchaseId===x.id).reduce((a,p)=>a+Number(p.amount||0),0);
+  const paid=Number(x.paid||0)+extra,due=Math.max(0,Number(x.total||0)-paid);
+  return '<tr><td>'+dateText(x.createdAt)+'</td><td>'+esc(x.productName)+'</td><td>'+x.qty+'</td><td>'+money(x.total)+'</td><td>'+esc(x.supplier||"")+'</td><td>'+money(due)+'</td><td>'+(due>0?'<button class="secondary" data-purchase-pay="'+x.id+'">ပေးသွင်းငွေပေး</button>':"ရှင်းပြီး")+'</td></tr>';
+ }).join("")||'<tr><td colspan="7">ရှာဖွေမှုနှင့် ကိုက်ညီသော အဝယ်စာရင်းမရှိပါ</td></tr>';
+ $("purchaseRows").querySelectorAll("[data-purchase-pay]").forEach(b=>b.onclick=()=>paySupplier(b.dataset.purchasePay));
+"""
+s = s[:start] + ledger_js + "\n" + s[end:]
+
+# Search inputs re-render only the ledgers, preserving the user's query.
+search_handlers = r"""
+$("salesSearch").oninput=()=>renderAll();
+$("purchasesSearch").oninput=()=>renderAll();
+
+"""
+if ' $("salesSearch").oninput=' not in s and '$("salesSearch").oninput=' not in s:
+    anchor = 'function renderAll(){'
+    if anchor not in s: raise SystemExit("Ledger patch: renderAll declaration missing")
+    s = s.replace(anchor, search_handlers + anchor, 1)
+
+# Keep the ledger filter values while rerendering; renderAll is called on each keystroke.
+# Export every sale line separately so the CSV is usable as a real spreadsheet ledger.
+old_sales_csv = ' sales.forEach(x=>rows.push(["Sale",x.productName,"","",x.qty,x.price,"",x.total,x.paid,x.due,dateText(x.createdAt)]));'
+new_sales_csv = r''' sales.forEach(x=>{
+  const lines=Array.isArray(x.lines)&&x.lines.length?x.lines:[{name:x.productName||"ပစ္စည်းများ",qty:x.qty||0,price:x.price||0}];
+  lines.forEach((line,i)=>rows.push(["Sale",line.name||x.productName||"ပစ္စည်းများ","","",line.qty??x.qty??0,line.price??x.price??"",line.cost??"",i===0?x.total:"",i===0?x.paid:"",i===0?Math.max(0,Number(x.total||0)-Number(x.paid||0)):"",dateText(x.createdAt)]));
+ });'''
+if old_sales_csv in s: s=s.replace(old_sales_csv,new_sales_csv,1)
+old_purchase_csv = ' purchases.forEach(x=>rows.push(["Purchase",x.productName,"","",x.qty,"",x.cost,x.total,"","","",dateText(x.createdAt)]));'
+new_purchase_csv = ' purchases.forEach(x=>rows.push(["Purchase",x.productName,"","",x.qty,"",x.cost,x.total,x.paid,Math.max(0,Number(x.total||0)-Number(x.paid||0)),"",dateText(x.createdAt)]));'
+if old_purchase_csv in s: s=s.replace(old_purchase_csv,new_purchase_csv,1)
+
+# Theme selection is saved per shop on this Android device and reapplied after login.
+theme_js = r"""
+const AK_THEMES={
+ navy:{navy:"#10233f",blue:"#174a7e",gold:"#f28c28",bg:"#f3f6fa",line:"#d9e1ec",ink:"#172536",muted:"#607086",head:"#e8eef6",alt:"#f7f9fc",hover:"#edf4fb"},
+ green:{navy:"#123b2a",blue:"#1e6045",gold:"#e8c56a",bg:"#f1f5f2",line:"#d8e2db",ink:"#172820",muted:"#66766c",head:"#e7f1eb",alt:"#f6faf7",hover:"#eaf5ed"},
+ blue:{navy:"#12345a",blue:"#1769aa",gold:"#55b7e8",bg:"#eff6fc",line:"#d3e2f0",ink:"#172b40",muted:"#62778c",head:"#e4f0fa",alt:"#f5f9fd",hover:"#e9f4fc"},
+ purple:{navy:"#39265e",blue:"#6941a5",gold:"#c5a4f5",bg:"#f5f1fa",line:"#e1d8ef",ink:"#2a2039",muted:"#766887",head:"#eee7f7",alt:"#faf8fd",hover:"#f1eafa"},
+ teal:{navy:"#104c50",blue:"#087e82",gold:"#e6b85c",bg:"#eff8f7",line:"#d2e7e4",ink:"#173536",muted:"#617a79",head:"#e0f1ef",alt:"#f5fbfa",hover:"#e8f6f3"},
+ dark:{navy:"#101820",blue:"#263f55",gold:"#f2a541",bg:"#111a23",line:"#334454",ink:"#edf3f8",muted:"#a8bac9",head:"#233444",alt:"#192633",hover:"#263b4d"}
+};
+function akHexMix(hex,amount){const n=parseInt(hex.slice(1),16),r=Math.max(0,Math.min(255,(n>>16)+amount)),g=Math.max(0,Math.min(255,((n>>8)&255)+amount)),b=Math.max(0,Math.min(255,(n&255)+amount));return "#"+[r,g,b].map(v=>v.toString(16).padStart(2,"0")).join("")}
+function akApplyTheme(name,customAccent){
+ const t={...(AK_THEMES[name]||AK_THEMES.navy)};
+ if(name==="custom"&&customAccent){t.blue=customAccent;t.navy=akHexMix(customAccent,-28);t.gold=akHexMix(customAccent,42);t.head=akHexMix(customAccent,205);t.alt=akHexMix(customAccent,235);t.hover=akHexMix(customAccent,185);t.bg="#f5f7fa";t.line="#d9e1e8";t.ink="#172536";t.muted="#607086"}
+ const root=document.documentElement.style;
+ root.setProperty("--navy",t.navy);root.setProperty("--blue",t.blue);root.setProperty("--gold",t.gold);root.setProperty("--bg",t.bg);root.setProperty("--line",t.line);root.setProperty("--ink",t.ink);root.setProperty("--muted",t.muted);root.setProperty("--green",t.blue);root.setProperty("--table-head",t.head);root.setProperty("--table-alt",t.alt);root.setProperty("--table-hover",t.hover);root.setProperty("--accent-soft",t.head);
+ document.querySelector('meta[name="theme-color"]')?.setAttribute("content",t.navy);
+ document.body.style.background=name==="dark"?t.bg:"linear-gradient(180deg,"+t.head+" 0%,var(--bg) 240px)";
+ const h=document.querySelector("header");if(h)h.style.background="linear-gradient(110deg,"+t.navy+","+t.blue+")";
+}
+function akThemeKey(){return "ak_pos_theme_"+(shopId||user?.uid||"local")}
+function akLoadTheme(){
+ let v={preset:"navy",accent:"#174a7e"};try{v={...v,...JSON.parse(localStorage.getItem(akThemeKey())||"{}")}}catch(_){}
+ $("themePreset").value=v.preset||"navy";$("themeAccent").value=v.accent||"#174a7e";akApplyTheme(v.preset||"navy",v.accent);
+}
+function akSaveTheme(){
+ const preset=$("themePreset").value,accent=$("themeAccent").value;
+ if(preset==="custom")$("themeStatus").textContent="ကိုယ်ပိုင်အရောင် အသုံးပြုနေသည်";
+ else $("themeStatus").textContent="အရောင်ပုံစံ သိမ်းပြီးပါပြီ";
+ localStorage.setItem(akThemeKey(),JSON.stringify({preset,accent}));akApplyTheme(preset,accent);
+}
+$("themePreset").onchange=()=>{if($("themePreset").value==="custom")$("themeStatus").textContent="ကိုယ်ပိုင်အရောင် ရွေးပါ";akSaveTheme()};
+$("themeAccent").oninput=()=>{$("themePreset").value="custom";akSaveTheme()};
+"""
+if "const AK_THEMES=" not in s:
+    anchor = 'function show(id){'
+    if anchor not in s: raise SystemExit("Theme patch: app initialization insertion point missing")
+    s=s.replace(anchor,theme_js+"\n"+anchor,1)
+# Apply after shop owner or shop owner license route has loaded.
+owner_route = 'show("shopPanel");\n    $("ownerControlBtn").classList.remove("hidden");'
+if owner_route in s:
+    s=s.replace(owner_route,'show("shopPanel");\n    akLoadTheme();\n    $("ownerControlBtn").classList.remove("hidden");',1)
+else:
+    # Find the licensed shop route and apply theme after the shop panel is shown.
+    if 'akLoadTheme();' not in s:
+        marker='show("shopPanel");'
+        pos=s.find(marker,s.find('const lic='))
+        if pos<0: raise SystemExit("Theme patch: shop login route not found")
+        pos+=len(marker);s=s[:pos]+'\n    akLoadTheme();'+s[pos:]
+# If app is already authenticated when UI script initializes, ensure theme UI is wired after DOM.
+p.write_text(s,encoding="utf-8")
+print("APK theme and spreadsheet ledger enhancements applied.")

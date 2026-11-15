@@ -4,7 +4,7 @@ const vm = require('vm');
 const assert = require('assert');
 
 const html = fs.readFileSync('www/index.html', 'utf8');
-const match = html.match(/async function apkProvisionShopOwner\\(email,password,expiresOn,shopName(?:,industryType)?\\)\s*\{[\s\S]*?^\}/m);
+const match = html.match(/async function apkProvisionShopOwner\(email,password,expiresOn,shopName(?:,industryType)?\)\s*\{[\s\S]*?^\}/m);
 assert(match, 'APK must use the Admin-backed shop-owner provisioning helper');
 const helperSource = match[0];
 

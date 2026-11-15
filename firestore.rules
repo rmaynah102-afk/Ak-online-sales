@@ -699,26 +699,31 @@ service cloud.firestore {
     }
 
     match /sponsoredAds/{adId} {
-      // Public sponsored advertisements auto-publish after strict field and expiry validation.
+      // Only the verified platform owner may create already-approved live ads.
+      // Public users must submit marketAdOrders; they cannot bypass approval.
       allow read: if isVerifiedOwner()
         || resource.data.status == 'approved'
         || (request.auth != null && resource.data.ownerUid == request.auth.uid);
-      allow create: if request.resource.data.keys().hasOnly(['ownerUid','email','shopName','category','city','township','phone','title','imageUrl','imageData','text','url','status','createdAt','startsAt','endsAt'])
-        && request.resource.data.ownerUid is string
-        && request.resource.data.email is string
+      allow create: if request.auth != null
+        && request.auth.token.email_verified == true
+        && isVerifiedOwner()
+        && request.resource.data.keys().hasOnly(['ownerUid','email','shopName','category','city','township','phone','title','imageUrl','imageData','text','url','status','createdAt','startsAt','endsAt'])
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.email == request.auth.token.email
         && request.resource.data.shopName is string
         && request.resource.data.shopName.size() >= 2
         && request.resource.data.shopName.size() <= 100
         && request.resource.data.category is string
         && request.resource.data.category.size() >= 2
         && request.resource.data.category.size() <= 100
-        && request.resource.data.city in ['မန္တလေးတိုင်း','ရန်ကုန်တိုင်း']
+        && request.resource.data.city is string
+        && request.resource.data.city.size() >= 2
+        && request.resource.data.city.size() <= 100
         && request.resource.data.township is string
         && request.resource.data.township.size() >= 2
         && request.resource.data.township.size() <= 80
         && request.resource.data.phone is string
         && request.resource.data.phone.size() <= 32
-        && (request.resource.data.ownerUid != 'public' || request.resource.data.phone.size() >= 9)
         && request.resource.data.title is string
         && request.resource.data.title.size() >= 3
         && request.resource.data.title.size() <= 80
@@ -737,9 +742,7 @@ service cloud.firestore {
         && request.resource.data.startsAt <= request.time + duration.value(2, 'm')
         && request.resource.data.endsAt is timestamp
         && request.resource.data.endsAt > request.time
-        && request.resource.data.endsAt <= request.time + duration.value(30, 'd')
-        && ((request.auth == null && request.resource.data.ownerUid == 'public' && request.resource.data.email == '')
-          || (isVerifiedMarketplaceUser() && request.resource.data.ownerUid == request.auth.uid && request.resource.data.email == request.auth.token.email));
+        && request.resource.data.endsAt <= request.time + duration.value(30, 'd');
       allow update: if isVerifiedOwner()
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','paymentReference','reviewedAt','startsAt','endsAt'])
         && request.resource.data.reviewedAt == request.time

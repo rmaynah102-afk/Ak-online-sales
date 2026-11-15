@@ -589,6 +589,7 @@ $("exportData").onclick=downloadAkBackup;
 async function commitInChunks(ops){
  for(let i=0;i<ops.length;i+=400){const batch=db.batch();ops.slice(i,i+400).forEach(op=>op(batch));await batch.commit()}
 }
+function reviveAkBackupRecord(raw){const x={...raw};for(const key of ["createdAt","updatedAt","paidAt","date"]){const v=x[key];if(v&&typeof v==="object"&&Number.isFinite(Number(v.seconds)))x[key]=firebase.firestore.Timestamp.fromMillis(Number(v.seconds)*1000+Number(v.nanoseconds||0)/1e6);else if(typeof v==="string"&&Number.isFinite(Date.parse(v)))x[key]=firebase.firestore.Timestamp.fromDate(new Date(v))}return x}
 $("restoreData").onclick=async()=>{
  try{
   if(staffRole!=="owner")throw Error("ဆိုင်ရှင်အကောင့်ဖြင့်သာ Backup ပြန်သွင်းနိုင်သည်");
@@ -604,9 +605,9 @@ $("restoreData").onclick=async()=>{
   const deletes=[];for(const group of oldDocs)for(const doc of group.docs)deletes.push(batch=>batch.delete(doc.ref));
   await commitInChunks(deletes);
   const writes=[];
-  for(const raw of data.products||[]){const x={...raw},id=String(x.id||db.collection("_ids").doc().id),cost=Number(x.cost||0);delete x.id;delete x.cost;writes.push(batch=>batch.set(col("products").doc(id),x),batch=>batch.set(col("productCosts").doc(id),{cost}))}
-  for(const raw of data.sales||[]){const x={...raw},id=String(x.id||db.collection("_ids").doc().id),cost=Number(x.cost||0),profit=Number(x.profit||0);delete x.id;delete x.cost;delete x.profit;writes.push(batch=>batch.set(col("sales").doc(id),x),batch=>batch.set(col("saleCosts").doc(id),{cost,profit}))}
-  for(const key of ["purchases","people","expenses","payments"])for(const raw of data[key]||[]){const x={...raw},id=String(x.id||db.collection("_ids").doc().id);delete x.id;writes.push(batch=>batch.set(col(key).doc(id),x))}
+  for(const raw of data.products||[]){const x=reviveAkBackupRecord(raw),id=String(x.id||db.collection("_ids").doc().id),cost=Number(x.cost||0);delete x.id;delete x.cost;writes.push(batch=>batch.set(col("products").doc(id),x),batch=>batch.set(col("productCosts").doc(id),{cost}))}
+  for(const raw of data.sales||[]){const x=reviveAkBackupRecord(raw),id=String(x.id||db.collection("_ids").doc().id),cost=Number(x.cost||0),profit=Number(x.profit||0);delete x.id;delete x.cost;delete x.profit;writes.push(batch=>batch.set(col("sales").doc(id),x),batch=>batch.set(col("saleCosts").doc(id),{cost,profit}))}
+  for(const key of ["purchases","people","expenses","payments"])for(const raw of data[key]||[]){const x=reviveAkBackupRecord(raw),id=String(x.id||db.collection("_ids").doc().id);delete x.id;writes.push(batch=>batch.set(col(key).doc(id),x))}
   await commitInChunks(writes);await reloadAll();alert("Backup Restore အောင်မြင်ပါပြီ။ "+count+" မှတ်တမ်း ပြန်သွင်းပြီးပါပြီ။");
  }catch(e){alert("Restore မအောင်မြင်ပါ: "+errText(e))}
 };

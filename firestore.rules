@@ -383,6 +383,7 @@ service cloud.firestore {
           && getAfter(/databases/$(database)/documents/freeBetaCapacity/slots).data.count is int
           && getAfter(/databases/$(database)/documents/freeBetaCapacity/slots).data.count <= 100
           && getAfter(freeTrialClaimPath(request.resource.data.email)).data.uid == userId
+          && getAfter(freeTrialClaimPath(request.resource.data.email)).data.email == request.resource.data.email
         );
       allow update: if (isVerifiedOwner()
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
@@ -412,11 +413,17 @@ service cloud.firestore {
           && getAfter(freeTrialClaimPath(request.auth.token.email)).data.uid == request.auth.uid)
         || (isVerifiedOwner()
           && documentId == 'slots'
-          && request.resource.data.keys().hasOnly(['count','updatedAt'])
+          && request.resource.data.keys().hasOnly(['count','updatedAt','lastIssuedUid'])
           && request.resource.data.count is int
           && request.resource.data.count >= 1
           && request.resource.data.count <= 100
-          && request.resource.data.updatedAt == request.time);
+          && request.resource.data.lastIssuedUid is string
+          && request.resource.data.updatedAt == request.time
+          && existsAfter(/databases/$(database)/documents/freeBetaUsers/$(request.resource.data.lastIssuedUid))
+          && getAfter(/databases/$(database)/documents/freeBetaUsers/$(request.resource.data.lastIssuedUid)).data.status == 'active'
+          && getAfter(/databases/$(database)/documents/freeBetaUsers/$(request.resource.data.lastIssuedUid)).data.plan == 'free-beta'
+          && existsAfter(freeTrialClaimPath(getAfter(/databases/$(database)/documents/freeBetaUsers/$(request.resource.data.lastIssuedUid)).data.email))
+          && getAfter(freeTrialClaimPath(getAfter(/databases/$(database)/documents/freeBetaUsers/$(request.resource.data.lastIssuedUid)).data.email)).data.uid == request.resource.data.lastIssuedUid);
       allow update: if (request.auth != null
           && request.auth.token.email_verified == true
           && documentId == 'slots'
@@ -433,11 +440,18 @@ service cloud.firestore {
           && getAfter(freeTrialClaimPath(request.auth.token.email)).data.uid == request.auth.uid)
         || (isVerifiedOwner()
           && documentId == 'slots'
-          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['count','updatedAt'])
-          && request.resource.data.count is int
-          && request.resource.data.count >= 1
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['count','updatedAt','lastIssuedUid'])
+          && resource.data.count is int
+          && request.resource.data.count == resource.data.count + 1
           && request.resource.data.count <= 100
-          && request.resource.data.updatedAt == request.time);
+          && request.resource.data.lastIssuedUid is string
+          && request.resource.data.updatedAt == request.time
+          && !exists(/databases/$(database)/documents/freeBetaUsers/$(request.resource.data.lastIssuedUid))
+          && existsAfter(/databases/$(database)/documents/freeBetaUsers/$(request.resource.data.lastIssuedUid))
+          && getAfter(/databases/$(database)/documents/freeBetaUsers/$(request.resource.data.lastIssuedUid)).data.status == 'active'
+          && getAfter(/databases/$(database)/documents/freeBetaUsers/$(request.resource.data.lastIssuedUid)).data.plan == 'free-beta'
+          && existsAfter(freeTrialClaimPath(getAfter(/databases/$(database)/documents/freeBetaUsers/$(request.resource.data.lastIssuedUid)).data.email))
+          && getAfter(freeTrialClaimPath(getAfter(/databases/$(database)/documents/freeBetaUsers/$(request.resource.data.lastIssuedUid)).data.email)).data.uid == request.resource.data.lastIssuedUid);
       allow delete: if false;
     }
 

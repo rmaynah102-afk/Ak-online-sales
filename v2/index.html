@@ -154,7 +154,7 @@ td,th{overflow-wrap:anywhere}
 </main><footer>AK Sale POS 2.0 · Hardware & Electrical · MMK</footer>
 <script>
 const OWNER="painglin102@gmail.com", GATEWAY="https://ak-sale-backend.painglin102.workers.dev", PROJECT=window.AK_FIREBASE_PUBLIC_CONFIG;
-let auth,db,user,shopId="",staffRole="owner",products=[],sales=[],purchases=[],people=[],expenses=[],payments=[],editingProduct=null,licenses=[],saleCart=[];
+let auth,db,user,shopId="",staffRole="owner",products=[],sales=[],purchases=[],people=[],expenses=[],payments=[],editingProduct=null,licenses=[],saleCart=[],activeShopName="ဆိုင်အမည်";
 const $=id=>document.getElementById(id), money=n=>(Number(n)||0).toLocaleString("en-US")+" ကျပ်", dateText=d=>{const x=d?.toDate?d.toDate():new Date(d||Date.now());return isNaN(x)? "-":x.toLocaleDateString("en-GB")};
 function status(msg,where="status"){ $(where).textContent=msg; }
 function show(id){$("loginPanel").classList.toggle("hidden",id!=="loginPanel");$("ownerPanel").classList.toggle("hidden",id!=="ownerPanel");$("shopPanel").classList.toggle("hidden",id!=="shopPanel");}
@@ -419,14 +419,15 @@ async function getRows(name){const s=await col(name).get();return s.docs.map(d=>
 async function loadShop(){
  const platformOwner=isPlatformOwner();
  if(platformOwner){
+  activeShopName="AK Hardware & Electrical";
   $("shopTitle").textContent="AK Hardware & Electrical · Owner POS";
   $("licenseBadge").textContent="Platform Owner · ကိုယ်ပိုင်ဆိုင်";
   $("ownerControlBtn").classList.remove("hidden");
  }else{
    const [lic,beta]=await Promise.all([db.collection("licenses").doc(shopId).get(),db.collection("freeBetaUsers").doc(shopId).get()]);
    const free=beta.exists&&beta.data().status==="active";
-   if(free){$("shopTitle").textContent=beta.data().shopName||"ဆိုင် Dashboard";$("licenseBadge").textContent="Free Beta · အခမဲ့";}
-   else{if(!lic.exists||lic.data().status!=="active"||!lic.data().expiresAt||lic.data().expiresAt.toDate()<=new Date())throw Error("ဆိုင်သက်တမ်းကုန်နေပါသည်။ Platform Owner ထံ သက်တမ်းတိုးရန် ဆက်သွယ်ပါ။");$("shopTitle").textContent=lic.data().shopName||"ဆိုင် Dashboard";$("licenseBadge").textContent="သက်တမ်းကုန်ရက် "+dateText(lic.data().expiresAt);}
+   if(free){activeShopName=String(beta.data().shopName||"ဆိုင်အမည်");$("shopTitle").textContent=beta.data().shopName||"ဆိုင် Dashboard";$("licenseBadge").textContent="Free Beta · အခမဲ့";}
+   else{if(!lic.exists||lic.data().status!=="active"||!lic.data().expiresAt||lic.data().expiresAt.toDate()<=new Date())throw Error("ဆိုင်သက်တမ်းကုန်နေပါသည်။ Platform Owner ထံ သက်တမ်းတိုးရန် ဆက်သွယ်ပါ။");activeShopName=String(lic.data().shopName||"ဆိုင်အမည်");$("shopTitle").textContent=lic.data().shopName||"ဆိုင် Dashboard";$("licenseBadge").textContent="သက်တမ်းကုန်ရက် "+dateText(lic.data().expiresAt);}
    $("ownerControlBtn").classList.add("hidden");
  }
  show("shopPanel");$("userBadge").textContent=platformOwner?"Platform Owner · POS":staffRole==="owner"?"ဆိုင်ရှင်":("ဝန်ထမ်း · "+staffRole);
@@ -679,9 +680,9 @@ function buildReceiptEscPos(s,paper="80mm"){
  const push=(text,size=20,bold=false,align="left")=>lines.push({text:String(text??""),size,bold,align});
  const wrap=(text,size,bold=false)=>{ctx.font=(bold?"bold ":"")+size+"px 'Noto Sans Myanmar',Arial,sans-serif";const parts=typeof Intl.Segmenter==="function"?Array.from(new Intl.Segmenter("my",{granularity:"grapheme"}).segment(String(text??"")),x=>x.segment):Array.from(String(text??""));let line="";for(const p of parts){if(line&&ctx.measureText(line+p).width>contentWidth){push(line,size,bold);line=p}else line+=p}if(line)push(line,size,bold)};
  const date=s.createdAt?.toDate?s.createdAt.toDate():new Date(s.createdAt||Date.now());
- push("AK Hardware & Electrical",27,true,"center");push("AK Sale POS",16,false,"center");push("--------------------------------",17,false,"center");
+ push(activeShopName||"ဆိုင်အမည်",27,true,"center");push("AK Sale POS",16,false,"center");push("--------------------------------",17,false,"center");
  wrap("ဘောင်ချာ: "+String(s.id||"").slice(-10),18,true);wrap("ရက်စွဲ: "+date.toLocaleString(),16);wrap("ဖောက်သည်: "+(s.customer||"လက်ငင်း"),16);
- push("--------------------------------",17,false,"center");wrap(s.productName||"ပစ္စည်း",18,true);wrap(Number(s.qty||0)+" × "+money(s.price)+" = "+money(s.total),17);
+ push("--------------------------------",17,false,"center");if(Array.isArray(s.lines)&&s.lines.length){for(const line of s.lines){wrap(line.name,18,true);wrap(Number(line.qty||0)+" × "+money(line.price)+" = "+money(Number(line.qty||0)*Number(line.price||0)),17)}}else{wrap(s.productName||"ပစ္စည်း",18,true);wrap(Number(s.qty||0)+" × "+money(s.price)+" = "+money(s.total),17)}
  push("--------------------------------",17,false,"center");wrap("စုစုပေါင်း: "+money(s.total),20,true);wrap("ပေးချေပြီး: "+money(s.paid),18);wrap("ကျန်ငွေ: "+money(s.due),18,true);push("ကျေးဇူးတင်ပါသည်",18,true,"center");
  let height=24;for(const l of lines){ctx.font=(l.bold?"bold ":"")+l.size+"px 'Noto Sans Myanmar',Arial,sans-serif";height+=l.size+12}height+=36;canvas.height=height;ctx=canvas.getContext("2d");ctx.fillStyle="#fff";ctx.fillRect(0,0,width,height);ctx.fillStyle="#000";let y=22;
  for(const l of lines){ctx.font=(l.bold?"bold ":"")+l.size+"px 'Noto Sans Myanmar',Arial,sans-serif";const w=ctx.measureText(l.text).width,x=l.align==="center"?Math.max(pad,(width-w)/2):pad;ctx.fillText(l.text,x,y);y+=l.size+12}
@@ -691,15 +692,15 @@ function buildReceiptEscPos(s,paper="80mm"){
 }
 window.shareSaleReceipt=async id=>{
  const sale=sales.find(x=>x.id===id);if(!sale)return;
- const text=["AK Hardware & Electrical","ဘောင်ချာ: "+String(id).slice(-10),"ရက်စွဲ: "+dateText(sale.createdAt),"ပစ္စည်း: "+sale.productName,"အရေအတွက်: "+sale.qty,"တစ်ခုဈေး: "+money(sale.price),"စုစုပေါင်း: "+money(sale.total),"ပေးချေပြီး: "+money(sale.paid),"ကျန်ငွေ: "+money(sale.due)].join("\n");
+ const text=[activeShopName||"ဆိုင်အမည်","ဘောင်ချာ: "+String(id).slice(-10),"ရက်စွဲ: "+dateText(sale.createdAt),"ပစ္စည်း: "+sale.productName,"အရေအတွက်: "+sale.qty,"တစ်ခုဈေး: "+money(sale.price),"စုစုပေါင်း: "+money(sale.total),"ပေးချေပြီး: "+money(sale.paid),"ကျန်ငွေ: "+money(sale.due)].join("\n");
  try{
   const canvas=document.createElement("canvas");canvas.width=720;canvas.height=760;
   const c=canvas.getContext("2d");if(!c)throw Error("ဘောင်ချာပုံဖန်တီးမရပါ");
   c.fillStyle="#ffffff";c.fillRect(0,0,720,760);c.strokeStyle="#d8e2db";c.lineWidth=4;c.strokeRect(18,18,684,724);
-  c.fillStyle="#123b2a";c.textAlign="center";c.font="bold 38px system-ui, 'Noto Sans Myanmar', sans-serif";c.fillText("AK Hardware & Electrical",360,82);
+  c.fillStyle="#123b2a";c.textAlign="center";c.font="bold 38px system-ui, 'Noto Sans Myanmar', sans-serif";c.fillText(activeShopName||"ဆိုင်အမည်",360,82);
   c.font="26px system-ui, 'Noto Sans Myanmar', sans-serif";c.fillText("အရောင်းဘောင်ချာ",360,132);
   c.textAlign="left";c.fillStyle="#172820";c.font="24px system-ui, 'Noto Sans Myanmar', sans-serif";
-  const rows=[["ဘောင်ချာ",String(id).slice(-10)],["ရက်စွဲ",dateText(sale.createdAt)],["ပစ္စည်း",sale.productName],["အရေအတွက်",String(sale.qty)],["တစ်ခုဈေး",money(sale.price)],["စုစုပေါင်း",money(sale.total)],["ပေးချေပြီး",money(sale.paid)],["ကျန်ငွေ",money(sale.due)]];
+  const rows=[["ဘောင်ချာ",String(id).slice(-10)],["ရက်စွဲ",dateText(sale.createdAt)],...(Array.isArray(sale.lines)?sale.lines.flatMap(line=>[[line.name,""],["အရေအတွက် / ဈေး",String(line.qty)+" × "+money(line.price)]]):[["ပစ္စည်း",sale.productName],["အရေအတွက်",String(sale.qty)],["တစ်ခုဈေး",money(sale.price)]]),["စုစုပေါင်း",money(sale.total)],["ပေးချေပြီး",money(sale.paid)],["ကျန်ငွေ",money(sale.due)]];
   let y=210;for(const [k,v] of rows){c.fillStyle="#66766c";c.fillText(k,55,y);c.fillStyle="#172820";c.textAlign="right";c.fillText(String(v).slice(0,34),665,y);c.textAlign="left";y+=62}
   c.strokeStyle="#d8e2db";c.beginPath();c.moveTo(55,710);c.lineTo(665,710);c.stroke();
   const blob=await new Promise(resolve=>canvas.toBlob(resolve,"image/png"));if(!blob)throw Error("ဘောင်ချာပုံ မရပါ");
@@ -723,7 +724,7 @@ window.printSaleReceipt=async id=>{
   try{await window.akPrintRawToDefault(buildReceiptEscPos({...sale,id}));status("ဘောင်ချာကို "+p.name+" သို့ ပို့ပြီးပါပြီ။ Printer မှ စာရွက်ထွက်လာကြောင်း စစ်ပါ။","printerStatus")}catch(e){alert("Direct Print မအောင်မြင်ပါ: "+errText(e))}return;
  }
  const w=window.open("","_blank");if(!w){alert("Print Window ဖွင့်မရပါ။ Pop-up ခွင့်ပြုပါ။");return}
- w.document.write('<!doctype html><html lang="my"><meta charset="utf-8"><title>AK Sale Receipt</title><style>body{font-family:Arial,sans-serif;padding:12px}h2{text-align:center}.line{border-top:1px dashed #555;margin:10px 0}button{padding:10px}</style><h2>AK Hardware & Electrical</h2><p>ဘောင်ချာ: '+esc(id.slice(-10))+'</p><p>ရက်စွဲ: '+dateText(sale.createdAt)+'</p><p>ပစ္စည်း: '+esc(sale.productName)+'</p><p>အရေအတွက်: '+sale.qty+'</p><p>စုစုပေါင်း: '+money(sale.total)+'</p><p>ပေးချေပြီး: '+money(sale.paid)+'</p><p>ကျန်ငွေ: '+money(sale.due)+'</p><button onclick="window.print()">Print / PDF သိမ်းရန်</button><scr"+"ipt>window.onload=()=>setTimeout(()=>window.print(),250)<\/script></html>');w.document.close();
+ w.document.write('<!doctype html><html lang="my"><meta charset="utf-8"><title>AK Sale Receipt</title><style>body{font-family:Arial,sans-serif;padding:12px}h2{text-align:center}.line{border-top:1px dashed #555;margin:10px 0}button{padding:10px}</style><h2>'+esc(activeShopName||"ဆိုင်အမည်")+'</h2><p>ဘောင်ချာ: '+esc(id.slice(-10))+'</p><p>ရက်စွဲ: '+dateText(sale.createdAt)+'</p><p>ပစ္စည်း: '+esc(sale.productName)+'</p><p>အရေအတွက်: '+sale.qty+'</p><p>စုစုပေါင်း: '+money(sale.total)+'</p><p>ပေးချေပြီး: '+money(sale.paid)+'</p><p>ကျန်ငွေ: '+money(sale.due)+'</p><button onclick="window.print()">Print / PDF သိမ်းရန်</button><scr"+"ipt>window.onload=()=>setTimeout(()=>window.print(),250)<\/script></html>');w.document.close();
 };
 $("testPrinter").onclick=async()=>{
  const p=printerRead().find(x=>x.default)||printerRead()[0];if(!p){status("Printer အရင်သိမ်းပါ။","printerStatus");return}

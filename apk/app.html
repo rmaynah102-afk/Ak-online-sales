@@ -2002,22 +2002,33 @@ async function firebaseResetPassword(){try{if(!fbAuth||!fbStore)await firebaseCo
 async function firebaseLogout(){try{if(!fbAuth)await firebaseConnect();if(fbAuth)await fbAuth.signOut();const pass=$("fbPassword");if(pass)pass.value="";$("fbStatus").textContent="အကောင့်မှ ထွက်ပြီးပါပြီ။ နောက်တစ်ကြိမ် Gmail ဖြင့် ပြန်ဝင်နိုင်ပါသည်။"}catch(e){$("fbStatus").textContent="Logout မအောင်မြင်: "+e.message}}
 function renderLicenseCalendar(expiry,status){const dateEl=$("licenseExpiryDate"),daysEl=$("licenseRemainingDays"),stateEl=$("licenseCalendarState");if(!dateEl||!daysEl||!stateEl)return;const valid=expiry instanceof Date&&!Number.isNaN(expiry.getTime());dateEl.value=valid?expiry.toISOString().slice(0,10):"";if(!valid){daysEl.textContent="—";stateEl.textContent="သက်တမ်းရက် မသတ်မှတ်ရသေးပါ";return}const remaining=Math.max(0,Math.ceil((expiry.getTime()-Date.now())/86400000));daysEl.textContent=String(remaining)+" ရက်";stateEl.textContent=status==="active"&&remaining>0?"အသုံးပြုခွင့် ဖွင့်ထားသည်": "သက်တမ်းကုန် / ပိတ်ထားသည်"}
 async function akEnsureFreeBetaAccess(user){
+ const email=String(user.email||"").trim().toLowerCase();
+ if(!email)return false;
  const profileRef=fbStore.collection("freeBetaUsers").doc(user.uid);
+ const claimRef=fbStore.collection("freeTrialClaims").doc(email);
  const capacityRef=fbStore.collection("freeBetaCapacity").doc("slots");
  return fbStore.runTransaction(async tx=>{
-  const profile=await tx.get(profileRef);
+  const [profile,claim,capacity]=await Promise.all([
+   tx.get(profileRef),tx.get(claimRef),tx.get(capacityRef)
+  ]);
   if(profile.exists){
    const existing=profile.data()||{};
-   if(existing.status!=="active")return false;
+   if(existing.status!=="active"||String(existing.email||"").toLowerCase()!==email)return false;
+   if(!claim.exists){
+    if(!existing.createdAt)throw Error("Free Beta စာရင်းအချက်အလက် မပြည့်စုံပါ။ Owner ထံ ဆက်သွယ်ပါ။");
+    tx.set(claimRef,{uid:user.uid,email,createdAt:existing.createdAt});
+   }else if(claim.data().uid!==user.uid)return false;
    tx.update(profileRef,{lastLoginAt:firebase.firestore.FieldValue.serverTimestamp()});
    return true;
   }
-  const capacity=await tx.get(capacityRef);
+  if(claim.exists)return false;
   const current=capacity.exists?Number((capacity.data()||{}).count):0;
   if(!Number.isInteger(current)||current<0||current>=100)return false;
-  tx.set(profileRef,{uid:user.uid,email:String(user.email||""),status:"active",createdAt:firebase.firestore.FieldValue.serverTimestamp(),lastLoginAt:firebase.firestore.FieldValue.serverTimestamp()});
-  if(capacity.exists)tx.update(capacityRef,{count:current+1,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
-  else tx.set(capacityRef,{count:1,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+  const serverTime=firebase.firestore.FieldValue.serverTimestamp();
+  tx.set(profileRef,{uid:user.uid,email,status:"active",createdAt:serverTime,lastLoginAt:serverTime});
+  tx.set(claimRef,{uid:user.uid,email,createdAt:serverTime});
+  if(capacity.exists)tx.update(capacityRef,{count:current+1,updatedAt:serverTime});
+  else tx.set(capacityRef,{count:1,updatedAt:serverTime});
   return true;
  });
 }

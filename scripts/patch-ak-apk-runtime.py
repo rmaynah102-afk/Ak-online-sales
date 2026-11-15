@@ -3,63 +3,15 @@ from pathlib import Path
 p = Path("www/index.html")
 s = p.read_text(encoding="utf-8")
 
-anchor = '$("createShopBtn").onclick=async()=>'
-helper = r"""
-async function apkProvisionShopOwner(email,password){
-  const appName="ak-owner-provision-"+Date.now();
-  const secondary=firebase.initializeApp(PROJECT,appName);
-  const secondaryAuth=secondary.auth();
-  secondaryAuth.languageCode="my";
-  let account=null,accountReused=false;
-  try{
-    try{
-      const credential=await secondaryAuth.createUserWithEmailAndPassword(email,password);
-      account=credential.user;
-    }catch(createError){
-      if(createError.code!=="auth/email-already-in-use")throw createError;
-      try{
-        const credential=await secondaryAuth.signInWithEmailAndPassword(email,password);
-        account=credential.user;
-        accountReused=true;
-      }catch(loginError){
-        if(["auth/wrong-password","auth/invalid-credential","auth/user-not-found"].includes(loginError.code)){
-          await secondaryAuth.sendPasswordResetEmail(email).catch(()=>{});
-          throw new Error("ဤ Gmail ဖြင့် အကောင့်ရှိပြီးသားဖြစ်သည်။ Password Reset Link ပို့ရန် ကြိုးစားထားပါသည်။ Gmail Inbox/Spam စစ်ပြီး Password အသစ်သတ်မှတ်ကာ ပြန်လုပ်ပါ။");
-        }
-        throw loginError;
-      }
-    }
-    await account.reload();
-    const uid=account.uid,emailVerified=account.emailVerified===true;
-    let verificationEmailSent=false,verificationError="";
-    if(!emailVerified){
-      try{await account.sendEmailVerification();verificationEmailSent=true;}
-      catch(e){verificationError=String(e.message||e).slice(0,120);}
-    }
-    return {ok:true,uid,email,emailVerified,verificationEmailSent,verificationError,accountReused,credentialManagedBy:"firebase-secondary-auth"};
-  }finally{
-    try{await secondaryAuth.signOut();}catch(_){}
-    try{await secondary.delete();}catch(_){}
-  }
-}
-"""
-if anchor not in s:
-    raise SystemExit("APK patch failed: shop-owner create handler anchor not found")
-if "async function apkProvisionShopOwner" not in s:
-    s = s.replace(anchor, helper + "\n" + anchor, 1)
-
-old = '  const token=await ownerToken();\n  const response=await fetch(GATEWAY+"/owner/provision",{\n   method:"POST",\n   headers:{"Authorization":"Bearer "+token,"Content-Type":"application/json"},\n   body:JSON.stringify({email,password,apiKey:PROJECT.apiKey})\n  });\n  const data=await response.json();\n  if(!response.ok||!data.ok){\n   if(data.passwordResetSent)throw Error("ဤ Gmail ဖြင့် အကောင့်ရှိပြီးသားဖြစ်သည်။ Password Reset Link ကို ဆိုင်ရှင်ထံ ပို့ထားပါပြီ။ ဆိုင်ရှင်က Password အသစ်သတ်မှတ်ပြီးနောက် အကောင့်ဖန်တီးမှုကို ပြန်လုပ်ပါ။");\n   if(data.error==="shop_owner_email_exists_use_password_recovery")throw Error("ဤ Gmail အကောင့်ရှိပြီးသားဖြစ်သည်။ ဆိုင်ရှင်၏ Gmail မှ Password Recovery ပြုလုပ်ပြီး ပြန်စမ်းပါ။");\n   throw Error(data.error||"Account creation failed");\n  }'
-new = '  const data=await apkProvisionShopOwner(email,password);\n  if(!data.ok||!data.uid)throw Error("Firebase မှ အကောင့်ဖန်တီးမှု အတည်မပြုနိုင်ပါ");'
-if old not in s:
-    raise SystemExit("APK patch failed: expected Worker-dependent shop-owner provisioning code not found")
-s = s.replace(old, new, 1)
-
-# Do not allow an unverified or non-Owner session to provision shop accounts.
-owner_guard_old = '$("createShopBtn").onclick=async()=>{\n const out=$("ownerStatus");\n try{'
-owner_guard_new = '$("createShopBtn").onclick=async()=>{\n const out=$("ownerStatus");\n try{\n  if(!isPlatformOwner()||!user||user.emailVerified!==true)throw Error("Verified Platform Owner အကောင့်ဖြင့်သာ ဆိုင်ရှင်အကောင့် ဖန်တီးနိုင်ပါသည်။");'
-if owner_guard_old not in s:
-    raise SystemExit("APK patch failed: shop-owner authorization guard anchor not found")
-s = s.replace(owner_guard_old, owner_guard_new, 1)
+# Shop-owner provisioning is part of the canonical v2 source and uses the
+# authenticated Firebase callable backed by the Admin SDK. Never create a
+# second Firebase client session or send password-reset/verification emails.
+if "async function apkProvisionShopOwner(email,password,expiresOn,shopName)" not in s:
+    raise SystemExit("APK patch failed: Admin-backed shop-owner provisioning helper missing")
+if 'fetch(GATEWAY+"/owner/provision"' in s:
+    raise SystemExit("APK patch failed: legacy Cloudflare owner provisioning must not be used")
+if 'if(!isPlatformOwner()||!user||user.emailVerified!==true)' not in s:
+    raise SystemExit("APK patch failed: verified Platform Owner guard missing")
 
 # APK-only visual baseline: white surfaces, black text, neutral buttons/header.
 css_anchor = "</style>"

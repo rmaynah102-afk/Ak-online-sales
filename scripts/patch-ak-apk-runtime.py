@@ -48,15 +48,15 @@ if anchor not in s:
 if "async function apkProvisionShopOwner" not in s:
     s = s.replace(anchor, helper + "\n" + anchor, 1)
 
-old = 'const token=await ownerToken();const resp=await fetch(GATEWAY+"/owner/provision",{method:"POST",headers:{"Authorization":"Bearer "+token,"Content-Type":"application/json"},body:JSON.stringify({email,password,apiKey:PROJECT.apiKey})});const data=await resp.json();if(!resp.ok||!data.ok){if(data.passwordResetSent)throw Error("ဤ Gmail ဖြင့် အကောင့်ရှိပြီးသားဖြစ်သည်။ Password Reset Link ကို ဆိုင်ရှင်ထံ ပို့ထားပါပြီ။ ဆိုင်ရှင်က Password အသစ်သတ်မှတ်ပြီးနောက် အကောင့်ဖန်တီးမှုကို ပြန်လုပ်ပါ။");if(data.error==="shop_owner_email_exists_use_password_recovery")throw Error("ဤ Gmail အကောင့်ရှိပြီးသားဖြစ်သည်။ ဆိုင်ရှင်၏ Gmail မှ Password Recovery ပြုလုပ်ပြီး ပြန်စမ်းပါ။");throw Error(data.error||"Account creation failed")}'
-new = 'const data=await apkProvisionShopOwner(email,password);if(!data.ok||!data.uid)throw Error("Firebase မှ အကောင့်ဖန်တီးမှု အတည်မပြုနိုင်ပါ");'
+old = '  const token=await ownerToken();\n  const response=await fetch(GATEWAY+"/owner/provision",{\n   method:"POST",\n   headers:{"Authorization":"Bearer "+token,"Content-Type":"application/json"},\n   body:JSON.stringify({email,password,apiKey:PROJECT.apiKey})\n  });\n  const data=await response.json();\n  if(!response.ok||!data.ok){\n   if(data.passwordResetSent)throw Error("ဤ Gmail ဖြင့် အကောင့်ရှိပြီးသားဖြစ်သည်။ Password Reset Link ကို ဆိုင်ရှင်ထံ ပို့ထားပါပြီ။ ဆိုင်ရှင်က Password အသစ်သတ်မှတ်ပြီးနောက် အကောင့်ဖန်တီးမှုကို ပြန်လုပ်ပါ။");\n   if(data.error==="shop_owner_email_exists_use_password_recovery")throw Error("ဤ Gmail အကောင့်ရှိပြီးသားဖြစ်သည်။ ဆိုင်ရှင်၏ Gmail မှ Password Recovery ပြုလုပ်ပြီး ပြန်စမ်းပါ။");\n   throw Error(data.error||"Account creation failed");\n  }'
+new = '  const data=await apkProvisionShopOwner(email,password);\n  if(!data.ok||!data.uid)throw Error("Firebase မှ အကောင့်ဖန်တီးမှု အတည်မပြုနိုင်ပါ");'
 if old not in s:
     raise SystemExit("APK patch failed: expected Worker-dependent shop-owner provisioning code not found")
 s = s.replace(old, new, 1)
 
 # Do not allow an unverified or non-Owner session to provision shop accounts.
-owner_guard_old = '$("createShopBtn").onclick=async()=>{const out=$("ownerStatus");try{const email='
-owner_guard_new = '$("createShopBtn").onclick=async()=>{const out=$("ownerStatus");try{if(!isPlatformOwner()||!user||user.emailVerified!==true)throw Error("Verified Platform Owner အကောင့်ဖြင့်သာ ဆိုင်ရှင်အကောင့် ဖန်တီးနိုင်ပါသည်။");const email='
+owner_guard_old = '$("createShopBtn").onclick=async()=>{\\n const out=$("ownerStatus");\\n try{'
+owner_guard_new = '$("createShopBtn").onclick=async()=>{\\n const out=$("ownerStatus");\\n try{\\n  if(!isPlatformOwner()||!user||user.emailVerified!==true)throw Error("Verified Platform Owner အကောင့်ဖြင့်သာ ဆိုင်ရှင်အကောင့် ဖန်တီးနိုင်ပါသည်။");'
 if owner_guard_old not in s:
     raise SystemExit("APK patch failed: shop-owner authorization guard anchor not found")
 s = s.replace(owner_guard_old, owner_guard_new, 1)

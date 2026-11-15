@@ -55,8 +55,8 @@ if old not in s:
 s = s.replace(old, new, 1)
 
 # Do not allow an unverified or non-Owner session to provision shop accounts.
-owner_guard_old = '$("createShopBtn").onclick=async()=>{\\n const out=$("ownerStatus");\\n try{'
-owner_guard_new = '$("createShopBtn").onclick=async()=>{\\n const out=$("ownerStatus");\\n try{\\n  if(!isPlatformOwner()||!user||user.emailVerified!==true)throw Error("Verified Platform Owner အကောင့်ဖြင့်သာ ဆိုင်ရှင်အကောင့် ဖန်တီးနိုင်ပါသည်။");'
+owner_guard_old = '$("createShopBtn").onclick=async()=>{\n const out=$("ownerStatus");\n try{'
+owner_guard_new = '$("createShopBtn").onclick=async()=>{\n const out=$("ownerStatus");\n try{\n  if(!isPlatformOwner()||!user||user.emailVerified!==true)throw Error("Verified Platform Owner အကောင့်ဖြင့်သာ ဆိုင်ရှင်အကောင့် ဖန်တီးနိုင်ပါသည်။");'
 if owner_guard_old not in s:
     raise SystemExit("APK patch failed: shop-owner authorization guard anchor not found")
 s = s.replace(owner_guard_old, owner_guard_new, 1)

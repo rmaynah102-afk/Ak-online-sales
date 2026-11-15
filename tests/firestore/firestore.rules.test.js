@@ -211,7 +211,7 @@ describe('AK Sale Firestore security baseline', function () {
     await assertFails(getDoc(doc(db, 'shops', 'platform-owner-uid', 'pos', 'products', 'records', 'item-1')));
   });
 
-  it('enforces the 100-shop capacity limit and rejects a counter-only increment', async () => {
+  it('allows paid shop issuance after 100 free-beta slots while rejecting counter-only increments', async () => {
     const db = testEnv.authenticatedContext('platform-owner-uid', {
       email: 'painglin102@gmail.com', email_verified: true,
     }).firestore();
@@ -219,7 +219,7 @@ describe('AK Sale Firestore security baseline', function () {
     await assertSucceeds(setDoc(counter, { activeShopCount: 100, updatedAt: serverTimestamp() }));
     await assertFails(setDoc(counter, {
       activeShopCount: 101, lastIssuedUid: 'shop-101', updatedAt: serverTimestamp(),
-    }));
+    }, { merge: true }));
     const batch = writeBatch(db);
     batch.set(doc(db, 'licenses', 'shop-101'), {
       uid: 'shop-101', status: 'active', expiresAt: futureTimestamp(30), plan: '30-days',
@@ -227,7 +227,7 @@ describe('AK Sale Firestore security baseline', function () {
     batch.update(counter, {
       activeShopCount: 101, lastIssuedUid: 'shop-101', updatedAt: serverTimestamp(),
     });
-    await assertFails(batch.commit());
+    await assertSucceeds(batch.commit());
   });
 
   it('allows shop owner to read workspace metadata but denies direct workspace writes', async () => {

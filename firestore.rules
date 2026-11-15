@@ -496,10 +496,7 @@ service cloud.firestore {
             && request.resource.data.activeShopCount == resource.data.activeShopCount + 1
             && request.resource.data.activeShopCount <= 100
             && request.resource.data.lastIssuedUid is string
-            && !exists(/databases/$(database)/documents/licenses/$(request.resource.data.lastIssuedUid))
             && !exists(/databases/$(database)/documents/freeBetaUsers/$(request.resource.data.lastIssuedUid))
-            && (existsAfter(/databases/$(database)/documents/licenses/$(request.resource.data.lastIssuedUid))
-              || existsAfter(/databases/$(database)/documents/freeBetaUsers/$(request.resource.data.lastIssuedUid)))
             && ((existsAfter(/databases/$(database)/documents/licenses/$(request.resource.data.lastIssuedUid))
                 && getAfter(/databases/$(database)/documents/licenses/$(request.resource.data.lastIssuedUid)).data.status == 'active')
               || (existsAfter(/databases/$(database)/documents/freeBetaUsers/$(request.resource.data.lastIssuedUid))

@@ -719,9 +719,10 @@ function buildReceiptEscPos(s,paper="80mm"){
  for(let yy=0;yy<height;yy++)for(let xx=0;xx<width;xx++){const k=(yy*width+xx)*4,g=(img.data[k]*299+img.data[k+1]*587+img.data[k+2]*114)/1000;if(g<175)raster[yy*bpr+(xx>>3)]|=0x80>>(xx&7)}
  const head=Uint8Array.from([27,64,29,118,48,0,bpr&255,(bpr>>8)&255,height&255,(height>>8)&255]),tail=Uint8Array.from([10,10,10,29,86,0]),out=new Uint8Array(head.length+raster.length+tail.length);out.set(head);out.set(raster,head.length);out.set(tail,head.length+raster.length);return out;
 }
+function saleBalance(sale){const extra=payments.filter(p=>p.kind==="sale"&&p.saleId===sale.id).reduce((a,p)=>a+Number(p.amount||0),0),paid=Number(sale.paid||0)+extra;return {paid,due:Math.max(0,Number(sale.total||0)-paid)}}
 window.shareSaleReceipt=async id=>{
- const sale=sales.find(x=>x.id===id);if(!sale)return;
- const text=[activeShopName||"ဆိုင်အမည်","ဘောင်ချာ: "+String(id).slice(-10),"ရက်စွဲ: "+dateText(sale.createdAt),"ပစ္စည်း: "+sale.productName,"အရေအတွက်: "+sale.qty,"တစ်ခုဈေး: "+money(sale.price),"စုစုပေါင်း: "+money(sale.total),"ပေးချေပြီး: "+money(sale.paid),"ကျန်ငွေ: "+money(sale.due)].join("\n");
+ const sale=sales.find(x=>x.id===id);if(!sale)return;const balance=saleBalance(sale);
+ const text=[activeShopName||"ဆိုင်အမည်","ဘောင်ချာ: "+String(id).slice(-10),"ရက်စွဲ: "+dateText(sale.createdAt),"ပစ္စည်း: "+sale.productName,"အရေအတွက်: "+sale.qty,"တစ်ခုဈေး: "+money(sale.price),"စုစုပေါင်း: "+money(sale.total),"ပေးချေပြီး: "+money(balance.paid),"ကျန်ငွေ: "+money(balance.due)].join("\n");
  try{
   const canvas=document.createElement("canvas");canvas.width=720;canvas.height=760;
   const c=canvas.getContext("2d");if(!c)throw Error("ဘောင်ချာပုံဖန်တီးမရပါ");
@@ -729,7 +730,7 @@ window.shareSaleReceipt=async id=>{
   c.fillStyle="#123b2a";c.textAlign="center";c.font="bold 38px system-ui, 'Noto Sans Myanmar', sans-serif";c.fillText(activeShopName||"ဆိုင်အမည်",360,82);
   c.font="26px system-ui, 'Noto Sans Myanmar', sans-serif";c.fillText("အရောင်းဘောင်ချာ",360,132);
   c.textAlign="left";c.fillStyle="#172820";c.font="24px system-ui, 'Noto Sans Myanmar', sans-serif";
-  const rows=[["ဘောင်ချာ",String(id).slice(-10)],["ရက်စွဲ",dateText(sale.createdAt)],...(Array.isArray(sale.lines)?sale.lines.flatMap(line=>[[line.name,""],["အရေအတွက် / ဈေး",String(line.qty)+" × "+money(line.price)]]):[["ပစ္စည်း",sale.productName],["အရေအတွက်",String(sale.qty)],["တစ်ခုဈေး",money(sale.price)]]),["စုစုပေါင်း",money(sale.total)],["ပေးချေပြီး",money(sale.paid)],["ကျန်ငွေ",money(sale.due)]];
+  const rows=[["ဘောင်ချာ",String(id).slice(-10)],["ရက်စွဲ",dateText(sale.createdAt)],...(Array.isArray(sale.lines)?sale.lines.flatMap(line=>[[line.name,""],["အရေအတွက် / ဈေး",String(line.qty)+" × "+money(line.price)]]):[["ပစ္စည်း",sale.productName],["အရေအတွက်",String(sale.qty)],["တစ်ခုဈေး",money(sale.price)]]),["စုစုပေါင်း",money(sale.total)],["ပေးချေပြီး",money(balance.paid)],["ကျန်ငွေ",money(balance.due)]];
   let y=210;for(const [k,v] of rows){c.fillStyle="#66766c";c.fillText(k,55,y);c.fillStyle="#172820";c.textAlign="right";c.fillText(String(v).slice(0,34),665,y);c.textAlign="left";y+=62}
   c.strokeStyle="#d8e2db";c.beginPath();c.moveTo(55,710);c.lineTo(665,710);c.stroke();
   const blob=await new Promise(resolve=>canvas.toBlob(resolve,"image/png"));if(!blob)throw Error("ဘောင်ချာပုံ မရပါ");
@@ -748,9 +749,10 @@ window.shareSaleReceipt=async id=>{
 };
 window.printSaleReceipt=async id=>{
  const sale=sales.find(x=>x.id===id);if(!sale)return;
+ const balance=saleBalance(sale);
  const p=printerRead().find(x=>x.default)||printerRead()[0];
  if(p&&["bluetooth","wifi"].includes(p.type)&&window.Capacitor?.isNativePlatform?.()){
-  try{await window.akPrintRawToDefault(buildReceiptEscPos({...sale,id}));status("ဘောင်ချာကို "+p.name+" သို့ ပို့ပြီးပါပြီ။ Printer မှ စာရွက်ထွက်လာကြောင်း စစ်ပါ။","printerStatus")}catch(e){alert("Direct Print မအောင်မြင်ပါ: "+errText(e))}return;
+  try{await window.akPrintRawToDefault(buildReceiptEscPos({...sale,...balance,id}));status("ဘောင်ချာကို "+p.name+" သို့ ပို့ပြီးပါပြီ။ Printer မှ စာရွက်ထွက်လာကြောင်း စစ်ပါ။","printerStatus")}catch(e){alert("Direct Print မအောင်မြင်ပါ: "+errText(e))}return;
  }
  const w=window.open("","_blank");if(!w){alert("Print Window ဖွင့်မရပါ။ Pop-up ခွင့်ပြုပါ။");return}
  w.document.write('<!doctype html><html lang="my"><meta charset="utf-8"><title>AK Sale Receipt</title><style>body{font-family:Arial,sans-serif;padding:12px}h2{text-align:center}.line{border-top:1px dashed #555;margin:10px 0}button{padding:10px}</style><h2>'+esc(activeShopName||"ဆိုင်အမည်")+'</h2><p>ဘောင်ချာ: '+esc(id.slice(-10))+'</p><p>ရက်စွဲ: '+dateText(sale.createdAt)+'</p><p>ပစ္စည်း: '+esc(sale.productName)+'</p><p>အရေအတွက်: '+sale.qty+'</p><p>စုစုပေါင်း: '+money(sale.total)+'</p><p>ပေးချေပြီး: '+money(sale.paid)+'</p><p>ကျန်ငွေ: '+money(sale.due)+'</p><button onclick="window.print()">Print / PDF သိမ်းရန်</button><scr"+"ipt>window.onload=()=>setTimeout(()=>window.print(),250)<\/script></html>');w.document.close();

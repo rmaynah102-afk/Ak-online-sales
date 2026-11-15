@@ -159,6 +159,14 @@ theme_css = r"""
 .theme-card label{margin:0;min-width:110px}
 .theme-card select{max-width:250px}
 .theme-card input[type=color]{width:54px;min-width:54px;height:44px;padding:4px}
+body[data-theme="dark"]{background:#111a23!important;color:#edf3f8}
+body[data-theme="dark"] .card,body[data-theme="dark"] .tablewrap{background:#182431;color:#edf3f8;border-color:#334454}
+body[data-theme="dark"] input,body[data-theme="dark"] select,body[data-theme="dark"] textarea{background:#111a23;color:#edf3f8;border-color:#465b6d}
+body[data-theme="dark"] .tablewrap tbody tr:nth-child(even){background:#1d2c3a}
+body[data-theme="dark"] .tablewrap tbody tr:hover{background:#263b4d}
+body[data-theme="dark"] .table-summary{background:#263b4d;color:#edf3f8}
+body[data-theme="dark"] .notice{background:#3b3424;color:#f8dfa8}
+body[data-theme="dark"] .muted{color:#b6c4d1}
 @media(max-width:599px){.tablewrap{max-height:60vh}.tablewrap table{min-width:720px}.table-tools>*{width:100%;max-width:none}.theme-card>*{flex:1 1 100%}.theme-card input[type=color]{width:64px;flex:0 0 64px}}
 """
 if "User-selectable shop themes and spreadsheet-like ledgers" not in s:
@@ -278,6 +286,7 @@ function akApplyTheme(name,customAccent){
  const t={...(AK_THEMES[name]||AK_THEMES.navy)};
  if(name==="custom"&&customAccent){t.blue=customAccent;t.navy=akHexMix(customAccent,-28);t.gold=akHexMix(customAccent,42);t.head=akHexMix(customAccent,205);t.alt=akHexMix(customAccent,235);t.hover=akHexMix(customAccent,185);t.bg="#f5f7fa";t.line="#d9e1e8";t.ink="#172536";t.muted="#607086"}
  const root=document.documentElement.style;
+ document.body.dataset.theme=name;
  root.setProperty("--navy",t.navy);root.setProperty("--blue",t.blue);root.setProperty("--gold",t.gold);root.setProperty("--bg",t.bg);root.setProperty("--line",t.line);root.setProperty("--ink",t.ink);root.setProperty("--muted",t.muted);root.setProperty("--green",t.blue);root.setProperty("--table-head",t.head);root.setProperty("--table-alt",t.alt);root.setProperty("--table-hover",t.hover);root.setProperty("--accent-soft",t.head);
  document.querySelector('meta[name="theme-color"]')?.setAttribute("content",t.navy);
  document.body.style.background=name==="dark"?t.bg:"linear-gradient(180deg,"+t.head+" 0%,var(--bg) 240px)";

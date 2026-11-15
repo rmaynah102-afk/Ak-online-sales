@@ -6,6 +6,7 @@ on:
     paths:
       - "v2/**"
       - "scripts/patch-ak-apk-runtime.py"
+      - "scripts/test-apk-auth-flow.js"
       - "firebase-config.js"
       - "google-services.json"
       - "firestore.rules"
@@ -116,6 +117,8 @@ jobs:
           if(!/if\(email===OWNER\)[\s\S]*?await loadLicenses\(\)/.test(html)) throw new Error('Platform Owner auth route does not load the Control Center licenses');
           console.log('Validated',scripts.length,'inline script block(s), Owner Google login and Owner POS contract');
           NODE
+      - name: Test APK shop-owner account creation and recovery
+        run: node scripts/test-apk-auth-flow.js
       - name: Validate native printer installer
         run: node --check scripts/install-native-printer.js
       - name: Generate Android project

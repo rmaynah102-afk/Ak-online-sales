@@ -64,17 +64,20 @@ s = s.replace(owner_guard_old, owner_guard_new, 1)
 # APK-only visual baseline: white surfaces, black text, neutral buttons/header.
 css_anchor = "</style>"
 css = """
-/* APK-only neutral high-contrast theme */
-:root{--navy:#111111;--blue:#222222;--gold:#111111;--bg:#ffffff;--line:#d5d5d5;--ink:#111111;--muted:#555555;--green:#222222;--red:#a00000}
-body{background:#ffffff;color:#111111}
-header{background:#ffffff;color:#111111;border-bottom:1px solid #111111}
-header small{color:#333333}
-header #userBadge{color:#111111!important}
-button{background:#111111;color:#ffffff}
-button.secondary{background:#ffffff;color:#111111;border:1px solid #111111}
-.tabs button.active{background:#111111;color:#ffffff}
-th{background:#f2f2f2;color:#111111}
-.stat{background:#ffffff}
+/* APK-only AK navy and orange high-contrast theme */
+:root{--navy:#10233f;--blue:#174a7e;--gold:#f28c28;--bg:#f3f6fa;--line:#d9e1ec;--ink:#172536;--muted:#607086;--green:#16734a;--red:#b42318}
+body{background:linear-gradient(180deg,#eaf0f7 0%,#f7f9fc 220px,#f3f6fa 100%);color:var(--ink)}
+header{background:linear-gradient(110deg,#10233f,#174a7e);color:#ffffff;border-bottom:3px solid #f28c28;box-shadow:0 3px 14px rgba(16,35,63,.16)}
+header small{color:#dbe7f5}
+header #userBadge{color:#ffffff!important}
+button{background:#174a7e;color:#ffffff;border:1px solid #174a7e;border-radius:9px}
+button:hover{background:#10233f}
+button.secondary{background:#ffffff;color:#174a7e;border:1px solid #b9c9dc}
+.tabs button.active{background:#f28c28;color:#172536;border-color:#f28c28}
+th{background:#e8eef6;color:#10233f}
+.stat{background:linear-gradient(145deg,#ffffff,#f5f8fc);border:1px solid #d9e1ec;border-radius:12px;box-shadow:0 2px 8px rgba(16,35,63,.06)}
+input,select,textarea{border:1px solid #c7d3e1;border-radius:8px}
+:focus-visible{outline:3px solid rgba(242,140,40,.45);outline-offset:2px}
 """
 if "APK-only neutral high-contrast theme" not in s:
     if css_anchor not in s: raise SystemExit("APK patch failed: CSS insertion point missing")

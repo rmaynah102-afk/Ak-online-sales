@@ -37,13 +37,13 @@ exports.createShopOwnerAccount = functions.https.onCall(async (data, context) =>
   const email = String(data.email || "").trim().toLowerCase();
   const password = String(data.password || "");
   const expiryDateText = String(data.expiresOn || "").trim();
-  if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email) || email === OWNER_EMAIL) {
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email === OWNER_EMAIL) {
     throw new functions.https.HttpsError("invalid-argument", "ဆိုင်ရှင် Gmail လိပ်စာ မမှန်ပါ။");
   }
   if (password.length < 8 || password.length > 128) {
     throw new functions.https.HttpsError("invalid-argument", "AK POS Password သည် အနည်းဆုံး ၈ လုံးဖြစ်ရမည်။");
   }
-  if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(expiryDateText)) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(expiryDateText)) {
     throw new functions.https.HttpsError("invalid-argument", "သက်တမ်းကုန်မည့်ရက်ကို ရွေးပါ။");
   }
   // Interpret the selected date as the end of that day in Myanmar time (UTC+06:30).

@@ -442,7 +442,7 @@ function filteredProducts(){const q=String($("productSearch")?.value||"").trim()
 function renderProductTable(){
  const rows=filteredProducts(),size=Number($("productPageSize")?.value||50),pages=Math.max(1,Math.ceil(rows.length/size));
  productPage=Math.min(Math.max(1,productPage),pages);const start=(productPage-1)*size,visible=rows.slice(start,start+size);
- $("productRows").innerHTML=visible.map(p=>'<tr><td>'+esc(p.name)+'<br><small>'+esc(p.sku||"")+'</small></td><td>'+esc(p.category)+'</td><td>'+p.stock+'</td><td>'+esc(p.unit||"ခု")+'</td><td>'+money(p.retail)+'</td><td>'+money(p.wholesale)+'</td><td>'+money(p.cost)+'</td><td><button class="secondary" onclick="editProduct(\''+p.id+'\')">ပြင်</button></td></tr>').join("")||'<tr><td colspan="8">ရှာဖွေမှုနှင့် ကိုက်ညီသော ပစ္စည်းမရှိပါ</td></tr>';
+ $("productRows").innerHTML=visible.map(p=>'<tr><td>'+(p.photoData?'<img src="'+esc(p.photoData)+'" alt="" style="width:40px;height:40px;object-fit:cover;border-radius:6px;vertical-align:middle"> ':"")+esc(p.name)+'<br><small>'+esc(p.sku||"")+'</small></td><td>'+esc(p.category)+'</td><td>'+p.stock+'</td><td>'+esc(p.unit||"ခု")+'</td><td>'+money(p.retail)+'</td><td>'+money(p.wholesale)+'</td><td>'+money(p.cost)+'</td><td><button class="secondary" onclick="editProduct(\''+p.id+'\')">ပြင်</button></td></tr>').join("")||'<tr><td colspan="8">ရှာဖွေမှုနှင့် ကိုက်ညီသော ပစ္စည်းမရှိပါ</td></tr>';
  $("productPageInfo").textContent="စုစုပေါင်း "+rows.length+" မျိုး · "+(rows.length?start+1:0)+"–"+Math.min(start+size,rows.length)+" · စာမျက်နှာ "+productPage+"/"+pages;
  $("productPrev").disabled=productPage<=1;$("productNext").disabled=productPage>=pages;
 }

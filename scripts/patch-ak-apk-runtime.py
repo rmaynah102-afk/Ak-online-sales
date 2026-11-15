@@ -87,8 +87,12 @@ if "APK-only neutral high-contrast theme" not in s:
 # APK-only receipt and advertising improvements.
 globals_old = 'let auth,db,user,shopId="",staffRole="owner",products=[],sales=[],purchases=[],people=[],expenses=[],editingProduct=null,licenses=[];'
 globals_new = 'let auth,db,user,shopId="",staffRole="owner",products=[],sales=[],purchases=[],people=[],expenses=[],editingProduct=null,licenses=[],activeShopName="ဆိုင်အမည်";'
-if globals_old not in s: raise SystemExit("APK patch failed: app globals anchor missing")
-s=s.replace(globals_old,globals_new,1)
+if globals_old in s:
+    s=s.replace(globals_old,globals_new,1)
+elif 'activeShopName=' not in s:
+    current_globals = 'let auth,db,user,shopId="",staffRole="owner",products=[],sales=[],purchases=[],people=[],expenses=[],payments=[],editingProduct=null,licenses=[],saleCart=[];'
+    if current_globals not in s: raise SystemExit("APK patch failed: app globals anchor missing")
+    s=s.replace(current_globals,current_globals[:-1]+',activeShopName="ဆိုင်အမည်";',1)
 
 owner_title = '$("shopTitle").textContent="AK Hardware & Electrical · Owner POS";'
 if owner_title not in s: raise SystemExit("APK patch failed: owner shop title anchor missing")
@@ -120,8 +124,12 @@ s=s.replace(old_receipt,new_receipt,1)
 # After a successful sale, immediately open that sale's receipt for print/PDF.
 sale_end = '  await reloadAll();\n }catch(e){alert(errText(e))}\n};\n$("savePurchase").onclick=async()=>'
 sale_end_new = '   await reloadAll();\n   await window.printSaleReceipt(saleRef.id);\n  }catch(e){alert(errText(e))}\n };\n $("savePurchase").onclick=async()=>'
-if sale_end not in s: raise SystemExit("APK patch failed: post-sale receipt insertion point missing")
-s=s.replace(sale_end,sale_end_new,1)
+if sale_end in s:
+    s=s.replace(sale_end,sale_end_new,1)
+elif 'await window.printSaleReceipt(saleRef.id)' not in s:
+    cart_sale_end = 'saleCart=[];$("salePaid").value="0";$("saleCustomer").value="";renderSaleCart();await reloadAll();'
+    if cart_sale_end not in s: raise SystemExit("APK patch failed: post-sale receipt insertion point missing")
+    s=s.replace(cart_sale_end,cart_sale_end+'await window.printSaleReceipt(saleRef.id);',1)
 
 p.write_text(s,encoding="utf-8")
 print("APK-only additions applied: immediate post-sale receipt, dynamic shop branding on receipts and ad artwork.")

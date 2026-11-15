@@ -54,6 +54,13 @@ if old not in s:
     raise SystemExit("APK patch failed: expected Worker-dependent shop-owner provisioning code not found")
 s = s.replace(old, new, 1)
 
+# Do not allow an unverified or non-Owner session to provision shop accounts.
+owner_guard_old = '$("createShopBtn").onclick=async()=>{const out=$("ownerStatus");try{const email='
+owner_guard_new = '$("createShopBtn").onclick=async()=>{const out=$("ownerStatus");try{if(!isPlatformOwner()||!user||user.emailVerified!==true)throw Error("Verified Platform Owner အကောင့်ဖြင့်သာ ဆိုင်ရှင်အကောင့် ဖန်တီးနိုင်ပါသည်။");const email='
+if owner_guard_old not in s:
+    raise SystemExit("APK patch failed: shop-owner authorization guard anchor not found")
+s = s.replace(owner_guard_old, owner_guard_new, 1)
+
 # APK-only visual baseline: white surfaces, black text, neutral buttons/header.
 css_anchor = "</style>"
 css = """

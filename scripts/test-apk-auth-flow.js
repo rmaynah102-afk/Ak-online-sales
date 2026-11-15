@@ -4,95 +4,71 @@ const vm = require('vm');
 const assert = require('assert');
 
 const html = fs.readFileSync('www/index.html', 'utf8');
-const match = html.match(/async function apkProvisionShopOwner\(email,password\)\s*\{[\s\S]*?^\}/m);
-assert(match, 'APK shop-owner provisioning helper must be present');
+const match = html.match(/async function apkProvisionShopOwner\(email,password,expiresOn,shopName\)\s*\{[\s\S]*?^\}/m);
+assert(match, 'APK must use the Admin-backed shop-owner provisioning helper');
 const helperSource = match[0];
 
 async function runScenario(name, configure, verify) {
   const calls = [];
-  const user = {
-    uid: 'shop-user-123',
-    email: 'shop@example.com',
-    emailVerified: false,
-    async reload() { calls.push('reload'); },
-    async sendEmailVerification() { calls.push('verify-email'); }
+  const mainSession = { uid: 'platform-owner-uid', email: 'painglin102@gmail.com' };
+  const resultData = {
+    ok: true, uid: 'shop-user-123', email: 'shop@example.com',
+    emailVerified: true, expiresAt: '2026-12-31T17:29:59.999Z',
+    passwordCredential: 'firebase-ak-pos-only'
   };
-  const secondaryAuth = {
-    languageCode: '',
-    async createUserWithEmailAndPassword() { calls.push('create'); return { user }; },
-    async signInWithEmailAndPassword() { calls.push('sign-in'); return { user }; },
-    async sendPasswordResetEmail() { calls.push('password-reset'); },
-    async signOut() { calls.push('secondary-sign-out'); }
-  };
-  const app = {
-    auth() { return secondaryAuth; },
-    async delete() { calls.push('secondary-delete'); }
-  };
-  const firebase = {
-    initializeApp(_config, appName) {
-      calls.push('initialize:' + appName);
-      return app;
+  const functions = {
+    httpsCallable(functionName) {
+      calls.push({ type: 'callable', functionName });
+      return async payload => {
+        calls.push({ type: 'payload', payload });
+        if (configure?.throwError) throw configure.throwError;
+        return { data: configure?.resultData || resultData };
+      };
     }
   };
-  configure?.({ calls, user, secondaryAuth });
-  const fn = new Function('firebase', 'PROJECT', helperSource + '\nreturn apkProvisionShopOwner;')(firebase, { projectId: 'ak-onlin-sales' });
-  const mainSession = { uid: 'platform-owner-uid' };
-  const result = await verify(fn, { calls, user, mainSession });
-  assert.deepStrictEqual(mainSession, { uid: 'platform-owner-uid' }, name + ': main Owner session must remain untouched');
-  assert(calls.includes('secondary-sign-out'), name + ': secondary Auth must sign out');
-  assert(calls.includes('secondary-delete'), name + ': secondary Firebase app must be deleted');
-  console.log('PASS', name, result || '');
+  const firebase = { functions: () => functions };
+  const fn = new Function('firebase', helperSource + '\nreturn apkProvisionShopOwner;')(firebase);
+  const r = await verify(fn, { calls, mainSession, resultData });
+  assert.deepStrictEqual(mainSession, { uid: 'platform-owner-uid', email: 'painglin102@gmail.com' },
+    name + ': Platform Owner session must remain signed in and unchanged');
+  assert(calls.some(x => x.type === 'callable' && x.functionName === 'createShopOwnerAccount'),
+    name + ': must call the trusted Firebase Admin function');
+  assert(!calls.some(x => x.type === 'payload' && ('gmailPassword' in x.payload)),
+    name + ': must never send a Gmail password');
+  console.log('PASS', name, r || '');
 }
 
 (async () => {
-  await runScenario('new shop owner: create + verification email', null, async (fn, ctx) => {
-    const r = await fn('shop@example.com', 'StrongPass123');
+  await runScenario('new shop owner: owner-defined AK POS credential', null, async (fn, ctx) => {
+    const r = await fn('shop@example.com', 'OwnerDefined123', '2026-12-31', 'AK Hardware');
     assert.strictEqual(r.uid, 'shop-user-123');
-    assert.strictEqual(r.emailVerified, false);
-    assert.strictEqual(r.verificationEmailSent, true);
-    assert(ctx.calls.includes('create'));
-    assert(ctx.calls.includes('verify-email'));
-    return 'verified-email sent; Owner session preserved';
-  });
-
-  await runScenario('existing shop owner: reuse matching credentials', ({ secondaryAuth, calls }) => {
-    secondaryAuth.createUserWithEmailAndPassword = async () => {
-      calls.push('create');
-      const e = new Error('already exists'); e.code = 'auth/email-already-in-use'; throw e;
-    };
-    secondaryAuth.signInWithEmailAndPassword = async () => {
-      calls.push('sign-in');
-      return { user: { uid: 'shop-user-123', email: 'shop@example.com', emailVerified: true, async reload() { calls.push('reload'); }, async sendEmailVerification() { calls.push('verify-email'); } } };
-    };
-  }, async (fn, ctx) => {
-    const r = await fn('shop@example.com', 'StrongPass123');
-    assert.strictEqual(r.accountReused, true);
     assert.strictEqual(r.emailVerified, true);
-    assert(!ctx.calls.includes('verify-email'));
-    return 'existing verified account reused safely';
+    const payload = ctx.calls.find(x => x.type === 'payload').payload;
+    assert.deepStrictEqual(payload, {
+      email: 'shop@example.com', password: 'OwnerDefined123',
+      expiresOn: '2026-12-31', shopName: 'AK Hardware'
+    });
+    return 'Owner sets Firebase AK POS password and expiry; no Gmail password requested';
   });
 
-  await runScenario('existing shop owner: wrong password triggers recovery', ({ secondaryAuth, calls }) => {
-    secondaryAuth.createUserWithEmailAndPassword = async () => {
-      calls.push('create');
-      const e = new Error('already exists'); e.code = 'auth/email-already-in-use'; throw e;
-    };
-    secondaryAuth.signInWithEmailAndPassword = async () => {
-      calls.push('sign-in');
-      const e = new Error('wrong password'); e.code = 'auth/wrong-password'; throw e;
-    };
+  await runScenario('existing Firebase account: password is reset by Admin SDK', {
+    resultData: {
+      ok: true, uid: 'existing-shop-user', email: 'shop@example.com',
+      emailVerified: true, expiresAt: '2026-12-31T17:29:59.999Z',
+      passwordCredential: 'firebase-ak-pos-only'
+    }
   }, async (fn, ctx) => {
-    await assert.rejects(fn('shop@example.com', 'WrongPass123'), /Password Reset Link/);
-    assert(ctx.calls.includes('password-reset'));
-    return 'password reset attempted; no duplicate account created';
+    const r = await fn('shop@example.com', 'NewAKPOSPass123', '2026-12-31', 'AK Hardware');
+    assert.strictEqual(r.uid, 'existing-shop-user');
+    assert.strictEqual(ctx.calls.filter(x => x.type === 'callable').length, 1);
+    return 'existing UID retained; only Firebase AK POS password updated';
   });
 
-  await runScenario('unexpected Firebase error: cleanup still runs', ({ secondaryAuth }) => {
-    secondaryAuth.createUserWithEmailAndPassword = async () => {
-      const e = new Error('network down'); e.code = 'auth/network-request-failed'; throw e;
-    };
-  }, async (fn) => {
-    await assert.rejects(fn('shop@example.com', 'StrongPass123'), /network down/);
-    return 'Firebase error surfaced without leaving secondary app open';
+  await runScenario('provisioning errors are surfaced without client-side password recovery', {
+    throwError: new Error('permission-denied')
+  }, async (fn, ctx) => {
+    await assert.rejects(fn('shop@example.com', 'OwnerDefined123', '2026-12-31', 'AK Hardware'), /permission-denied/);
+    assert(!ctx.calls.some(x => x.type === 'payload' && ('resetPassword' in x.payload)));
+    return 'server authorization errors surfaced; no password-reset email attempted';
   });
 })().catch(error => { console.error(error); process.exitCode = 1; });

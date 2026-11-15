@@ -37,12 +37,17 @@ exports.createShopOwnerAccount = functions.https.onCall(async (data, context) =>
   const email = String(data.email || "").trim().toLowerCase();
   const password = String(data.password || "");
   const shopName = String(data.shopName || "").trim().slice(0, 100);
+  const industryType = String(data.industryType || "general").trim().toLowerCase();
+  const allowedIndustryTypes = new Set(["general","grocery","hardware","electronics","mobile","gold","restaurant","cosmetics","fashion","auto_parts","pharmacy","construction","wholesale","beauty","hotel","laundry","stationery","online","other"]);
   const expiryDateText = String(data.expiresOn || "").trim();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email === OWNER_EMAIL) {
     throw new functions.https.HttpsError("invalid-argument", "ဆိုင်ရှင် Gmail လိပ်စာ မမှန်ပါ။");
   }
   if (shopName.length < 2) {
     throw new functions.https.HttpsError("invalid-argument", "ဆိုင်အမည် အနည်းဆုံး ၂ လုံးထည့်ပါ။");
+  }
+  if (!allowedIndustryTypes.has(industryType)) {
+    throw new functions.https.HttpsError("invalid-argument", "ဆိုင်အမျိုးအစား မမှန်ပါ။");
   }
   if (password.length < 8 || password.length > 128) {
     throw new functions.https.HttpsError("invalid-argument", "AK POS Password သည် အနည်းဆုံး ၈ လုံးဖြစ်ရမည်။");
@@ -82,7 +87,7 @@ exports.createShopOwnerAccount = functions.https.onCall(async (data, context) =>
   const licenseRef = db.collection("licenses").doc(user.uid);
   await db.runTransaction(async tx => {
     tx.set(licenseRef, {
-      uid: user.uid, email, shopName, status: "active", plan: "owner-managed",
+      uid: user.uid, email, shopName, industryType, status: "active", plan: "owner-managed",
       expiresAt, provisionedBy: actor,
       provisionedAt: admin.firestore.FieldValue.serverTimestamp(),
       updatedAt: admin.firestore.FieldValue.serverTimestamp()
@@ -91,11 +96,11 @@ exports.createShopOwnerAccount = functions.https.onCall(async (data, context) =>
   await db.collection("freeBetaUsers").doc(user.uid).delete().catch(() => {});
   await db.collection("platformAuditLogs").add({
     action: "shop_owner_account_provisioned",
-    targetUid: user.uid, targetEmail: email, expiresAt, actor,
+    targetUid: user.uid, targetEmail: email, shopName, industryType, expiresAt, actor,
     createdAt: admin.firestore.FieldValue.serverTimestamp()
   });
   return {
-    ok: true, uid: user.uid, email, emailVerified: true,
+    ok: true, uid: user.uid, email, shopName, industryType, emailVerified: true,
     expiresAt: expiryDate.toISOString(),
     passwordCredential: "firebase-ak-pos-only"
   };
@@ -142,20 +147,17 @@ exports.claimShopDevice = functions.https.onCall(async (data, context) => {
   const ref = devices.doc(deviceId);
   return db.runTransaction(async tx => {
     const [ownSnap, allSnap] = await Promise.all([tx.get(ref), tx.get(devices)]);
-    if (!ownSnap.exists && allSnap.size >= 5) {
-      throw new functions.https.HttpsError("resource-exhausted", "ဖုန်း ၅ လုံး ပြည့်နေပါသည်။ Owner က စက်ဟောင်းကို အရင်ဖြုတ်ပါ။");
-    }
     tx.set(ref, {
       deviceId, label, createdAt: ownSnap.exists ? ownSnap.data().createdAt : admin.firestore.FieldValue.serverTimestamp(),
       lastSeenAt: admin.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
-    return { ok: true, count: ownSnap.exists ? allSnap.size : allSnap.size + 1, limit: 5 };
+    return { ok: true, count: ownSnap.exists ? allSnap.size : allSnap.size + 1, limit: null };
   });
 });
 
 exports.listShopDevices = functions.https.onCall(async (data, context) => {
   const uid = await requireActiveShop(context);
-  const snap = await db.collection("users").doc(uid).collection("devices").orderBy("lastSeenAt", "desc").limit(5).get();
+  const snap = await db.collection("users").doc(uid).collection("devices").orderBy("lastSeenAt", "desc").limit(100).get();
   return { devices: snap.docs.map(doc => {
     const x = doc.data();
     return { deviceId: doc.id, label: x.label || "Device",

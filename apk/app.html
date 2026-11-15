@@ -2226,7 +2226,7 @@ async function akCreateShopOwnerAccount(){
   const password=$("akNewShopPassword")?.value||"";
   const confirmPassword=$("akNewShopPasswordConfirm")?.value||"";
   const expiresOn=$("akNewShopExpiry")?.value||"";
-  if(!email||!/^\\S+@\\S+\\.\\S+$/.test(email))throw Error("ဆိုင်ရှင် Gmail လိပ်စာ မှန်ကန်စွာထည့်ပါ။");
+  if(!email||!/^\S+@\S+\.\S+$/.test(email))throw Error("ဆိုင်ရှင် Gmail လိပ်စာ မှန်ကန်စွာထည့်ပါ။");
   if(password.length<8)throw Error("AK POS Password အနည်းဆုံး ၈ လုံးထည့်ပါ။");
   if(password!==confirmPassword)throw Error("Password နှစ်ခု မတူပါ။");
   if(!expiresOn)throw Error("သက်တမ်းကုန်မည့်ရက် ရွေးပါ။");

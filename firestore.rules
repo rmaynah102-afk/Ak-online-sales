@@ -589,8 +589,7 @@ service cloud.firestore {
         && request.resource.data.phone is string
         && request.resource.data.phone.size() <= 32
       ) || (
-        !isVerifiedMarketplaceUser()
-        && request.resource.data.keys().hasOnly(['title','price','currency','category','city','township','address','phone','description','imageUrl','ownerUid','status','shopName','createdAt'])
+        request.resource.data.keys().hasOnly(['title','price','currency','category','city','township','address','phone','description','imageUrl','ownerUid','status','shopName','createdAt'])
         && request.resource.data.ownerUid == 'public'
         && request.resource.data.status == 'published'
         && request.resource.data.title is string

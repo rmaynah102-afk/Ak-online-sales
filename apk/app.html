@@ -2010,10 +2010,11 @@ async function firebaseLogin(){
  }finally{if(button){button.disabled=false;button.textContent="Login ဝင်မည်"}}
 }
 function akUpdateAccountTypeHint(){
- const type=$("akAccountType")?.value||"shop-owner",hint=$("akAccountTypeHint");
+ const type=$("akAccountType")?.value||"shop-owner",hint=$("akAccountTypeHint"),register=$("akRegisterButton");
  if(hint)hint.textContent=type==="staff"
   ?"ဝန်ထမ်းသည် ကိုယ်ပိုင် Gmail ဖြင့် Register လုပ်ပြီး Email အတည်ပြုကာ Merchant Code ဖြင့် ဆိုင်နှင့်ချိတ်ဆက်ပါ။"
   :"ဆိုင်ရှင် User သည် Register မလုပ်ပါ။ Platform Owner ဖန်တီးပေးသော Gmail နှင့် AK POS Password ဖြင့် Login ဝင်ပါ။";
+ if(register)register.hidden=type!=="staff";
 }
 async function firebaseRegister(){
  try{

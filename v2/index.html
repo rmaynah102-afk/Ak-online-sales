@@ -117,19 +117,19 @@ td,th{overflow-wrap:anywhere}
 </section>
 <section id="ownerPanel" class="hidden">
 <div class="card"><div class="row"><h2 style="flex:2">Platform Owner Control Center</h2><button id="ownerPOSBtn" class="secondary">Owner POS သို့</button><button id="logoutOwner" class="secondary">Logout</button></div>
-<div class="stats"><div class="stat">အသုံးပြုနေသော ဆိုင်<b id="shopCount">0</b></div><div class="stat">Free Beta အခမဲ့နေရာ<b>100</b></div></div>
+<div class="stats"><div class="stat">အသုံးပြုနေသော ဆိုင်<b id="shopCount">0</b></div><div class="stat">ဆိုင်အကောင့် အရေအတွက်<b>ကန့်သတ်ချက်မရှိ</b></div></div>
 </div>
 <div class="card"><h2>ဆိုင်ရှင်အကောင့်အသစ် ဖန်တီးရန်</h2>
-<div class="grid"><div><label>ဆိုင်အမည်</label><input id="shopName" placeholder="AK Hardware"></div><div><label>ဆိုင်ရှင် Gmail</label><input id="newEmail" type="email" placeholder="owner@gmail.com"></div><div><label>ယာယီ Password (အနည်းဆုံး ၈ လုံး)</label><input id="newPassword" type="password" autocomplete="new-password"></div><div><label>Package / အခမဲ့အစီအစဉ်</label><select id="plan"><option value="free-beta">Free Beta — ပထမ ၁၀၀ ဆိုင် အခမဲ့</option><option value="30-days">၃၀ ရက် — ၃၀,၀၀၀ ကျပ်</option><option value="90-days">၉၀ ရက် — ၉၀,၀၀၀ ကျပ်</option><option value="180-days">၁၈၀ ရက် — ၁၈၀,၀၀၀ ကျပ်</option><option value="365-days">၃၆၅ ရက် — ၃၆၀,၀၀၀ ကျပ်</option></select></div></div>
+<div class="grid"><div><label>ဆိုင်အမည်</label><input id="shopName" placeholder="AK Hardware"></div><div><label>ဆိုင်ရှင် Gmail</label><input id="newEmail" type="email" placeholder="owner@gmail.com"></div><div><label>AK Sale POS Password (အနည်းဆုံး ၈ လုံး)</label><input id="newPassword" type="password" autocomplete="new-password"></div><div><label>Password ထပ်အတည်ပြုရန်</label><input id="newPasswordConfirm" type="password" autocomplete="new-password"></div><div><label>သက်တမ်းကုန်မည့်ရက်</label><input id="expiresOn" type="date"></div></div>
 <div class="row" style="margin-top:10px"><button id="createShopBtn">ဆိုင်ရှင်အကောင့် ဖန်တီးမည်</button></div>
-<p class="muted">အကောင့်ဖန်တီးပြီးနောက် ဆိုင်ရှင်၏ Gmail သို့ Verification Link ပို့မည်။ ပထမဆုံး ဆိုင် ၁၀၀ ကို Free Beta အဖြစ် အခမဲ့ဖွင့်နိုင်သည်။ နောက်ထပ်အကောင့်များအတွက် App အပြင်တွင် ငွေလက်ခံပြီး Package သတ်မှတ်ပါ။</p><div id="ownerStatus" class="muted"></div><button id="verifyOwnerBtn" class="secondary">Owner Gmail Verification Link ပြန်ပို့ရန်</button></div>
+<p class="muted">Owner သည် ဆိုင်ရှင် Gmail နှင့် AK POS Password ကို သတ်မှတ်ပေးမည်။ ဤ Password သည် Gmail / Google Password မဟုတ်ပါ။ ရှိပြီးသား Firebase အကောင့်ဖြစ်ပါကလည်း AK POS Password ကိုသာ ပြောင်းမည်။ User သည် Verification Link မလိုဘဲ ပေးထားသော Gmail နှင့် AK POS Password ဖြင့် Login ဝင်နိုင်သည်။</p><div id="ownerStatus" class="muted"></div><button id="verifyOwnerBtn" class="secondary">Owner Gmail Verification Link ပြန်ပို့ရန်</button></div>
 <div class="card"><h2>ဆိုင်ရှင်စာရင်း / သက်တမ်းထိန်းချုပ်မှု</h2><div class="tablewrap"><table><thead><tr><th>ဆိုင် / Gmail</th><th>Package</th><th>သက်တမ်းကုန်ရက်</th><th>အခြေအနေ</th><th>လုပ်ဆောင်ချက်</th></tr></thead><tbody id="licenseRows"></tbody></table></div></div>
 </section>
 <section id="shopPanel" class="hidden">
 <div class="card"><div class="row"><div style="flex:2"><h2 id="shopTitle">ဆိုင် Dashboard</h2><span class="pill" id="licenseBadge">Active</span></div><button id="ownerControlBtn" class="secondary hidden">Owner Control Center</button><button id="logoutShop" class="secondary">Logout</button></div>
 <div class="stats"><div class="stat">ကုန်ပစ္စည်း<b id="productCount">0</b></div><div class="stat">ယနေ့အရောင်း<b id="todaySales">0 ကျပ်</b></div><div class="stat">လက်ကျန်တန်ဖိုး<b id="stockValue">0 ကျပ်</b></div><div class="stat">ကုန်နည်း<b id="lowStock">0</b></div></div></div>
 <nav class="tabs no-print" id="tabs"><button data-tab="products" class="active">ကုန်ပစ္စည်း</button><button data-tab="sales">အရောင်း</button><button data-tab="purchases">အဝယ်</button><button data-tab="people">ဖောက်သည်/ပေးသွင်းသူ</button><button data-tab="expenses">အသုံးစရိတ်</button><button data-tab="reports">စာရင်းချုပ်</button><button data-tab="printer">Printer</button><button data-tab="ads">ကြော်ငြာ</button><button data-tab="backup">Backup</button></nav>
-<section id="staffManagement" class="card hidden"><h2>ဝန်ထမ်းအကောင့် စီမံခန့်ခွဲမှု</h2><p class="muted">ဝန်ထမ်းအတွက် ကိုယ်ပိုင် Gmail မလိုပါ။ Merchant Code နှင့် Password ဖြင့် ဝင်နိုင်သည်။ ဝန်ထမ်း ၃ ဦးအထိ ဖန်တီးနိုင်သည်။ Code ကို တစ်ကြိမ်သာ ပြသမည်။</p><div class="grid"><div><label>ဝန်ထမ်းအမည်</label><input id="staffName" placeholder="ဝန်ထမ်းအမည်"></div><div><label>ရာထူး</label><select id="staffRole"><option value="cashier">ငွေကိုင်</option><option value="manager">မန်နေဂျာ</option><option value="employee">ပစ္စည်းကြည့်ရှုသူ</option></select></div><div><label>Password (အနည်းဆုံး ၈ လုံး)</label><input id="staffPassword" type="password" minlength="8"></div></div><div class="row" style="margin-top:10px"><button id="createStaffBtn">Merchant Code ဖန်တီးမည်</button><button id="refreshStaffBtn" class="secondary">စာရင်းပြန်ဖတ်မည်</button></div><div id="staffStatus" class="muted"></div><div class="tablewrap"><table><thead><tr><th>အမည်</th><th>ရာထူး</th><th>အခြေအနေ</th><th></th></tr></thead><tbody id="staffRows"></tbody></table></div></section><section id="tab-products" class="card">
+<section id="staffManagement" class="card hidden"><h2>ဝန်ထမ်းအကောင့် စီမံခန့်ခွဲမှု</h2><p class="muted">ဝန်ထမ်းအတွက် ကိုယ်ပိုင် Gmail မလိုပါ။ Merchant Code နှင့် Password ဖြင့် ဝင်နိုင်သည်။ ဝန်ထမ်း ၂ ဦးအထိသာ ဖန်တီးနိုင်သည်။ Code ကို တစ်ကြိမ်သာ ပြသမည်။</p><div class="grid"><div><label>ဝန်ထမ်းအမည်</label><input id="staffName" placeholder="ဝန်ထမ်းအမည်"></div><div><label>ရာထူး</label><select id="staffRole"><option value="cashier">ငွေကိုင်</option><option value="manager">မန်နေဂျာ</option><option value="employee">ပစ္စည်းကြည့်ရှုသူ</option></select></div><div><label>Password (အနည်းဆုံး ၈ လုံး)</label><input id="staffPassword" type="password" minlength="8"></div></div><div class="row" style="margin-top:10px"><button id="createStaffBtn">Merchant Code ဖန်တီးမည်</button><button id="refreshStaffBtn" class="secondary">စာရင်းပြန်ဖတ်မည်</button></div><div id="staffStatus" class="muted"></div><div class="tablewrap"><table><thead><tr><th>အမည်</th><th>ရာထူး</th><th>အခြေအနေ</th><th></th></tr></thead><tbody id="staffRows"></tbody></table></div></section><section id="tab-products" class="card">
 <h2>ကုန်ပစ္စည်းစာရင်း</h2><div class="grid no-print" style="margin-bottom:10px"><div><label>ပစ္စည်းအမည် / SKU / Barcode ရှာရန်</label><input id="productSearch" type="search" placeholder="အမည် သို့မဟုတ် Barcode ရိုက်ရှာပါ"></div><div><label>တစ်မျက်နှာပြလမည့်အရေအတွက်</label><select id="productPageSize"><option value="25">25</option><option value="50" selected>50</option><option value="100">100</option></select></div></div><div class="row no-print" style="justify-content:space-between"><span id="productPageInfo" class="muted">စာရင်းပြင်ဆင်နေသည်...</span><div><button type="button" class="secondary" id="productPrev">ရှေ့</button> <button type="button" class="secondary" id="productNext">နောက်</button></div></div><div id="productForm"><div class="grid"><div><label>ပစ္စည်းအမည်</label><input id="pName"></div><div><label>SKU / Barcode</label><input id="pSku"><button type="button" class="secondary" id="scanProductBtn">Camera Scan</button></div><div><label>ကုန်ပစ္စည်းအမျိုးအစား</label><input id="pCategory" list="shopCategoryOptions" placeholder="ဥပမာ - ကုန်မာ၊ အစားအသောက်၊ အဝတ်အထည်"><datalist id="shopCategoryOptions"><option value="ကုန်မာ"><option value="လျှပ်စစ်"><option value="ကုန်စုံ"><option value="အစားအသောက်"><option value="အဖျော်ယမကာ"><option value="အဝတ်အထည်"><option value="ဖိနပ်"><option value="အလှကုန်"><option value="ဖုန်းနှင့် Accessories"><option value="ကွန်ပျူတာ"><option value="ဆေးဆိုင်"><option value="စာရေးကိရိယာ"><option value="အိမ်သုံးပစ္စည်း"><option value="မော်တော်ယာဉ်ပစ္စည်း"><option value="စားသောက်ဆိုင်"></datalist></div><div><label>အရေအတွက်ယူနစ်</label><input id="pUnit" list="shopUnitOptions" placeholder="ခု / ဘူး / ထုပ် / kg / ပေ"><datalist id="shopUnitOptions"><option value="ခု"><option value="လုံး"><option value="ဘူး"><option value="ထုပ်"><option value="ထည်"><option value="စုံ"><option value="kg"><option value="g"><option value="လီတာ"><option value="ml"><option value="ပေ"><option value="မီတာ"><option value="ပုံး"><option value="ပါကင်"></datalist></div><div><label>ဝယ်ဈေး</label><input id="pCost" type="number" min="0"></div><div><label>လက်လီဈေး</label><input id="pRetail" type="number" min="0"></div><div><label>လက်ကားဈေး</label><input id="pWholesale" type="number" min="0"></div><div><label>လက်ကျန်အရေအတွက်</label><input id="pStock" type="number" min="0"></div><div><label>ကုန်နည်းသတိပေးအဆင့်</label><input id="pAlert" type="number" min="0" value="5"></div><div><label>ပစ္စည်းဓာတ်ပုံ</label><input id="pPhoto" type="file" accept="image/*"><img id="pPhotoPreview" class="hidden" alt="Product preview" style="width:88px;height:88px;object-fit:cover;border-radius:10px;margin-top:8px"></div></div>
 <div class="row" style="margin-top:10px"><button id="saveProduct">ပစ္စည်းသိမ်းမည်</button><button id="clearProduct" class="secondary">ရှင်းမည်</button></div></div>
 <div class="tablewrap"><table><thead><tr><th>ပစ္စည်း</th><th>အမျိုးအစား</th><th>လက်ကျန်</th><th>ယူနစ်</th><th>လက်လီ</th><th>လက်ကား</th><th>ဝယ်ဈေး</th><th></th></tr></thead><tbody id="productRows"></tbody></table></div>
@@ -162,7 +162,7 @@ async function boot(){
  $("loginBtn").disabled=true;
  if(!PROJECT?.apiKey)throw Error("Firebase config မတွေ့ပါ");
  await new Promise((resolve,reject)=>{const x=document.createElement("script");x.src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js";x.onload=resolve;x.onerror=reject;document.head.appendChild(x)});
- await Promise.all(["firebase-auth-compat.js","firebase-firestore-compat.js"].map(name=>new Promise((resolve,reject)=>{const x=document.createElement("script");x.src="https://www.gstatic.com/firebasejs/10.12.2/"+name;x.onload=resolve;x.onerror=reject;document.head.appendChild(x)})));
+ await Promise.all(["firebase-auth-compat.js","firebase-firestore-compat.js","firebase-functions-compat.js"].map(name=>new Promise((resolve,reject)=>{const x=document.createElement("script");x.src="https://www.gstatic.com/firebasejs/10.12.2/"+name;x.onload=resolve;x.onerror=reject;document.head.appendChild(x)})));
  if(!firebase.apps.length)firebase.initializeApp(PROJECT);
  auth=firebase.auth();db=firebase.firestore();auth.languageCode="my";
  await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
@@ -305,77 +305,34 @@ $("logoutOwner").onclick=$("logoutShop").onclick=()=>auth.signOut();
 function planDays(p){return Number(p.split("-")[0])}
 async function ownerToken(){const t=await user.getIdToken(true);return t}
 async function ensureCapacity(){const ref=db.collection("platformMeta").doc("shopCapacity"),[snap,allLicenses,betaUsers]=await Promise.all([ref.get(),db.collection("licenses").get(),db.collection("freeBetaUsers").get()]);const ids=new Set([...allLicenses.docs.map(d=>d.id),...betaUsers.docs.map(d=>d.id)]);const actualCount=ids.size;if(!snap.exists||Number(snap.data()?.activeShopCount)!==actualCount)await ref.set({activeShopCount:actualCount,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});}
+
+async function apkProvisionShopOwner(email,password,expiresOn,shopName){
+ const call=firebase.functions().httpsCallable("createShopOwnerAccount");
+ const result=await call({email,password,expiresOn,shopName});
+ const data=result.data||{};
+ if(!data.ok||!data.uid)throw Error("Server မှ ဆိုင်ရှင်အကောင့် ဖန်တီးမှု အတည်မပြုနိုင်ပါ။");
+ return data;
+}
 $("createShopBtn").onclick=async()=>{
  const out=$("ownerStatus");
  try{
+  if(!isPlatformOwner()||!user||user.emailVerified!==true)throw Error("Verified Platform Owner အကောင့်ဖြင့်သာ ဆိုင်ရှင်အကောင့် ဖန်တီးနိုင်ပါသည်။");
   const email=$("newEmail").value.trim().toLowerCase();
   const password=$("newPassword").value;
+  const confirmPassword=$("newPasswordConfirm").value;
   const shopName=$("shopName").value.trim();
-  const plan=$("plan").value;
-  if(!shopName||!email||password.length<8)throw Error("ဆိုင်အမည်၊ Gmail နှင့် အနည်းဆုံး ၈ လုံး Password ဖြည့်ပါ");
-  if(email===OWNER)throw Error("Owner Gmail ကို ဆိုင်ရှင်အဖြစ် မသုံးနိုင်ပါ");
+  const expiresOn=$("expiresOn").value;
+  if(!shopName||shopName.length<2||!email||!/^\\S+@\\S+\\.\\S+$/.test(email))throw Error("ဆိုင်အမည်နှင့် Gmail မှန်ကန်စွာ ဖြည့်ပါ။");
+  if(email===OWNER)throw Error("Owner Gmail ကို ဆိုင်ရှင်အဖြစ် မသုံးနိုင်ပါ။");
+  if(password.length<8||password.length>128)throw Error("AK POS Password အနည်းဆုံး ၈ လုံးထည့်ပါ။");
+  if(password!==confirmPassword)throw Error("Password နှစ်ခု မတူပါ။");
+  if(!expiresOn)throw Error("သက်တမ်းကုန်မည့်ရက် ရွေးပါ။");
+  if(!confirm(email+" ကို AK POS Password သတ်မှတ်ပြီး "+expiresOn+" အထိ အသုံးပြုခွင့်ပေးမလား။ Gmail Password ကို မပြောင်းပါ။"))return;
   $("createShopBtn").disabled=true;
-  out.textContent="ဆိုင်အကောင့်အရေအတွက် စစ်ဆေးနေသည်...";
-  await ensureCapacity();
-  const cap=db.collection("platformMeta").doc("shopCapacity");
-  const capSnap=await cap.get();
-  const count=Number(capSnap.data()?.activeShopCount||0);
-  const isFree=plan==="free-beta";
-  let betaCapRef=null,betaCapSnap=null,betaCount=0;
-  if(isFree){
-   betaCapRef=db.collection("freeBetaCapacity").doc("slots");
-   const results=await Promise.all([
-    db.collection("freeBetaUsers").where("email","==",email).limit(1).get(),
-    db.collection("freeTrialClaims").doc(email).get(),
-    betaCapRef.get()
-   ]);
-   const profile=results[0],claim=results[1];
-   betaCapSnap=results[2];
-   if(!profile.empty||claim.exists)throw Error("ဤ Gmail သည် Free Beta အကောင့်အဖြစ် ယခင်က အသုံးပြုပြီးဖြစ်သည်။");
-   betaCount=betaCapSnap.exists?Number(betaCapSnap.data()?.count||0):(await db.collection("freeBetaUsers").get()).size;
-   if(betaCount>=100)throw Error("Free Beta ဆိုင် ၁၀၀ ပြည့်သွားပါပြီ။");
-  }
-  out.textContent="အကောင့်ဖန်တီးနေသည်...";
-  const token=await ownerToken();
-  const response=await fetch(GATEWAY+"/owner/provision",{
-   method:"POST",
-   headers:{"Authorization":"Bearer "+token,"Content-Type":"application/json"},
-   body:JSON.stringify({email,password,apiKey:PROJECT.apiKey})
-  });
-  const data=await response.json();
-  if(!response.ok||!data.ok){
-   if(data.passwordResetSent)throw Error("ဤ Gmail ဖြင့် အကောင့်ရှိပြီးသားဖြစ်သည်။ Password Reset Link ကို ဆိုင်ရှင်ထံ ပို့ထားပါပြီ။ ဆိုင်ရှင်က Password အသစ်သတ်မှတ်ပြီးနောက် အကောင့်ဖန်တီးမှုကို ပြန်လုပ်ပါ။");
-   if(data.error==="shop_owner_email_exists_use_password_recovery")throw Error("ဤ Gmail အကောင့်ရှိပြီးသားဖြစ်သည်။ ဆိုင်ရှင်၏ Gmail မှ Password Recovery ပြုလုပ်ပြီး ပြန်စမ်းပါ။");
-   throw Error(data.error||"Account creation failed");
-  }
-  const licenseRef=db.collection("licenses").doc(data.uid);
-  const betaRef=db.collection("freeBetaUsers").doc(data.uid);
-  const claimRef=db.collection("freeTrialClaims").doc(email);
-  const existingLicense=await licenseRef.get();
-  if(existingLicense.exists&&existingLicense.data()?.status!=="pending_payment")throw Error("ဤ Gmail အတွက် ဆိုင်လိုင်စင် ရှိပြီးသားဖြစ်သည်။ ဆိုင်ရှင်စာရင်းမှ စီမံပါ။");
-  const batch=db.batch();
-  const serverTime=firebase.firestore.FieldValue.serverTimestamp();
-  if(isFree){
-   batch.set(betaRef,{uid:data.uid,email,shopName,status:"active",plan:"free-beta",createdAt:serverTime,lastLoginAt:serverTime});
-   batch.set(claimRef,{uid:data.uid,email,createdAt:serverTime});
-   if(betaCapSnap.exists)batch.update(betaCapRef,{count:betaCount+1,updatedAt:serverTime,lastIssuedUid:data.uid});
-   else batch.set(betaCapRef,{count:betaCount+1,updatedAt:serverTime,lastIssuedUid:data.uid});
-  }else{
-   const days=planDays(plan);
-   const expires=new Date(Date.now()+days*86400000);
-   batch.set(licenseRef,{uid:data.uid,email,shopName,status:"active",plan,expiresAt:firebase.firestore.Timestamp.fromDate(expires),createdAt:serverTime});
-  }
-  batch.update(cap,{activeShopCount:count+1,lastIssuedUid:data.uid,updatedAt:serverTime});
-  await batch.commit();
-  if(isFree){
-   out.textContent="အခမဲ့ Free Beta ဆိုင်ရှင်အကောင့် ဖန်တီးပြီးပါပြီ။ "+email+" · သက်တမ်းကုန်ရက် မရှိပါ။";
-  }else{
-   const expiry=dateText(new Date(Date.now()+planDays(plan)*86400000));
-   out.textContent=data.emailVerified
-    ?"ရှိပြီးသား Gmail အကောင့်ကို ပြန်ချိတ်ပြီး ဆိုင်လိုင်စင်ဖန်တီးပြီးပါပြီ။"
-    :"အကောင့်ဖန်တီးပြီးပါပြီ။ "+email+" သို့ Verification Link "+(data.verificationEmailSent?"ပို့ထားသည်။":"မပို့နိုင်ပါ။ "+(data.verificationError||""))+" သက်တမ်းကုန်ရက်: "+expiry;
-  }
-  $("newPassword").value="";
+  out.textContent="ဆိုင်ရှင်အကောင့်နှင့် License ဖန်တီးနေသည်...";
+  const data=await apkProvisionShopOwner(email,password,expiresOn,shopName);
+  out.textContent="အောင်မြင်ပါပြီ။ "+data.email+" ကို AK POS Login သုံးနိုင်ပါပြီ။ ဆိုင်: "+shopName+" · သက်တမ်းကုန်ရက်: "+dateText(new Date(data.expiresAt));
+  $("newPassword").value="";$("newPasswordConfirm").value="";
   await loadLicenses();
  }catch(e){
   out.textContent="မအောင်မြင်: "+errText(e);
@@ -403,14 +360,29 @@ async function staffGateway(path,data={}){
  if(!response.ok||!result.ok)throw Error(result.error||"Backend တုံ့ပြန်မှု မမှန်ပါ");
  return result;
 }
+
+let merchantStaffCount=0;
 async function loadMerchantStaff(){
  try{
   const r=await staffGateway("/staff/list");
-  $("staffRows").innerHTML=(r.members||[]).map(m=>'<tr><td>'+esc(m.name)+'</td><td>'+esc(m.role)+'</td><td>'+esc(m.status)+'</td><td><button class="danger" data-remove-staff="'+esc(m.uid)+'">ဖယ်ရှား</button></td></tr>').join("")||'<tr><td colspan="4">ဝန်ထမ်း မရှိသေးပါ</td></tr>';
+  const members=Array.isArray(r.members)?r.members:[];
+  merchantStaffCount=members.length;
+  $("staffRows").innerHTML=members.map(m=>'<tr><td>'+esc(m.name)+'</td><td>'+esc(m.role)+'</td><td>'+esc(m.status)+'</td><td><button class="danger" data-remove-staff="'+esc(m.uid)+'">ဖယ်ရှား</button></td></tr>').join("")||'<tr><td colspan="4">ဝန်ထမ်း မရှိသေးပါ</td></tr>';
   $("staffRows").querySelectorAll("[data-remove-staff]").forEach(button=>button.onclick=()=>removeMerchantStaff(button.dataset.removeStaff));
+  $("staffStatus").textContent="ဝန်ထမ်း "+merchantStaffCount+" / 2 ဦး · Owner အပါအဝင် စုစုပေါင်း အကောင့် "+(merchantStaffCount+1)+" / 3 ခု";
  }catch(e){$("staffStatus").textContent="ဝန်ထမ်းစာရင်း ဖတ်မရပါ: "+errText(e)}
 }
-$("createStaffBtn").onclick=async()=>{try{const name=$("staffName").value.trim(),role=$("staffRole").value,password=$("staffPassword").value;if(!name||password.length<8)throw Error("အမည်နှင့် အနည်းဆုံး ၈ လုံး Password ဖြည့်ပါ");$("createStaffBtn").disabled=true;$("staffStatus").textContent="Merchant Code ဖန်တီးနေသည်...";const r=await staffGateway("/staff/provision",{name,role,password});$("staffStatus").textContent="အောင်မြင်ပါသည်။ Merchant Code: "+r.code+" · ဒီ Code ကို ဝန်ထမ်းထံ တစ်ကြိမ်သာ ပေးပါ။";try{await navigator.clipboard.writeText(r.code)}catch(_){}$("staffPassword").value="";await loadMerchantStaff()}catch(e){$("staffStatus").textContent="ဖန်တီးမရပါ: "+errText(e)}finally{$("createStaffBtn").disabled=false}};
+$("createStaffBtn").onclick=async()=>{try{
+ const name=$("staffName").value.trim(),role=$("staffRole").value,password=$("staffPassword").value;
+ if(merchantStaffCount>=2)throw Error("ဝန်ထမ်း ၂ ယောက် ပြည့်နေပါပြီ။ နောက်ထပ်ဝန်ထမ်းထည့်ရန် တစ်ယောက်ကို အရင်ဖယ်ရှားပါ။");
+ if(!name||password.length<8)throw Error("အမည်နှင့် အနည်းဆုံး ၈ လုံး Password ဖြည့်ပါ");
+ $("createStaffBtn").disabled=true;$("staffStatus").textContent="Merchant Code ဖန်တီးနေသည်...";
+ const r=await staffGateway("/staff/provision",{name,role,password});
+ $("staffStatus").textContent="အောင်မြင်ပါသည်။ Merchant Code: "+r.code+" · ဒီ Code ကို ဝန်ထမ်းထံ တစ်ကြိမ်သာ ပေးပါ။";
+ try{await navigator.clipboard.writeText(r.code)}catch(_){}
+ $("staffPassword").value="";await loadMerchantStaff();
+}catch(e){$("staffStatus").textContent="ဖန်တီးမရပါ: "+errText(e)}
+finally{$("createStaffBtn").disabled=false}};
 $("refreshStaffBtn").onclick=loadMerchantStaff;
 window.removeMerchantStaff=async uid=>{if(!confirm("ဤဝန်ထမ်းအကောင့်ကို ပိတ်မလား။"))return;try{await staffGateway("/staff/revoke",{memberUid:uid});await loadMerchantStaff();$("staffStatus").textContent="ဝန်ထမ်းအကောင့် ပိတ်ပြီးပါပြီ။"}catch(e){$("staffStatus").textContent="ပိတ်မရပါ: "+errText(e)}};
 

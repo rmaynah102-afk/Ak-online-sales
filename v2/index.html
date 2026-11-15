@@ -308,7 +308,7 @@ async function ensureCapacity(){const ref=db.collection("platformMeta").doc("sho
 
 async function apkProvisionShopOwner(email,password,expiresOn,shopName,industryType){
  const call=firebase.functions().httpsCallable("createShopOwnerAccount");
- const result=await call({email,password,expiresOn,shopName,industryType});
+ const result=await call({email,password,expiresOn,shopName,industryType:industryType||"general"});
  const data=result.data||{};
  if(!data.ok||!data.uid)throw Error("Server မှ ဆိုင်ရှင်အကောင့် ဖန်တီးမှု အတည်မပြုနိုင်ပါ။");
  return data;

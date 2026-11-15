@@ -36,9 +36,13 @@ exports.createShopOwnerAccount = functions.https.onCall(async (data, context) =>
   const actor = requireAdmin(context);
   const email = String(data.email || "").trim().toLowerCase();
   const password = String(data.password || "");
+  const shopName = String(data.shopName || "").trim().slice(0, 100);
   const expiryDateText = String(data.expiresOn || "").trim();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email === OWNER_EMAIL) {
     throw new functions.https.HttpsError("invalid-argument", "ဆိုင်ရှင် Gmail လိပ်စာ မမှန်ပါ။");
+  }
+  if (shopName.length < 2) {
+    throw new functions.https.HttpsError("invalid-argument", "ဆိုင်အမည် အနည်းဆုံး ၂ လုံးထည့်ပါ။");
   }
   if (password.length < 8 || password.length > 128) {
     throw new functions.https.HttpsError("invalid-argument", "AK POS Password သည် အနည်းဆုံး ၈ လုံးဖြစ်ရမည်။");
@@ -78,7 +82,7 @@ exports.createShopOwnerAccount = functions.https.onCall(async (data, context) =>
   const licenseRef = db.collection("licenses").doc(user.uid);
   await db.runTransaction(async tx => {
     tx.set(licenseRef, {
-      uid: user.uid, email, status: "active", plan: "owner-managed",
+      uid: user.uid, email, shopName, status: "active", plan: "owner-managed",
       expiresAt, provisionedBy: actor,
       provisionedAt: admin.firestore.FieldValue.serverTimestamp(),
       updatedAt: admin.firestore.FieldValue.serverTimestamp()

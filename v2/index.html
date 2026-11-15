@@ -281,8 +281,8 @@ $("createShopBtn").onclick=async()=>{
   if(isFree){
    batch.set(betaRef,{uid:data.uid,email,shopName,status:"active",plan:"free-beta",createdAt:serverTime,lastLoginAt:serverTime});
    batch.set(claimRef,{uid:data.uid,email,createdAt:serverTime});
-   if(betaCapSnap.exists)batch.update(betaCapRef,{count:betaCount+1,updatedAt:serverTime});
-   else batch.set(betaCapRef,{count:betaCount+1,updatedAt:serverTime});
+   if(betaCapSnap.exists)batch.update(betaCapRef,{count:betaCount+1,updatedAt:serverTime,lastIssuedUid:data.uid});
+   else batch.set(betaCapRef,{count:betaCount+1,updatedAt:serverTime,lastIssuedUid:data.uid});
   }else{
    const days=planDays(plan);
    const expires=new Date(Date.now()+days*86400000);

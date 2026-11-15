@@ -306,12 +306,14 @@ owner_route = 'show("shopPanel");\n    $("ownerControlBtn").classList.remove("hi
 if owner_route in s:
     s=s.replace(owner_route,'show("shopPanel");\n    akLoadTheme();\n    $("ownerControlBtn").classList.remove("hidden");',1)
 else:
-    # Find the licensed shop route and apply theme after the shop panel is shown.
-    if 'akLoadTheme();' not in s:
-        marker='show("shopPanel");'
-        pos=s.find(marker,s.find('const lic='))
-        if pos<0: raise SystemExit("Theme patch: shop login route not found")
-        pos+=len(marker);s=s[:pos]+'\n    akLoadTheme();'+s[pos:]
+    # Apply the shop theme after loadShop has resolved the correct shop identity.
+    if 'async function loadShop()' not in s: raise SystemExit("Theme patch: loadShop function not found")
+    load_start=s.find('async function loadShop()')
+    marker='show("shopPanel");'
+    pos=s.find(marker,load_start)
+    if pos<0: raise SystemExit("Theme patch: shop panel activation not found")
+    pos+=len(marker)
+    if 'akLoadTheme();' not in s[pos:pos+120]: s=s[:pos]+'akLoadTheme();'+s[pos:]
 # If app is already authenticated when UI script initializes, ensure theme UI is wired after DOM.
 p.write_text(s,encoding="utf-8")
 print("APK theme and spreadsheet ledger enhancements applied.")

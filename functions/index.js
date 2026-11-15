@@ -55,7 +55,7 @@ exports.createShopOwnerAccount = functions.https.onCall(async (data, context) =>
   let user;
   try {
     user = await admin.auth().getUserByEmail(email);
-    if (user.uid === context.auth.uid || user.customClaims?.platformAdmin === true) {
+    if (user.uid === context.auth.uid || user.customClaims?.platformAdmin === true || user.customClaims?.shopId) {
       throw new functions.https.HttpsError("permission-denied", "ဤ Gmail ကို ဆိုင်ရှင်အကောင့်အဖြစ် မသတ်မှတ်နိုင်ပါ။");
     }
     const member = await db.collection("shopMembers").doc(user.uid).get();

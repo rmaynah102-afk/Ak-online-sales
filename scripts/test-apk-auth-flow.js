@@ -4,7 +4,7 @@ const vm = require('vm');
 const assert = require('assert');
 
 const html = fs.readFileSync('www/index.html', 'utf8');
-const match = html.match(/async function apkProvisionShopOwner\(email,password,expiresOn,shopName\)\s*\{[\s\S]*?^\}/m);
+const match = html.match(/async function apkProvisionShopOwner\\(email,password,expiresOn,shopName(?:,industryType)?\\)\s*\{[\s\S]*?^\}/m);
 assert(match, 'APK must use the Admin-backed shop-owner provisioning helper');
 const helperSource = match[0];
 
@@ -40,13 +40,13 @@ async function runScenario(name, configure, verify) {
 
 (async () => {
   await runScenario('new shop owner: owner-defined AK POS credential', null, async (fn, ctx) => {
-    const r = await fn('shop@example.com', 'OwnerDefined123', '2026-12-31', 'AK Hardware');
+    const r = await fn('shop@example.com', 'OwnerDefined123', '2026-12-31', 'AK Hardware', 'hardware');
     assert.strictEqual(r.uid, 'shop-user-123');
     assert.strictEqual(r.emailVerified, true);
     const payload = ctx.calls.find(x => x.type === 'payload').payload;
     assert.deepStrictEqual(payload, {
       email: 'shop@example.com', password: 'OwnerDefined123',
-      expiresOn: '2026-12-31', shopName: 'AK Hardware'
+      expiresOn: '2026-12-31', shopName: 'AK Hardware', industryType: 'hardware'
     });
     return 'Owner sets Firebase AK POS password and expiry; no Gmail password requested';
   });
@@ -58,7 +58,7 @@ async function runScenario(name, configure, verify) {
       passwordCredential: 'firebase-ak-pos-only'
     }
   }, async (fn, ctx) => {
-    const r = await fn('shop@example.com', 'NewAKPOSPass123', '2026-12-31', 'AK Hardware');
+    const r = await fn('shop@example.com', 'NewAKPOSPass123', '2026-12-31', 'AK Hardware', 'hardware');
     assert.strictEqual(r.uid, 'existing-shop-user');
     assert.strictEqual(ctx.calls.filter(x => x.type === 'callable').length, 1);
     return 'existing UID retained; only Firebase AK POS password updated';
@@ -67,7 +67,7 @@ async function runScenario(name, configure, verify) {
   await runScenario('provisioning errors are surfaced without client-side password recovery', {
     throwError: new Error('permission-denied')
   }, async (fn, ctx) => {
-    await assert.rejects(fn('shop@example.com', 'OwnerDefined123', '2026-12-31', 'AK Hardware'), /permission-denied/);
+    await assert.rejects(fn('shop@example.com', 'OwnerDefined123', '2026-12-31', 'AK Hardware', 'hardware'), /permission-denied/);
     assert(!ctx.calls.some(x => x.type === 'payload' && ('resetPassword' in x.payload)));
     return 'server authorization errors surfaced; no password-reset email attempted';
   });

@@ -483,13 +483,13 @@ window.printSaleReceipt=async id=>{
   try{await window.akPrintRawToDefault(buildReceiptEscPos({...sale,id}));status("ဘောင်ချာကို "+p.name+" သို့ ပို့ပြီးပါပြီ။ Printer မှ စာရွက်ထွက်လာကြောင်း စစ်ပါ။","printerStatus")}catch(e){alert("Direct Print မအောင်မြင်ပါ: "+errText(e))}return;
  }
  const w=window.open("","_blank");if(!w){alert("Print Window ဖွင့်မရပါ။ Pop-up ခွင့်ပြုပါ။");return}
- w.document.write('<!doctype html><html lang="my"><meta charset="utf-8"><title>AK Sale Receipt</title><style>body{font-family:Arial,sans-serif;padding:12px}h2{text-align:center}.line{border-top:1px dashed #555;margin:10px 0}button{padding:10px}</style><h2>AK Hardware & Electrical</h2><p>ဘောင်ချာ: '+esc(id.slice(-10))+'</p><p>ရက်စွဲ: '+dateText(sale.createdAt)+'</p><p>ပစ္စည်း: '+esc(sale.productName)+'</p><p>အရေအတွက်: '+sale.qty+'</p><p>စုစုပေါင်း: '+money(sale.total)+'</p><p>ပေးချေပြီး: '+money(sale.paid)+'</p><p>ကျန်ငွေ: '+money(sale.due)+'</p><button onclick="window.print()">Print / PDF သိမ်းရန်</button><script>window.onload=()=>setTimeout(()=>window.print(),250)<\/script></html>');w.document.close();
+ w.document.write('<!doctype html><html lang="my"><meta charset="utf-8"><title>AK Sale Receipt</title><style>body{font-family:Arial,sans-serif;padding:12px}h2{text-align:center}.line{border-top:1px dashed #555;margin:10px 0}button{padding:10px}</style><h2>AK Hardware & Electrical</h2><p>ဘောင်ချာ: '+esc(id.slice(-10))+'</p><p>ရက်စွဲ: '+dateText(sale.createdAt)+'</p><p>ပစ္စည်း: '+esc(sale.productName)+'</p><p>အရေအတွက်: '+sale.qty+'</p><p>စုစုပေါင်း: '+money(sale.total)+'</p><p>ပေးချေပြီး: '+money(sale.paid)+'</p><p>ကျန်ငွေ: '+money(sale.due)+'</p><button onclick="window.print()">Print / PDF သိမ်းရန်</button><scr"+"ipt>window.onload=()=>setTimeout(()=>window.print(),250)<\/script></html>');w.document.close();
 };
 $("testPrinter").onclick=async()=>{
  const p=printerRead().find(x=>x.default)||printerRead()[0];if(!p){status("Printer အရင်သိမ်းပါ။","printerStatus");return}
  if(["bluetooth","wifi"].includes(p.type)&&window.Capacitor?.isNativePlatform?.()){
   try{await window.akPrintRawToDefault(buildReceiptEscPos({id:"TEST",createdAt:new Date(),productName:"AK Sale Printer Test",qty:1,price:0,total:0,paid:0,due:0}));status("Test data ပို့ပြီးပါပြီ။ Printer စစ်ပါ။","printerStatus")}catch(e){status(errText(e),"printerStatus")}
- }else{const w=window.open("","_blank");if(w){w.document.write("<h2>AK Sale Printer Test</h2><p>Android Print Service မှ Printer ရွေးပါ။</p><script>window.onload=()=>window.print()<\/script>");w.document.close()}}
+ }else{const w=window.open("","_blank");if(w){w.document.write("<h2>AK Sale Printer Test</h2><p>Android Print Service မှ Printer ရွေးပါ။</p><scr"+"ipt>window.onload=()=>window.print()<\/script>");w.document.close()}}
 };
 $("systemPrint").onclick=()=>window.print();
 printerTypeChanged();printerRender();

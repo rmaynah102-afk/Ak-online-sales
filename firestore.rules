@@ -287,7 +287,7 @@ service cloud.firestore {
     match /shopStaffSlots/{slotId} {
       allow read: if request.auth != null
         && ((resource.data != null && resource.data.uid == request.auth.uid)
-          || (slotId in [request.auth.uid + '_1', request.auth.uid + '_2', request.auth.uid + '_3']
+          || (slotId in [request.auth.uid + '_1', request.auth.uid + '_2']
             && activeShopLicense(request.auth.uid)));
       allow create: if (
         request.auth != null
@@ -318,7 +318,7 @@ service cloud.firestore {
         && activeShopLicense(request.resource.data.shopId)
         && request.resource.data.keys().hasOnly(['shopId','uid','slot','createdAt','merchantStaff'])
         && request.resource.data.uid is string
-        && request.resource.data.slot in [1,2,3]
+        && request.resource.data.slot in [1,2]
         && ((request.resource.data.slot == 1 && slotId == request.auth.uid + '_1')
           || (request.resource.data.slot == 2 && slotId == request.auth.uid + '_2')
 )

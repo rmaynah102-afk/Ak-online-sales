@@ -207,3 +207,23 @@ test("refuses Merchant Code staff creation when the shop license is inactive", a
     assert.equal(calls.length,2);
   }finally{globalThis.fetch=originalFetch}
 });
+
+test("refuses a third staff account when both shop staff slots are occupied", async () => {
+  const originalFetch=globalThis.fetch;
+  const calls=[];
+  globalThis.fetch=async(url)=>{
+    const u=String(url);calls.push(u);
+    if(u.includes("accounts:lookup"))return new Response(JSON.stringify({users:[{localId:"shop-owner-uid-123",email:"shop@example.com",emailVerified:true}]}),{status:200});
+    if(u.includes("/documents/licenses/"))return new Response(JSON.stringify({fields:{status:{stringValue:"active"},expiresAt:{timestampValue:"2099-01-01T00:00:00.000Z"}}}),{status:200});
+    if(u.includes("/documents/shopStaffSlots/"))return new Response(JSON.stringify({name:"existing-slot"}),{status:200});
+    throw new Error("Staff limit should block before creating another account: "+u);
+  };
+  try{
+    const response=await worker.fetch(staffRequest("/staff/provision",{
+      apiKey:"test-api-key",name:"Third Staff",role:"cashier",password:"strong-pass-123"
+    }),{});
+    assert.equal(response.status,409);
+    assert.equal((await response.json()).error,"staff_limit_2_reached");
+    assert.equal(calls.filter(x=>x.includes("accounts:signUp")).length,0);
+  }finally{globalThis.fetch=originalFetch}
+});

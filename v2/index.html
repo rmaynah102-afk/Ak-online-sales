@@ -513,6 +513,7 @@ function refreshTransactionProductOptions(){
  buy.innerHTML=make(String($("buyProductSearch")?.value||"").trim().toLowerCase());
  if([...sale.options].some(o=>o.value===saleValue))sale.value=saleValue;
  if([...buy.options].some(o=>o.value===buyValue))buy.value=buyValue;
+ if(!buyPaidManuallyEdited&&buy.value){const p=products.find(x=>x.id===buy.value);if(p){$("buyCost").value=Number(p.cost||0);$("buyPaid").value=(Number($("buyQty").value)||1)*Number(p.cost||0)}}
 }
 function renderAll(){
  renderSaleCart();
@@ -584,7 +585,7 @@ $("clearSaleCart").onclick=()=>{saleCart=[];renderSaleCart()};
 $("saleProductSearch").addEventListener("input",()=>refreshTransactionProductOptions());
 $("saleProductSearch").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();if($("saleProduct").options.length===1)$("saleProduct").selectedIndex=0;$("addSaleCart").click();$("saleProductSearch").value="";refreshTransactionProductOptions();$("saleQty").focus();$("saleQty").select()}});
 $("buyProductSearch").addEventListener("input",()=>refreshTransactionProductOptions());
-$("buyProduct").addEventListener("change",()=>{const p=products.find(x=>x.id===$("buyProduct").value);if(p){$("buyCost").value=Number(p.cost||0);if(!$("buyPaidTouched")?.value)$("buyPaid").value=(Number($("buyQty").value)||1)*Number($("buyCost").value||0)}});
+$("buyProduct").addEventListener("change",()=>{const p=products.find(x=>x.id===$("buyProduct").value);if(p){$("buyCost").value=Number(p.cost||0);if(!buyPaidManuallyEdited)$("buyPaid").value=(Number($("buyQty").value)||1)*Number($("buyCost").value||0)}});
 let buyPaidManuallyEdited=false;
 $("buyPaid").addEventListener("input",()=>{buyPaidManuallyEdited=true});
 function updateSuggestedPurchasePaid(){if(!buyPaidManuallyEdited)$("buyPaid").value=(Number($("buyQty").value)||1)*(Number($("buyCost").value)||0)}

@@ -163,44 +163,49 @@ if "id=\"purchasesSearch\"" not in s:
     if purchase_table_anchor not in s: raise SystemExit("Ledger patch: purchase table anchor missing")
     s = s.replace(purchase_table_anchor, purchases_tools + purchase_table_anchor, 1)
 
-# Replace only the two ledger render blocks; payment calculations remain based on original records.
-start = s.find(' $("saleRows").innerHTML=sales.slice()')
-end = s.find(' $("peopleRows").innerHTML=', start)
-if start < 0 or end < 0:
-    raise SystemExit("Ledger patch: renderAll sales/purchase block not found")
-ledger_js = r"""
- const saleQuery=String($("salesSearch")?.value||"").trim().toLowerCase();
- const purchaseQuery=String($("purchasesSearch")?.value||"").trim().toLowerCase();
- const visibleSales=sales.slice().sort((a,b)=>new Date(b.createdAt?.toDate?.()||b.createdAt||0)-new Date(a.createdAt?.toDate?.()||a.createdAt||0)).filter(x=>{
-  const itemNames=(Array.isArray(x.lines)&&x.lines.length?x.lines.map(v=>v.name).join(" "):x.productName||"ပစ္စည်းများ");
-  return !saleQuery||[itemNames,x.customer,x.customerName,dateText(x.createdAt),x.id].some(v=>String(v||"").toLowerCase().includes(saleQuery));
- });
- const saleTotals=visibleSales.reduce((a,x)=>{const extra=payments.filter(p=>p.kind==="sale"&&p.saleId===x.id).reduce((z,p)=>z+Number(p.amount||0),0);a.total+=Number(x.total||0);a.paid+=Number(x.paid||0)+extra;a.due+=Math.max(0,Number(x.total||0)-Number(x.paid||0)-extra);return a},{total:0,paid:0,due:0});
- $("salesSummary").textContent=visibleSales.length+" ဘောင်ချာ · အရောင်း "+money(saleTotals.total)+" · ရရှိ "+money(saleTotals.paid)+" · ကျန် "+money(saleTotals.due);
- $("saleRows").innerHTML=visibleSales.map(x=>{
-  const extra=payments.filter(p=>p.kind==="sale"&&p.saleId===x.id).reduce((a,p)=>a+Number(p.amount||0),0);
-  const paid=Number(x.paid||0)+extra,due=Math.max(0,Number(x.total||0)-paid);
-  const lines=Array.isArray(x.lines)&&x.lines.length?x.lines:[{name:x.productName||"ပစ္စည်းများ",qty:x.qty||0}];
-  const names=lines.map(v=>esc(v.name||"ပစ္စည်း")).join("<br>");
-  const quantities=lines.map(v=>String(v.qty??0)).join("<br>");
-  return '<tr><td>'+dateText(x.createdAt)+'</td><td>'+names+'</td><td>'+quantities+'</td><td>'+money(x.total)+'</td><td>'+money(paid)+'</td><td>'+money(due)+'</td><td>'+(due>0?'<button class="secondary" data-sale-pay="'+x.id+'">အကြွေးကောက်</button> ':"")+'<button class="secondary" data-receipt-print="'+x.id+'">ဘောင်ချာ / PDF</button> <button class="secondary" data-receipt-share="'+x.id+'">Share</button></td></tr>';
- }).join("")||'<tr><td colspan="7">ရှာဖွေမှုနှင့် ကိုက်ညီသော အရောင်းစာရင်းမရှိပါ</td></tr>';
- $("saleRows").querySelectorAll("[data-sale-pay]").forEach(b=>b.onclick=()=>collectSalePayment(b.dataset.salePay));
- $("saleRows").querySelectorAll("[data-receipt-print]").forEach(b=>b.onclick=()=>printSaleReceipt(b.dataset.receiptPrint));
- $("saleRows").querySelectorAll("[data-receipt-share]").forEach(b=>b.onclick=()=>shareSaleReceipt(b.dataset.receiptShare));
- const visiblePurchases=purchases.slice().sort((a,b)=>new Date(b.createdAt?.toDate?.()||b.createdAt||0)-new Date(a.createdAt?.toDate?.()||a.createdAt||0)).filter(x=>
-  !purchaseQuery||[x.productName,x.supplier,dateText(x.createdAt),x.id].some(v=>String(v||"").toLowerCase().includes(purchaseQuery))
- );
- const purchaseTotals=visiblePurchases.reduce((a,x)=>{const extra=payments.filter(p=>p.kind==="purchase"&&p.purchaseId===x.id).reduce((z,p)=>z+Number(p.amount||0),0);a.total+=Number(x.total||0);a.paid+=Number(x.paid||0)+extra;a.due+=Math.max(0,Number(x.total||0)-Number(x.paid||0)-extra);return a},{total:0,paid:0,due:0});
- $("purchasesSummary").textContent=visiblePurchases.length+" ဘောင်ချာ · အဝယ် "+money(purchaseTotals.total)+" · ပေးပြီး "+money(purchaseTotals.paid)+" · ကျန် "+money(purchaseTotals.due);
- $("purchaseRows").innerHTML=visiblePurchases.map(x=>{
-  const extra=payments.filter(p=>p.kind==="purchase"&&p.purchaseId===x.id).reduce((a,p)=>a+Number(p.amount||0),0);
-  const paid=Number(x.paid||0)+extra,due=Math.max(0,Number(x.total||0)-paid);
-  return '<tr><td>'+dateText(x.createdAt)+'</td><td>'+esc(x.productName)+'</td><td>'+x.qty+'</td><td>'+money(x.total)+'</td><td>'+esc(x.supplier||"")+'</td><td>'+money(due)+'</td><td>'+(due>0?'<button class="secondary" data-purchase-pay="'+x.id+'">ပေးသွင်းငွေပေး</button>':"ရှင်းပြီး")+'</td></tr>';
- }).join("")||'<tr><td colspan="7">ရှာဖွေမှုနှင့် ကိုက်ညီသော အဝယ်စာရင်းမရှိပါ</td></tr>';
- $("purchaseRows").querySelectorAll("[data-purchase-pay]").forEach(b=>b.onclick=()=>paySupplier(b.dataset.purchasePay));
-"""
-s = s[:start] + ledger_js + "\n" + s[end:]
+# Replace only the two ledger render blocks. Preserve a source ledger that is already searchable.
+if all(marker in s for marker in ['id="salesSearch"', 'id="purchasesSearch"', 'visibleSales', 'visiblePurchases', 'salesSummary', 'purchasesSummary']):
+    print("Ledger patch: existing searchable sales/purchase ledgers preserved")
+else:
+    # Replace only the two ledger render blocks; payment calculations remain based on original records.
+    start = s.find(' $("saleRows").innerHTML=sales.slice()')
+    end = s.find(' $("peopleRows").innerHTML=', start)
+    if start < 0 or end < 0:
+        raise SystemExit("Ledger patch: renderAll sales/purchase block not found")
+    ledger_js = r"""
+     const saleQuery=String($("salesSearch")?.value||"").trim().toLowerCase();
+     const purchaseQuery=String($("purchasesSearch")?.value||"").trim().toLowerCase();
+     const visibleSales=sales.slice().sort((a,b)=>new Date(b.createdAt?.toDate?.()||b.createdAt||0)-new Date(a.createdAt?.toDate?.()||a.createdAt||0)).filter(x=>{
+      const itemNames=(Array.isArray(x.lines)&&x.lines.length?x.lines.map(v=>v.name).join(" "):x.productName||"ပစ္စည်းများ");
+      return !saleQuery||[itemNames,x.customer,x.customerName,dateText(x.createdAt),x.id].some(v=>String(v||"").toLowerCase().includes(saleQuery));
+     });
+     const saleTotals=visibleSales.reduce((a,x)=>{const extra=payments.filter(p=>p.kind==="sale"&&p.saleId===x.id).reduce((z,p)=>z+Number(p.amount||0),0);a.total+=Number(x.total||0);a.paid+=Number(x.paid||0)+extra;a.due+=Math.max(0,Number(x.total||0)-Number(x.paid||0)-extra);return a},{total:0,paid:0,due:0});
+     $("salesSummary").textContent=visibleSales.length+" ဘောင်ချာ · အရောင်း "+money(saleTotals.total)+" · ရရှိ "+money(saleTotals.paid)+" · ကျန် "+money(saleTotals.due);
+     $("saleRows").innerHTML=visibleSales.map(x=>{
+      const extra=payments.filter(p=>p.kind==="sale"&&p.saleId===x.id).reduce((a,p)=>a+Number(p.amount||0),0);
+      const paid=Number(x.paid||0)+extra,due=Math.max(0,Number(x.total||0)-paid);
+      const lines=Array.isArray(x.lines)&&x.lines.length?x.lines:[{name:x.productName||"ပစ္စည်းများ",qty:x.qty||0}];
+      const names=lines.map(v=>esc(v.name||"ပစ္စည်း")).join("<br>");
+      const quantities=lines.map(v=>String(v.qty??0)).join("<br>");
+      return '<tr><td>'+dateText(x.createdAt)+'</td><td>'+names+'</td><td>'+quantities+'</td><td>'+money(x.total)+'</td><td>'+money(paid)+'</td><td>'+money(due)+'</td><td>'+(due>0?'<button class="secondary" data-sale-pay="'+x.id+'">အကြွေးကောက်</button> ':"")+'<button class="secondary" data-receipt-print="'+x.id+'">ဘောင်ချာ / PDF</button> <button class="secondary" data-receipt-share="'+x.id+'">Share</button></td></tr>';
+     }).join("")||'<tr><td colspan="7">ရှာဖွေမှုနှင့် ကိုက်ညီသော အရောင်းစာရင်းမရှိပါ</td></tr>';
+     $("saleRows").querySelectorAll("[data-sale-pay]").forEach(b=>b.onclick=()=>collectSalePayment(b.dataset.salePay));
+     $("saleRows").querySelectorAll("[data-receipt-print]").forEach(b=>b.onclick=()=>printSaleReceipt(b.dataset.receiptPrint));
+     $("saleRows").querySelectorAll("[data-receipt-share]").forEach(b=>b.onclick=()=>shareSaleReceipt(b.dataset.receiptShare));
+     const visiblePurchases=purchases.slice().sort((a,b)=>new Date(b.createdAt?.toDate?.()||b.createdAt||0)-new Date(a.createdAt?.toDate?.()||a.createdAt||0)).filter(x=>
+      !purchaseQuery||[x.productName,x.supplier,dateText(x.createdAt),x.id].some(v=>String(v||"").toLowerCase().includes(purchaseQuery))
+     );
+     const purchaseTotals=visiblePurchases.reduce((a,x)=>{const extra=payments.filter(p=>p.kind==="purchase"&&p.purchaseId===x.id).reduce((z,p)=>z+Number(p.amount||0),0);a.total+=Number(x.total||0);a.paid+=Number(x.paid||0)+extra;a.due+=Math.max(0,Number(x.total||0)-Number(x.paid||0)-extra);return a},{total:0,paid:0,due:0});
+     $("purchasesSummary").textContent=visiblePurchases.length+" ဘောင်ချာ · အဝယ် "+money(purchaseTotals.total)+" · ပေးပြီး "+money(purchaseTotals.paid)+" · ကျန် "+money(purchaseTotals.due);
+     $("purchaseRows").innerHTML=visiblePurchases.map(x=>{
+      const extra=payments.filter(p=>p.kind==="purchase"&&p.purchaseId===x.id).reduce((a,p)=>a+Number(p.amount||0),0);
+      const paid=Number(x.paid||0)+extra,due=Math.max(0,Number(x.total||0)-paid);
+      return '<tr><td>'+dateText(x.createdAt)+'</td><td>'+esc(x.productName)+'</td><td>'+x.qty+'</td><td>'+money(x.total)+'</td><td>'+esc(x.supplier||"")+'</td><td>'+money(due)+'</td><td>'+(due>0?'<button class="secondary" data-purchase-pay="'+x.id+'">ပေးသွင်းငွေပေး</button>':"ရှင်းပြီး")+'</td></tr>';
+     }).join("")||'<tr><td colspan="7">ရှာဖွေမှုနှင့် ကိုက်ညီသော အဝယ်စာရင်းမရှိပါ</td></tr>';
+     $("purchaseRows").querySelectorAll("[data-purchase-pay]").forEach(b=>b.onclick=()=>paySupplier(b.dataset.purchasePay));
+    """
+    s = s[:start] + ledger_js + "\n" + s[end:]
+
 
 # Search inputs re-render only the ledgers, preserving the user's query.
 search_handlers = r"""

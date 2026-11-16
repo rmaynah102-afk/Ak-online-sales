@@ -105,10 +105,15 @@ exports.claimOwnerProvisioning = functions.https.onCall(async (data, context) =>
     });
     return { ok: true, status: "active" };
   }
-  const licenseSnap = await db.collection("licenses").doc(context.auth.uid).get();
+  const [licenseSnap, betaSnap] = await Promise.all([
+    db.collection("licenses").doc(context.auth.uid).get(),
+    db.collection("freeBetaUsers").doc(context.auth.uid).get()
+  ]);
   const license = licenseSnap.data() || {};
+  const beta = betaSnap.data() || {};
   if (licenseSnap.exists && license.email === email && license.status === "active" &&
       license.expiresAt && license.expiresAt.toMillis() > Date.now()) return { ok: true, status: "active" };
+  if (betaSnap.exists && beta.email === email && beta.status === "active") return { ok: true, status: "active" };
   throw new functions.https.HttpsError("permission-denied", "ဤ Gmail ကို Platform Owner က ခွင့်ပြုမထားသေးပါ။");
 });
 

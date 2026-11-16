@@ -78,8 +78,8 @@ jobs:
           from pathlib import Path
           p = Path("www/index.html")
           s = p.read_text()
-          old_tabs = '["products","sales","purchases","people","expenses","reports","backup"]'
-          new_tabs = '["products","sales","purchases","people","expenses","reports","printer","ads","backup"]'
+          old_tabs = '["profile","products","sales","purchases","people","expenses","reports","backup"]'
+          new_tabs = '["profile","products","sales","purchases","people","expenses","reports","printer","ads","backup"]'
           if old_tabs in s:
               s = s.replace(old_tabs, new_tabs, 1)
           elif new_tabs not in s:
@@ -123,7 +123,7 @@ jobs:
           if(!html.includes("async function apkProvisionShopOwner")||html.includes('fetch(GATEWAY+"/owner/provision"')) throw new Error("APK owner account creation still depends on Cloudflare Worker");
           if(!html.includes('httpsCallable("createShopOwnerAccount")')||!html.includes("APK-only AK navy and orange high-contrast theme")) throw new Error("APK-only Admin-backed Firebase provisioning or theme patch is missing");
           if(!html.includes('await window.printSaleReceipt(saleRef.id)')||!html.includes('id="adBrand"')||!html.includes("ctx.fillText(brand.slice(0,32),540,105)")||!html.includes('activeShopName||"ဆိုင်အမည်"')) throw new Error("APK receipt auto-print or editable shop advertising brand patch is missing");
-          if(!html.includes('["products","sales","purchases","people","expenses","reports","printer","ads","backup"]')) throw new Error('Printer/Ads tab click routing is missing');
+          if(!html.includes('["profile","products","sales","purchases","people","expenses","reports","printer","ads","backup"]')) throw new Error('Printer/Ads tab click routing is missing');
           if(!html.includes('boot().catch(e=>{ $("loginBtn").disabled=false;$("ownerGoogleBtn").disabled=false;')) throw new Error('Login buttons must remain responsive when startup fails');
           if(!html.includes('id="themePreset"')||!html.includes('id="themeAccent"')||!html.includes('const AK_THEMES=')||!html.includes('akLoadTheme()')) throw new Error('APK user-selectable shop color themes are missing');
           if(!html.includes('id="salesSearch"')||!html.includes('id="purchasesSearch"')||!html.includes('visibleSales')||!html.includes('visiblePurchases')||!html.includes('salesSummary')||!html.includes('purchasesSummary')) throw new Error('APK spreadsheet-style searchable sales/purchase ledgers are missing');

@@ -6,7 +6,8 @@ s = p.read_text(encoding="utf-8")
 # Shop-owner provisioning is part of the canonical v2 source and uses the
 # authenticated Firebase callable backed by the Admin SDK. Never create a
 # second Firebase client session or send password-reset/verification emails.
-if ("async function apkProvisionShopOwner(email,password,expiresOn,shopName)" not in s
+if ("async function apkProvisionShopOwner(email,expiresOn,shopName,industryType)" not in s
+        and "async function apkProvisionShopOwner(email,password,expiresOn,shopName)" not in s
         and "async function apkProvisionShopOwner(email,password,expiresOn,shopName,industryType)" not in s):
     raise SystemExit("APK patch failed: Admin-backed shop-owner provisioning helper missing")
 if 'fetch(GATEWAY+"/owner/provision"' in s:

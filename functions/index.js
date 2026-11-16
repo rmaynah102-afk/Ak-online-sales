@@ -71,7 +71,7 @@ exports.createShopOwnerAccount = functions.https.onCall(async (data, context) =>
 
 // Called only after Firebase Email Link sign-in has verified the exact invited Gmail.
 exports.claimOwnerProvisioning = functions.https.onCall(async (data, context) => {
-  if (!context.auth || context.auth.token.email_verified !== true) throw new functions.https.HttpsError("unauthenticated", "Gmail Link ဖြင့် အတည်ပြုပြီး Login ဝင်ပါ။");
+  if (!context.auth || context.auth.token.email_verified !== true || context.auth.token.firebase?.sign_in_provider !== "google.com") throw new functions.https.HttpsError("unauthenticated", "Google Gmail ဖြင့် အတည်ပြုပြီး Login ဝင်ပါ။");
   const email = String(context.auth.token.email || "").trim().toLowerCase();
   if (!email || email === OWNER_EMAIL) throw new functions.https.HttpsError("permission-denied", "Customer Gmail မမှန်ပါ။");
   const emailKey = crypto.createHash("sha256").update(email).digest("hex");
@@ -114,7 +114,7 @@ exports.claimOwnerProvisioning = functions.https.onCall(async (data, context) =>
     });
     await db.collection("platformAuditLogs").add({
       action: "shop_owner_email_verified_and_activated", targetUid: context.auth.uid, targetEmail: email,
-      actor: "email-link-verification", createdAt: admin.firestore.FieldValue.serverTimestamp()
+      actor: "google-sign-in", createdAt: admin.firestore.FieldValue.serverTimestamp()
     });
     return { ok: true, status: "active" };
   }

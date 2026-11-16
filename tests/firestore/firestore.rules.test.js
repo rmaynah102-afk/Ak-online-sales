@@ -176,15 +176,82 @@ describe('AK Sale Firestore security baseline', function () {
     await assertSucceeds(batch.commit());
   });
 
-  it('enforces the 100-shop capacity limit and rejects a counter-only increment', async () => {
-    const db = testEnv.authenticatedContext('platform-owner-uid', {
+  it('allows only the verified Platform Owner to reconcile a stale shop-capacity counter', async () => {
+    const ownerDb = testEnv.authenticatedContext('platform-owner-uid', {
+      email: 'painglin102@gmail.com', email_verified: true,
+    }).firestore();
+    const counter = doc(ownerDb, 'platformMeta', 'shopCapacity');
+    await assertSucceeds(setDoc(counter, { activeShopCount: 4, updatedAt: serverTimestamp() }));
+    await assertSucceeds(setDoc(counter, { activeShopCount: 2, updatedAt: serverTimestamp() }, { merge: true }));
+
+    const unverifiedOwnerDb = testEnv.authenticatedContext('platform-owner-uid', {
       email: 'painglin102@gmail.com', email_verified: false,
+    }).firestore();
+    await assertFails(setDoc(doc(unverifiedOwnerDb, 'platformMeta', 'shopCapacity'), {
+      activeShopCount: 3, updatedAt: serverTimestamp(),
+    }, { merge: true }));
+
+    const customerDb = testEnv.authenticatedContext('shop-a', {
+      email: 'shop-a@example.com', email_verified: true,
+    }).firestore();
+    await assertFails(setDoc(doc(customerDb, 'platformMeta', 'shopCapacity'), {
+      activeShopCount: 3, updatedAt: serverTimestamp(),
+    }, { merge: true }));
+  });
+
+  it('denies Platform Owner administration to an unverified account using the Owner email', async () => {
+    const db = testEnv.authenticatedContext('platform-owner-uid', {
+      email: 'painglin102@gmail.com',
+      email_verified: false,
+    }).firestore();
+    await assertFails(setDoc(doc(db, 'platformMeta', 'shopCapacity'), {
+      activeShopCount: 0, updatedAt: serverTimestamp(),
+    }));
+    await assertFails(getDoc(doc(db, 'licenses', 'shop-a')));
+    await assertFails(getDoc(doc(db, 'shops', 'platform-owner-uid', 'pos', 'products', 'records', 'item-1')));
+  });
+
+  it('requires each Owner Free Beta slot to be atomically paired with a new profile and one-time claim', async () => {
+    const db = testEnv.authenticatedContext('platform-owner-uid', {
+      email: 'painglin102@gmail.com', email_verified: true,
+    }).firestore();
+    const capacity = doc(db, 'freeBetaCapacity', 'slots');
+    const addBetaShop = (batch, uid, email, count, createCapacity = false) => {
+      const now = serverTimestamp();
+      batch.set(doc(db, 'freeBetaUsers', uid), {
+        uid, email, shopName: 'Beta Shop', status: 'active', plan: 'free-beta',
+        createdAt: now, lastLoginAt: now,
+      });
+      batch.set(doc(db, 'freeTrialClaims', email), { uid, email, createdAt: now });
+      if (createCapacity) batch.set(capacity, { count, updatedAt: now, lastIssuedUid: uid });
+      else batch.update(capacity, { count, updatedAt: now, lastIssuedUid: uid });
+    };
+    const first = writeBatch(db);
+    addBetaShop(first, 'beta-1', 'beta-1@example.com', 1, true);
+    await assertSucceeds(first.commit());
+
+    await assertFails(setDoc(capacity, {
+      count: 2, updatedAt: serverTimestamp(), lastIssuedUid: 'beta-2',
+    }, { merge: true }));
+
+    const second = writeBatch(db);
+    addBetaShop(second, 'beta-2', 'beta-2@example.com', 2);
+    await assertSucceeds(second.commit());
+
+    await assertFails(setDoc(capacity, {
+      count: 101, updatedAt: serverTimestamp(), lastIssuedUid: 'beta-101',
+    }, { merge: true }));
+  });
+
+  it('allows paid shop issuance after 100 free-beta slots while rejecting counter-only increments', async () => {
+    const db = testEnv.authenticatedContext('platform-owner-uid', {
+      email: 'painglin102@gmail.com', email_verified: true,
     }).firestore();
     const counter = doc(db, 'platformMeta', 'shopCapacity');
     await assertSucceeds(setDoc(counter, { activeShopCount: 100, updatedAt: serverTimestamp() }));
     await assertFails(setDoc(counter, {
       activeShopCount: 101, lastIssuedUid: 'shop-101', updatedAt: serverTimestamp(),
-    }));
+    }, { merge: true }));
     const batch = writeBatch(db);
     batch.set(doc(db, 'licenses', 'shop-101'), {
       uid: 'shop-101', status: 'active', expiresAt: futureTimestamp(30), plan: '30-days',
@@ -192,7 +259,7 @@ describe('AK Sale Firestore security baseline', function () {
     batch.update(counter, {
       activeShopCount: 101, lastIssuedUid: 'shop-101', updatedAt: serverTimestamp(),
     });
-    await assertFails(batch.commit());
+    await assertSucceeds(batch.commit());
   });
 
   it('allows shop owner to read workspace metadata but denies direct workspace writes', async () => {
@@ -275,7 +342,7 @@ describe('AK Sale Firestore security baseline', function () {
 
   it('allows the verified Platform Owner to create staff invites in their own workspace without a customer license', async () => {
     const ownerDb = testEnv.authenticatedContext('platform-owner', {
-      email: 'painglin102@gmail.com', email_verified: false,
+      email: 'painglin102@gmail.com', email_verified: true,
     }).firestore();
     const inviteRef = doc(ownerDb, 'shopInvites', 'FEDCBA9876543210FEDCBA9876543210');
     await assertSucceeds(setDoc(inviteRef, {

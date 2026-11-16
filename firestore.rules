@@ -3,7 +3,8 @@ service cloud.firestore {
   match /databases/{database}/documents {
     function isVerifiedOwner() {
       return request.auth != null
-        && request.auth.token.email == 'painglin102@gmail.com';
+        && request.auth.token.email == 'painglin102@gmail.com'
+        && request.auth.token.email_verified == true;
     }
 
     // Marketplace is a separate public web service: verified Gmail users do not need a POS license or APK device slot.
@@ -12,21 +13,18 @@ service cloud.firestore {
     }
 
     function hasActiveLicense(uid) {
-      // The platform owner may access only their own UID path.
-      // Customer access requires a server-issued, unexpired active license.
       return request.auth != null
         && request.auth.uid == uid
         && (isVerifiedOwner()
-          || (!exists(/databases/$(database)/documents/licenses/$(uid))
-            && exists(/databases/$(database)/documents/freeBetaUsers/$(uid))
+          || (request.auth.token.email_verified == true
             && request.auth.token.email is string
-            && exists(freeTrialClaimPath(request.auth.token.email))
+            && exists(/databases/$(database)/documents/freeBetaUsers/$(uid))
+            && get(/databases/$(database)/documents/freeBetaUsers/$(uid)).data.uid == uid
+            && get(/databases/$(database)/documents/freeBetaUsers/$(uid)).data.email == request.auth.token.email
             && get(/databases/$(database)/documents/freeBetaUsers/$(uid)).data.status == 'active'
-            && get(/databases/$(database)/documents/freeBetaUsers/$(uid)).data.createdAt is timestamp
-            && get(/databases/$(database)/documents/freeBetaUsers/$(uid)).data.createdAt + duration.value(5, 'd') > request.time
+            && exists(freeTrialClaimPath(request.auth.token.email))
             && get(freeTrialClaimPath(request.auth.token.email)).data.uid == uid
-            && get(freeTrialClaimPath(request.auth.token.email)).data.email == request.auth.token.email
-            && get(freeTrialClaimPath(request.auth.token.email)).data.createdAt == get(/databases/$(database)/documents/freeBetaUsers/$(uid)).data.createdAt)
+            && get(freeTrialClaimPath(request.auth.token.email)).data.email == request.auth.token.email)
           || ((request.auth.token.email_verified == true
               || (request.auth.token.phone_number is string
                 && request.auth.token.phone_number.size() >= 8))
@@ -41,8 +39,16 @@ service cloud.firestore {
     }
 
     function activeShopLicense(shopId) {
-      // Platform Owner has a separate, license-exempt workspace, but only at their own UID path.
       return (isVerifiedOwner() && request.auth.uid == shopId)
+        || (request.auth != null
+          && request.auth.token.email_verified == true
+          && exists(/databases/$(database)/documents/freeBetaUsers/$(shopId))
+          && get(/databases/$(database)/documents/freeBetaUsers/$(shopId)).data.status == 'active'
+          && ((request.auth.uid == shopId
+              && get(/databases/$(database)/documents/freeBetaUsers/$(shopId)).data.email == request.auth.token.email)
+            || (exists(/databases/$(database)/documents/shopMembers/$(request.auth.uid))
+              && get(/databases/$(database)/documents/shopMembers/$(request.auth.uid)).data.shopId == shopId
+              && get(/databases/$(database)/documents/shopMembers/$(request.auth.uid)).data.status == 'active')))
         || (exists(/databases/$(database)/documents/licenses/$(shopId))
           && get(/databases/$(database)/documents/licenses/$(shopId)).data.status == 'active'
           && get(/databases/$(database)/documents/licenses/$(shopId)).data.expiresAt is timestamp
@@ -162,7 +168,7 @@ service cloud.firestore {
     }
 
     // Spark-compatible staff membership: a verified employee claims a one-time
-    // invite and reserves one of three fixed slots in the same atomic batch.
+    // invite and reserves one of two fixed staff slots in the same atomic batch.
     match /shopMembers/{memberUid} {
       allow read: if request.auth != null
         && ((request.auth.uid == memberUid
@@ -186,7 +192,7 @@ service cloud.firestore {
         && request.resource.data.inviteCode is string
         && request.resource.data.inviteCode.size() == 32
         && !request.resource.data.inviteCode.matches('.*[^A-F0-9].*')
-        && request.resource.data.slotId in [request.resource.data.shopId + '_1', request.resource.data.shopId + '_2', request.resource.data.shopId + '_3']
+        && request.resource.data.slotId in [request.resource.data.shopId + '_1', request.resource.data.shopId + '_2']
         && activeShopLicense(request.resource.data.shopId)
         && exists(/databases/$(database)/documents/shopInvites/$(request.resource.data.inviteCode))
         && get(/databases/$(database)/documents/shopInvites/$(request.resource.data.inviteCode)).data.shopId == request.resource.data.shopId
@@ -216,7 +222,7 @@ service cloud.firestore {
         && request.resource.data.merchantCodeHash is string
         && request.resource.data.merchantCodeHash.size() == 64
         && !request.resource.data.merchantCodeHash.matches('.*[^a-f0-9].*')
-        && request.resource.data.slotId in [request.auth.uid + '_1', request.auth.uid + '_2', request.auth.uid + '_3']
+        && request.resource.data.slotId in [request.auth.uid + '_1', request.auth.uid + '_2']
         && existsAfter(/databases/$(database)/documents/shopStaffSlots/$(request.resource.data.slotId))
         && getAfter(/databases/$(database)/documents/shopStaffSlots/$(request.resource.data.slotId)).data.uid == memberUid
         && getAfter(/databases/$(database)/documents/shopStaffSlots/$(request.resource.data.slotId)).data.shopId == request.auth.uid
@@ -261,8 +267,7 @@ service cloud.firestore {
         && !code.matches('.*[^A-F0-9].*')
         && !exists(/databases/$(database)/documents/shopInvites/$(code))
         && (!exists(/databases/$(database)/documents/shopStaffSlots/$(request.auth.uid + '_1'))
-          || !exists(/databases/$(database)/documents/shopStaffSlots/$(request.auth.uid + '_2'))
-          || !exists(/databases/$(database)/documents/shopStaffSlots/$(request.auth.uid + '_3')));
+          || !exists(/databases/$(database)/documents/shopStaffSlots/$(request.auth.uid + '_2')));
       allow update: if request.auth != null
         && resource.data.status == 'open'
         && resource.data.expiresAt is timestamp
@@ -282,7 +287,7 @@ service cloud.firestore {
     match /shopStaffSlots/{slotId} {
       allow read: if request.auth != null
         && ((resource.data != null && resource.data.uid == request.auth.uid)
-          || (slotId in [request.auth.uid + '_1', request.auth.uid + '_2', request.auth.uid + '_3']
+          || (slotId in [request.auth.uid + '_1', request.auth.uid + '_2']
             && activeShopLicense(request.auth.uid)));
       allow create: if (
         request.auth != null
@@ -290,10 +295,10 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly(['shopId','uid','slot','createdAt','inviteCode'])
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.shopId is string
-        && request.resource.data.slot in [1,2,3]
+        && request.resource.data.slot in [1,2]
         && ((request.resource.data.slot == 1 && slotId == request.resource.data.shopId + '_1')
           || (request.resource.data.slot == 2 && slotId == request.resource.data.shopId + '_2')
-          || (request.resource.data.slot == 3 && slotId == request.resource.data.shopId + '_3'))
+)
         && request.resource.data.createdAt == request.time
         && activeShopLicense(request.resource.data.shopId)
         && request.resource.data.inviteCode is string
@@ -313,10 +318,10 @@ service cloud.firestore {
         && activeShopLicense(request.resource.data.shopId)
         && request.resource.data.keys().hasOnly(['shopId','uid','slot','createdAt','merchantStaff'])
         && request.resource.data.uid is string
-        && request.resource.data.slot in [1,2,3]
+        && request.resource.data.slot in [1,2]
         && ((request.resource.data.slot == 1 && slotId == request.auth.uid + '_1')
           || (request.resource.data.slot == 2 && slotId == request.auth.uid + '_2')
-          || (request.resource.data.slot == 3 && slotId == request.auth.uid + '_3'))
+)
         && request.resource.data.merchantStaff == true
         && request.resource.data.createdAt is timestamp
         && request.resource.data.createdAt <= request.time
@@ -332,26 +337,53 @@ service cloud.firestore {
         && activeShopLicense(resource.data.shopId);
     }
 
-    // A Gmail address can claim one five-day trial only once. The server timestamp
-    // on the profile determines expiry; clients cannot extend or reset the trial clock.
+    // The first 100 verified shop-owner accounts receive permanent Free Beta access.
+    // Owner can suspend an account; each Gmail address can claim only once.
     match /freeBetaUsers/{userId} {
       allow read: if isVerifiedOwner()
         || (request.auth != null && request.auth.uid == userId);
-      allow create: if request.auth != null
-        && request.auth.uid == userId
-        && request.auth.token.email_verified == true
-        && request.resource.data.uid == userId
-        && request.resource.data.email == request.auth.token.email
-        && request.resource.data.status == 'active'
-        && request.resource.data.createdAt == request.time
-        && request.resource.data.lastLoginAt == request.time
-        && request.resource.data.keys().hasOnly(['uid','email','status','createdAt','lastLoginAt'])
-        && !exists(/databases/$(database)/documents/freeBetaUsers/$(userId))
-        && !exists(freeTrialClaimPath(request.auth.token.email))
-        && existsAfter(freeTrialClaimPath(request.auth.token.email))
-        && getAfter(freeTrialClaimPath(request.auth.token.email)).data.uid == userId
-        && getAfter(freeTrialClaimPath(request.auth.token.email)).data.email == request.auth.token.email
-        && getAfter(freeTrialClaimPath(request.auth.token.email)).data.createdAt == request.time;
+      allow create: if (
+          request.auth != null
+          && request.auth.uid == userId
+          && request.auth.token.email_verified == true
+          && request.resource.data.uid == userId
+          && request.resource.data.email == request.auth.token.email
+          && request.resource.data.status == 'active'
+          && request.resource.data.createdAt == request.time
+          && request.resource.data.lastLoginAt == request.time
+          && request.resource.data.keys().hasOnly(['uid','email','status','createdAt','lastLoginAt'])
+          && !exists(/databases/$(database)/documents/freeBetaUsers/$(userId))
+          && !exists(freeTrialClaimPath(request.auth.token.email))
+          && existsAfter(freeTrialClaimPath(request.auth.token.email))
+          && existsAfter(/databases/$(database)/documents/freeBetaCapacity/slots)
+          && getAfter(/databases/$(database)/documents/freeBetaCapacity/slots).data.count is int
+          && getAfter(/databases/$(database)/documents/freeBetaCapacity/slots).data.count <= 100
+          && getAfter(/databases/$(database)/documents/freeBetaCapacity/slots).data.updatedAt == request.time
+          && getAfter(freeTrialClaimPath(request.auth.token.email)).data.uid == userId
+          && getAfter(freeTrialClaimPath(request.auth.token.email)).data.email == request.auth.token.email
+          && getAfter(freeTrialClaimPath(request.auth.token.email)).data.createdAt == request.time
+        ) || (
+          isVerifiedOwner()
+          && request.resource.data.uid == userId
+          && request.resource.data.email is string
+          && request.resource.data.email.size() > 4
+          && request.resource.data.status == 'active'
+          && request.resource.data.plan == 'free-beta'
+          && request.resource.data.shopName is string
+          && request.resource.data.shopName.size() >= 2
+          && request.resource.data.shopName.size() <= 90
+          && request.resource.data.createdAt == request.time
+          && request.resource.data.lastLoginAt == request.time
+          && request.resource.data.keys().hasOnly(['uid','email','shopName','status','plan','createdAt','lastLoginAt'])
+          && !exists(/databases/$(database)/documents/freeBetaUsers/$(userId))
+          && !exists(freeTrialClaimPath(request.resource.data.email))
+          && existsAfter(freeTrialClaimPath(request.resource.data.email))
+          && existsAfter(/databases/$(database)/documents/freeBetaCapacity/slots)
+          && getAfter(/databases/$(database)/documents/freeBetaCapacity/slots).data.count is int
+          && getAfter(/databases/$(database)/documents/freeBetaCapacity/slots).data.count <= 100
+          && getAfter(freeTrialClaimPath(request.resource.data.email)).data.uid == userId
+          && getAfter(freeTrialClaimPath(request.resource.data.email)).data.email == request.resource.data.email
+        );
       allow update: if (isVerifiedOwner()
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
           && request.resource.data.status in ['active','disabled'])
@@ -359,38 +391,105 @@ service cloud.firestore {
           && request.auth.uid == userId
           && resource.data.status == 'active'
           && resource.data.createdAt is timestamp
-          && resource.data.createdAt + duration.value(5, 'd') > request.time
           && request.resource.data.status == 'active'
           && request.resource.data.lastLoginAt == request.time
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastLoginAt']));
       allow delete: if false;
     }
 
+    match /freeBetaCapacity/{documentId} {
+      allow read: if isVerifiedOwner()
+        || (request.auth != null && request.auth.token.email_verified == true);
+      allow create: if (request.auth != null
+          && request.auth.token.email_verified == true
+          && documentId == 'slots'
+          && request.resource.data.keys().hasOnly(['count','updatedAt'])
+          && request.resource.data.count == 1
+          && request.resource.data.updatedAt == request.time
+          && existsAfter(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid))
+          && existsAfter(freeTrialClaimPath(request.auth.token.email))
+          && getAfter(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid)).data.status == 'active'
+          && getAfter(freeTrialClaimPath(request.auth.token.email)).data.uid == request.auth.uid)
+        || (isVerifiedOwner()
+          && documentId == 'slots'
+          && request.resource.data.keys().hasOnly(['count','updatedAt','lastIssuedUid'])
+          && request.resource.data.count is int
+          && request.resource.data.count >= 1
+          && request.resource.data.count <= 100
+          && request.resource.data.lastIssuedUid is string
+          && request.resource.data.updatedAt == request.time
+          && existsAfter(/databases/$(database)/documents/freeBetaUsers/$(request.resource.data.lastIssuedUid))
+          && getAfter(/databases/$(database)/documents/freeBetaUsers/$(request.resource.data.lastIssuedUid)).data.status == 'active'
+          && getAfter(/databases/$(database)/documents/freeBetaUsers/$(request.resource.data.lastIssuedUid)).data.plan == 'free-beta'
+          && existsAfter(freeTrialClaimPath(getAfter(/databases/$(database)/documents/freeBetaUsers/$(request.resource.data.lastIssuedUid)).data.email))
+          && getAfter(freeTrialClaimPath(getAfter(/databases/$(database)/documents/freeBetaUsers/$(request.resource.data.lastIssuedUid)).data.email)).data.uid == request.resource.data.lastIssuedUid);
+      allow update: if (request.auth != null
+          && request.auth.token.email_verified == true
+          && documentId == 'slots'
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['count','updatedAt'])
+          && resource.data.count is int
+          && request.resource.data.count == resource.data.count + 1
+          && request.resource.data.count <= 100
+          && request.resource.data.updatedAt == request.time
+          && !exists(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid))
+          && existsAfter(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid))
+          && !exists(freeTrialClaimPath(request.auth.token.email))
+          && existsAfter(freeTrialClaimPath(request.auth.token.email))
+          && getAfter(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid)).data.status == 'active'
+          && getAfter(freeTrialClaimPath(request.auth.token.email)).data.uid == request.auth.uid)
+        || (isVerifiedOwner()
+          && documentId == 'slots'
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['count','updatedAt','lastIssuedUid'])
+          && resource.data.count is int
+          && request.resource.data.count == resource.data.count + 1
+          && request.resource.data.count <= 100
+          && request.resource.data.lastIssuedUid is string
+          && request.resource.data.updatedAt == request.time
+          && !exists(/databases/$(database)/documents/freeBetaUsers/$(request.resource.data.lastIssuedUid))
+          && existsAfter(/databases/$(database)/documents/freeBetaUsers/$(request.resource.data.lastIssuedUid))
+          && getAfter(/databases/$(database)/documents/freeBetaUsers/$(request.resource.data.lastIssuedUid)).data.status == 'active'
+          && getAfter(/databases/$(database)/documents/freeBetaUsers/$(request.resource.data.lastIssuedUid)).data.plan == 'free-beta'
+          && existsAfter(freeTrialClaimPath(getAfter(/databases/$(database)/documents/freeBetaUsers/$(request.resource.data.lastIssuedUid)).data.email))
+          && getAfter(freeTrialClaimPath(getAfter(/databases/$(database)/documents/freeBetaUsers/$(request.resource.data.lastIssuedUid)).data.email)).data.uid == request.resource.data.lastIssuedUid);
+      allow delete: if false;
+    }
+
     match /freeTrialClaims/{email} {
       allow read: if isVerifiedOwner()
         || (request.auth != null && request.auth.token.email == email);
-      allow create: if request.auth != null
-        && request.auth.token.email_verified == true
-        && request.auth.token.email == email
-        && request.resource.data.uid == request.auth.uid
-        && request.resource.data.email == email
-        && request.resource.data.createdAt is timestamp
-        && request.resource.data.keys().hasOnly(['uid','email','createdAt'])
-        && !exists(freeTrialClaimPath(email))
-        && (
-          (existsAfter(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid))
-            && !exists(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid))
-            && getAfter(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid)).data.createdAt == request.time
-            && request.resource.data.createdAt == request.time)
-          || (exists(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid))
-            && get(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid)).data.uid == request.auth.uid
-            && get(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid)).data.email == email
-            && get(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid)).data.createdAt == request.resource.data.createdAt)
+      allow create: if (
+          request.auth != null
+          && request.auth.token.email_verified == true
+          && request.auth.token.email == email
+          && request.resource.data.uid == request.auth.uid
+          && request.resource.data.email == email
+          && request.resource.data.createdAt is timestamp
+          && request.resource.data.keys().hasOnly(['uid','email','createdAt'])
+          && !exists(freeTrialClaimPath(email))
+          && (
+            (existsAfter(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid))
+              && !exists(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid))
+              && getAfter(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid)).data.createdAt == request.time
+              && request.resource.data.createdAt == request.time)
+            || (exists(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid))
+              && get(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid)).data.uid == request.auth.uid
+              && get(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid)).data.email == email
+              && get(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid)).data.createdAt == request.resource.data.createdAt)
+          )
+        ) || (
+          isVerifiedOwner()
+          && request.resource.data.uid is string
+          && request.resource.data.email == email
+          && request.resource.data.createdAt == request.time
+          && request.resource.data.keys().hasOnly(['uid','email','createdAt'])
+          && existsAfter(/databases/$(database)/documents/freeBetaUsers/$(request.resource.data.uid))
+          && getAfter(/databases/$(database)/documents/freeBetaUsers/$(request.resource.data.uid)).data.email == email
+          && !exists(freeTrialClaimPath(email))
         );
       allow update, delete: if false;
     }
 
-    // A transactionally maintained counter enforces the 100 customer-shop limit.
+    // A transactionally maintained counter tracks all customer shops; only Free Beta is capped at 100.
     // A new license and the counter increment must be committed atomically.
     match /platformMeta/{documentId} {
       allow read: if isVerifiedOwner();
@@ -399,20 +498,30 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly(['activeShopCount','updatedAt'])
         && request.resource.data.activeShopCount is int
         && request.resource.data.activeShopCount >= 0
-        && request.resource.data.activeShopCount <= 100
+        && request.resource.data.activeShopCount <= 1000000
         && request.resource.data.updatedAt == request.time;
       allow update: if isVerifiedOwner()
         && documentId == 'shopCapacity'
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['activeShopCount','updatedAt','lastIssuedUid'])
-        && resource.data.activeShopCount is int
-        && request.resource.data.activeShopCount == resource.data.activeShopCount + 1
-        && request.resource.data.activeShopCount <= 100
-        && request.resource.data.lastIssuedUid is string
-        && !exists(/databases/$(database)/documents/licenses/$(request.resource.data.lastIssuedUid))
-        && existsAfter(/databases/$(database)/documents/licenses/$(request.resource.data.lastIssuedUid))
-        && getAfter(/databases/$(database)/documents/licenses/$(request.resource.data.lastIssuedUid)).data.uid == request.resource.data.lastIssuedUid
-        && getAfter(/databases/$(database)/documents/licenses/$(request.resource.data.lastIssuedUid)).data.status == 'active'
-        && request.resource.data.updatedAt == request.time;
+        && (
+          // Normal issuance: increment the counter atomically with a new license.
+          (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['activeShopCount','updatedAt','lastIssuedUid'])
+            && resource.data.activeShopCount is int
+            && request.resource.data.activeShopCount == resource.data.activeShopCount + 1
+            && request.resource.data.activeShopCount <= 1000000
+            && request.resource.data.lastIssuedUid is string
+            && !exists(/databases/$(database)/documents/freeBetaUsers/$(request.resource.data.lastIssuedUid))
+            && ((existsAfter(/databases/$(database)/documents/licenses/$(request.resource.data.lastIssuedUid))
+                && getAfter(/databases/$(database)/documents/licenses/$(request.resource.data.lastIssuedUid)).data.status == 'active')
+              || (existsAfter(/databases/$(database)/documents/freeBetaUsers/$(request.resource.data.lastIssuedUid))
+                && getAfter(/databases/$(database)/documents/freeBetaUsers/$(request.resource.data.lastIssuedUid)).data.status == 'active'))
+            && request.resource.data.updatedAt == request.time)
+          // Owner-only repair: reconcile a stale counter to the actual license collection size.
+          || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['activeShopCount','updatedAt'])
+            && request.resource.data.activeShopCount is int
+            && request.resource.data.activeShopCount >= 0
+            && request.resource.data.activeShopCount <= 1000000
+            && request.resource.data.updatedAt == request.time)
+        );
       allow delete: if false;
     }
 
@@ -435,7 +544,6 @@ service cloud.firestore {
         && request.resource.data.plan in ['30-days','90-days','180-days','365-days']
         && exists(/databases/$(database)/documents/platformMeta/shopCapacity)
         && get(/databases/$(database)/documents/platformMeta/shopCapacity).data.activeShopCount is int
-        && get(/databases/$(database)/documents/platformMeta/shopCapacity).data.activeShopCount < 100
         && existsAfter(/databases/$(database)/documents/platformMeta/shopCapacity)
         && getAfter(/databases/$(database)/documents/platformMeta/shopCapacity).data.activeShopCount
           == get(/databases/$(database)/documents/platformMeta/shopCapacity).data.activeShopCount + 1

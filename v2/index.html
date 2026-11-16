@@ -369,12 +369,12 @@ async function loadPlatformUsers(reset=true){
   const result=await call({pageToken:platformUsersPageToken||""});
   const data=result.data||{},items=data.users||[];
   rows.insertAdjacentHTML("beforeend",items.map(x=>{
-   const active=x.status==="active"&&!x.disabled;
    const locked=x.status==="suspended"||x.disabled;
    const expiry=x.expiresAt?dateText(new Date(x.expiresAt)):"မသတ်မှတ်ရသေး";
    const action=locked?"reactivate":"suspend";
    const label=locked?"ပြန်ဖွင့်ရန်":"ပိတ်ရန်";
-   return '<tr><td>'+esc(x.email||x.uid)+'</td><td>'+(x.emailVerified?"အတည်ပြုပြီး":"မအတည်ပြုရသေး")+'</td><td>'+esc(x.plan||"-")+'<br>'+esc(expiry)+'</td><td>'+esc(x.disabled?"Auth ပိတ်ထား":x.status)+'</td><td><button class="'+(locked?"secondary":"danger")+'" onclick="changePlatformUserAccess(\''+x.uid+'\',\''+action+'\')">'+label+'</button></td></tr>';
+   const state=x.isInvitation?(locked?"Invitation ပိတ်ထား":"Gmail Link စောင့်နေသည်"):(x.disabled?"Auth ပိတ်ထား":x.status);
+   return '<tr><td>'+esc(x.email||x.uid)+'</td><td>'+(x.emailVerified?"အတည်ပြုပြီး":(x.isInvitation?"မဝင်ရောက်ရသေး":"မအတည်ပြုရသေး"))+'</td><td>'+esc(x.plan||"-")+'<br>'+esc(expiry)+'</td><td>'+esc(state)+'</td><td><button class="'+(locked?"secondary":"danger")+'" onclick="changePlatformUserAccess(\\''+x.uid+'\\',\\''+action+'\\')">'+label+'</button></td></tr>';
   }).join(""));
   platformUsersPageToken=data.nextPageToken||"";
   $("morePlatformUsers").classList.toggle("hidden",!platformUsersPageToken);

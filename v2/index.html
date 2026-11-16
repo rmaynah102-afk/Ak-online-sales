@@ -102,6 +102,31 @@ td,th{overflow-wrap:anywhere}
   *,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}
 }
 
+/* AK Sale 2.1 — readable, spacious shop interface */
+:root{--navy:#10233f;--blue:#174a7e;--gold:#f0a33a;--bg:#f2f5fa;--line:#d7e0eb;--ink:#172536;--muted:#596b80}
+body{font-size:16px;line-height:1.55;background:linear-gradient(180deg,#eaf0f7 0,#f7f9fc 260px,#f2f5fa 100%);color:var(--ink)}
+main{max-width:1680px;padding:clamp(12px,2vw,30px)}
+header{padding:15px clamp(14px,2.2vw,30px);background:linear-gradient(115deg,#10233f,#174a7e 70%,#146c78);border-bottom:4px solid var(--gold)}
+header h1{font-size:clamp(18px,2vw,24px);font-weight:850}
+.card{padding:clamp(15px,2vw,24px);border:1px solid #d8e2ed;border-radius:16px;box-shadow:0 5px 18px #10233f0c;background:#fff}
+h2{font-size:clamp(19px,2vw,23px);font-weight:850;color:#153b60;margin:0 0 14px}
+h3{font-size:17px;font-weight:800}
+label{font-size:14px;font-weight:750;color:#40556c;margin:9px 0 5px}
+input,select,textarea{font-size:16px;min-height:46px;padding:11px 13px;border-radius:10px;border:1px solid #c8d5e4}
+button{min-height:44px;padding:10px 16px;border-radius:10px;font-size:15px;font-weight:750}
+.tabs button{min-height:46px;padding:10px 16px;font-size:14px}
+table{min-width:720px}
+th,td{font-size:14px;padding:11px 10px;line-height:1.45}
+th{background:#eaf0f7;color:#183c60}
+.stat{padding:15px;border-radius:14px}
+.stat b{font-size:clamp(20px,2vw,27px)}
+.muted{font-size:13px;line-height:1.55}
+.notice{font-size:14px;line-height:1.65}
+.row{gap:10px}
+@media(min-width:900px){.grid{gap:16px}.tabs button{min-width:118px}}
+@media(max-width:599px){body{font-size:16px}main{padding:10px}.card{padding:14px;margin:10px 0;border-radius:14px}.grid{gap:10px}.tabs button{flex:1 1 42%;font-size:14px;padding:10px 8px}th,td{font-size:13px;padding:9px 8px}input,select,textarea{font-size:16px}.stat b{font-size:19px}}
+.printer-highlight{border:1px solid #c6d8eb;background:linear-gradient(135deg,#f5f9ff,#fff);border-radius:14px;padding:14px}
+
 </style>
 </head>
 <body>
@@ -150,7 +175,7 @@ td,th{overflow-wrap:anywhere}
 <section id="tab-printer" class="card hidden">
 <h2>Printer ချိတ်ဆက်မှု</h2><p class="muted">APK တွင် Bluetooth Classic ESC/POS နှင့် Wi-Fi RAW TCP 9100 ကို တိုက်ရိုက်အသုံးပြုနိုင်သည်။ Website တွင် Android/System Print သို့မဟုတ် Browser Print ကို အသုံးပြုပါ။</p>
 <div class="grid"><div><label>Printer အမည်</label><input id="printerName" placeholder="ဥပမာ Xprinter 58mm"></div><div><label>Printer အမျိုးအစား</label><select id="printerType"><option value="system">Android / System Print</option><option value="bluetooth">Bluetooth ESC/POS</option><option value="wifi">Wi-Fi RAW TCP</option></select></div><div id="printerBluetoothBox" class="hidden"><label>Pair လုပ်ထားသော Printer</label><select id="printerBluetoothDevice"><option value="">Printer ရှာရန်နှိပ်ပါ</option></select><button type="button" class="secondary" id="findBluetoothPrinters">Bluetooth Printer ရှာရန်</button></div><div id="printerWifiBox" class="hidden"><label>Printer IP Address</label><input id="printerHost" placeholder="192.168.1.100"><label>Port</label><input id="printerPort" type="number" value="9100"></div></div>
-<div class="row"><button id="savePrinter">Printer သိမ်းမည်</button><button id="testPrinter" class="secondary">စမ်းသပ် Print</button><button id="systemPrint" class="secondary">System Print / PDF</button></div><div id="printerStatus" class="muted"></div><div id="printerRows"></div>
+<div class="printer-highlight"><b>ဘောင်ချာစာရွက်အကျယ်</b><select id="printerPaper"><option value="58mm">58mm Thermal Printer</option><option value="80mm" selected>80mm Thermal Printer</option></select><p class="muted">Wi-Fi Printer သည် ဖုန်းနှင့် တူညီသော Wi-Fi Network တွင်ရှိရမည်။ Bluetooth Printer ကို Android Settings မှ Pair လုပ်ထားပါ။</p></div><div class="row"><button id="savePrinter">Printer သိမ်းမည်</button><button id="testPrinter" class="secondary">စမ်းသပ် Print</button><button id="systemPrint" class="secondary">Android System Print</button></div><div id="printerStatus" class="muted"></div><div id="printerRows"></div>
 </section>
 <section id="tab-ads" class="card hidden">
 <h2>Social Media ကြော်ငြာဖန်တီးရန်</h2><p class="muted">ကုန်ပစ္စည်းအမည်၊ ဈေးနှုန်း၊ ဆက်သွယ်ရန်နှင့် ဓာတ်ပုံဖြင့် 1080×1080 ကြော်ငြာပုံဖန်တီးပြီး Android Share Menu မှ Viber၊ TikTok၊ Facebook စသည်သို့ မျှဝေနိုင်သည်။</p>
@@ -788,18 +813,25 @@ window.akPrintRawToDefault=async bytes=>{
  if(p.type==="wifi")return api.printWifi({host:p.host,port:Number(p.port||9100),data});
  throw Error("Direct Print အတွက် Bluetooth သို့မဟုတ် Wi-Fi Printer ရွေးပါ။");
 };
-function buildReceiptEscPos(s,paper="80mm"){
+function receiptPaper(){return localStorage.getItem("ak_pos_receipt_paper_"+(shopId||user?.uid||"local"))||"80mm"}
+function buildReceiptEscPos(s,paper=receiptPaper()){
  const width=paper==="58mm"?384:576,pad=18,contentWidth=width-pad*2,canvas=document.createElement("canvas");canvas.width=width;canvas.height=100;
  let ctx=canvas.getContext("2d");if(!ctx)throw Error("Receipt Canvas မရပါ");const lines=[];
  const push=(text,size=20,bold=false,align="left")=>lines.push({text:String(text??""),size,bold,align});
  const wrap=(text,size,bold=false)=>{ctx.font=(bold?"bold ":"")+size+"px 'Noto Sans Myanmar',Arial,sans-serif";const parts=typeof Intl.Segmenter==="function"?Array.from(new Intl.Segmenter("my",{granularity:"grapheme"}).segment(String(text??"")),x=>x.segment):Array.from(String(text??""));let line="";for(const p of parts){if(line&&ctx.measureText(line+p).width>contentWidth){push(line,size,bold);line=p}else line+=p}if(line)push(line,size,bold)};
  const date=s.createdAt?.toDate?s.createdAt.toDate():new Date(s.createdAt||Date.now());
- push(shopProfile.name||activeShopName||"ဆိုင်အမည်",27,true,"center");if(shopProfile.type)wrap(shopProfile.type,16,false);if(shopProfile.phone)wrap("ဖုန်း: "+shopProfile.phone,16);if(shopProfile.address)wrap("လိပ်စာ: "+shopProfile.address,15);push("AK Sale POS",15,false,"center");push("--------------------------------",17,false,"center");
- wrap("ဘောင်ချာ: "+String(s.id||"").slice(-10),18,true);wrap("ရက်စွဲ: "+date.toLocaleString(),16);wrap("ဖောက်သည်: "+(s.customer||"လက်ငင်း"),16);
- push("--------------------------------",17,false,"center");if(Array.isArray(s.lines)&&s.lines.length){for(const line of s.lines){wrap(line.name,18,true);wrap(Number(line.qty||0)+" × "+money(line.price)+" = "+money(Number(line.qty||0)*Number(line.price||0)),17)}}else{wrap(s.productName||"ပစ္စည်း",18,true);wrap(Number(s.qty||0)+" × "+money(s.price)+" = "+money(s.total),17)}
- push("--------------------------------",17,false,"center");wrap("စုစုပေါင်း: "+money(s.total),20,true);wrap("ပေးချေပြီး: "+money(s.paid),18);wrap("ကျန်ငွေ: "+money(s.due),18,true);push("ကျေးဇူးတင်ပါသည်",18,true,"center");
- let height=24;for(const l of lines){ctx.font=(l.bold?"bold ":"")+l.size+"px 'Noto Sans Myanmar',Arial,sans-serif";height+=l.size+12}height+=36;canvas.height=height;ctx=canvas.getContext("2d");ctx.fillStyle="#fff";ctx.fillRect(0,0,width,height);ctx.fillStyle="#000";let y=22;
- for(const l of lines){ctx.font=(l.bold?"bold ":"")+l.size+"px 'Noto Sans Myanmar',Arial,sans-serif";const w=ctx.measureText(l.text).width,x=l.align==="center"?Math.max(pad,(width-w)/2):pad;ctx.fillText(l.text,x,y);y+=l.size+12}
+ wrap(shopProfile.name||activeShopName||"ဆိုင်အမည်",27,true);if(shopProfile.type)wrap(shopProfile.type,16);if(shopProfile.phone)wrap("ဖုန်း: "+shopProfile.phone,17);if(shopProfile.address)wrap("လိပ်စာ: "+shopProfile.address,15);
+ push("AK SALE POS",15,true,"center");push("--------------------------------",17,false,"center");
+ wrap("ဘောင်ချာ: "+String(s.id||"").slice(-12),18,true);wrap("ရက်စွဲ: "+date.toLocaleString(),16);wrap("ဖောက်သည်: "+(s.customer||"လက်ငင်း"),16);
+ push("--------------------------------",17,false,"center");
+ if(Array.isArray(s.lines)&&s.lines.length){for(const line of s.lines){wrap(line.name,19,true);wrap(Number(line.qty||0)+" × "+money(line.price)+" = "+money(Number(line.qty||0)*Number(line.price||0)),17)}}
+ else{wrap(s.productName||"ပစ္စည်း",19,true);wrap(Number(s.qty||0)+" × "+money(s.price)+" = "+money(s.total),17)}
+ push("--------------------------------",17,false,"center");wrap("စုစုပေါင်း: "+money(s.total),22,true);wrap("ပေးချေပြီး: "+money(s.paid),18);wrap("ကျန်ငွေ: "+money(s.due),19,true);push("--------------------------------",17,false,"center");wrap(shopProfile.footer||"အားပေးမှုအတွက် ကျေးဇူးတင်ပါသည်",17,true);
+ let height=104;for(const l of lines){ctx.font=(l.bold?"bold ":"")+l.size+"px 'Noto Sans Myanmar',Arial,sans-serif";height+=l.size+12}height+=24;canvas.height=height;ctx=canvas.getContext("2d");ctx.fillStyle="#fff";ctx.fillRect(0,0,width,height);
+ ctx.beginPath();ctx.arc(width/2,43,27,0,Math.PI*2);ctx.fillStyle="#000";ctx.fill();ctx.fillStyle="#fff";ctx.font="bold 22px Arial,sans-serif";ctx.textAlign="center";ctx.fillText("AK",width/2,51);
+ ctx.strokeStyle="#000";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(pad,82);ctx.lineTo(width-pad,82);ctx.stroke();
+ ctx.fillStyle="#000";let y=105;
+ for(const l of lines){ctx.font=(l.bold?"bold ":"")+l.size+"px 'Noto Sans Myanmar',Arial,sans-serif";ctx.textAlign=l.align==="center"?"center":"left";const x=l.align==="center"?width/2:pad;ctx.fillText(l.text,x,y);y+=l.size+12}
  const img=ctx.getImageData(0,0,width,height),bpr=Math.ceil(width/8),raster=new Uint8Array(bpr*height);
  for(let yy=0;yy<height;yy++)for(let xx=0;xx<width;xx++){const k=(yy*width+xx)*4,g=(img.data[k]*299+img.data[k+1]*587+img.data[k+2]*114)/1000;if(g<175)raster[yy*bpr+(xx>>3)]|=0x80>>(xx&7)}
  const head=Uint8Array.from([27,64,29,118,48,0,bpr&255,(bpr>>8)&255,height&255,(height>>8)&255]),tail=Uint8Array.from([10,10,10,29,86,0]),out=new Uint8Array(head.length+raster.length+tail.length);out.set(head);out.set(raster,head.length);out.set(tail,head.length+raster.length);return out;
@@ -822,7 +854,7 @@ window.printSaleReceipt=async id=>{
  const sale=sales.find(x=>x.id===id);if(!sale)return;
  const balance=saleBalance(sale),p=printerRead().find(x=>x.default)||printerRead()[0];
  if(p&&["bluetooth","wifi"].includes(p.type)&&window.Capacitor?.isNativePlatform?.()){
-  try{await window.akPrintRawToDefault(buildReceiptEscPos({...sale,...balance,id}));status("အရောင်ဒီဇိုင်းဘောင်ချာ၏ စာသားပုံစံကို "+p.name+" သို့ ပို့ပြီးပါပြီ။ Thermal Printer သည် အဖြူအမည်းသာ ပုံနှိပ်နိုင်သည်။","printerStatus")}catch(e){alert("Direct Print မအောင်မြင်ပါ: "+errText(e))}return;
+  try{await window.akPrintRawToDefault(buildReceiptEscPos({...sale,...balance,id},receiptPaper()));status("အရောင်ဒီဇိုင်းဘောင်ချာ၏ စာသားပုံစံကို "+p.name+" သို့ ပို့ပြီးပါပြီ။ Thermal Printer သည် အဖြူအမည်းသာ ပုံနှိပ်နိုင်သည်။","printerStatus")}catch(e){alert("Direct Print မအောင်မြင်ပါ: "+errText(e))}return;
  }
  const w=window.open("","_blank");if(!w){alert("Print Window ဖွင့်မရပါ။ Pop-up ခွင့်ပြုပါ။");return}
  const rows=(sale.lines?.length?sale.lines.map(line=>[line.name,String(line.qty)+" × "+money(line.price)]):[[sale.productName||"ပစ္စည်း",String(sale.qty)+" × "+money(sale.price)]]);rows.push(["ဖောက်သည်",sale.customer||"လက်ငင်း"]);
@@ -837,6 +869,8 @@ $("testPrinter").onclick=async()=>{
 };
 $("systemPrint").onclick=()=>window.print();
 printerTypeChanged();printerRender();
+$("printerPaper").value=receiptPaper();
+$("printerPaper").onchange=()=>localStorage.setItem("ak_pos_receipt_paper_"+(shopId||user?.uid||"local"),$("printerPaper").value);
 
 // Social advert image creator and native share-sheet handoff (no automatic posting).
 let adImage=null,adReady=false;

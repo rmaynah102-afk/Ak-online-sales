@@ -198,7 +198,11 @@ async function boot(){
     const memberSnap=await db.collection("shopMembers").doc(u.uid).get(),member=memberSnap.data()||{};
     if(!memberSnap.exists||member.merchantStaff!==true||member.status!=="active"||!member.shopId){await auth.signOut();show("loginPanel");status("ဝန်ထမ်းအကောင့် ပိတ်ထားခြင်း သို့မဟုတ် မမှန်ကန်ပါ။");return}
     shopId=member.shopId;staffRole=member.role||"employee";await loadShop()
-   }else{shopId=u.uid;staffRole="owner";await loadShop()}
+   }else{
+    const claim=firebase.functions().httpsCallable("claimOwnerProvisioning");
+    await claim({});
+    shopId=u.uid;staffRole="owner";await loadShop()
+   }
   }catch(e){
    const email=(u.email||"").toLowerCase();
    if(email===OWNER){
@@ -209,6 +213,19 @@ async function boot(){
    }
   }
  });
+ await finishEmailLinkLogin();
+}
+async function finishEmailLinkLogin(){
+ if(!auth||!auth.isSignInWithEmailLink(window.location.href))return;
+ let email=localStorage.getItem("akPosEmailForSignIn")||"";
+ if(!email)email=prompt("Login Link တောင်းခဲ့သော Gmail ကို ထည့်ပါ။")||"";
+ if(!email)return;
+ try{
+  await auth.signInWithEmailLink(email.trim().toLowerCase(),window.location.href);
+  localStorage.removeItem("akPosEmailForSignIn");
+  history.replaceState({},document.title,location.origin+location.pathname);
+  status("Gmail အတည်ပြုပြီးပါပြီ။ ဆိုင်အကောင့်ကို စစ်ဆေးနေသည်...");
+ }catch(e){status("Gmail Login မအောင်မြင်: "+friendlyAuthError(e))}
 }
 function errText(e){return e?.message||String(e)}
 function friendlyAuthError(e){
@@ -227,16 +244,14 @@ function friendlyAuthError(e){
 function isPlatformOwner(u=user){return !!u&&String(u.email||"").trim().toLowerCase()===OWNER}
 $("loginType").onchange=()=>{
  const mode=$("loginType").value,staff=mode==="staff",owner=mode==="owner";
- $("emailLoginFields").classList.toggle("hidden",staff);
+ $("emailLoginFields").classList.toggle("hidden",staff||owner);
  $("staffLoginFields").classList.toggle("hidden",!staff);
- $("passwordLoginFields").classList.toggle("hidden",false);
-
- $("loginBtn").classList.toggle("hidden",false);
- $("resetBtn").classList.toggle("hidden",staff);
- $("email").readOnly=owner;
+ $("passwordLoginFields").classList.toggle("hidden",!staff);
+ $("sendLoginLinkBtn").classList.toggle("hidden",staff||owner);
+ $("loginBtn").classList.toggle("hidden",!staff);
+ $("ownerGoogleBtn").classList.toggle("hidden",!owner);
  if(owner)$("email").value=OWNER;
- else if($("email").value.toLowerCase()===OWNER)$("email").value="";
- status(owner?"Platform Owner သည် "+OWNER+" Gmail နှင့် Password ဖြင့် ဝင်နိုင်သည်။ မရပါက Google Login ကို အသုံးပြုပါ။":staff?"Merchant Code နှင့် Password ဖြည့်ပါ။":"ဆိုင်ရှင် Gmail နှင့် Password ဖြည့်ပါ။");
+ status(owner?"Platform Owner သည် သတ်မှတ်ထားသော Google Gmail ဖြင့်ဝင်ပါ။":staff?"ဝန်ထမ်း Merchant Code နှင့် Password ဖြည့်ပါ။":"Owner ခွင့်ပြုထားသော Gmail ကိုထည့်ပြီး Login Link တောင်းပါ။ Password မလိုပါ။");
 };
 $("ownerGoogleBtn").onclick=async()=>{
  const button=$("ownerGoogleBtn");
@@ -284,24 +299,26 @@ $("ownerControlBtn").onclick=async()=>{try{if(!isPlatformOwner())throw Error("Pl
 $("loginType").onchange();
 $("loginBtn").onclick=async()=>{
  try{
-  status("Login စစ်ဆေးနေသည်...");
+  status("ဝန်ထမ်း Login စစ်ဆေးနေသည်...");
   const password=$("password").value;
-  if($("loginType").value==="staff"){
-   const code=$("merchantCode").value.trim().toUpperCase();
-   if(!/^[A-F0-9]{12}$/.test(code))throw Error("Merchant Code ၁၂ လုံး မှန်ကန်စွာထည့်ပါ");
-   await auth.signInWithEmailAndPassword("staff."+code.toLowerCase()+"@akstaff.app",password);
-  }else{
-   const email=$("email").value.trim().toLowerCase();
-   const c=await auth.signInWithEmailAndPassword(email,password);
-   if(email===OWNER){
-    status("Platform Owner အကောင့်ကို အတည်ပြုနေသည်...");
-   }else if($("loginType").value==="owner"){
-    await auth.signOut();throw Error("Platform Owner Gmail မဟုတ်ပါ။ Owner Gmail သည် "+OWNER+" ဖြစ်ရပါမည်။");
-   }
-  }
- }catch(e){status("Login မအောင်မြင်: "+friendlyAuthError(e))}
+  const code=$("merchantCode").value.trim().toUpperCase();
+  if(!/^[A-F0-9]{12}$/.test(code))throw Error("Merchant Code ၁၂ လုံး မှန်ကန်စွာထည့်ပါ");
+  await auth.signInWithEmailAndPassword("staff."+code.toLowerCase()+"@akstaff.app",password);
+ }catch(e){status("ဝန်ထမ်း Login မအောင်မြင်: "+friendlyAuthError(e))}
 };
-$("resetBtn").onclick=async()=>{try{await auth.sendPasswordResetEmail($("email").value.trim());status("Password Reset Link ပို့ပြီးပါပြီ။ Gmail Inbox/Spam စစ်ပါ။")}catch(e){status(errText(e))}};
+$("sendLoginLinkBtn").onclick=async()=>{
+ const button=$("sendLoginLinkBtn");
+ try{
+  const email=$("email").value.trim().toLowerCase();
+  if(!/^[^@ ]+@[^@ ]+[.][^@ .]+$/.test(email))throw Error("Gmail လိပ်စာ မှန်ကန်စွာထည့်ပါ။");
+  if(email===OWNER)throw Error("Platform Owner သည် Google Login ကို အသုံးပြုပါ။");
+  button.disabled=true;
+  await auth.sendSignInLinkToEmail(email,{url:location.origin+location.pathname,handleCodeInApp:true});
+  localStorage.setItem("akPosEmailForSignIn",email);
+  status(email+" သို့ Login Link ပို့ပြီးပါပြီ။ Gmail Inbox/Spam မှ Link ကိုဖွင့်ပါ။");
+ }catch(e){status("Login Link မပို့နိုင်ပါ: "+friendlyAuthError(e))}
+ finally{button.disabled=false}
+};
 $("verifyOwnerBtn").onclick=async()=>{try{const current=auth.currentUser;if(!current||current.email.toLowerCase()!==OWNER)throw Error("Owner အကောင့်ဖြင့် အရင်ဝင်ပါ");await current.reload();if(current.emailVerified){await auth.signOut();status("Owner Gmail အတည်ပြုပြီးပါပြီ။ Platform Owner အဖြစ် ပြန် Login ဝင်ပါ။");return}await current.sendEmailVerification();$("ownerStatus").textContent="Verification Link ပို့ပြီးပါပြီ။ "+OWNER+" Gmail Inbox/Spam ထဲက Link ကိုဖွင့်ပြီးနောက် ဤနေရာတွင် ထပ်နှိပ်ပါ။"}catch(e){$("ownerStatus").textContent="Verification မပို့နိုင်ပါ: "+friendlyAuthError(e)}};
 $("logoutOwner").onclick=$("logoutShop").onclick=()=>auth.signOut();
 function planDays(p){return Number(p.split("-")[0])}

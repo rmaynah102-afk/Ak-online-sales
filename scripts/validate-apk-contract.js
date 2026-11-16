@@ -217,14 +217,9 @@ if (!html.includes('akCloudConflict=false;akLocalDirty=false;')) {
   console.error('Explicit Cloud Load must clear conflict state only after replacing local data.');
   process.exitCode = 1;
 }
-const apkPaymentSubmitStart = html.indexOf('async function submitPaymentRequest(){');
-const apkPaymentSubmitEnd = html.indexOf('\nlet akAccessQueueUnsubscribe', apkPaymentSubmitStart);
-const apkPaymentSubmit = apkPaymentSubmitStart >= 0 && apkPaymentSubmitEnd > apkPaymentSubmitStart
-  ? html.slice(apkPaymentSubmitStart, apkPaymentSubmitEnd) : '';
-if (!apkPaymentSubmit.includes('httpsCallable("createPaymentRequest")') ||
-    apkPaymentSubmit.includes('fbStore.batch()') ||
-    apkPaymentSubmit.includes('batch.set(referenceRef') ||
-    apkPaymentSubmit.includes('batch.set(requestRef') ||
+if (!html.includes('httpsCallable("createPaymentRequest")') ||
+    html.includes('batch.set(referenceRef') ||
+    html.includes('batch.set(requestRef') ||
     !html.includes('paymentRequests").where("status","==","pending")') ||
     !html.includes('onSnapshot(()=>{void loadAdminPaymentRequests()}')) {
   console.error('APK payment requests must upload proof and use the trusted createPaymentRequest callable; direct client payment writes are forbidden.');

@@ -531,7 +531,7 @@ function renderAll(){
  $("lowStock").textContent=products.filter(x=>x.stock<=x.alert).length;
  renderProductTable();
  refreshTransactionProductOptions();
- $("adProduct").innerHTML='<option value="">ကိုယ်တိုင်ဖြည့်မည်</option>'+opts;
+ $("adProduct").innerHTML='<option value="">ကိုယ်တိုင်ဖြည့်မည်</option>'+products.map(p=>'<option value="'+p.id+'">'+esc(p.name)+'</option>').join("");
  $("saleRows").innerHTML=visibleSales.slice().sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0)).map(x=>{
   const extra=payments.filter(p=>p.kind==="sale"&&p.saleId===x.id).reduce((a,p)=>a+Number(p.amount||0),0);
   const paid=Number(x.paid||0)+extra,due=Math.max(0,Number(x.total||0)-paid);
@@ -591,7 +591,7 @@ $("addSaleCart").onclick=()=>{
 };
 $("clearSaleCart").onclick=()=>{saleCart=[];renderSaleCart()};
 $("saleProductSearch").addEventListener("input",()=>refreshTransactionProductOptions());
-$("saleProductSearch").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();if($("saleProduct").options.length===1)$("saleProduct").selectedIndex=0;$("addSaleCart").click();$("saleProductSearch").value="";refreshTransactionProductOptions();$("saleQty").focus();$("saleQty").select()}});
+$("saleProductSearch").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();const select=$("saleProduct");if(select.options.length===1){select.selectedIndex=0;$("addSaleCart").click();$("saleProductSearch").value="";refreshTransactionProductOptions();$("saleQty").focus();$("saleQty").select()}else if(select.options.length>1){select.focus()}else{status("ကိုက်ညီသော ပစ္စည်းမတွေ့ပါ")}}});
 $("buyProductSearch").addEventListener("input",()=>refreshTransactionProductOptions());
 $("buyProduct").addEventListener("change",()=>{const p=products.find(x=>x.id===$("buyProduct").value);if(p){$("buyCost").value=Number(p.cost||0);if(!buyPaidManuallyEdited)$("buyPaid").value=(Number($("buyQty").value)||1)*Number($("buyCost").value||0)}});
 let buyPaidManuallyEdited=false;

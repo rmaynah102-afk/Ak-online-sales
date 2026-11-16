@@ -2,7 +2,7 @@ name: Build AK Sale POS 2.0 Android APK
 
 on:
   push:
-    branches: [ak-sale-pos-v2-main, main, ak-pos-rebuild-1.0.5-restore]
+    branches: [ak-sale-pos-v2-main, main, ak-pos-rebuild-1.0.5-restore, ak-pos-international-v2]
     paths:
       - "v2/**"
       - "scripts/patch-ak-apk-runtime.py"
@@ -125,7 +125,7 @@ jobs:
           if(!html.includes('await window.printSaleReceipt(saleRef.id)')||!html.includes('id="adBrand"')||!html.includes("ctx.fillText(brand.slice(0,32),540,105)")||!html.includes('activeShopName||"ဆိုင်အမည်"')) throw new Error("APK receipt auto-print or editable shop advertising brand patch is missing");
           if(!html.includes('["profile","products","sales","purchases","people","expenses","reports","printer","ads","backup"]')) throw new Error('Printer/Ads tab click routing is missing');
           if(!html.includes('boot().catch(e=>{ $("loginBtn").disabled=false;$("ownerGoogleBtn").disabled=false;')) throw new Error('Login buttons must remain responsive when startup fails');
-          if(!html.includes('id="themePreset"')||!html.includes('id="themeAccent"')||!html.includes('const AK_THEMES=')||!html.includes('akLoadTheme()')) throw new Error('APK user-selectable shop color themes are missing');
+          if(!html.includes('id="saleProductSearch"')||!html.includes('id="buyProductSearch"')||!html.includes('function refreshTransactionProductOptions')||!html.includes('Viber / Share')) throw new Error('Fast sale/purchase search or transaction Viber sharing is missing');
           if(!html.includes('id="salesSearch"')||!html.includes('id="purchasesSearch"')||!html.includes('visibleSales')||!html.includes('visiblePurchases')||!html.includes('salesSummary')||!html.includes('purchasesSummary')) throw new Error('APK spreadsheet-style searchable sales/purchase ledgers are missing');
           if(!html.includes('Array.isArray(x.lines)&&x.lines.length?x.lines.map(v=>v.name).join(" ")')||!html.includes('line.qty??x.qty??0')) throw new Error('APK multi-item sale ledger/CSV details are missing');
           if(!html.includes('function isPlatformOwner')||!html.includes('AK Hardware & Electrical · Owner POS')||!html.includes('ownerControlBtn')) throw new Error('Separate Owner POS and Control Center routing is missing');

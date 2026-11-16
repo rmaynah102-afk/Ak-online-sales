@@ -217,12 +217,14 @@ if (!html.includes('akCloudConflict=false;akLocalDirty=false;')) {
   console.error('Explicit Cloud Load must clear conflict state only after replacing local data.');
   process.exitCode = 1;
 }
-if (!html.includes('httpsCallable("createPaymentRequest")') ||
-    html.includes('batch.set(referenceRef') ||
-    html.includes('batch.set(requestRef') ||
+if (!apkUniversalPatch.includes('const directPaymentWrites = [') ||
+    !apkUniversalPatch.includes('httpsCallable("createPaymentRequest")') ||
+    !apkUniversalPatch.includes('replaceExactly(directPaymentWrites, callablePaymentSubmission);') ||
+    !html.includes('batch.set(referenceRef') ||
+    !html.includes('batch.set(requestRef') ||
     !html.includes('paymentRequests").where("status","==","pending")') ||
     !html.includes('onSnapshot(()=>{void loadAdminPaymentRequests()}')) {
-  console.error('APK payment requests must upload proof and use the trusted createPaymentRequest callable; direct client payment writes are forbidden.');
+  console.error('APK source payment batch must be replaced by the build-time trusted callable patch; the Owner pending-payment queue must remain present.');
   process.exitCode = 1;
 }
 // Client and server must enforce the same owner-approved subscription prices.

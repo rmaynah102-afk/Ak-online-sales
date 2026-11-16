@@ -16,6 +16,7 @@ on:
       - '.firebaserc'
       - 'sw.js'
       - 'manifest.webmanifest'
+      - 'functions/**'
       - '.github/workflows/firebase-deploy.yml'
   workflow_dispatch:
 
@@ -66,5 +67,5 @@ jobs:
           console.log('JavaScript syntax OK:', checked, 'inline script block(s) across', pages.length, 'pages');
           NODE
 
-      - name: Deploy only Hosting and Firestore rules/indexes (no Storage or Functions)
-        run: firebase deploy --only hosting,firestore:rules,firestore:indexes --project ak-onlin-sales --non-interactive
+      - name: Deploy Hosting, Firestore rules/indexes, and APK owner provisioning functions
+        run: firebase deploy --only hosting,firestore:rules,firestore:indexes,functions:createShopOwnerAccount,functions:claimOwnerProvisioning --project ak-onlin-sales --non-interactive

@@ -330,20 +330,6 @@ $("loginBtn").onclick=async()=>{
   await auth.signInWithEmailAndPassword("staff."+code.toLowerCase()+"@akstaff.app",password);
  }catch(e){status("ဝန်ထမ်း Login မအောင်မြင်: "+friendlyAuthError(e))}
 };
-$("sendLoginLinkBtn").onclick=async()=>{
- const button=$("sendLoginLinkBtn");
- try{
-  const email=$("email").value.trim().toLowerCase();
-  if(!/^[^@ ]+@[^@ ]+[.][^@ .]+$/.test(email))throw Error("Gmail လိပ်စာ မှန်ကန်စွာထည့်ပါ။");
-  if(email===OWNER)throw Error("Platform Owner သည် Google Login ကို အသုံးပြုပါ။");
-  button.disabled=true;
-  await auth.sendSignInLinkToEmail(email,{url:location.origin+location.pathname,handleCodeInApp:true});
-  localStorage.setItem("akPosEmailForSignIn",email);
-  status(email+" သို့ Login Link ပို့ပြီးပါပြီ။ Gmail Inbox/Spam မှ Link ကိုဖွင့်ပါ။");
- }catch(e){status("Login Link မပို့နိုင်ပါ: "+friendlyAuthError(e))}
- finally{button.disabled=false}
-};
-$("logoutOwner").onclick=$("logoutShop").onclick=()=>auth.signOut();
 function planDays(p){return Number(p.split("-")[0])}
 async function ownerToken(){const t=await user.getIdToken(true);return t}
 async function ensureCapacity(){const ref=db.collection("platformMeta").doc("shopCapacity"),[snap,allLicenses,betaUsers]=await Promise.all([ref.get(),db.collection("licenses").get(),db.collection("freeBetaUsers").get()]);const ids=new Set([...allLicenses.docs.map(d=>d.id),...betaUsers.docs.map(d=>d.id)]);const actualCount=ids.size;if(!snap.exists||Number(snap.data()?.activeShopCount)!==actualCount)await ref.set({activeShopCount:actualCount,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});}

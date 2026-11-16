@@ -225,19 +225,6 @@ async function boot(){
    }
   }
  });
- await finishEmailLinkLogin();
-}
-async function finishEmailLinkLogin(){
- if(!auth||!auth.isSignInWithEmailLink(window.location.href))return;
- let email=localStorage.getItem("akPosEmailForSignIn")||"";
- if(!email)email=prompt("Login Link တောင်းခဲ့သော Gmail ကို ထည့်ပါ။")||"";
- if(!email)return;
- try{
-  await auth.signInWithEmailLink(email.trim().toLowerCase(),window.location.href);
-  localStorage.removeItem("akPosEmailForSignIn");
-  history.replaceState({},document.title,location.origin+location.pathname);
-  status("Gmail အတည်ပြုပြီးပါပြီ။ ဆိုင်အကောင့်ကို စစ်ဆေးနေသည်...");
- }catch(e){status("Gmail Login မအောင်မြင်: "+friendlyAuthError(e))}
 }
 function errText(e){return e?.message||String(e)}
 function friendlyAuthError(e){

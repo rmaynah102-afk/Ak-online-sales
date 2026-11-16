@@ -503,7 +503,7 @@ exports.setPlatformUserAccess = functions.https.onCall(async (data, context) => 
   }
   if (uid.startsWith("invite:")) {
     const email = uid.slice(7).trim().toLowerCase();
-    if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email) || email === OWNER_EMAIL) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email === OWNER_EMAIL) {
       throw new functions.https.HttpsError("invalid-argument", "Invitation Gmail မမှန်ပါ။");
     }
     const key = crypto.createHash("sha256").update(email).digest("hex");

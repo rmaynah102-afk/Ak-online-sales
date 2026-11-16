@@ -20,7 +20,7 @@ button.secondary{background:#e9f0fa;color:#23456e;border:1px solid #d3dfef}butto
 .tabs{display:flex;gap:6px;overflow:auto;padding:8px 0}.tabs button{white-space:nowrap;flex:0 0 auto}.tabs button.active{background:var(--navy)}
 .hidden{display:none!important}.muted{font-size:12px;color:var(--muted)}.notice{padding:10px;border-radius:9px;background:#fff6df;color:#6a4d12;font-size:13px;margin:8px 0}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:8px}.stat{padding:12px;border:1px solid var(--line);border-radius:12px;background:#fbfdff}.stat b{display:block;font-size:20px;color:var(--blue);overflow-wrap:anywhere}
-.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:560px}th,td{text-align:left;padding:9px;border-bottom:1px solid var(--line);font-size:13px}th{background:#edf3fb;color:#29496e}
+.tablewrap{overflow:auto}.trade-range.active{background:var(--navy);color:#fff}#tradeTrendCard{overflow:hidden}table{width:100%;border-collapse:collapse;min-width:560px}th,td{text-align:left;padding:9px;border-bottom:1px solid var(--line);font-size:13px}th{background:#edf3fb;color:#29496e}
 #status{font-size:13px;color:var(--muted);padding:5px 0;white-space:pre-wrap}.pill{display:inline-block;background:#e7f4ed;color:#176044;padding:4px 9px;border-radius:20px;font-size:12px}
 footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
 @media(max-width:520px){main{padding:8px}header h1{font-size:17px}.card{padding:12px}.row>*{flex-basis:100%}}
@@ -129,6 +129,13 @@ td,th{overflow-wrap:anywhere}
 <section id="shopPanel" class="hidden">
 <div class="card"><div class="row"><div style="flex:2"><h2 id="shopTitle">ဆိုင် Dashboard</h2><span class="pill" id="licenseBadge">Active</span></div><button id="ownerControlBtn" class="secondary hidden">Owner Control Center</button><button id="logoutShop" class="secondary">Logout</button></div>
 <div class="stats"><div class="stat">ကုန်ပစ္စည်း<b id="productCount">0</b></div><div class="stat">ယနေ့အရောင်း<b id="todaySales">0 ကျပ်</b></div><div class="stat">လက်ကျန်တန်ဖိုး<b id="stockValue">0 ကျပ်</b></div><div class="stat">ကုန်နည်း<b id="lowStock">0</b></div></div></div>
+<section id="tradeTrendCard" class="card">
+ <div class="row" style="justify-content:space-between"><div><h2 style="margin-bottom:3px">အရောင်းအဝယ် အတက်အကျဇယား</h2><span class="muted">ဤဆိုင်၏ သိမ်းဆည်းထားသော အရောင်း/အဝယ်မှတ်တမ်းများကို အခြေခံထားသည်</span></div><div class="row no-print" style="flex:0 1 auto"><button type="button" class="secondary trade-range active" data-range="7">၇ ရက်</button><button type="button" class="secondary trade-range" data-range="30">၃၀ ရက်</button><button type="button" class="secondary trade-range" data-range="12m">၁၂ လ</button></div></div>
+ <div class="stats" style="margin:12px 0"><div class="stat">ကာလအတွင်း အရောင်း<b id="trendSalesTotal">0 ကျပ်</b></div><div class="stat">ကာလအတွင်း အဝယ်<b id="trendPurchasesTotal">0 ကျပ်</b></div><div class="stat">အရောင်း − အဝယ်<b id="trendDifference">0 ကျပ်</b></div></div>
+ <div style="position:relative;width:100%;height:260px"><canvas id="tradeTrendCanvas" aria-label="အရောင်းနှင့် အဝယ် အတက်အကျဇယား" role="img" style="width:100%;height:260px;display:block"></canvas></div>
+ <div class="row" style="justify-content:center;margin-top:8px"><span class="muted"><span style="display:inline-block;width:18px;height:3px;background:#1767c2;vertical-align:middle"></span> အရောင်း</span><span class="muted"><span style="display:inline-block;width:18px;height:3px;background:#e08a24;vertical-align:middle"></span> အဝယ်</span></div>
+ <p id="trendChartNote" class="muted" style="margin-bottom:0">ဒေတာဖတ်နေသည်...</p>
+</section>
 <nav class="tabs no-print" id="tabs"><button data-tab="profile">ဆိုင်အချက်အလက်</button><button data-tab="products" class="active">ကုန်ပစ္စည်း</button><button data-tab="sales">အရောင်း</button><button data-tab="purchases">အဝယ်</button><button data-tab="people">ဖောက်သည်/ပေးသွင်းသူ</button><button data-tab="expenses">အသုံးစရိတ်</button><button data-tab="reports">စာရင်းချုပ်</button><button data-tab="printer">Printer</button><button data-tab="ads">ကြော်ငြာ</button><button data-tab="backup">Backup</button></nav>
 <section id="staffManagement" class="card hidden"><h2>ဝန်ထမ်းအကောင့် စီမံခန့်ခွဲမှု</h2><p class="muted">ဝန်ထမ်းအတွက် ကိုယ်ပိုင် Gmail မလိုပါ။ Merchant Code နှင့် Password ဖြင့် ဝင်နိုင်သည်။ ဝန်ထမ်း ၂ ဦးအထိသာ ဖန်တီးနိုင်သည်။ Code ကို တစ်ကြိမ်သာ ပြသမည်။</p><div class="grid"><div><label>ဝန်ထမ်းအမည်</label><input id="staffName" placeholder="ဝန်ထမ်းအမည်"></div><div><label>ရာထူး</label><select id="staffRole"><option value="cashier">ငွေကိုင်</option><option value="manager">မန်နေဂျာ</option><option value="employee">ပစ္စည်းကြည့်ရှုသူ</option></select></div><div><label>Password (အနည်းဆုံး ၈ လုံး)</label><input id="staffPassword" type="password" minlength="8"></div></div><div class="row" style="margin-top:10px"><button id="createStaffBtn">Merchant Code ဖန်တီးမည်</button><button id="refreshStaffBtn" class="secondary">စာရင်းပြန်ဖတ်မည်</button></div><div id="staffStatus" class="muted"></div><div class="tablewrap"><table><thead><tr><th>အမည်</th><th>ရာထူး</th><th>အခြေအနေ</th><th></th></tr></thead><tbody id="staffRows"></tbody></table></div></section><section id="tab-profile" class="card hidden"><h2>ကိုယ်ပိုင်ဆိုင်အမည် / ဘောင်ချာဒီဇိုင်း</h2><p class="muted">AK အမည်တစ်ခုတည်းမဟုတ်ဘဲ ကိုယ့်လုပ်ငန်းအမည်၊ လိပ်စာ၊ ဖုန်းနှင့် ဘောင်ချာအရောင်ကို သတ်မှတ်နိုင်သည်။</p><div class="grid"><div><label>လုပ်ငန်း / ဆိုင်အမည်</label><input id="profileName" maxlength="90"></div><div><label>လုပ်ငန်းအမျိုးအစား</label><input id="profileType" maxlength="60"></div><div><label>ဖုန်း / Viber</label><input id="profilePhone" maxlength="50"></div><div><label>လိပ်စာ</label><input id="profileAddress" maxlength="160"></div><div><label>ဘောင်ချာအရောင်</label><select id="profileTheme"><option value="blue">အပြာ / ရွှေရောင်</option><option value="green">အစိမ်း / ရွှေရောင်</option><option value="purple">ခရမ်း / ပန်းရောင်</option><option value="red">အနီ / လိမ္မော်</option><option value="teal">စိမ်းပြာ / အဖြူ</option></select></div><div><label>ဘောင်ချာအောက်ခြေစာသား</label><input id="profileFooter" maxlength="120"></div></div><div class="row"><button id="saveShopProfile">ဆိုင်အချက်အလက် သိမ်းမည်</button><button id="previewVoucher" class="secondary">ဘောင်ချာနမူနာကြည့်ရန်</button></div><div id="profileStatus" class="muted"></div></section><section id="tab-products" class="card">
 <h2>ကုန်ပစ္စည်းစာရင်း</h2><div class="grid no-print" style="margin-bottom:10px"><div><label>ပစ္စည်းအမည် / SKU / Barcode ရှာရန်</label><input id="productSearch" type="search" placeholder="အမည် သို့မဟုတ် Barcode ရိုက်ရှာပါ"></div><div><label>တစ်မျက်နှာပြလမည့်အရေအတွက်</label><select id="productPageSize"><option value="25">25</option><option value="50" selected>50</option><option value="100">100</option></select></div></div><div class="row no-print" style="justify-content:space-between"><span id="productPageInfo" class="muted">စာရင်းပြင်ဆင်နေသည်...</span><div><button type="button" class="secondary" id="productPrev">ရှေ့</button> <button type="button" class="secondary" id="productNext">နောက်</button></div></div><div id="productForm"><div class="grid"><div><label>ပစ္စည်းအမည်</label><input id="pName"></div><div><label>SKU / Barcode</label><input id="pSku"><button type="button" class="secondary" id="scanProductBtn">Camera Scan</button></div><div><label>ကုန်ပစ္စည်းအမျိုးအစား</label><input id="pCategory" list="shopCategoryOptions" placeholder="ဥပမာ - ကုန်မာ၊ အစားအသောက်၊ အဝတ်အထည်"><datalist id="shopCategoryOptions"><option value="ကုန်မာ"><option value="လျှပ်စစ်"><option value="ကုန်စုံ"><option value="အစားအသောက်"><option value="အဖျော်ယမကာ"><option value="အဝတ်အထည်"><option value="ဖိနပ်"><option value="အလှကုန်"><option value="ဖုန်းနှင့် Accessories"><option value="ကွန်ပျူတာ"><option value="ဆေးဆိုင်"><option value="စာရေးကိရိယာ"><option value="အိမ်သုံးပစ္စည်း"><option value="မော်တော်ယာဉ်ပစ္စည်း"><option value="စားသောက်ဆိုင်"></datalist></div><div><label>အရေအတွက်ယူနစ်</label><input id="pUnit" list="shopUnitOptions" placeholder="ခု / ဘူး / ထုပ် / kg / ပေ"><datalist id="shopUnitOptions"><option value="ခု"><option value="လုံး"><option value="ဘူး"><option value="ထုပ်"><option value="ထည်"><option value="စုံ"><option value="kg"><option value="g"><option value="လီတာ"><option value="ml"><option value="ပေ"><option value="မီတာ"><option value="ပုံး"><option value="ပါကင်"></datalist></div><div><label>ဝယ်ဈေး</label><input id="pCost" type="number" min="0"></div><div><label>လက်လီဈေး</label><input id="pRetail" type="number" min="0"></div><div><label>လက်ကားဈေး</label><input id="pWholesale" type="number" min="0"></div><div><label>လက်ကျန်အရေအတွက်</label><input id="pStock" type="number" min="0"></div><div><label>ကုန်နည်းသတိပေးအဆင့်</label><input id="pAlert" type="number" min="0" value="5"></div><div><label>ပစ္စည်းဓာတ်ပုံ</label><input id="pPhoto" type="file" accept="image/*"><img id="pPhotoPreview" class="hidden" alt="Product preview" style="width:88px;height:88px;object-fit:cover;border-radius:10px;margin-top:8px"></div></div>
@@ -484,6 +491,42 @@ $("productSearch").oninput=()=>{productPage=1;renderProductTable()};
 $("productPageSize").onchange=()=>{productPage=1;renderProductTable()};
 $("productPrev").onclick=()=>{productPage--;renderProductTable()};
 $("productNext").onclick=()=>{productPage++;renderProductTable()};
+let tradeTrendRange="7";
+function tradeDate(value){
+ const d=value?.toDate?value.toDate():(value instanceof Date?value:new Date(value||0));
+ return Number.isNaN(d.getTime())?null:d;
+}
+function renderTradeTrend(){
+ const canvas=$("tradeTrendCanvas");if(!canvas)return;
+ const months=tradeTrendRange==="12m",count=months?12:Number(tradeTrendRange),now=new Date(),labels=[],salesData=[],purchaseData=[];
+ const keys=[];
+ if(months){
+  for(let i=count-1;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);keys.push(d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0"));labels.push(d.toLocaleDateString("my-MM",{month:"short"}))}
+ }else{
+  for(let i=count-1;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth(),now.getDate()-i);keys.push(d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"));labels.push(d.toLocaleDateString("en-GB",{day:"2-digit",month:"short"}))}
+ }
+ const sm=new Map(keys.map(k=>[k,0])),pm=new Map(keys.map(k=>[k,0]));
+ const keyOf=v=>{const d=tradeDate(v);return d?(months?d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0"):d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")):""};
+ sales.forEach(x=>{const k=keyOf(x.createdAt);if(sm.has(k))sm.set(k,sm.get(k)+Number(x.total||0))});
+ purchases.forEach(x=>{const k=keyOf(x.createdAt);if(pm.has(k))pm.set(k,pm.get(k)+Number(x.total||0))});
+ keys.forEach(k=>{salesData.push(sm.get(k)||0);purchaseData.push(pm.get(k)||0)});
+ const sum=a=>a.reduce((n,v)=>n+v,0),st=sum(salesData),pt=sum(purchaseData);
+ $("trendSalesTotal").textContent=money(st);$("trendPurchasesTotal").textContent=money(pt);$("trendDifference").textContent=money(st-pt);
+ const rect=canvas.getBoundingClientRect(),w=Math.max(280,Math.floor(rect.width)),h=260,dpr=Math.min(2,window.devicePixelRatio||1);
+ canvas.width=Math.floor(w*dpr);canvas.height=Math.floor(h*dpr);
+ const c=canvas.getContext("2d");c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,w,h);
+ const left=54,right=12,top=14,bottom=34,plotW=w-left-right,plotH=h-top-bottom,max=Math.max(1,...salesData,...purchaseData),scale=Math.pow(10,Math.floor(Math.log10(max))),axisMax=Math.ceil(max/(scale/2))*(scale/2);
+ c.font="11px system-ui";c.textBaseline="middle";c.strokeStyle="#e4eaf1";c.fillStyle="#68788b";c.lineWidth=1;
+ for(let i=0;i<=4;i++){const y=top+plotH*i/4,val=axisMax*(1-i/4);c.beginPath();c.moveTo(left,y);c.lineTo(w-right,y);c.stroke();c.textAlign="right";c.fillText(val>=1000000?(val/1000000).toFixed(1)+"M":val>=1000?(val/1000).toFixed(0)+"k":String(Math.round(val)),left-8,y)}
+ const xAt=i=>left+(keys.length===1?plotW/2:i*plotW/(keys.length-1)),yAt=v=>top+plotH-(v/axisMax)*plotH;
+ const draw=(data,color)=>{c.beginPath();data.forEach((v,i)=>{const x=xAt(i),y=yAt(v);if(i===0)c.moveTo(x,y);else c.lineTo(x,y)});c.strokeStyle=color;c.lineWidth=2.6;c.lineJoin="round";c.lineCap="round";c.stroke();data.forEach((v,i)=>{c.beginPath();c.arc(xAt(i),yAt(v),3,0,Math.PI*2);c.fillStyle=color;c.fill()})};
+ draw(salesData,"#1767c2");draw(purchaseData,"#e08a24");
+ const step=Math.max(1,Math.ceil(keys.length/(w<440?4:7)));c.fillStyle="#68788b";c.textAlign="center";c.textBaseline="top";
+ labels.forEach((label,i)=>{if(i%step===0||i===labels.length-1)c.fillText(label,xAt(i),top+plotH+9)});
+ $("trendChartNote").textContent=st===0&&pt===0?"ရွေးထားသောကာလအတွင်း အရောင်း/အဝယ်မှတ်တမ်း မရှိသေးပါ။ အရောင်းနှင့် အဝယ်သိမ်းပြီးနောက် ဇယားသည် အလိုအလျောက် ပြောင်းလဲမည်။":"ရွေးထားသောကာလ၏ မှတ်တမ်း "+keys.length+" ခုကို ပြထားသည်။ ဇယားသည် ဆိုင်ဒေတာအပေါ် အခြေခံပြီး ပြင်ပဈေးကွက်ဒေတာ မဟုတ်ပါ။";
+}
+document.querySelectorAll(".trade-range").forEach(b=>b.onclick=()=>{tradeTrendRange=b.dataset.range;document.querySelectorAll(".trade-range").forEach(x=>x.classList.toggle("active",x===b));renderTradeTrend()});
+window.addEventListener("resize",()=>{if(!$("shopPanel").classList.contains("hidden"))renderTradeTrend()});
 function renderAll(){
  renderSaleCart();
  $("productCount").textContent=products.length;
@@ -517,6 +560,7 @@ function renderAll(){
  const payable=purchases.reduce((a,x)=>a+Math.max(0,Number(x.total||0)-Number(x.paid||0)-payments.filter(p=>p.kind==="purchase"&&p.purchaseId===x.id).reduce((z,p)=>z+Number(p.amount||0),0)),0);
  const profit=sales.reduce((a,x)=>a+(x.profit||0),0)-totalExp;
  $("reportSales").textContent=money(totalSales);$("reportPurchases").textContent=money(totalPurch);$("reportExpenses").textContent=money(totalExp);$("reportProfit").textContent=money(profit);$("reportDebt").textContent=money(debt);$("reportPayable").textContent=money(payable);
+ renderTradeTrend();
 }
 async function compressProductPhoto(file){
  if(!file)return "";

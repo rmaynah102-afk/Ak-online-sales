@@ -79,7 +79,15 @@ exports.claimOwnerProvisioning = functions.https.onCall(async (data, context) =>
   const inviteSnap = await inviteRef.get();
   if (inviteSnap.exists) {
     const invite = inviteSnap.data() || {};
-    if (invite.email !== email || invite.status !== "pending") throw new functions.https.HttpsError("permission-denied", "ဤ Gmail Invitation ကို ပိတ်ထားသည်။");
+    if (invite.email !== email) throw new functions.https.HttpsError("permission-denied", "ဤ Gmail Invitation မမှန်ပါ။");
+    if (invite.status === "claimed" && invite.claimedUid === context.auth.uid) {
+      const existingSnap = await db.collection("licenses").doc(context.auth.uid).get();
+      const existing = existingSnap.data() || {};
+      if (existingSnap.exists && existing.email === email && existing.status === "active" &&
+          existing.expiresAt && existing.expiresAt.toMillis() > Date.now()) return { ok: true, status: "active" };
+      throw new functions.https.HttpsError("permission-denied", "Owner က အကောင့်ပိတ်ထားသည် သို့မဟုတ် သက်တမ်းကုန်နေသည်။");
+    }
+    if (invite.status !== "pending") throw new functions.https.HttpsError("permission-denied", "ဤ Gmail Invitation ကို ပိတ်ထားသည်။");
     if (!invite.expiresAt || invite.expiresAt.toMillis() <= Date.now()) throw new functions.https.HttpsError("failed-precondition", "အကောင့်သက်တမ်းကုန်နေသည်။ Owner ထံ ဆက်သွယ်ပါ။");
     const licenseRef = db.collection("licenses").doc(context.auth.uid);
     await db.runTransaction(async tx => {

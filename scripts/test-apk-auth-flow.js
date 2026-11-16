@@ -26,7 +26,7 @@ async function runScenario(name, configure, verify) {
       };
     }
   };
-  const fn = new Function('firebase','auth','location',helperSource+'\nreturn apkProvisionShopOwner;')(
+  const fn = new Function('firebase','auth','location',helperSource+String.fromCharCode(10)+'return apkProvisionShopOwner;')(
     { functions: () => functions }, auth, { origin: 'https://example.com', pathname: '/pos/' }
   );
   const r = await verify(fn, { calls });

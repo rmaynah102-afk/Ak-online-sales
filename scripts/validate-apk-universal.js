@@ -49,6 +49,7 @@ const checks = [
   ['staff cannot load owner center-management data', html.includes('if(!isStaff&&window.cmCloudLoad)')],
   ['APK payment proof upload is enabled', /id="payScreenshot"[^>]*required/.test(html) && !/id="payScreenshot"[^>]*disabled/.test(html)],
   ['APK payment request requires screenshot proof', html.includes('if(!file)throw Error("ငွေလွှဲ Screenshot ကို မဖြစ်မနေတင်ပါ။")') && html.includes('firebase.storage().ref(uploadedPath).put(file)')],
+  ['APK payment request uses trusted callable, not direct client writes', html.includes('httpsCallable("createPaymentRequest")') && !html.includes('batch.set(referenceRef') && !html.includes('batch.set(requestRef')],
   ['APK owner can create Merchant Codes', html.includes('onclick="akCreateMerchantCode()"')],
   ['APK staff list uses deployed callable', html.includes('httpsCallable("listShopStaff")') && html.includes('async function akLoadStaff()') && !html.includes('ဝန်ထမ်းစနစ် မဖွင့်ထားပါ။')],
   ['Thermer receipt sharing present', html.includes('Thermer / Printer App သို့ပို့') && html.includes('chooserTitle')],

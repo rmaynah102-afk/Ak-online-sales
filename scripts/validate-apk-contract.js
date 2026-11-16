@@ -217,10 +217,17 @@ if (!html.includes('akCloudConflict=false;akLocalDirty=false;')) {
   console.error('Explicit Cloud Load must clear conflict state only after replacing local data.');
   process.exitCode = 1;
 }
-if (!html.includes('batch.set(referenceRef') || !html.includes('batch.set(requestRef') ||
+const apkPaymentSubmitStart = html.indexOf('async function submitPaymentRequest(){');
+const apkPaymentSubmitEnd = html.indexOf('\nlet akAccessQueueUnsubscribe', apkPaymentSubmitStart);
+const apkPaymentSubmit = apkPaymentSubmitStart >= 0 && apkPaymentSubmitEnd > apkPaymentSubmitStart
+  ? html.slice(apkPaymentSubmitStart, apkPaymentSubmitEnd) : '';
+if (!apkPaymentSubmit.includes('httpsCallable("createPaymentRequest")') ||
+    apkPaymentSubmit.includes('fbStore.batch()') ||
+    apkPaymentSubmit.includes('batch.set(referenceRef') ||
+    apkPaymentSubmit.includes('batch.set(requestRef') ||
     !html.includes('paymentRequests").where("status","==","pending")') ||
     !html.includes('onSnapshot(()=>{void loadAdminPaymentRequests()}')) {
-  console.error('Payment requests must be submitted atomically to Firestore and delivered to the Owner through the live pending-payment queue.');
+  console.error('APK payment requests must upload proof and use the trusted createPaymentRequest callable; direct client payment writes are forbidden.');
   process.exitCode = 1;
 }
 // Client and server must enforce the same owner-approved subscription prices.
@@ -264,7 +271,10 @@ if (!apkSubscriptionPatch.includes('id="akPlanButtons"') ||
   console.error('APK subscription onboarding patch must include Package -> Google Gmail -> payment proof.');
   process.exitCode = 1;
 }
-if (!functionsSource.includes('!screenshotUrl') || !html.includes('function validateAndSubmitKPay(paymentData,screenshotFile)')) {
+if (!functionsSource.includes('!screenshotUrl') ||
+    !functionsSource.includes('screenshotUrl.startsWith("https://firebasestorage.googleapis.com/")') ||
+    !functionsSource.includes('encodeURIComponent("paymentProofs/" + uid + "/")') ||
+    !html.includes('function validateAndSubmitKPay(paymentData,screenshotFile)')) {
   console.error('Payment proof validation must remain present in client and trusted server.');
   process.exitCode = 1;
 }

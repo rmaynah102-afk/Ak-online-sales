@@ -135,6 +135,22 @@ const headEnd = html.indexOf('</head>');
 if (headEnd < 0) throw new Error('HTML head closing tag not found.');
 html = html.slice(0, headEnd) + style + '\n' + html.slice(headEnd);
 
+// Payment proof must be submitted through the trusted callable; never write payment documents directly from the APK client.
+const directPaymentWrites = [
+  '  const referenceKey=reference;',
+  '  const requestRef=fbStore.collection("paymentRequests").doc();',
+  '  const referenceRef=fbStore.collection("paymentReferences").doc(referenceKey);',
+  '  const batch=fbStore.batch();',
+  '  batch.set(referenceRef,{uid,paymentRequestId:requestRef.id,reference,status:"pending",method,createdAt:firebase.firestore.FieldValue.serverTimestamp()});',
+  '  batch.set(requestRef,{uid,email,days,amount,method,bankName:"KBZPay",reference,referenceKey,screenshotUrl,status:"pending",createdAt:firebase.firestore.FieldValue.serverTimestamp()});',
+  '  await batch.commit();'
+].join('\n');
+const callablePaymentSubmission = [
+  '  if(!firebase.functions)throw Error("Firebase Cloud Functions မရနိုင်ပါ။");',
+  '  const paymentResult=await firebase.functions().httpsCallable("createPaymentRequest")({days,amount,method,reference,screenshotUrl});',
+  '  if(!paymentResult?.data?.ok||!paymentResult.data.requestId)throw Error("Payment request ကို Server က အတည်မပြုနိုင်ပါ။");'
+].join('\n');
+replaceExactly(directPaymentWrites, callablePaymentSubmission);
 const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
 config.appId = 'com.ak.hardware.sales';
 config.appName = 'AK Sale Software';

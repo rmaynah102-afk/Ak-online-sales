@@ -505,12 +505,14 @@ exports.setPlatformUserAccess = functions.https.onCall(async (data, context) => 
       });
     }
   });
+  // Disable Firebase Auth as well as the POS license so suspended users cannot start new sessions.
+  await admin.auth().updateUser(uid, { disabled: action === "suspend" });
   await db.collection("platformAuditLogs").add({
     action: action === "suspend" ? "customer_suspended" : "customer_reactivated",
     targetUid: uid, targetEmail: target.email || "", actor,
     createdAt: admin.firestore.FieldValue.serverTimestamp()
   });
-  return { ok: true, uid, action };
+  return { ok: true, uid, action, authDisabled: action === "suspend" };
 });
 
 exports.rejectPaymentRequest = functions.https.onCall(async (data, context) => {

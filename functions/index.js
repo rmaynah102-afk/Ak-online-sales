@@ -87,14 +87,27 @@ exports.claimOwnerProvisioning = functions.https.onCall(async (data, context) =>
           existing.expiresAt && existing.expiresAt.toMillis() > Date.now()) return { ok: true, status: "active" };
       throw new functions.https.HttpsError("permission-denied", "Owner က အကောင့်ပိတ်ထားသည် သို့မဟုတ် သက်တမ်းကုန်နေသည်။");
     }
-    if (invite.status !== "pending") throw new functions.https.HttpsError("permission-denied", "ဤ Gmail Invitation ကို ပိတ်ထားသည်။");
-    if (!invite.expiresAt || invite.expiresAt.toMillis() <= Date.now()) throw new functions.https.HttpsError("failed-precondition", "အကောင့်သက်တမ်းကုန်နေသည်။ Owner ထံ ဆက်သွယ်ပါ။");
     const licenseRef = db.collection("licenses").doc(context.auth.uid);
     await db.runTransaction(async tx => {
+      const currentInviteSnap = await tx.get(inviteRef);
+      if (!currentInviteSnap.exists) throw new functions.https.HttpsError("permission-denied", "Gmail Invitation မရှိတော့ပါ။");
+      const currentInvite = currentInviteSnap.data() || {};
+      if (currentInvite.email !== email || currentInvite.status !== "pending") {
+        throw new functions.https.HttpsError("permission-denied", "ဤ Gmail Invitation ကို Owner က ပိတ်ထားသည် သို့မဟုတ် အသုံးပြုပြီးဖြစ်သည်။");
+      }
+      if (!currentInvite.expiresAt || currentInvite.expiresAt.toMillis() <= Date.now()) {
+        throw new functions.https.HttpsError("failed-precondition", "အကောင့်သက်တမ်းကုန်နေသည်။ Owner ထံ ဆက်သွယ်ပါ။");
+      }
+      const existingLicenseSnap = await tx.get(licenseRef);
+      const existingLicense = existingLicenseSnap.exists ? existingLicenseSnap.data() || {} : {};
+      if (existingLicenseSnap.exists && existingLicense.email &&
+          String(existingLicense.email).toLowerCase() !== email) {
+        throw new functions.https.HttpsError("permission-denied", "ဤ Firebase အကောင့်သည် အခြား Gmail ဆိုင်အကောင့်နှင့် ချိတ်ထားပြီးဖြစ်သည်။");
+      }
       tx.set(licenseRef, {
-        uid: context.auth.uid, email, shopName: invite.shopName, industryType: invite.industryType,
-        status: "active", plan: "owner-managed", expiresAt: invite.expiresAt,
-        provisionedBy: invite.invitedBy, provisionedAt: admin.firestore.FieldValue.serverTimestamp(),
+        uid: context.auth.uid, email, shopName: currentInvite.shopName, industryType: currentInvite.industryType,
+        status: "active", plan: "owner-managed", expiresAt: currentInvite.expiresAt,
+        provisionedBy: currentInvite.invitedBy, provisionedAt: admin.firestore.FieldValue.serverTimestamp(),
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
       }, { merge: true });
       tx.update(inviteRef, { status: "claimed", claimedUid: context.auth.uid, claimedAt: admin.firestore.FieldValue.serverTimestamp() });

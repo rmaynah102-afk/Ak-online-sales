@@ -323,7 +323,7 @@ $("createShopBtn").onclick=async()=>{
   const shopName=$("shopName").value.trim();
   const industryType=$("industryType").value;
   const expiresOn=$("expiresOn").value;
-  if(!shopName||shopName.length<2||!email||!/^\\S+@\\S+\\.\\S+$/.test(email))throw Error("ဆိုင်အမည်နှင့် Gmail မှန်ကန်စွာ ဖြည့်ပါ။");
+  if(!shopName||shopName.length<2||!email||!/^(?:[^\\s@]+)@(?:[^\\s@]+)\\.(?:[^\\s@]+)$/.test(email))throw Error("ဆိုင်အမည်နှင့် Gmail မှန်ကန်စွာ ဖြည့်ပါ။");
   if(email===OWNER)throw Error("Owner Gmail ကို ဆိုင်ရှင်အဖြစ် မသုံးနိုင်ပါ။");
   if(password.length<8||password.length>128)throw Error("AK POS Password အနည်းဆုံး ၈ လုံးထည့်ပါ။");
   if(password!==confirmPassword)throw Error("Password နှစ်ခု မတူပါ။");

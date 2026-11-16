@@ -27,35 +27,108 @@ exports.startTrial = functions.auth.user().onCreate(async (user) => {
 
 
 async function enforceCustomerShopCapacity(tx, uid, currentLicenseSnap) {
-  // A shared lock document serializes every new activation/renewal across shops.
-  // The active license query is re-counted inside the same transaction so expired
-  // and suspended shops release capacity automatically.
-  const capacityRef = db.collection("platformControls").doc("shopCapacity");
-  const activeQuery = db.collection("licenses").where("status", "==", "active");
-  const [capacitySnap, activeSnap] = await Promise.all([
-    tx.get(capacityRef),
-    tx.get(activeQuery)
-  ]);
-  const now = Date.now();
-  const activeOwners = activeSnap.docs.filter(doc => {
-    const item = doc.data() || {};
-    const email = String(item.email || "").trim().toLowerCase();
-    const expiry = item.expiresAt && typeof item.expiresAt.toMillis === "function"
-      ? item.expiresAt.toMillis() : 0;
-    return email !== OWNER_EMAIL && expiry > now;
-  });
-  const targetAlreadyActive = activeOwners.some(doc => doc.id === uid);
-  if (!targetAlreadyActive && activeOwners.length >= 30) {
-    throw new functions.https.HttpsError("resource-exhausted",
-      "Platform Owner က ခွင့်ပြုထားသော ဆိုင် ၃၀ ဆိုင် ပြည့်နေပါပြီ။ ဆိုင်ဟောင်းတစ်ဆိုင်ကို Suspend လုပ်ခြင်း သို့မဟုတ် သက်တမ်းကုန်ပြီးမှ အသစ်ဖွင့်နိုင်ပါမည်။");
-  }
-  tx.set(capacityRef, {
-    activeCount: activeOwners.length + (targetAlreadyActive ? 0 : 1),
-    limit: 30,
-    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-    lastActivatedUid: uid
-  }, { merge: true });
+  // Shop accounts are not capped by an artificial platform-wide 100-shop limit.
+  // Expiry and suspension are enforced per license below.
+  return;
 }
+
+exports.createShopOwnerAccount = functions.https.onCall(async (data, context) => {
+  const actor = requireAdmin(context);
+  const email = String(data.email || "").trim().toLowerCase();
+  const shopName = String(data.shopName || "").trim().slice(0, 100);
+  const industryType = String(data.industryType || "general").trim().toLowerCase();
+  const allowedIndustryTypes = new Set(["general","grocery","hardware","electronics","mobile","gold","restaurant","cosmetics","fashion","auto_parts","pharmacy","construction","wholesale","beauty","hotel","laundry","stationery","online","other"]);
+  const expiryDateText = String(data.expiresOn || "").trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email === OWNER_EMAIL) throw new functions.https.HttpsError("invalid-argument", "ဆိုင်ရှင် Gmail လိပ်စာ မမှန်ပါ။");
+  if (shopName.length < 2) throw new functions.https.HttpsError("invalid-argument", "ဆိုင်အမည် အနည်းဆုံး ၂ လုံးထည့်ပါ။");
+  if (!allowedIndustryTypes.has(industryType)) throw new functions.https.HttpsError("invalid-argument", "ဆိုင်အမျိုးအစား မမှန်ပါ။");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(expiryDateText)) throw new functions.https.HttpsError("invalid-argument", "သက်တမ်းကုန်မည့်ရက်ကို ရွေးပါ။");
+  const expiryDate = new Date(expiryDateText + "T23:59:59.999+06:30");
+  if (!Number.isFinite(expiryDate.getTime()) || expiryDate.getTime() <= Date.now()) throw new functions.https.HttpsError("invalid-argument", "သက်တမ်းကုန်မည့်ရက်သည် ယနေ့ထက် နောက်ကျရမည်။");
+  let existing = null;
+  try { existing = await admin.auth().getUserByEmail(email); } catch (e) { if (e.code !== "auth/user-not-found") throw e; }
+  if (existing && (existing.uid === context.auth.uid || existing.customClaims?.platformAdmin === true || existing.customClaims?.shopId)) {
+    throw new functions.https.HttpsError("permission-denied", "ဤ Gmail ကို ဆိုင်ရှင်အကောင့်အဖြစ် မသတ်မှတ်နိုင်ပါ။");
+  }
+  if (existing) {
+    const member = await db.collection("shopMembers").doc(existing.uid).get();
+    if (member.exists) throw new functions.https.HttpsError("failed-precondition", "ဤ Gmail သည် ဝန်ထမ်းအကောင့်ဖြစ်နေသည်။");
+  }
+  const emailKey = crypto.createHash("sha256").update(email).digest("hex");
+  const inviteRef = db.collection("pendingOwnerInvites").doc(emailKey);
+  const invite = {
+    email, shopName, industryType, status: "pending",
+    expiresAt: admin.firestore.Timestamp.fromDate(expiryDate),
+    invitedBy: actor, updatedAt: admin.firestore.FieldValue.serverTimestamp()
+  };
+  await inviteRef.set(invite, { merge: true });
+  await db.collection("platformAuditLogs").add({
+    action: "shop_owner_email_invited", targetEmail: email, shopName, industryType,
+    expiresAt: invite.expiresAt, actor, createdAt: admin.firestore.FieldValue.serverTimestamp()
+  });
+  return { ok: true, email, shopName, industryType, expiresAt: expiryDate.toISOString(), invitationPending: true };
+});
+
+// Called only after Firebase Email Link sign-in has verified the exact invited Gmail.
+exports.claimOwnerProvisioning = functions.https.onCall(async (data, context) => {
+  if (!context.auth || context.auth.token.email_verified !== true || context.auth.token.firebase?.sign_in_provider !== "google.com") throw new functions.https.HttpsError("unauthenticated", "Google Gmail ဖြင့် အတည်ပြုပြီး Login ဝင်ပါ။");
+  const email = String(context.auth.token.email || "").trim().toLowerCase();
+  if (!email || email === OWNER_EMAIL) throw new functions.https.HttpsError("permission-denied", "Customer Gmail မမှန်ပါ။");
+  const emailKey = crypto.createHash("sha256").update(email).digest("hex");
+  const inviteRef = db.collection("pendingOwnerInvites").doc(emailKey);
+  const inviteSnap = await inviteRef.get();
+  if (inviteSnap.exists) {
+    const invite = inviteSnap.data() || {};
+    if (invite.email !== email) throw new functions.https.HttpsError("permission-denied", "ဤ Gmail Invitation မမှန်ပါ။");
+    if (invite.status === "claimed" && invite.claimedUid === context.auth.uid) {
+      const existingSnap = await db.collection("licenses").doc(context.auth.uid).get();
+      const existing = existingSnap.data() || {};
+      if (existingSnap.exists && existing.email === email && existing.status === "active" &&
+          existing.expiresAt && existing.expiresAt.toMillis() > Date.now()) return { ok: true, status: "active" };
+      throw new functions.https.HttpsError("permission-denied", "Owner က အကောင့်ပိတ်ထားသည် သို့မဟုတ် သက်တမ်းကုန်နေသည်။");
+    }
+    const licenseRef = db.collection("licenses").doc(context.auth.uid);
+    await db.runTransaction(async tx => {
+      const currentInviteSnap = await tx.get(inviteRef);
+      if (!currentInviteSnap.exists) throw new functions.https.HttpsError("permission-denied", "Gmail Invitation မရှိတော့ပါ။");
+      const currentInvite = currentInviteSnap.data() || {};
+      if (currentInvite.email !== email || currentInvite.status !== "pending") {
+        throw new functions.https.HttpsError("permission-denied", "ဤ Gmail Invitation ကို Owner က ပိတ်ထားသည် သို့မဟုတ် အသုံးပြုပြီးဖြစ်သည်။");
+      }
+      if (!currentInvite.expiresAt || currentInvite.expiresAt.toMillis() <= Date.now()) {
+        throw new functions.https.HttpsError("failed-precondition", "အကောင့်သက်တမ်းကုန်နေသည်။ Owner ထံ ဆက်သွယ်ပါ။");
+      }
+      const existingLicenseSnap = await tx.get(licenseRef);
+      const existingLicense = existingLicenseSnap.exists ? existingLicenseSnap.data() || {} : {};
+      if (existingLicenseSnap.exists && existingLicense.email &&
+          String(existingLicense.email).toLowerCase() !== email) {
+        throw new functions.https.HttpsError("permission-denied", "ဤ Firebase အကောင့်သည် အခြား Gmail ဆိုင်အကောင့်နှင့် ချိတ်ထားပြီးဖြစ်သည်။");
+      }
+      tx.set(licenseRef, {
+        uid: context.auth.uid, email, shopName: currentInvite.shopName, industryType: currentInvite.industryType,
+        status: "active", plan: "owner-managed", expiresAt: currentInvite.expiresAt,
+        provisionedBy: currentInvite.invitedBy, provisionedAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+      tx.update(inviteRef, { status: "claimed", claimedUid: context.auth.uid, claimedAt: admin.firestore.FieldValue.serverTimestamp() });
+    });
+    await db.collection("platformAuditLogs").add({
+      action: "shop_owner_email_verified_and_activated", targetUid: context.auth.uid, targetEmail: email,
+      actor: "google-sign-in", createdAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+    return { ok: true, status: "active" };
+  }
+  const [licenseSnap, betaSnap] = await Promise.all([
+    db.collection("licenses").doc(context.auth.uid).get(),
+    db.collection("freeBetaUsers").doc(context.auth.uid).get()
+  ]);
+  const license = licenseSnap.data() || {};
+  const beta = betaSnap.data() || {};
+  if (licenseSnap.exists && license.email === email && license.status === "active" &&
+      license.expiresAt && license.expiresAt.toMillis() > Date.now()) return { ok: true, status: "active" };
+  if (betaSnap.exists && beta.email === email && beta.status === "active") return { ok: true, status: "active" };
+  throw new functions.https.HttpsError("permission-denied", "ဤ Gmail ကို Platform Owner က ခွင့်ပြုမထားသေးပါ။");
+});
 
 function requireAdmin(context) {
   if (!context.auth) {
@@ -77,9 +150,15 @@ async function requireActiveShop(context) {
   if (email === OWNER_EMAIL && context.auth.token.email_verified === true) return uid;
   const snap = await db.collection("licenses").doc(uid).get();
   const license = snap.data() || {};
+  if (snap.exists && license.status === "suspended") {
+    throw new functions.https.HttpsError("permission-denied", "ဤအကောင့်ကို Platform Owner က ရပ်ဆိုင်းထားသည်။");
+  }
+  const beta = await db.collection("freeBetaUsers").doc(uid).get();
+  if (context.auth.token.email_verified === true && beta.exists &&
+      beta.data().status === "active" && beta.data().email === email) return uid;
   if (!snap.exists || license.status !== "active" || !license.expiresAt ||
       license.expiresAt.toMillis() <= Date.now()) {
-    throw new functions.https.HttpsError("permission-denied", "ငွေပေးချေမှုအတည်ပြုထားသော Subscription လိုအပ်သည်။");
+    throw new functions.https.HttpsError("permission-denied", "Free Beta အကောင့်မဟုတ်ပါက သက်တမ်းရှိ Subscription လိုအပ်သည်။");
   }
   return uid;
 }
@@ -95,20 +174,17 @@ exports.claimShopDevice = functions.https.onCall(async (data, context) => {
   const ref = devices.doc(deviceId);
   return db.runTransaction(async tx => {
     const [ownSnap, allSnap] = await Promise.all([tx.get(ref), tx.get(devices)]);
-    if (!ownSnap.exists && allSnap.size >= 5) {
-      throw new functions.https.HttpsError("resource-exhausted", "ဖုန်း ၅ လုံး ပြည့်နေပါသည်။ Owner က စက်ဟောင်းကို အရင်ဖြုတ်ပါ။");
-    }
     tx.set(ref, {
       deviceId, label, createdAt: ownSnap.exists ? ownSnap.data().createdAt : admin.firestore.FieldValue.serverTimestamp(),
       lastSeenAt: admin.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
-    return { ok: true, count: ownSnap.exists ? allSnap.size : allSnap.size + 1, limit: 5 };
+    return { ok: true, count: ownSnap.exists ? allSnap.size : allSnap.size + 1, limit: null };
   });
 });
 
 exports.listShopDevices = functions.https.onCall(async (data, context) => {
   const uid = await requireActiveShop(context);
-  const snap = await db.collection("users").doc(uid).collection("devices").orderBy("lastSeenAt", "desc").limit(5).get();
+  const snap = await db.collection("users").doc(uid).collection("devices").orderBy("lastSeenAt", "desc").limit(100).get();
   return { devices: snap.docs.map(doc => {
     const x = doc.data();
     return { deviceId: doc.id, label: x.label || "Device",
@@ -328,22 +404,45 @@ exports.listPendingPayments = functions.https.onCall(async (data, context) => {
 exports.listPlatformUsers = functions.https.onCall(async (data, context) => {
   requireAdmin(context);
   const pageToken = String(data.pageToken || "").trim() || undefined;
-  const page = await admin.auth().listUsers(100, pageToken);
-  const refs = page.users.map(u => db.collection("licenses").doc(u.uid));
-  const licenseSnaps = refs.length ? await db.getAll(...refs) : [];
-  const byUid = new Map(licenseSnaps.map(s => [s.id, s.exists ? s.data() : {}]));
-  return {
-    users: page.users.map(u => {
-      const license = byUid.get(u.uid) || {};
-      return {
-        uid: u.uid, email: u.email || "", emailVerified: !!u.emailVerified,
-        disabled: !!u.disabled, status: String(license.status || "pending_payment"),
-        plan: String(license.plan || ""), expiresAt: license.expiresAt && license.expiresAt.toDate
-          ? license.expiresAt.toDate().toISOString() : ""
-      };
-    }).filter(u => u.email.toLowerCase() !== OWNER_EMAIL),
-    nextPageToken: page.pageToken || ""
-  };
+  const [page, inviteSnap] = await Promise.all([
+    admin.auth().listUsers(100, pageToken),
+    db.collection("pendingOwnerInvites").limit(100).get()
+  ]);
+  const refs = page.users.flatMap(u => [
+    db.collection("licenses").doc(u.uid),
+    db.collection("freeBetaUsers").doc(u.uid)
+  ]);
+  const snaps = refs.length ? await db.getAll(...refs) : [];
+  const authUsers = page.users.map(u => {
+    const licenseSnap = snaps.find(x => x.id === u.uid && x.ref.parent.id === "licenses");
+    const license = licenseSnap && licenseSnap.exists ? licenseSnap.data() : {};
+    const betaSnap = snaps.find(x => x.id === u.uid && x.ref.parent.id === "freeBetaUsers");
+    const betaData = betaSnap && betaSnap.exists ? betaSnap.data() : {};
+    const status = betaData.status === "suspended" || license.status === "suspended"
+      ? "suspended" : (betaData.status === "active" ? "active" : String(license.status || "pending_payment"));
+    return {
+      uid: u.uid, email: u.email || "", emailVerified: !!u.emailVerified,
+      disabled: !!u.disabled, status,
+      plan: betaData.status === "active" || betaData.status === "suspended" ? "free-beta" : String(license.plan || ""),
+      expiresAt: license.expiresAt && license.expiresAt.toDate
+        ? license.expiresAt.toDate().toISOString() : "", isInvitation: false
+    };
+  }).filter(u => u.email.toLowerCase() !== OWNER_EMAIL);
+  const registeredEmails = new Set(authUsers.map(u => u.email.toLowerCase()));
+  const invitations = inviteSnap.docs.map(doc => {
+    const x = doc.data() || {};
+    return {
+      uid: "invite:" + String(x.email || "").toLowerCase(),
+      email: String(x.email || ""), emailVerified: false,
+      disabled: x.status === "suspended",
+      status: x.status === "suspended" ? "suspended" : "invited",
+      plan: "Gmail Invitation", isInvitation: true,
+      expiresAt: x.expiresAt && x.expiresAt.toDate ? x.expiresAt.toDate().toISOString() : ""
+    };
+  }).filter(x => x.email && x.email.toLowerCase() !== OWNER_EMAIL &&
+    !registeredEmails.has(x.email.toLowerCase()) &&
+    ["pending", "suspended"].includes(inviteSnap.docs.find(d => String(d.data().email || "").toLowerCase() === x.email.toLowerCase())?.data()?.status));
+  return { users: [...authUsers, ...invitations], nextPageToken: page.pageToken || "" };
 });
 
 // A customer asks for access after registering. Payment is handled outside the app;
@@ -423,8 +522,36 @@ exports.setPlatformUserAccess = functions.https.onCall(async (data, context) => 
   const actor = requireAdmin(context);
   const uid = String(data.uid || "").trim();
   const action = String(data.action || "").trim();
-  if (!uid || uid.length > 128 || !["suspend", "reactivate"].includes(action)) {
+  if (!uid || uid.length > 256 || !["suspend", "reactivate"].includes(action)) {
     throw new functions.https.HttpsError("invalid-argument", "အသုံးပြုသူ သို့မဟုတ် လုပ်ဆောင်ချက် မမှန်ပါ။");
+  }
+  if (uid.startsWith("invite:")) {
+    const email = uid.slice(7).trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email === OWNER_EMAIL) {
+      throw new functions.https.HttpsError("invalid-argument", "Invitation Gmail မမှန်ပါ။");
+    }
+    const key = crypto.createHash("sha256").update(email).digest("hex");
+    const inviteRef = db.collection("pendingOwnerInvites").doc(key);
+    await db.runTransaction(async tx => {
+      const snap = await tx.get(inviteRef);
+      if (!snap.exists || snap.data().email !== email || !["pending", "suspended"].includes(snap.data().status)) {
+        throw new functions.https.HttpsError("not-found", "စောင့်ဆိုင်းနေသော Gmail Invitation မတွေ့ပါ။");
+      }
+      if (action === "reactivate" && snap.data().expiresAt &&
+          snap.data().expiresAt.toMillis() <= Date.now()) {
+        throw new functions.https.HttpsError("failed-precondition", "Invitation သက်တမ်းကုန်နေသည်။ အသစ်ပြန်ဖန်တီးပါ။");
+      }
+      tx.update(inviteRef, {
+        status: action === "suspend" ? "suspended" : "pending",
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        accessChangedBy: actor
+      });
+    });
+    await db.collection("platformAuditLogs").add({
+      action: action === "suspend" ? "customer_invitation_suspended" : "customer_invitation_reactivated",
+      targetEmail: email, actor, createdAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+    return { ok: true, email, action, invitation: true };
   }
   if (uid === context.auth.uid) {
     throw new functions.https.HttpsError("permission-denied", "Owner အကောင့်ကို ဒီနေရာမှ ပိတ်၍မရပါ။");
@@ -435,13 +562,29 @@ exports.setPlatformUserAccess = functions.https.onCall(async (data, context) => 
     throw new functions.https.HttpsError("permission-denied", "ဤအကောင့်ကို Customer အဖြစ် မစီမံနိုင်ပါ။");
   }
   const licenseRef = db.collection("licenses").doc(uid);
+  const betaRef = db.collection("freeBetaUsers").doc(uid);
   await db.runTransaction(async tx => {
-    const snap = await tx.get(licenseRef);
+    const [snap, betaSnap] = await Promise.all([tx.get(licenseRef), tx.get(betaRef)]);
+    const beta = betaSnap.exists ? betaSnap.data() || {} : null;
     if (action === "suspend") {
       tx.set(licenseRef, {
         uid, email: target.email || "", status: "suspended",
         suspendedAt: admin.firestore.FieldValue.serverTimestamp(),
         suspendedBy: actor, updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+      if (betaSnap.exists) tx.update(betaRef, {
+        status: "suspended", suspendedAt: admin.firestore.FieldValue.serverTimestamp(),
+        suspendedBy: actor, updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+    } else if (beta && beta.email === String(target.email || "").trim().toLowerCase()) {
+      // Legacy free-beta users have no subscription expiry; restore their beta record explicitly.
+      tx.update(betaRef, {
+        status: "active", reactivatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        reactivatedBy: actor, updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+      if (snap.exists) tx.set(licenseRef, {
+        status: "active", reactivatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        reactivatedBy: actor, updatedAt: admin.firestore.FieldValue.serverTimestamp()
       }, { merge: true });
     } else {
       const license = snap.data() || {};
@@ -456,12 +599,14 @@ exports.setPlatformUserAccess = functions.https.onCall(async (data, context) => 
       });
     }
   });
+  // Disable Firebase Auth as well as the POS license so suspended users cannot start new sessions.
+  await admin.auth().updateUser(uid, { disabled: action === "suspend" });
   await db.collection("platformAuditLogs").add({
     action: action === "suspend" ? "customer_suspended" : "customer_reactivated",
     targetUid: uid, targetEmail: target.email || "", actor,
     createdAt: admin.firestore.FieldValue.serverTimestamp()
   });
-  return { ok: true, uid, action };
+  return { ok: true, uid, action, authDisabled: action === "suspend" };
 });
 
 exports.rejectPaymentRequest = functions.https.onCall(async (data, context) => {
@@ -636,12 +781,12 @@ exports.assignShopStaffRole = functions.https.onCall(async (data, context) => {
       throw new functions.https.HttpsError("already-exists", "ဤ Gmail ကို အခြားဆိုင်တွင် ချိတ်ဆက်ထားပြီးဖြစ်သည်။");
     }
     const alreadyMember = memberSnap.exists && memberSnap.data().shopId === ownerUid;
-    if (!alreadyMember && membersSnap.size >= 3) {
-      throw new functions.https.HttpsError("resource-exhausted", "ဆိုင်တစ်ဆိုင်လျှင် ဝန်ထမ်း ၃ ဦးအထိသာ ခွင့်ပြုထားသည်။");
+    if (!alreadyMember && membersSnap.size >= 2) {
+      throw new functions.https.HttpsError("resource-exhausted", "ဆိုင်တစ်ဆိုင်လျှင် ဝန်ထမ်း ၂ ဦးအထိသာ ခွင့်ပြုထားသည်။");
     }
     tx.set(membershipControlRef, {
       staffCount: membersSnap.size,
-      staffLimit: 3,
+      staffLimit: 2,
       updatedAt: admin.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
     tx.set(memberRef, {
@@ -668,8 +813,8 @@ exports.createShopInviteCode = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError("invalid-argument", "ဝန်ထမ်းရာထူး မမှန်ပါ။");
   }
   const members = await db.collection("shopMembers").where("shopId", "==", ownerUid).get();
-  if (members.size >= 3) {
-    throw new functions.https.HttpsError("resource-exhausted", "ဝန်ထမ်း ၃ ဦး ပြည့်နေပါပြီ။");
+  if (members.size >= 2) {
+    throw new functions.https.HttpsError("resource-exhausted", "ဝန်ထမ်း ၂ ဦး ပြည့်နေပါပြီ။");
   }
   const code = crypto.randomBytes(5).toString("hex").toUpperCase();
   const hash = crypto.createHash("sha256").update(code).digest("hex");
@@ -717,12 +862,12 @@ exports.claimShopInviteCode = functions.https.onCall(async (data, context) => {
       throw new functions.https.HttpsError("already-exists", "ဤ Gmail ကို အခြားဆိုင်တွင် ချိတ်ထားပြီးဖြစ်သည်။");
     }
     const already = memberSnap.exists && memberSnap.data().shopId === invite.shopId;
-    if (!already && membersSnap.size >= 3) {
-      throw new functions.https.HttpsError("resource-exhausted", "ဝန်ထမ်း ၃ ဦး ပြည့်နေပါပြီ။");
+    if (!already && membersSnap.size >= 2) {
+      throw new functions.https.HttpsError("resource-exhausted", "ဝန်ထမ်း ၂ ဦး ပြည့်နေပါပြီ။");
     }
     tx.set(membershipControlRef, {
       staffCount: membersSnap.size + (already ? 0 : 1),
-      staffLimit: 3,
+      staffLimit: 2,
       updatedAt: admin.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
     tx.update(inviteRef, { status: "claimed", claimedBy: uid, claimedEmail: email, claimedAt: admin.firestore.FieldValue.serverTimestamp() });
@@ -746,7 +891,7 @@ exports.claimShopInviteCode = functions.https.onCall(async (data, context) => {
 exports.listShopStaff = functions.https.onCall(async (data, context) => {
   const ownerUid = await requireActiveShop(context);
   const snap = await db.collection("shopMembers").where("shopId", "==", ownerUid).limit(100).get();
-  return { maxStaff: 3, totalAccounts: 1 + snap.size, members: snap.docs.map(doc => {
+  return { maxStaff: 2, totalAccounts: 1 + snap.size, members: snap.docs.map(doc => {
     const x = doc.data();
     return { uid: doc.id, email: x.email || "", role: x.role || "employee", canPrint: x.canPrint === true };
   }) };
@@ -835,7 +980,7 @@ exports.removeShopStaff = functions.https.onCall(async (data, context) => {
     tx.delete(ref);
     tx.set(membershipControlRef, {
       staffCount: Math.max(0, membersSnap.size - 1),
-      staffLimit: 3,
+      staffLimit: 2,
       updatedAt: admin.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
     removed = true;
@@ -1048,11 +1193,13 @@ async function verifyWorkspaceMember(context, identity) {
       member.data().role!==identity.role) {
     throw new functions.https.HttpsError("permission-denied","ဆိုင်ဝန်ထမ်းအဖွဲ့ဝင်ခွင့် မမှန်ပါ။");
   }
+  const beta=await db.collection("freeBetaUsers").doc(identity.shopId).get();
+  if (beta.exists && beta.data().status==="active") return;
   const license=await db.collection("licenses").doc(identity.shopId).get();
   const l=license.data()||{};
   if (!license.exists || l.status!=="active" || !l.expiresAt ||
       l.expiresAt.toMillis()<=Date.now()) {
-    throw new functions.https.HttpsError("permission-denied","ဆိုင် Subscription သက်တမ်း မရှိပါ။");
+    throw new functions.https.HttpsError("permission-denied","ဆိုင် Free Beta သို့မဟုတ် Subscription အသုံးပြုခွင့် မရှိပါ။");
   }
 }
 function workspaceCanWrite(role,key) {

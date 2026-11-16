@@ -400,10 +400,9 @@ exports.listPlatformUsers = functions.https.onCall(async (data, context) => {
     db.collection("freeBetaUsers").doc(u.uid)
   ]);
   const snaps = refs.length ? await db.getAll(...refs) : [];
-  const byId = new Map(snaps.map(x => [x.id, x.exists ? x.data() : {}]));
   const authUsers = page.users.map(u => {
-    const license = byId.get(u.uid) || {};
-    const beta = byId.get(u.uid + "#beta") || {};
+    const licenseSnap = snaps.find(x => x.id === u.uid && x.ref.parent.id === "licenses");
+    const license = licenseSnap && licenseSnap.exists ? licenseSnap.data() : {};
     const betaSnap = snaps.find(x => x.id === u.uid && x.ref.parent.id === "freeBetaUsers");
     const betaData = betaSnap && betaSnap.exists ? betaSnap.data() : {};
     const status = betaData.status === "suspended" || license.status === "suspended"

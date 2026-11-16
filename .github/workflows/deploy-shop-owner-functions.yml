@@ -34,7 +34,7 @@ jobs:
           node - <<'NODE'
           const source = require('fs').readFileSync('functions/index.js', 'utf8');
           for (const name of ['createShopOwnerAccount', 'claimOwnerProvisioning']) {
-            if (!new RegExp('exports\\\\.' + name + '\\\\s*=').test(source)) {
+            if (!new RegExp('exports\\.' + name + '\\s*=').test(source)) {
               throw new Error('Missing required export: ' + name);
             }
           }

@@ -235,9 +235,7 @@ function friendlyAuthError(e){
   "auth/invalid-email":"Gmail ပုံစံ မမှန်ပါ။",
   "auth/too-many-requests":"အကြိမ်များစွာ မှားယွင်းနေပါသည်။ ခဏစောင့်ပြီး ပြန်ဝင်ပါ။",
   "auth/network-request-failed":"အင်တာနက်ချိတ်ဆက်မှု မကောင်းပါ။",
-  "auth/operation-not-allowed":"Firebase Authentication > Email/Password ထဲတွင် Email Link (Passwordless sign-in) ကို Enable လုပ်ရန်လိုသည်။",
   "auth/unauthorized-domain":"Firebase Authentication > Settings > Authorized Domains ထဲတွင် Website Domain ကို ထည့်ရန်လိုသည်။",
-  "auth/invalid-action-code":"Gmail Login Link သက်တမ်းကုန်နေသည် သို့မဟုတ် အသုံးပြုပြီးဖြစ်သည်။ Login Link အသစ်တောင်းပါ။",
   "auth/api-key-not-valid.-please-pass-a-valid-api-key.":"Firebase API Key မမှန်ပါ။"
  };
  return map[code]||e?.message||String(e);
@@ -248,7 +246,6 @@ $("loginType").onchange=()=>{
  $("emailLoginFields").classList.add("hidden");
  $("staffLoginFields").classList.toggle("hidden",!staff);
  $("passwordLoginFields").classList.toggle("hidden",!staff);
- $("sendLoginLinkBtn")?.classList.add("hidden");
  $("customerGoogleBtn").classList.toggle("hidden",!shop);
  $("loginBtn").classList.toggle("hidden",!staff);
  $("ownerGoogleBtn").classList.toggle("hidden",!owner);

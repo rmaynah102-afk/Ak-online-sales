@@ -142,8 +142,8 @@ td,th{overflow-wrap:anywhere}
 <div class="row" style="margin-top:10px"><button id="saveProduct">ပစ္စည်းသိမ်းမည်</button><button id="clearProduct" class="secondary">ရှင်းမည်</button></div></div>
 <div class="tablewrap"><table><thead><tr><th>ပစ္စည်း</th><th>အမျိုးအစား</th><th>လက်ကျန်</th><th>ယူနစ်</th><th>လက်လီ</th><th>လက်ကား</th><th>ဝယ်ဈေး</th><th></th></tr></thead><tbody id="productRows"></tbody></table></div>
 </section>
-<section id="tab-sales" class="card hidden"><h2>အရောင်းသွင်းရန်</h2><div class="grid"><div><label>ပစ္စည်း</label><select id="saleProduct"></select><button type="button" class="secondary" id="scanSaleBtn">Barcode Scan</button></div><div><label>အရေအတွက်</label><input id="saleQty" type="number" min="0.001" step="0.001" value="1"></div><div><label>ဈေးနှုန်းအမျိုးအစား</label><select id="salePriceType"><option value="retail">လက်လီ</option><option value="wholesale">လက်ကား</option></select></div><div><label>ပေးချေမှု</label><select id="salePay"><option value="cash">ငွေသား</option><option value="credit">အကြွေး</option><option value="partial">တစ်စိတ်တစ်ပိုင်း</option></select></div><div><label>လက်ခံငွေ</label><input id="salePaid" type="number" min="0" value="0"></div><div><label>ဖောက်သည်</label><input id="saleCustomer" placeholder="အမည် / ဖုန်း"></div></div><div class="row no-print" style="margin-top:10px"><button type="button" class="secondary" id="addSaleCart">ဈေးခြင်းထဲထည့်မည်</button><button type="button" class="secondary" id="clearSaleCart">ဈေးခြင်းရှင်းမည်</button><button type="button" class="secondary" onclick="document.querySelector('#tabs button[data-tab=\'printer\']').click()">Printer ချိတ်ဆက် / စမ်းသပ်ရန်</button><span id="saleCartTotal" class="pill">စုစုပေါင်း 0 ကျပ်</span></div><div class="tablewrap"><table><thead><tr><th>ပစ္စည်း</th><th>အရေအတွက်</th><th>ဈေးနှုန်း</th><th>စုစုပေါင်း</th><th></th></tr></thead><tbody id="saleCartRows"></tbody></table></div><button id="saveSale" style="margin-top:10px">အရောင်းသိမ်းမည်</button><div class="tablewrap"><table><thead><tr><th>ရက်စွဲ</th><th>ပစ္စည်း</th><th>အရေအတွက်</th><th>စုစုပေါင်း</th><th>ရရှိငွေ</th><th>ကျန်အကြွေး</th><th>ဘောင်ချာ</th></tr></thead><tbody id="saleRows"></tbody></table></div></section>
-<section id="tab-purchases" class="card hidden"><h2>ကုန်ဝယ်ယူမှု</h2><div class="grid"><div><label>ပစ္စည်း</label><select id="buyProduct"></select></div><div><label>အရေအတွက်</label><input id="buyQty" type="number" min="0.001" step="0.001" value="1"></div><div><label>တစ်ခုဝယ်ဈေး</label><input id="buyCost" type="number" min="0"></div><div><label>ပေးသွင်းသူ</label><input id="buySupplier"></div><div><label>ယခုပေးချေငွေ</label><input id="buyPaid" type="number" min="0" value="0"></div></div><button id="savePurchase" style="margin-top:10px">အဝယ်သိမ်းမည်</button><div class="tablewrap"><table><thead><tr><th>ရက်စွဲ</th><th>ပစ္စည်း</th><th>အရေအတွက်</th><th>စုစုပေါင်း</th><th>ပေးသွင်းသူ</th><th>ပေးရန်ကျန်</th><th>လုပ်ဆောင်ချက်</th></tr></thead><tbody id="purchaseRows"></tbody></table></div></section>
+<section id="tab-sales" class="card hidden"><h2>အရောင်းသွင်းရန်</h2><div class="grid"><div><label>ပစ္စည်းရှာရန် (အမည် / Barcode)</label><input id="saleProductSearch" type="search" placeholder="ရိုက်ရှာပြီး Enter နှိပ်ပါ" autocomplete="off"><select id="saleProduct"></select><button type="button" class="secondary" id="scanSaleBtn">Barcode Scan</button></div><div><label>အရေအတွက်</label><input id="saleQty" type="number" min="0.001" step="0.001" value="1"></div><div><label>ဈေးနှုန်းအမျိုးအစား</label><select id="salePriceType"><option value="retail">လက်လီ</option><option value="wholesale">လက်ကား</option></select></div><div><label>ပေးချေမှု</label><select id="salePay"><option value="cash">ငွေသား</option><option value="credit">အကြွေး</option><option value="partial">တစ်စိတ်တစ်ပိုင်း</option></select></div><div><label>လက်ခံငွေ</label><input id="salePaid" type="number" min="0" value="0"></div><div><label>ဖောက်သည်</label><input id="saleCustomer" placeholder="အမည် / ဖုန်း"></div></div><div class="row no-print" style="margin-top:10px"><button type="button" class="secondary" id="addSaleCart">ဈေးခြင်းထဲထည့်မည်</button><button type="button" class="secondary" id="clearSaleCart">ဈေးခြင်းရှင်းမည်</button><button type="button" class="secondary" onclick="document.querySelector('#tabs button[data-tab=\'printer\']').click()">Printer ချိတ်ဆက် / စမ်းသပ်ရန်</button><span id="saleCartTotal" class="pill">စုစုပေါင်း 0 ကျပ်</span></div><div class="tablewrap"><table><thead><tr><th>ပစ္စည်း</th><th>အရေအတွက်</th><th>ဈေးနှုန်း</th><th>စုစုပေါင်း</th><th></th></tr></thead><tbody id="saleCartRows"></tbody></table></div><button id="saveSale" style="margin-top:10px">အရောင်းသိမ်းမည်</button><div class="tablewrap"><table><thead><tr><th>ရက်စွဲ</th><th>ပစ္စည်း</th><th>အရေအတွက်</th><th>စုစုပေါင်း</th><th>ရရှိငွေ</th><th>ကျန်အကြွေး</th><th>ဘောင်ချာ</th></tr></thead><tbody id="saleRows"></tbody></table></div></section>
+<section id="tab-purchases" class="card hidden"><h2>ကုန်ဝယ်ယူမှု</h2><div class="grid"><div><label>ပစ္စည်းရှာရန် (အမည် / Barcode)</label><input id="buyProductSearch" type="search" placeholder="ဝယ်ယူမည့်ပစ္စည်း ရှာရန်" autocomplete="off"><select id="buyProduct"></select></div><div><label>အရေအတွက်</label><input id="buyQty" type="number" min="0.001" step="0.001" value="1"></div><div><label>တစ်ခုဝယ်ဈေး</label><input id="buyCost" type="number" min="0"></div><div><label>ပေးသွင်းသူ (မဖြည့်လည်းရ)</label><input id="buySupplier"></div><div><label>ယခုပေးချေငွေ</label><input id="buyPaid" type="number" min="0" value="0"></div></div><button id="savePurchase" style="margin-top:10px">အဝယ်သိမ်းမည်</button><div class="tablewrap"><table><thead><tr><th>ရက်စွဲ</th><th>ပစ္စည်း</th><th>အရေအတွက်</th><th>စုစုပေါင်း</th><th>ပေးသွင်းသူ</th><th>ပေးရန်ကျန်</th><th>လုပ်ဆောင်ချက်</th></tr></thead><tbody id="purchaseRows"></tbody></table></div></section>
 <section id="tab-people" class="card hidden"><h2>ဖောက်သည် / ပေးသွင်းသူ</h2><div class="grid"><div><label>အမည်</label><input id="personName"></div><div><label>ဖုန်း</label><input id="personPhone"></div><div><label>အမျိုးအစား</label><select id="personType"><option value="customer">ဖောက်သည်</option><option value="supplier">ပေးသွင်းသူ</option></select></div></div><button id="savePerson" style="margin-top:10px">သိမ်းမည်</button><div id="peopleRows"></div></section>
 <section id="tab-expenses" class="card hidden"><h2>အသုံးစရိတ်</h2><div class="grid"><div><label>အကြောင်းအရာ</label><input id="expenseName"></div><div><label>ငွေပမာဏ</label><input id="expenseAmount" type="number" min="0"></div></div><button id="saveExpense" style="margin-top:10px">သိမ်းမည်</button><div id="expenseRows"></div></section>
 <section id="tab-reports" class="card hidden"><h2>စာရင်းချုပ်</h2><div class="stats"><div class="stat">စုစုပေါင်းအရောင်း<b id="reportSales">0</b></div><div class="stat">စုစုပေါင်းအဝယ်<b id="reportPurchases">0</b></div><div class="stat">အသုံးစရိတ်<b id="reportExpenses">0</b></div><div class="stat">အကြမ်းအမြတ်ခန့်မှန်း<b id="reportProfit">0</b></div><div class="stat">ရရန်အကြွေး<b id="reportDebt">0</b></div><div class="stat">ပေးရန်အကြွေး<b id="reportPayable">0</b></div></div><p class="muted">အမြတ်တွက်ချက်မှုသည် သိမ်းထားသော ဝယ်ဈေးနှင့် အရောင်းမှတ်တမ်းအပေါ် မူတည်သည်။</p><div class="row"><button id="reportVoucher" class="secondary">အစီရင်ခံစာ Online ဘောင်ချာ</button><button onclick="window.print()" class="secondary">အစီရင်ခံစာ ပုံနှိပ်ရန်</button><button id="exportCsv" class="secondary">CSV မိတ္တူ Export</button></div></section>
@@ -505,6 +505,15 @@ function renderTradeTrend(){
 }
 document.querySelectorAll(".trade-range").forEach(b=>b.onclick=()=>{tradeTrendRange=b.dataset.range;document.querySelectorAll(".trade-range").forEach(x=>x.classList.toggle("active",x===b));renderTradeTrend()});
 window.addEventListener("resize",()=>{if(!$("shopPanel").classList.contains("hidden"))renderTradeTrend()});
+function refreshTransactionProductOptions(){
+ const make=(query)=>products.filter(p=>!query||[p.name,p.sku,p.barcode,p.category].some(v=>String(v||"").toLowerCase().includes(query))).map(p=>'<option value="'+p.id+'">'+esc(p.name)+' ('+esc(p.unit||"ခု")+' · လက်ကျန် '+p.stock+')</option>').join("");
+ const sale=$("saleProduct"),buy=$("buyProduct");
+ const saleValue=sale.value,buyValue=buy.value;
+ sale.innerHTML=make(String($("saleProductSearch")?.value||"").trim().toLowerCase());
+ buy.innerHTML=make(String($("buyProductSearch")?.value||"").trim().toLowerCase());
+ if([...sale.options].some(o=>o.value===saleValue))sale.value=saleValue;
+ if([...buy.options].some(o=>o.value===buyValue))buy.value=buyValue;
+}
 function renderAll(){
  renderSaleCart();
  $("productCount").textContent=products.length;
@@ -512,13 +521,12 @@ function renderAll(){
  $("stockValue").textContent=money(products.reduce((a,x)=>a+x.stock*(x.cost||0),0));
  $("lowStock").textContent=products.filter(x=>x.stock<=x.alert).length;
  renderProductTable();
- const opts=products.map(p=>'<option value="'+p.id+'">'+esc(p.name)+' ('+esc(p.unit||"ခု")+' · လက်ကျန် '+p.stock+')</option>').join("");
- $("saleProduct").innerHTML=$("buyProduct").innerHTML=opts;
+ refreshTransactionProductOptions();
  $("adProduct").innerHTML='<option value="">ကိုယ်တိုင်ဖြည့်မည်</option>'+opts;
  $("saleRows").innerHTML=sales.slice().sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0)).map(x=>{
   const extra=payments.filter(p=>p.kind==="sale"&&p.saleId===x.id).reduce((a,p)=>a+Number(p.amount||0),0);
   const paid=Number(x.paid||0)+extra,due=Math.max(0,Number(x.total||0)-paid);
-  return '<tr><td>'+dateText(x.createdAt)+'</td><td>'+esc(x.productName||"ပစ္စည်းများ")+'</td><td>'+x.qty+'</td><td>'+money(x.total)+'</td><td>'+money(paid)+'</td><td>'+money(due)+'</td><td>'+(due>0?'<button class="secondary" data-sale-pay="'+x.id+'">အကြွေးကောက်</button> ':"")+'<button class="secondary" data-receipt-print="'+x.id+'">ဘောင်ချာ ပုံနှိပ်ရန်</button> <button class="secondary" data-receipt-share="'+x.id+'">Share</button></td></tr>';
+  return '<tr><td>'+dateText(x.createdAt)+'</td><td>'+esc(x.productName||"ပစ္စည်းများ")+'</td><td>'+x.qty+'</td><td>'+money(x.total)+'</td><td>'+money(paid)+'</td><td>'+money(due)+'</td><td>'+(due>0?'<button class="secondary" data-sale-pay="'+x.id+'">အကြွေးကောက်</button> ':"")+'<button class="secondary" data-receipt-print="'+x.id+'">ဘောင်ချာ ပုံနှိပ်ရန်</button> <button class="secondary" data-receipt-share="'+x.id+'">Viber / Share</button></td></tr>';
  }).join("");
  $("saleRows").querySelectorAll("[data-sale-pay]").forEach(b=>b.onclick=()=>collectSalePayment(b.dataset.salePay));
  $("saleRows").querySelectorAll("[data-receipt-print]").forEach(b=>b.onclick=()=>printSaleReceipt(b.dataset.receiptPrint));
@@ -526,12 +534,12 @@ function renderAll(){
  $("purchaseRows").innerHTML=purchases.map(x=>{
   const extra=payments.filter(p=>p.kind==="purchase"&&p.purchaseId===x.id).reduce((a,p)=>a+Number(p.amount||0),0);
   const paid=Number(x.paid||0)+extra,due=Math.max(0,Number(x.total||0)-paid);
-  return '<tr><td>'+dateText(x.createdAt)+'</td><td>'+esc(x.productName)+'</td><td>'+x.qty+'</td><td>'+money(x.total)+'</td><td>'+esc(x.supplier||"")+'</td><td>'+money(due)+'</td><td>'+(due>0?'<button class="secondary" data-purchase-pay="'+x.id+'">ပေးသွင်းငွေပေး</button> ':"ရှင်းပြီး " )+'<button class="secondary" data-purchase-voucher="'+x.id+'">Online ဘောင်ချာ</button></td></tr>';
+  return '<tr><td>'+dateText(x.createdAt)+'</td><td>'+esc(x.productName)+'</td><td>'+x.qty+'</td><td>'+money(x.total)+'</td><td>'+esc(x.supplier||"")+'</td><td>'+money(due)+'</td><td>'+(due>0?'<button class="secondary" data-purchase-pay="'+x.id+'">ပေးသွင်းငွေပေး</button> ':"ရှင်းပြီး " )+'<button class="secondary" data-purchase-voucher="'+x.id+'">Viber / Share</button></td></tr>';
  }).join("");
  $("purchaseRows").querySelectorAll("[data-purchase-pay]").forEach(b=>b.onclick=()=>paySupplier(b.dataset.purchasePay));
  $("purchaseRows").querySelectorAll("[data-purchase-voucher]").forEach(b=>b.onclick=()=>sharePurchaseVoucher(b.dataset.purchaseVoucher));
  $("peopleRows").innerHTML=people.map(x=>'<p>'+esc(x.name)+' · '+esc(x.phone||"")+' · '+esc(x.type)+'</p>').join("");
- $("expenseRows").innerHTML=expenses.map(x=>'<p>'+esc(x.name)+' · '+money(x.amount)+' · '+dateText(x.createdAt)+' <button class="secondary" data-expense-voucher="'+x.id+'">Online ဘောင်ချာ</button></p>').join("");
+ $("expenseRows").innerHTML=expenses.map(x=>'<p>'+esc(x.name)+' · '+money(x.amount)+' · '+dateText(x.createdAt)+' <button class="secondary" data-expense-voucher="'+x.id+'">Viber / Share</button></p>').join("");
  $("expenseRows").querySelectorAll("[data-expense-voucher]").forEach(b=>b.onclick=()=>shareExpenseVoucher(b.dataset.expenseVoucher));
  const totalSales=sales.reduce((a,x)=>a+x.total,0),totalPurch=purchases.reduce((a,x)=>a+x.total,0),totalExp=expenses.reduce((a,x)=>a+x.amount,0);
  const debt=sales.reduce((a,x)=>a+Math.max(0,Number(x.total||0)-Number(x.paid||0)-payments.filter(p=>p.kind==="sale"&&p.saleId===x.id).reduce((z,p)=>z+Number(p.amount||0),0)),0);
@@ -573,6 +581,16 @@ $("addSaleCart").onclick=()=>{
  const old=saleCart.find(x=>x.productId===id&&x.price===price);if(old)old.qty+=qty;else saleCart.push({productId:id,name:p.name,qty,price});renderSaleCart();
 };
 $("clearSaleCart").onclick=()=>{saleCart=[];renderSaleCart()};
+$("saleProductSearch").addEventListener("input",()=>refreshTransactionProductOptions());
+$("saleProductSearch").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();if($("saleProduct").options.length===1)$("saleProduct").selectedIndex=0;$("addSaleCart").click();$("saleProductSearch").value="";refreshTransactionProductOptions();$("saleQty").focus();$("saleQty").select()}});
+$("buyProductSearch").addEventListener("input",()=>refreshTransactionProductOptions());
+$("buyProduct").addEventListener("change",()=>{const p=products.find(x=>x.id===$("buyProduct").value);if(p){$("buyCost").value=Number(p.cost||0);if(!$("buyPaidTouched")?.value)$("buyPaid").value=(Number($("buyQty").value)||1)*Number($("buyCost").value||0)}});
+let buyPaidManuallyEdited=false;
+$("buyPaid").addEventListener("input",()=>{buyPaidManuallyEdited=true});
+function updateSuggestedPurchasePaid(){if(!buyPaidManuallyEdited)$("buyPaid").value=(Number($("buyQty").value)||1)*(Number($("buyCost").value)||0)}
+$("buyQty").addEventListener("input",updateSuggestedPurchasePaid);
+$("buyCost").addEventListener("input",updateSuggestedPurchasePaid);
+
 $("saveSale").onclick=async()=>{
  try{
   if(!saleCart.length)throw Error("အရင်ဆုံး ပစ္စည်းကို ဈေးခြင်းထဲထည့်ပါ");
@@ -593,16 +611,16 @@ $("saveSale").onclick=async()=>{
 $("savePurchase").onclick=async()=>{
  try{
   const selectedId=$("buyProduct").value,qty=Number($("buyQty").value),cost=Number($("buyCost").value),supplier=$("buySupplier").value.trim(),paid=Number($("buyPaid").value)||0;
-  if(!selectedId||!Number.isFinite(qty)||qty<=0||!Number.isFinite(cost)||cost<0||!supplier)throw Error("အဝယ်အချက်အလက်နှင့် ပေးသွင်းသူ အမည် မှန်ကန်စွာဖြည့်ပါ");
+  if(!selectedId||!Number.isFinite(qty)||qty<=0||!Number.isFinite(cost)||cost<0)throw Error("အဝယ်အချက်အလက် မှန်ကန်စွာဖြည့်ပါ");
   const total=qty*cost;if(paid<0||paid>total)throw Error("ပေးချေငွေသည် စုစုပေါင်းထက် မများရပါ");
   const purchaseRef=col("purchases").doc(),productRef=col("products").doc(selectedId),costRef=col("productCosts").doc(selectedId),paymentRef=col("payments").doc();
   await db.runTransaction(async tx=>{
    const productSnap=await tx.get(productRef);if(!productSnap.exists)throw Error("ပစ္စည်းမတွေ့ပါ");const p=productSnap.data();
    tx.update(productRef,{stock:Number(p.stock||0)+qty});tx.set(costRef,{cost});
-   tx.set(purchaseRef,{productId:selectedId,productName:p.name,qty,cost,total,paid,due:total-paid,supplier,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+   tx.set(purchaseRef,{productId:selectedId,productName:p.name,qty,cost,total,paid,due:total-paid,supplier:supplier||"မသတ်မှတ်ရသေး",createdAt:firebase.firestore.FieldValue.serverTimestamp()});
    if(paid>0)tx.set(paymentRef,{kind:"purchase",purchaseId:purchaseRef.id,amount:paid,supplier,createdAt:firebase.firestore.FieldValue.serverTimestamp(),note:"အဝယ်တွင် ပထမပေးချေမှု"});
   });
-  $("buyPaid").value="0";await reloadAll();
+  $("buyPaid").value="0";buyPaidManuallyEdited=false;await reloadAll();
  }catch(e){alert(errText(e))}
 };
 

@@ -135,11 +135,14 @@ async function requireActiveShop(context) {
   const email = String(context.auth.token.email || "").trim().toLowerCase();
   // The sole verified Platform Owner may administer their own shop without a paid license.
   if (email === OWNER_EMAIL && context.auth.token.email_verified === true) return uid;
+  const snap = await db.collection("licenses").doc(uid).get();
+  const license = snap.data() || {};
+  if (snap.exists && license.status === "suspended") {
+    throw new functions.https.HttpsError("permission-denied", "ဤအကောင့်ကို Platform Owner က ရပ်ဆိုင်းထားသည်။");
+  }
   const beta = await db.collection("freeBetaUsers").doc(uid).get();
   if (context.auth.token.email_verified === true && beta.exists &&
       beta.data().status === "active" && beta.data().email === email) return uid;
-  const snap = await db.collection("licenses").doc(uid).get();
-  const license = snap.data() || {};
   if (!snap.exists || license.status !== "active" || !license.expiresAt ||
       license.expiresAt.toMillis() <= Date.now()) {
     throw new functions.https.HttpsError("permission-denied", "Free Beta အကောင့်မဟုတ်ပါက သက်တမ်းရှိ Subscription လိုအပ်သည်။");
@@ -392,15 +395,24 @@ exports.listPlatformUsers = functions.https.onCall(async (data, context) => {
     admin.auth().listUsers(100, pageToken),
     db.collection("pendingOwnerInvites").limit(100).get()
   ]);
-  const refs = page.users.map(u => db.collection("licenses").doc(u.uid));
-  const licenseSnaps = refs.length ? await db.getAll(...refs) : [];
-  const byUid = new Map(licenseSnaps.map(s => [s.id, s.exists ? s.data() : {}]));
+  const refs = page.users.flatMap(u => [
+    db.collection("licenses").doc(u.uid),
+    db.collection("freeBetaUsers").doc(u.uid)
+  ]);
+  const snaps = refs.length ? await db.getAll(...refs) : [];
+  const byId = new Map(snaps.map(x => [x.id, x.exists ? x.data() : {}]));
   const authUsers = page.users.map(u => {
-    const license = byUid.get(u.uid) || {};
+    const license = byId.get(u.uid) || {};
+    const beta = byId.get(u.uid + "#beta") || {};
+    const betaSnap = snaps.find(x => x.id === u.uid && x.ref.parent.id === "freeBetaUsers");
+    const betaData = betaSnap && betaSnap.exists ? betaSnap.data() : {};
+    const status = betaData.status === "suspended" || license.status === "suspended"
+      ? "suspended" : (betaData.status === "active" ? "active" : String(license.status || "pending_payment"));
     return {
       uid: u.uid, email: u.email || "", emailVerified: !!u.emailVerified,
-      disabled: !!u.disabled, status: String(license.status || "pending_payment"),
-      plan: String(license.plan || ""), expiresAt: license.expiresAt && license.expiresAt.toDate
+      disabled: !!u.disabled, status,
+      plan: betaData.status === "active" || betaData.status === "suspended" ? "free-beta" : String(license.plan || ""),
+      expiresAt: license.expiresAt && license.expiresAt.toDate
         ? license.expiresAt.toDate().toISOString() : "", isInvitation: false
     };
   }).filter(u => u.email.toLowerCase() !== OWNER_EMAIL);
@@ -538,13 +550,29 @@ exports.setPlatformUserAccess = functions.https.onCall(async (data, context) => 
     throw new functions.https.HttpsError("permission-denied", "ဤအကောင့်ကို Customer အဖြစ် မစီမံနိုင်ပါ။");
   }
   const licenseRef = db.collection("licenses").doc(uid);
+  const betaRef = db.collection("freeBetaUsers").doc(uid);
   await db.runTransaction(async tx => {
-    const snap = await tx.get(licenseRef);
+    const [snap, betaSnap] = await Promise.all([tx.get(licenseRef), tx.get(betaRef)]);
+    const beta = betaSnap.exists ? betaSnap.data() || {} : null;
     if (action === "suspend") {
       tx.set(licenseRef, {
         uid, email: target.email || "", status: "suspended",
         suspendedAt: admin.firestore.FieldValue.serverTimestamp(),
         suspendedBy: actor, updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+      if (betaSnap.exists) tx.update(betaRef, {
+        status: "suspended", suspendedAt: admin.firestore.FieldValue.serverTimestamp(),
+        suspendedBy: actor, updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+    } else if (beta && beta.email === String(target.email || "").trim().toLowerCase()) {
+      // Legacy free-beta users have no subscription expiry; restore their beta record explicitly.
+      tx.update(betaRef, {
+        status: "active", reactivatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        reactivatedBy: actor, updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+      if (snap.exists) tx.set(licenseRef, {
+        status: "active", reactivatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        reactivatedBy: actor, updatedAt: admin.firestore.FieldValue.serverTimestamp()
       }, { merge: true });
     } else {
       const license = snap.data() || {};

@@ -191,6 +191,7 @@ async function boot(){
     // A missing/empty POS collection must never prevent access to shop licenses.
     $("ownerStatus").textContent="Platform Owner Login အောင်မြင်ပါပြီ။ ဆိုင်အကောင့်စာရင်းကို ဖတ်နေသည်...";
     await loadLicenses();
+    await loadPlatformUsers(true);
     $("ownerStatus").textContent="Platform Owner အကောင့်ဝင်ပြီးပါပြီ။ ဆိုင်ရှင်အကောင့်များကို စီမံနိုင်ပါသည်။";
    }
    else if(email.endsWith("@akstaff.app")){

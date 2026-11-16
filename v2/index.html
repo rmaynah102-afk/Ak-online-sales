@@ -822,7 +822,7 @@ $("shareAd").onclick=async()=>{
 $("exportCsv").onclick=()=>{
  const rows=[["Type","Name","Category","SKU","Qty","Price","Cost","Total","Paid","Due","Date","Customer / Supplier","Shop"]];
  products.forEach(x=>rows.push(["Product",x.name,x.category,x.sku,x.stock,x.retail,x.cost,"","","",""]));
- sales.forEach(x=>{const b=saleBalance(x);rows.push(["Sale",x.productName,"","",x.qty,x.price,"",x.total,b.paid,b.due,dateText(x.createdAt),x.customer||"",shopProfile.name||activeShopName])});
+ sales.forEach(x=>{const b=saleBalance(x),saleName=Array.isArray(x.lines)&&x.lines.length?x.lines.map(v=>v.name).join(" "):x.productName,saleQty=Array.isArray(x.lines)&&x.lines.length?x.lines.reduce((n,line)=>n+Number(line.qty??x.qty??0),0):Number(x.qty||0);rows.push(["Sale",saleName,"","",saleQty,x.price,"",x.total,b.paid,b.due,dateText(x.createdAt),x.customer||"",shopProfile.name||activeShopName])});
  purchases.forEach(x=>{const paid=Number(x.paid||0)+payments.filter(p=>p.kind==="purchase"&&p.purchaseId===x.id).reduce((a,p)=>a+Number(p.amount||0),0);rows.push(["Purchase",x.productName,"","",x.qty,"",x.cost,x.total,paid,Math.max(0,x.total-paid),dateText(x.createdAt),x.supplier||"",shopProfile.name||activeShopName])});
  expenses.forEach(x=>rows.push(["Expense",x.name,"","","","","",x.amount,"","","",dateText(x.createdAt),"",shopProfile.name||activeShopName]));
  people.forEach(x=>rows.push(["Person",x.name,x.type,x.phone,"","","","","","","","",shopProfile.name||activeShopName]));

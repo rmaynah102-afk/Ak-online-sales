@@ -463,6 +463,7 @@ async function loadShop(){
    else{if(!lic.exists||lic.data().status!=="active"||!lic.data().expiresAt||lic.data().expiresAt.toDate()<=new Date())throw Error("ဆိုင်သက်တမ်းကုန်နေပါသည်။ Platform Owner ထံ သက်တမ်းတိုးရန် ဆက်သွယ်ပါ။");activeShopName=String(lic.data().shopName||"ဆိုင်အမည်");$("shopTitle").textContent=lic.data().shopName||"ဆိုင် Dashboard";$("licenseBadge").textContent="သက်တမ်းကုန်ရက် "+dateText(lic.data().expiresAt);}
    $("ownerControlBtn").classList.add("hidden");
  }
+ await loadShopProfile();
  show("shopPanel");$("userBadge").textContent=platformOwner?"Platform Owner · POS":staffRole==="owner"?"ဆိုင်ရှင်":("ဝန်ထမ်း · "+staffRole);
  printerRender();applyRoleUI();
  if(staffRole==="owner"&&!platformOwner)await loadMerchantStaff();
@@ -823,8 +824,8 @@ $("exportCsv").onclick=()=>{
  products.forEach(x=>rows.push(["Product",x.name,x.category,x.sku,x.stock,x.retail,x.cost,"","","",""]));
  sales.forEach(x=>{const b=saleBalance(x);rows.push(["Sale",x.productName,"","",x.qty,x.price,"",x.total,b.paid,b.due,dateText(x.createdAt),x.customer||"",shopProfile.name||activeShopName])});
  purchases.forEach(x=>{const paid=Number(x.paid||0)+payments.filter(p=>p.kind==="purchase"&&p.purchaseId===x.id).reduce((a,p)=>a+Number(p.amount||0),0);rows.push(["Purchase",x.productName,"","",x.qty,"",x.cost,x.total,paid,Math.max(0,x.total-paid),dateText(x.createdAt),x.supplier||"",shopProfile.name||activeShopName])});
- expenses.forEach(x=>rows.push(["Expense",x.name,"","","","","",x.amount,"","","",dateText(x.createdAt)]));
- people.forEach(x=>rows.push(["Person",x.name,x.type,x.phone,"","","","","","",""]));
+ expenses.forEach(x=>rows.push(["Expense",x.name,"","","","","",x.amount,"","","",dateText(x.createdAt),"",shopProfile.name||activeShopName]));
+ people.forEach(x=>rows.push(["Person",x.name,x.type,x.phone,"","","","","","","","",shopProfile.name||activeShopName]));
  const csv="\uFEFF"+rows.map(row=>row.map(v=>'"'+String(v??"").replace(/"/g,'""')+'"').join(",")).join("\r\n"),blob=new Blob([csv],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=(String(shopProfile.name||activeShopName||"Business").replace(/[^a-z0-9-_]/gi,"-").slice(0,35)||"Business")+"-POS-Backup-"+new Date().toISOString().slice(0,10)+".csv";a.click();URL.revokeObjectURL(a.href);
 };
 

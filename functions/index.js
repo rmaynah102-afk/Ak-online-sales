@@ -388,22 +388,37 @@ exports.listPendingPayments = functions.https.onCall(async (data, context) => {
 exports.listPlatformUsers = functions.https.onCall(async (data, context) => {
   requireAdmin(context);
   const pageToken = String(data.pageToken || "").trim() || undefined;
-  const page = await admin.auth().listUsers(100, pageToken);
+  const [page, inviteSnap] = await Promise.all([
+    admin.auth().listUsers(100, pageToken),
+    db.collection("pendingOwnerInvites").limit(100).get()
+  ]);
   const refs = page.users.map(u => db.collection("licenses").doc(u.uid));
   const licenseSnaps = refs.length ? await db.getAll(...refs) : [];
   const byUid = new Map(licenseSnaps.map(s => [s.id, s.exists ? s.data() : {}]));
-  return {
-    users: page.users.map(u => {
-      const license = byUid.get(u.uid) || {};
-      return {
-        uid: u.uid, email: u.email || "", emailVerified: !!u.emailVerified,
-        disabled: !!u.disabled, status: String(license.status || "pending_payment"),
-        plan: String(license.plan || ""), expiresAt: license.expiresAt && license.expiresAt.toDate
-          ? license.expiresAt.toDate().toISOString() : ""
-      };
-    }).filter(u => u.email.toLowerCase() !== OWNER_EMAIL),
-    nextPageToken: page.pageToken || ""
-  };
+  const authUsers = page.users.map(u => {
+    const license = byUid.get(u.uid) || {};
+    return {
+      uid: u.uid, email: u.email || "", emailVerified: !!u.emailVerified,
+      disabled: !!u.disabled, status: String(license.status || "pending_payment"),
+      plan: String(license.plan || ""), expiresAt: license.expiresAt && license.expiresAt.toDate
+        ? license.expiresAt.toDate().toISOString() : "", isInvitation: false
+    };
+  }).filter(u => u.email.toLowerCase() !== OWNER_EMAIL);
+  const registeredEmails = new Set(authUsers.map(u => u.email.toLowerCase()));
+  const invitations = inviteSnap.docs.map(doc => {
+    const x = doc.data() || {};
+    return {
+      uid: "invite:" + String(x.email || "").toLowerCase(),
+      email: String(x.email || ""), emailVerified: false,
+      disabled: x.status === "suspended",
+      status: x.status === "suspended" ? "suspended" : "invited",
+      plan: "Gmail Invitation", isInvitation: true,
+      expiresAt: x.expiresAt && x.expiresAt.toDate ? x.expiresAt.toDate().toISOString() : ""
+    };
+  }).filter(x => x.email && x.email.toLowerCase() !== OWNER_EMAIL &&
+    !registeredEmails.has(x.email.toLowerCase()) &&
+    ["pending", "suspended"].includes(inviteSnap.docs.find(d => String(d.data().email || "").toLowerCase() === x.email.toLowerCase())?.data()?.status));
+  return { users: [...authUsers, ...invitations], nextPageToken: page.pageToken || "" };
 });
 
 // A customer asks for access after registering. Payment is handled outside the app;
@@ -483,8 +498,36 @@ exports.setPlatformUserAccess = functions.https.onCall(async (data, context) => 
   const actor = requireAdmin(context);
   const uid = String(data.uid || "").trim();
   const action = String(data.action || "").trim();
-  if (!uid || uid.length > 128 || !["suspend", "reactivate"].includes(action)) {
+  if (!uid || uid.length > 256 || !["suspend", "reactivate"].includes(action)) {
     throw new functions.https.HttpsError("invalid-argument", "အသုံးပြုသူ သို့မဟုတ် လုပ်ဆောင်ချက် မမှန်ပါ။");
+  }
+  if (uid.startsWith("invite:")) {
+    const email = uid.slice(7).trim().toLowerCase();
+    if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email) || email === OWNER_EMAIL) {
+      throw new functions.https.HttpsError("invalid-argument", "Invitation Gmail မမှန်ပါ။");
+    }
+    const key = crypto.createHash("sha256").update(email).digest("hex");
+    const inviteRef = db.collection("pendingOwnerInvites").doc(key);
+    await db.runTransaction(async tx => {
+      const snap = await tx.get(inviteRef);
+      if (!snap.exists || snap.data().email !== email || !["pending", "suspended"].includes(snap.data().status)) {
+        throw new functions.https.HttpsError("not-found", "စောင့်ဆိုင်းနေသော Gmail Invitation မတွေ့ပါ။");
+      }
+      if (action === "reactivate" && snap.data().expiresAt &&
+          snap.data().expiresAt.toMillis() <= Date.now()) {
+        throw new functions.https.HttpsError("failed-precondition", "Invitation သက်တမ်းကုန်နေသည်။ အသစ်ပြန်ဖန်တီးပါ။");
+      }
+      tx.update(inviteRef, {
+        status: action === "suspend" ? "suspended" : "pending",
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        accessChangedBy: actor
+      });
+    });
+    await db.collection("platformAuditLogs").add({
+      action: action === "suspend" ? "customer_invitation_suspended" : "customer_invitation_reactivated",
+      targetEmail: email, actor, createdAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+    return { ok: true, email, action, invitation: true };
   }
   if (uid === context.auth.uid) {
     throw new functions.https.HttpsError("permission-denied", "Owner အကောင့်ကို ဒီနေရာမှ ပိတ်၍မရပါ။");

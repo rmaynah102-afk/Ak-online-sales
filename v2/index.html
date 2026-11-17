@@ -457,7 +457,6 @@ $("loginBtn").onclick=async()=>{
  try{
   const mode=$("loginType").value,email=$("email").value.trim().toLowerCase(),password=$("password").value;
   if(!email||!/^[^@ ]+@[^@ ]+[.][^@ .]+$/.test(email)||!password)throw Error("Gmail နှင့် Password ဖြည့်ပါ။");
-  if(mode==="staff"&&!/^[A-F0-9]{32}$/.test($("merchantCode").value.trim().toUpperCase()))throw Error("၃၂ လုံး Merchant Code မှန်ကန်စွာ ထည့်ပါ။");
   status(mode==="staff"?"Staff Gmail Login စစ်ဆေးနေသည်...":"ဆိုင်ရှင် Gmail Login စစ်ဆေးနေသည်...");
   await auth.signInWithEmailAndPassword(email,password);
  }catch(e){status("Login မအောင်မြင်: "+friendlyAuthError(e))}

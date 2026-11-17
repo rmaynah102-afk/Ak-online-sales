@@ -286,7 +286,6 @@ async function boot(){
     await claimShopOwnerAccess(u);
     shopId=u.uid;staffRole="owner";await loadShop()
    }
-   }
   }catch(e){
    const email=(u.email||"").toLowerCase();
    if(email===OWNER){

@@ -525,6 +525,56 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Spark-plan Gmail invitations: only the verified Platform Owner can issue or
+    // manage invitations; only the exact invited, verified Gmail can claim one.
+    match /pendingOwnerInvites/{emailKey} {
+      allow read: if isVerifiedOwner()
+        || (request.auth != null
+          && request.auth.token.email_verified == true
+          && request.auth.token.email == resource.data.email
+          && emailKey == request.auth.token.email);
+      allow create: if isVerifiedOwner()
+        && emailKey == request.resource.data.email
+        && request.resource.data.email is string
+        && request.resource.data.email.matches('^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$')
+        && request.resource.data.shopName is string
+        && request.resource.data.shopName.size() >= 2
+        && request.resource.data.shopName.size() <= 100
+        && request.resource.data.industryType is string
+        && request.resource.data.industryType.size() <= 60
+        && request.resource.data.status == 'pending'
+        && request.resource.data.invitedBy == request.auth.uid
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.expiresAt is timestamp
+        && request.resource.data.expiresAt > request.time;
+      allow update: if (
+          isVerifiedOwner()
+          && request.resource.data.email == resource.data.email
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['shopName','industryType','status','invitedBy','createdAt','expiresAt','updatedAt'])
+          && request.resource.data.status in ['pending','suspended']
+          && request.resource.data.expiresAt is timestamp
+          && request.resource.data.expiresAt > request.time
+        ) || (
+          request.auth != null
+          && request.auth.token.email_verified == true
+          && request.auth.token.email == resource.data.email
+          && emailKey == request.auth.token.email
+          && resource.data.status == 'pending'
+          && resource.data.expiresAt is timestamp
+          && resource.data.expiresAt > request.time
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','claimedUid','claimedAt'])
+          && request.resource.data.status == 'claimed'
+          && request.resource.data.claimedUid == request.auth.uid
+          && request.resource.data.claimedAt == request.time
+          && existsAfter(/databases/$(database)/documents/licenses/$(request.auth.uid))
+          && getAfter(/databases/$(database)/documents/licenses/$(request.auth.uid)).data.email == request.auth.token.email
+          && getAfter(/databases/$(database)/documents/licenses/$(request.auth.uid)).data.expiresAt == resource.data.expiresAt
+          && getAfter(/databases/$(database)/documents/licenses/$(request.auth.uid)).data.status == 'active'
+        );
+      allow delete: if false;
+    }
+
     match /licenses/{userId} {
       allow read: if request.auth != null && (
         request.auth.uid == userId
@@ -537,22 +587,44 @@ service cloud.firestore {
           && resource.data.expiresAt > request.time)
       );
       // Only the verified Platform Owner may issue or suspend a license after manual payment review.
-      allow create: if isVerifiedOwner()
-        && request.resource.data.uid == userId
-        && request.resource.data.status == 'active'
-        && request.resource.data.expiresAt is timestamp
-        && request.resource.data.plan in ['30-days','90-days','180-days','365-days']
-        && exists(/databases/$(database)/documents/platformMeta/shopCapacity)
-        && get(/databases/$(database)/documents/platformMeta/shopCapacity).data.activeShopCount is int
-        && existsAfter(/databases/$(database)/documents/platformMeta/shopCapacity)
-        && getAfter(/databases/$(database)/documents/platformMeta/shopCapacity).data.activeShopCount
-          == get(/databases/$(database)/documents/platformMeta/shopCapacity).data.activeShopCount + 1
-        && getAfter(/databases/$(database)/documents/platformMeta/shopCapacity).data.lastIssuedUid == userId;
+      allow create: if (
+          isVerifiedOwner()
+          && request.resource.data.uid == userId
+          && request.resource.data.status == 'active'
+          && request.resource.data.expiresAt is timestamp
+          && request.resource.data.plan in ['30-days','90-days','180-days','365-days']
+          && exists(/databases/$(database)/documents/platformMeta/shopCapacity)
+          && get(/databases/$(database)/documents/platformMeta/shopCapacity).data.activeShopCount is int
+          && existsAfter(/databases/$(database)/documents/platformMeta/shopCapacity)
+          && getAfter(/databases/$(database)/documents/platformMeta/shopCapacity).data.activeShopCount
+            == get(/databases/$(database)/documents/platformMeta/shopCapacity).data.activeShopCount + 1
+          && getAfter(/databases/$(database)/documents/platformMeta/shopCapacity).data.lastIssuedUid == userId
+        ) || (
+          request.auth != null
+          && request.auth.uid == userId
+          && request.auth.token.email_verified == true
+          && request.resource.data.uid == userId
+          && request.resource.data.email == request.auth.token.email
+          && request.resource.data.status == 'active'
+          && request.resource.data.plan == 'owner-managed'
+          && request.resource.data.expiresAt is timestamp
+          && request.resource.data.expiresAt > request.time
+          && exists(/databases/$(database)/documents/pendingOwnerInvites/$(request.auth.token.email))
+          && get(/databases/$(database)/documents/pendingOwnerInvites/$(request.auth.token.email)).data.email == request.auth.token.email
+          && get(/databases/$(database)/documents/pendingOwnerInvites/$(request.auth.token.email)).data.status == 'pending'
+          && get(/databases/$(database)/documents/pendingOwnerInvites/$(request.auth.token.email)).data.expiresAt == request.resource.data.expiresAt
+          && existsAfter(/databases/$(database)/documents/pendingOwnerInvites/$(request.auth.token.email))
+          && getAfter(/databases/$(database)/documents/pendingOwnerInvites/$(request.auth.token.email)).data.status == 'claimed'
+          && getAfter(/databases/$(database)/documents/pendingOwnerInvites/$(request.auth.token.email)).data.claimedUid == userId
+        );
       allow update: if isVerifiedOwner()
         && request.resource.data.uid == userId
+        && request.resource.data.email == resource.data.email
         && request.resource.data.status in ['active','suspended']
         && request.resource.data.expiresAt is timestamp
-        && request.resource.data.plan in ['30-days','90-days','180-days','365-days'];
+        && request.resource.data.plan in ['owner-managed','30-days','90-days','180-days','365-days']
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['status','expiresAt','plan','updatedAt','shopName','industryType']);
       allow delete: if false;
     }
 

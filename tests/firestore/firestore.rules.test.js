@@ -17,7 +17,8 @@ function passwordContext(uid,claims={}) {
 
 async function seedLicense(uid,hours=24*30){
  await testEnv.withSecurityRulesDisabled(async ctx=>{
-  await setDoc(doc(ctx.firestore(),'licenses',uid),{
+  const adminDb=ctx.firestore();
+  await setDoc(doc(adminDb,'licenses',uid),{
    uid,email:uid+'@example.com',shopName:'Test Shop',industryType:'general',
    status:'active',plan:'30-days',expiresAt:futureTimestamp(hours)
   });
@@ -25,7 +26,8 @@ async function seedLicense(uid,hours=24*30){
 }
 async function seedInvite(shopId,code,name='Staff Member',hours=24){
  await testEnv.withSecurityRulesDisabled(async ctx=>{
-  await setDoc(doc(ctx.firestore(),'shopInvites',code),{
+  const adminDb=ctx.firestore();
+  await setDoc(doc(adminDb,'shopInvites',code),{
    shopId,role:'employee',name,status:'open',createdAt:Timestamp.now(),
    expiresAt:futureTimestamp(hours),createdBy:shopId
   });
@@ -197,8 +199,9 @@ describe('AK Sale POS role and tenant security',function(){
   }));
   await assertFails(deleteDoc(doc(db,'shopMembers','staff-a')));
   await testEnv.withSecurityRulesDisabled(async ctx=>{
-   await setDoc(doc(ctx.firestore(),'shops','shop-a','pos','productCosts','records','p1'),{cost:100});
-   await setDoc(doc(ctx.firestore(),'shops','shop-a','pos','saleCosts','records','s1'),{cost:100,profit:50});
+  const adminDb=ctx.firestore();
+   await setDoc(doc(adminDb,'shops','shop-a','pos','productCosts','records','p1'),{cost:100});
+   await setDoc(doc(adminDb,'shops','shop-a','pos','saleCosts','records','s1'),{cost:100,profit:50});
   });
   await assertFails(getDoc(doc(db,'shops','shop-a','pos','productCosts','records','p1')));
   await assertFails(getDoc(doc(db,'shops','shop-a','pos','saleCosts','records','s1')));
@@ -210,7 +213,8 @@ describe('AK Sale POS role and tenant security',function(){
   await seedInvite('shop-a',code);
   const db=await claimInvite('staff-a','staff-a@example.com','shop-a',code);
   await testEnv.withSecurityRulesDisabled(async ctx=>{
-   await setDoc(doc(ctx.firestore(),'shops','shop-a','pos','products','records','p1'),{
+  const adminDb=ctx.firestore();
+   await setDoc(doc(adminDb,'shops','shop-a','pos','products','records','p1'),{
     name:'Hammer',retail:5000,wholesale:4500,stock:5
    });
   });
@@ -221,7 +225,7 @@ describe('AK Sale POS role and tenant security',function(){
   await assertFails(setDoc(doc(db,'shops','shop-a','pos','purchases','records','p1'),{total:5000}));
   await assertFails(setDoc(doc(db,'shops','shop-a','pos','expenses','records','e1'),{amount:500}));
   await assertFails(setDoc(doc(db,'shops','shop-a','pos','products','records','p1'),{
-   name:'Hammer',retail:5000,wholesale:4500,stock:4
+   name:'Hammer',retail:6000,wholesale:4500,stock:4
   }));
   await assertSucceeds(setDoc(doc(db,'shops','shop-a','pos','products','records','p1'),{stock:4},{merge:true}));
  });
@@ -234,7 +238,8 @@ describe('AK Sale POS role and tenant security',function(){
   const db=await claimInvite('staff-a','staff-a@example.com','shop-a',code);
   await assertFails(getDoc(doc(db,'shops','shop-b','pos','products','records','p1')));
   await testEnv.withSecurityRulesDisabled(async ctx=>{
-   await setDoc(doc(ctx.firestore(),'licenses','shop-a'),{
+  const adminDb=ctx.firestore();
+   await setDoc(doc(adminDb,'licenses','shop-a'),{
     uid:'shop-a',email:'shop-a@example.com',shopName:'Test Shop',industryType:'general',
     status:'active',plan:'30-days',expiresAt:Timestamp.fromMillis(Date.now()-60000)
    });

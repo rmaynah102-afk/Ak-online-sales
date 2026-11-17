@@ -511,7 +511,7 @@ async function loadPlatformUsers(reset=true){
   rows.innerHTML=items.map(x=>{
    const locked=x.status==="suspended"||x.disabled,expiry=x.expiresAt?.toDate?dateText(x.expiresAt):x.expiresAt?dateText(new Date(x.expiresAt)):"မသတ်မှတ်ရသေး";
    const action=locked?"reactivate":"suspend",label=locked?"ပြန်ဖွင့်ရန်":"ပိတ်ရန်",state=x.isInvitation?(locked?"Invitation ပိတ်ထား":"Google Login စောင့်နေသည်"):(x.status==="active"?"အသုံးပြုခွင့်ရှိ":"အကောင့်ပိတ်ထား");
-   return '<tr><td>'+esc(x.email||x.uid)+'</td><td>'+(x.isInvitation?"မဝင်ရောက်ရသေး":"Gmail ခွင့်ပြုထား")+'</td><td>'+esc(x.plan||"Invitation")+'<br>'+esc(expiry)+'</td><td>'+esc(state)+'</td><td><button class="'+(locked?"secondary":"danger")+'" onclick="changePlatformUserAccess(\\''+esc(x.uid)+'\\',\\''+action+'\\')">'+label+'</button></td></tr>';
+    return '<tr><td>'+esc(x.email||x.uid)+'</td><td>'+(x.isInvitation?"မဝင်ရောက်ရသေး":"Gmail ခွင့်ပြုထား")+'</td><td>'+esc(x.plan||"Invitation")+'<br>'+esc(expiry)+'</td><td>'+esc(state)+'</td><td><button class="'+(locked?"secondary":"danger")+'" onclick="changePlatformUserAccess(&quot;'+esc(x.uid)+'&quot;,&quot;'+action+'&quot;)">'+label+'</button></td></tr>';
   }).join("")||'<tr><td colspan="5">User မရှိသေးပါ။</td></tr>';
   $("morePlatformUsers").classList.add("hidden");statusEl.textContent="ဆိုင်ရှင် / Invitation စုစုပေါင်း "+items.length+" ခု။";
  }catch(e){statusEl.textContent="User စာရင်း မဖတ်နိုင်ပါ: "+errText(e);}

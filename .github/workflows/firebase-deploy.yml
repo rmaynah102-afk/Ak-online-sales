@@ -2,7 +2,7 @@ name: Deploy AK Sale POS Platform Owner Backend
 
 on:
   push:
-    branches: [main]
+    branches: [main, ak-pos-international-v2]
     paths:
       - 'index.html'
       - 'app.html'

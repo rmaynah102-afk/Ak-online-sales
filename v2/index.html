@@ -310,11 +310,19 @@ async function signInWithGoogleAccount(){
   provider.setCustomParameters({prompt:"select_account"});
   signed=await auth.signInWithPopup(provider);
  }
- if(!signed||!signed.user||!signed.user.email||signed.user.emailVerified!==true){
+ if(!signed||!signed.user||!signed.user.email){
   await auth.signOut();
-  throw Error("Google မှ အတည်ပြုထားသော Gmail မရရှိပါ။");
+  throw Error("Google Gmail အကောင့်ကို မရရှိပါ။");
  }
- return signed;
+ await signed.user.reload();
+ const fresh=auth.currentUser||signed.user;
+ const token=await fresh.getIdTokenResult(true);
+ const google=Array.isArray(fresh.providerData)&&fresh.providerData.some(p=>p.providerId==="google.com");
+ if(!google||token.claims?.email_verified!==true){
+  await auth.signOut();
+  throw Error("Google အကောင့်၏ email_verified အတည်ပြုချက် မရရှိပါ။ Google Account ထဲတွင် Gmail အတည်ပြုပြီး ပြန်ဝင်ပါ။");
+ }
+ return {user:fresh};
 }
 $("customerGoogleBtn").onclick=async()=>{
  const button=$("customerGoogleBtn");

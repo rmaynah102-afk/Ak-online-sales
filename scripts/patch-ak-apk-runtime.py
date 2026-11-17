@@ -18,20 +18,37 @@ if 'async function assertVerifiedPlatformOwner()' not in s or 'await assertVerif
 # APK-only visual baseline: white surfaces, black text, neutral buttons/header.
 css_anchor = "</style>"
 css = """
-/* APK-only AK navy and orange high-contrast theme */
-:root{--navy:#10233f;--blue:#174a7e;--gold:#f28c28;--bg:#f3f6fa;--line:#d9e1ec;--ink:#172536;--muted:#607086;--green:#16734a;--red:#b42318}
-body{background:linear-gradient(180deg,#eaf0f7 0%,#f7f9fc 220px,#f3f6fa 100%);color:var(--ink)}
-header{background:linear-gradient(110deg,#10233f,#174a7e);color:#ffffff;border-bottom:3px solid #f28c28;box-shadow:0 3px 14px rgba(16,35,63,.16)}
-header small{color:#dbe7f5}
-header #userBadge{color:#ffffff!important}
-button{background:#174a7e;color:#ffffff;border:1px solid #174a7e;border-radius:9px}
-button:hover{background:#10233f}
-button.secondary{background:#ffffff;color:#174a7e;border:1px solid #b9c9dc}
-.tabs button.active{background:#f28c28;color:#172536;border-color:#f28c28}
-th{background:#e8eef6;color:#10233f}
-.stat{background:linear-gradient(145deg,#ffffff,#f5f8fc);border:1px solid #d9e1ec;border-radius:12px;box-shadow:0 2px 8px rgba(16,35,63,.06)}
-input,select,textarea{border:1px solid #c7d3e1;border-radius:8px}
-:focus-visible{outline:3px solid rgba(242,140,40,.45);outline-offset:2px}
+/* APK-only AK dark monochrome high-contrast theme */
+:root{color-scheme:dark;--navy:#090b0e;--blue:#171b20;--gold:#d7dce2;--bg:#090b0e;--line:#30363d;--ink:#f1f3f5;--muted:#aeb6bf;--green:#d7dce2;--red:#c7cbd0}
+html,body{background:#090b0e!important;color:#f1f3f5!important}
+body{font-family:system-ui,"Noto Sans Myanmar",sans-serif;font-size:14px;line-height:1.42;background:#090b0e!important;color:#f1f3f5}
+header{background:#090b0e!important;color:#fff;border-bottom:1px solid #555b63;box-shadow:none}
+header small{color:#c9cdd2}
+header #userBadge{color:#fff!important}
+.card{background:#11151a!important;color:#f1f3f5;border:1px solid #343b43;border-radius:9px;box-shadow:none}
+h2,h3{color:#f1f3f5;font-weight:800;letter-spacing:.15px;text-shadow:0 1px 0 #000}
+label{color:#c5cbd2}
+button{background:#d8dde3;color:#11151a;border:1px solid #d8dde3;border-radius:5px;font-weight:750}
+button:hover{background:#eef1f4}
+button.secondary{background:#171c22;color:#edf0f3;border:1px solid #555e68}
+button.danger{background:#333941;color:#fff;border-color:#666e78}
+.tabs{background:#090b0e}
+.tabs button{background:#171c22;color:#e8ebee;border-color:#454d57}
+.tabs button.active{background:#e1e5e9;color:#0b0d10;border-color:#e1e5e9}
+.stat{background:#0c1014;border:1px solid #303740;color:#f1f3f5}
+.stat b{color:#f4f5f6}
+input,select,textarea{background:#090c10!important;color:#f4f5f6!important;border:1px solid #424a53!important}
+input::placeholder,textarea::placeholder{color:#858e98}
+.notice,.pill,.printer-highlight{background:#1a2026!important;color:#e9edf0!important;border:1px solid #434b54}
+.muted,#status{color:#aeb6bf!important}
+.tablewrap{background:#0c1014;border:1px solid #343b43}
+table{background:#0c1014;border-collapse:separate;border-spacing:0}
+th,td{background:#0c1014!important;color:#e8ebee!important;border-bottom:1px solid #303740!important;border-right:1px solid #252c33!important}
+th{background:#1a2026!important;color:#fff!important}
+tr:hover td{background:#151a20!important}
+#loginPanel{background:#11151a!important;border:1px solid #555e68}
+#productSheet input{background:#090c10!important;color:#f4f5f6!important}
+@media(max-width:599px){main{padding:7px}.card{padding:9px}.grid{gap:7px}.stats{gap:5px}.stat{padding:8px}.tabs button{flex:0 0 auto;font-size:12px;padding:7px 9px}.row{gap:6px}}
 """
 if "APK-only neutral high-contrast theme" not in s:
     if css_anchor not in s: raise SystemExit("APK patch failed: CSS insertion point missing")
@@ -129,22 +146,11 @@ if "User-selectable shop themes and spreadsheet-like ledgers" not in s:
 
 theme_panel = r"""
 <section id="appearancePanel" class="card no-print">
-  <h3>အရောင်နှင့် ပုံစံပြင်ရန်</h3>
-  <div class="theme-card">
-    <label for="themePreset">အရောင် Theme</label>
-    <select id="themePreset">
-      <option value="navy">AK Navy & Orange</option>
-      <option value="green">အစိမ်း</option>
-      <option value="blue">အပြာ</option>
-      <option value="purple">ခရမ်း</option>
-      <option value="teal">စိမ်းပြာ</option>
-      <option value="dark">Dark</option>
-      <option value="custom">ကိုယ်ပိုင်အရောင်</option>
-    </select>
-    <label for="themeAccent">အဓိကအရောင်</label>
-    <input id="themeAccent" type="color" value="#174a7e" aria-label="အဓိကအရောင်ရွေးရန်">
-    <span id="themeStatus" class="muted">ရွေးထားသောအရောင်ကို ဒီဆိုင်အတွက် သိမ်းထားမည်</span>
-  </div>
+  <h3>AK POS · Dark High-Contrast Interface</h3>
+  <p class="muted">အနက်ရောင်နောက်ခံ · အဖြူ/ငွေရောင်စာသား · ဇယားကွက်ရှင်းလင်းမှု</p>
+  <input id="themePreset" type="hidden" value="dark">
+  <input id="themeAccent" type="hidden" value="#d7dce2">
+  <span id="themeStatus" class="muted">Dark theme</span>
 </section>
 """
 nav_anchor = '<nav class="tabs no-print" id="tabs">'
@@ -232,38 +238,18 @@ if old_purchase_csv in s: s=s.replace(old_purchase_csv,new_purchase_csv,1)
 
 # Theme selection is saved per shop on this Android device and reapplied after login.
 theme_js = r"""
-const AK_THEMES={
- navy:{navy:"#10233f",blue:"#174a7e",gold:"#f28c28",bg:"#f3f6fa",line:"#d9e1ec",ink:"#172536",muted:"#607086",head:"#e8eef6",alt:"#f7f9fc",hover:"#edf4fb"},
- green:{navy:"#123b2a",blue:"#1e6045",gold:"#e8c56a",bg:"#f1f5f2",line:"#d8e2db",ink:"#172820",muted:"#66766c",head:"#e7f1eb",alt:"#f6faf7",hover:"#eaf5ed"},
- blue:{navy:"#12345a",blue:"#1769aa",gold:"#55b7e8",bg:"#eff6fc",line:"#d3e2f0",ink:"#172b40",muted:"#62778c",head:"#e4f0fa",alt:"#f5f9fd",hover:"#e9f4fc"},
- purple:{navy:"#39265e",blue:"#6941a5",gold:"#c5a4f5",bg:"#f5f1fa",line:"#e1d8ef",ink:"#2a2039",muted:"#766887",head:"#eee7f7",alt:"#faf8fd",hover:"#f1eafa"},
- teal:{navy:"#104c50",blue:"#087e82",gold:"#e6b85c",bg:"#eff8f7",line:"#d2e7e4",ink:"#173536",muted:"#617a79",head:"#e0f1ef",alt:"#f5fbfa",hover:"#e8f6f3"},
- dark:{navy:"#101820",blue:"#263f55",gold:"#f2a541",bg:"#111a23",line:"#334454",ink:"#edf3f8",muted:"#a8bac9",head:"#233444",alt:"#192633",hover:"#263b4d"}
-};
-function akHexMix(hex,amount){const n=parseInt(hex.slice(1),16),r=Math.max(0,Math.min(255,(n>>16)+amount)),g=Math.max(0,Math.min(255,((n>>8)&255)+amount)),b=Math.max(0,Math.min(255,(n&255)+amount));return "#"+[r,g,b].map(v=>v.toString(16).padStart(2,"0")).join("")}
-function akApplyTheme(name,customAccent){
- const t={...(AK_THEMES[name]||AK_THEMES.navy)};
- if(name==="custom"&&customAccent){t.blue=customAccent;t.navy=akHexMix(customAccent,-28);t.gold=akHexMix(customAccent,42);t.head=akHexMix(customAccent,205);t.alt=akHexMix(customAccent,235);t.hover=akHexMix(customAccent,185);t.bg="#f5f7fa";t.line="#d9e1e8";t.ink="#172536";t.muted="#607086"}
- const root=document.documentElement.style;
- document.body.dataset.theme=name;
+const AK_THEMES={dark:{navy:"#090b0e",blue:"#171b20",gold:"#d7dce2",bg:"#090b0e",line:"#30363d",ink:"#f1f3f5",muted:"#aeb6bf",head:"#1a2026",alt:"#0c1014",hover:"#151a20"}};
+function akApplyTheme(){
+ const t=AK_THEMES.dark,root=document.documentElement.style;
+ document.body.dataset.theme="dark";
  root.setProperty("--navy",t.navy);root.setProperty("--blue",t.blue);root.setProperty("--gold",t.gold);root.setProperty("--bg",t.bg);root.setProperty("--line",t.line);root.setProperty("--ink",t.ink);root.setProperty("--muted",t.muted);root.setProperty("--green",t.blue);root.setProperty("--table-head",t.head);root.setProperty("--table-alt",t.alt);root.setProperty("--table-hover",t.hover);root.setProperty("--accent-soft",t.head);
  document.querySelector('meta[name="theme-color"]')?.setAttribute("content",t.navy);
- document.body.style.background=name==="dark"?t.bg:"linear-gradient(180deg,"+t.head+" 0%,var(--bg) 240px)";
- const h=document.querySelector("header");if(h)h.style.background="linear-gradient(110deg,"+t.navy+","+t.blue+")";
+ document.body.style.background=t.bg;
+ const h=document.querySelector("header");if(h)h.style.background=t.navy;
 }
 function akThemeKey(){return "ak_pos_theme_"+(shopId||user?.uid||"local")}
-function akLoadTheme(){
- let v={preset:"navy",accent:"#174a7e"};try{v={...v,...JSON.parse(localStorage.getItem(akThemeKey())||"{}")}}catch(_){}
- $("themePreset").value=v.preset||"navy";$("themeAccent").value=v.accent||"#174a7e";akApplyTheme(v.preset||"navy",v.accent);
-}
-function akSaveTheme(){
- const preset=$("themePreset").value,accent=$("themeAccent").value;
- if(preset==="custom")$("themeStatus").textContent="ကိုယ်ပိုင်အရောင် အသုံးပြုနေသည်";
- else $("themeStatus").textContent="အရောင်ပုံစံ သိမ်းပြီးပါပြီ";
- localStorage.setItem(akThemeKey(),JSON.stringify({preset,accent}));akApplyTheme(preset,accent);
-}
-$("themePreset").onchange=()=>{if($("themePreset").value==="custom")$("themeStatus").textContent="ကိုယ်ပိုင်အရောင် ရွေးပါ";akSaveTheme()};
-$("themeAccent").oninput=()=>{$("themePreset").value="custom";akSaveTheme()};
+function akLoadTheme(){try{localStorage.setItem(akThemeKey(),JSON.stringify({preset:"dark"}))}catch(_){}akApplyTheme()}
+function akSaveTheme(){akLoadTheme()}
 """
 if "const AK_THEMES=" not in s:
     anchor = 'function show(id){'

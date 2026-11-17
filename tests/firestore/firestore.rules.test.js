@@ -189,6 +189,11 @@ describe('AK Sale POS role and tenant security',function(){
 
  it('blocks Staff from editing their role, deleting their membership, or seeing cost and profit data',async()=>{
   await seedLicense('shop-a');
+  await testEnv.withSecurityRulesDisabled(async ctx=>{
+   const adminDb=ctx.firestore();
+   await setDoc(doc(adminDb,'shops','shop-a','pos','productCosts','records','p1'),{cost:100});
+   await setDoc(doc(adminDb,'shops','shop-a','pos','saleCosts','records','s1'),{cost:100,profit:50});
+  });
   const code='BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB';
   await seedInvite('shop-a',code);
   const db=await claimInvite('staff-a','staff-a@example.com','shop-a',code);
@@ -198,11 +203,6 @@ describe('AK Sale POS role and tenant security',function(){
    canPrint:true,merchantStaff:true,name:'Staff A'
   }));
   await assertFails(deleteDoc(doc(db,'shopMembers','staff-a')));
-  await testEnv.withSecurityRulesDisabled(async ctx=>{
-  const adminDb=ctx.firestore();
-   await setDoc(doc(adminDb,'shops','shop-a','pos','productCosts','records','p1'),{cost:100});
-   await setDoc(doc(adminDb,'shops','shop-a','pos','saleCosts','records','s1'),{cost:100,profit:50});
-  });
   await assertFails(getDoc(doc(db,'shops','shop-a','pos','productCosts','records','p1')));
   await assertFails(getDoc(doc(db,'shops','shop-a','pos','saleCosts','records','s1')));
  });

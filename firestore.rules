@@ -109,7 +109,7 @@ service cloud.firestore {
 
     function canUpdatePosCollection(shopId, collection) {
       return isPosShopOwner(shopId)
-        || (collection == 'products' && hasShopMemberRole(shopId, ['manager','cashier']))
+        || (collection == 'products' && hasShopMemberRole(shopId, ['manager','cashier','employee']))
         || (collection == 'sales' && hasShopMemberRole(shopId, ['manager']))
         || (collection == 'purchases' && hasShopMemberRole(shopId, ['manager']))
         || (collection == 'people' && hasShopMemberRole(shopId, ['manager','cashier']))
@@ -144,7 +144,7 @@ service cloud.firestore {
           || posRecordHasNoCostFields(request.resource.data))
         && (collection != 'products' || isPosShopOwner(shopId)
           || hasShopMemberRole(shopId, ['manager'])
-          || (hasShopMemberRole(shopId, ['cashier'])
+          || (hasShopMemberRole(shopId, ['cashier','employee'])
             && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stock'])));
       allow delete: if canDeletePosCollection(shopId, collection);
     }

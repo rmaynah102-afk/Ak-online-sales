@@ -248,7 +248,7 @@ async function boot(){
   try{
    const email=(u.email||"").toLowerCase();
    // Platform Owner is the fixed, password-authenticated control account; do not block Owner login on email verification.
-   if(!u.emailVerified && email!==OWNER){await auth.signOut();show("loginPanel");status("အကောင့်အတည်ပြုမှု မပြီးသေးပါ။ Gmail Inbox/Spam မှ Verification Link ကိုအရင်ဖွင့်ပါ။");return}
+   if(!u.emailVerified && email!==OWNER){try{await u.sendEmailVerification()}catch(_){}await auth.signOut();show("loginPanel");status("Gmail အတည်ပြုမှု မပြီးသေးပါ။ Inbox/Spam ထဲသို့ Verification Link ပြန်ပို့ထားသည်။ Link ကိုဖွင့်ပြီးနောက် ပြန် Login ဝင်ပါ။");return}
    if(email===OWNER){
     await u.reload();
     user=auth.currentUser||u;
@@ -278,13 +278,17 @@ async function boot(){
      $("ownerStatus").textContent="Owner Login အောင်မြင်ပါပြီ။ User Control Center ကို အသုံးပြုနိုင်သည်။ License အကျဉ်းချုပ်: "+errText(e);
     }
    }
-   else if(email.endsWith("@akstaff.app")){
+   else{
     const memberSnap=await db.collection("shopMembers").doc(u.uid).get(),member=memberSnap.data()||{};
-    if(!memberSnap.exists||member.merchantStaff!==true||member.status!=="active"||!member.shopId||String(member.email||"").toLowerCase()!==String(u.email||"").toLowerCase()||!["employee","manager","cashier"].includes(member.role)){await auth.signOut();show("loginPanel");status("ဝန်ထမ်းအကောင့် ပိတ်ထားခြင်း သို့မဟုတ် မမှန်ကန်ပါ။");return}
-    shopId=member.shopId;staffRole="employee";await loadShop()
-   }else{
-    await claimShopOwnerAccess(u);
-    shopId=u.uid;staffRole="owner";await loadShop()
+    if(memberSnap.exists){
+     if(member.merchantStaff!==true||member.status!=="active"||!member.shopId||String(member.email||"").toLowerCase()!==email||member.role!=="employee")throw Error("ဝန်ထမ်းအကောင့် ပိတ်ထားခြင်း သို့မဟုတ် မမှန်ကန်ပါ။");
+     shopId=member.shopId;staffRole="employee";await loadShop();
+    }else if($("loginType").value==="staff"){
+     shopId=await claimStaffInvite(u,$("merchantCode").value.trim().toUpperCase());staffRole="employee";await loadShop();
+    }else{
+     await claimShopOwnerAccess(u);shopId=u.uid;staffRole="owner";await loadShop();
+    }
+   }
    }
   }catch(e){
    const email=(u.email||"").toLowerCase();
@@ -328,8 +332,8 @@ async function assertVerifiedPlatformOwner(){
 async function claimShopOwnerAccess(signedUser){
  const current=auth.currentUser||signedUser;await current.reload();const fresh=auth.currentUser||current;
  const email=String(fresh.email||"").trim().toLowerCase(),token=await fresh.getIdTokenResult(true);
- const google=Array.isArray(fresh.providerData)&&fresh.providerData.some(p=>p.providerId==="google.com");
- if(!email||!google||token.claims?.email_verified!==true)throw Error("အတည်ပြုထားသော Google Gmail ဖြင့်သာ ဆိုင်ရှင် Login ဝင်နိုင်သည်။");
+ const passwordProvider=Array.isArray(fresh.providerData)&&fresh.providerData.some(p=>p.providerId==="password");
+ if(!email||!passwordProvider||token.claims?.email_verified!==true)throw Error("အတည်ပြုထားသော Gmail/Password အကောင့်ဖြင့်သာ ဆိုင်ရှင် Login ဝင်နိုင်သည်။");
  if(email===OWNER)throw Error("Platform Owner Login အမျိုးအစားကို ရွေးပါ။");
  const licenseRef=db.collection("licenses").doc(fresh.uid),licenseSnap=await licenseRef.get();
  if(licenseSnap.exists){
@@ -351,6 +355,29 @@ async function claimShopOwnerAccess(signedUser){
  batch.update(inviteRef,{status:"claimed",claimedUid:fresh.uid,claimedAt:firebase.firestore.FieldValue.serverTimestamp()});
  await batch.commit();return {status:"active"};
 }
+async function claimStaffInvite(signedUser,code){
+ const current=auth.currentUser||signedUser;await current.reload();
+ const fresh=auth.currentUser||current,token=await fresh.getIdTokenResult(true);
+ if(!fresh.email||token.claims?.email_verified!==true)throw Error("ဝန်ထမ်း Gmail ကို အရင်အတည်ပြုပါ။");
+ if(!/^[A-F0-9]{32}$/.test(code))throw Error("၃၂ လုံး Merchant Code မှန်ကန်စွာ ထည့်ပါ။");
+ const inviteRef=db.collection("shopInvites").doc(code),inviteSnap=await inviteRef.get();
+ if(!inviteSnap.exists)throw Error("Merchant Code မမှန်ပါ၊ သက်တမ်းကုန်နေပါသည် သို့မဟုတ် အသုံးပြုပြီးဖြစ်သည်။");
+ const invite=inviteSnap.data()||{};
+ if(invite.status!=="open"||!invite.expiresAt||invite.expiresAt.toDate()<=new Date())throw Error("Merchant Code သက်တမ်းကုန်နေပါသည် သို့မဟုတ် အသုံးပြုပြီးဖြစ်သည်။");
+ const targetShop=String(invite.shopId||"");
+ if(!targetShop||invite.role!=="employee")throw Error("Merchant Code အချက်အလက် မမှန်ပါ။");
+ const memberRef=db.collection("shopMembers").doc(fresh.uid),name=String(invite.name||fresh.displayName||fresh.email.split("@")[0]).slice(0,80);
+ let lastError;
+ for(const slot of [1,2]){
+  const slotId=targetShop+"_"+slot,slotRef=db.collection("shopStaffSlots").doc(slotId),batch=db.batch();
+  batch.set(memberRef,{shopId:targetShop,role:"employee",status:"active",email:fresh.email,createdAt:firebase.firestore.FieldValue.serverTimestamp(),createdBy:targetShop,inviteCode:code,slotId,canPrint:false,merchantStaff:true,name});
+  batch.update(inviteRef,{status:"claimed",claimedBy:fresh.uid,claimedAt:firebase.firestore.FieldValue.serverTimestamp()});
+  batch.set(slotRef,{shopId:targetShop,uid:fresh.uid,slot,createdAt:firebase.firestore.FieldValue.serverTimestamp(),inviteCode:code});
+  try{await batch.commit();return targetShop}catch(e){lastError=e;if(e.code!=="permission-denied"&&e.code!=="firestore/permission-denied")throw e;}
+ }
+ throw Error("ဝန်ထမ်း ၂ ဦး ပြည့်နေပါပြီ သို့မဟုတ် Merchant Code ကို အသုံးပြုပြီးဖြစ်သည်။ "+(lastError?.message||""));
+}
+
 $("loginType").onchange=()=>{
  const mode=$("loginType").value,staff=mode==="staff",owner=mode==="owner";
  $("emailLoginFields").classList.toggle("hidden",owner);
@@ -590,15 +617,16 @@ async function loadMerchantStaff(){
  }catch(e){$("staffStatus").textContent="ဝန်ထမ်းစာရင်း ဖတ်မရပါ: "+errText(e)}
 }
 $("createStaffBtn").onclick=async()=>{try{
- const name=$("staffName").value.trim(),role=$("staffRole").value,password=$("staffPassword").value;
- if(merchantStaffCount>=2)throw Error("ဝန်ထမ်း ၂ ယောက် ပြည့်နေပါပြီ။ နောက်ထပ်ဝန်ထမ်းထည့်ရန် တစ်ယောက်ကို အရင်ဖယ်ရှားပါ။");
- if(!name||password.length<8)throw Error("အမည်နှင့် အနည်းဆုံး ၈ လုံး Password ဖြည့်ပါ");
- $("createStaffBtn").disabled=true;$("staffStatus").textContent="Merchant Code ဖန်တီးနေသည်...";
- const r=await staffGateway("/staff/provision",{name,role,password});
- $("staffStatus").textContent="အောင်မြင်ပါသည်။ Merchant Code: "+r.code+" · ဒီ Code ကို ဝန်ထမ်းထံ တစ်ကြိမ်သာ ပေးပါ။";
- try{await navigator.clipboard.writeText(r.code)}catch(_){}
- $("staffPassword").value="";await loadMerchantStaff();
-}catch(e){$("staffStatus").textContent="ဖန်တီးမရပါ: "+errText(e)}
+ const name=$("staffName").value.trim();
+ if(merchantStaffCount>=2)throw Error("ဝန်ထမ်း ၂ ဦး ပြည့်နေပါပြီ။ နောက်ထပ်ထည့်ရန် တစ်ဦးကို အရင်ဖယ်ရှားပါ။");
+ if(name.length<2)throw Error("ဝန်ထမ်းအမည် ဖြည့်ပါ။");
+ $("createStaffBtn").disabled=true;$("staffStatus").textContent="၃၂ လုံး Merchant Code ဖန်တီးနေသည်...";
+ const bytes=crypto.getRandomValues(new Uint8Array(16)),code=Array.from(bytes,x=>x.toString(16).padStart(2,"0")).join("").toUpperCase(),expiresAt=new Date(Date.now()+24*60*60*1000);
+ await db.collection("shopInvites").doc(code).set({shopId,role:"employee",name,status:"open",createdAt:firebase.firestore.FieldValue.serverTimestamp(),expiresAt:firebase.firestore.Timestamp.fromDate(expiresAt),createdBy:shopId});
+ $("staffStatus").textContent="Merchant Code: "+code+" · ၂၄ နာရီအတွင်း တစ်ကြိမ်သာ အသုံးပြုနိုင်သည်။ ဝန်ထမ်းထံ ပေးပါ။";
+ try{await navigator.clipboard.writeText(code)}catch(_){}
+ $("staffName").value="";await loadMerchantStaff();
+}catch(e){$("staffStatus").textContent="Code ဖန်တီးမရပါ: "+errText(e)}
 finally{$("createStaffBtn").disabled=false}};
 $("refreshStaffBtn").onclick=loadMerchantStaff;
 window.removeMerchantStaff=async uid=>{if(!confirm("ဤဝန်ထမ်းအကောင့်ကို ပိတ်မလား။"))return;try{await staffGateway("/staff/revoke",{memberUid:uid});await loadMerchantStaff();$("staffStatus").textContent="ဝန်ထမ်းအကောင့် ပိတ်ပြီးပါပြီ။"}catch(e){$("staffStatus").textContent="ပိတ်မရပါ: "+errText(e)}};

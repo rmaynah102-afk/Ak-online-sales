@@ -208,10 +208,14 @@ async function boot(){
    if(!u.emailVerified && email!==OWNER){await auth.signOut();show("loginPanel");status("အကောင့်အတည်ပြုမှု မပြီးသေးပါ။ Gmail Inbox/Spam မှ Verification Link ကိုအရင်ဖွင့်ပါ။");return}
    if(email===OWNER){
     await u.reload();
-    staffRole="owner";shopId=u.uid;
+    user=auth.currentUser||u;
+    const ownerToken=await user.getIdTokenResult(true);
+    const ownerGoogle=Array.isArray(user.providerData)&&user.providerData.some(p=>p.providerId==="google.com");
+    const ownerVerified=ownerGoogle&&ownerToken.claims?.email_verified===true;
+    staffRole="owner";shopId=user.uid;
     $("userBadge").textContent="Platform Owner";
     show("ownerPanel");
-    if(!u.emailVerified){
+    if(!ownerVerified){
      $("ownerPOSBtn").disabled=true;
      $("ownerControlBtn").classList.add("hidden");
      $("ownerStatus").textContent="Owner Gmail အတည်ပြုရန်လိုသည်။ Verification Link ကိုပို့ပြီး Gmail Inbox/Spam မှ အတည်ပြုပြီးနောက် ပြန် Login ဝင်ပါ။ အတည်မပြုမီ ဆိုင်အကောင့်များကို စီမံခွင့်မပေးပါ။";
@@ -266,6 +270,19 @@ function friendlyAuthError(e){
  return map[code]||e?.message||String(e);
 }
 function isPlatformOwner(u=user){return !!u&&String(u.email||"").trim().toLowerCase()===OWNER}
+async function assertVerifiedPlatformOwner(){
+ const current=auth?.currentUser;
+ if(!current)throw Error("Platform Owner အကောင့် Login ဝင်ထားခြင်းမရှိပါ။");
+ await current.reload();
+ const fresh=auth.currentUser||current;
+ user=fresh;
+ const token=await fresh.getIdTokenResult(true);
+ const google=Array.isArray(fresh.providerData)&&fresh.providerData.some(p=>p.providerId==="google.com");
+ if(String(fresh.email||"").trim().toLowerCase()!==OWNER||!google||token.claims?.email_verified!==true){
+  throw Error("Platform Owner Gmail ("+OWNER+") ကို Google ဖြင့် Login ဝင်ထားကြောင်းနှင့် Google အတည်ပြုချက်ကို မရရှိပါ။ Login အမျိုးအစားတွင် Platform Owner ကိုရွေးပြီး မှန်ကန်သော Gmail ဖြင့် ပြန်ဝင်ပါ။");
+ }
+ return fresh;
+}
 $("loginType").onchange=()=>{
  const mode=$("loginType").value,staff=mode==="staff",owner=mode==="owner",shop=mode==="shop";
  $("emailLoginFields").classList.add("hidden");
@@ -353,7 +370,7 @@ async function apkProvisionShopOwner(email,expiresOn,shopName,industryType){
 $("createShopBtn").onclick=async()=>{
  const out=$("ownerStatus");
  try{
-  if(!isPlatformOwner()||!user||user.emailVerified!==true)throw Error("Verified Platform Owner အကောင့်ဖြင့်သာ ဆိုင်ရှင်အကောင့် ဖန်တီးနိုင်ပါသည်။");
+  await assertVerifiedPlatformOwner();
   const email=$("newEmail").value.trim().toLowerCase();
   const shopName=$("shopName").value.trim();
   const industryType=$("industryType").value;

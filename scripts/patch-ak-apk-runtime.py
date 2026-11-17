@@ -3,15 +3,18 @@ from pathlib import Path
 p = Path("www/index.html")
 s = p.read_text(encoding="utf-8")
 
-# Shop-owner provisioning uses the authenticated Cloudflare gateway to create
-# Firebase Email/Password credentials and send verification or password-reset mail.
-# The app then writes the one-time, expiry-bound Firestore shop invitation.
-if "async function apkProvisionShopOwner(email,password,expiresOn,shopName,industryType)" not in s:
-    raise SystemExit("APK patch failed: password-based Shop Owner provisioning helper missing")
-if 'fetch(GATEWAY+"/owner/provision"' not in s:
-    raise SystemExit("APK patch failed: authenticated Shop Owner provisioning gateway is missing")
-if "async function claimStaffInvite(signedUser,code)" not in s or "akStaffRegistration" not in s:
-    raise SystemExit("APK patch failed: verified Gmail Staff registration and Merchant Code claim are missing")
+# All account types use Google Sign-In. Shop Owner and Staff access is
+# authorized only after the exact Gmail invitation/code is claimed in Firestore.
+if "async function apkProvisionShopOwner(email,expiresOn,shopName,industryType)" not in s:
+    raise SystemExit("APK patch failed: Google-only Shop Owner invitation helper missing")
+if "async function claimShopOwnerAccess(signedUser)" not in s:
+    raise SystemExit("APK patch failed: Shop Owner invitation claim helper missing")
+if "async function claimStaffInvite(signedUser,code)" not in s:
+    raise SystemExit("APK patch failed: Google-authenticated Staff Merchant Code claim missing")
+if "async function signInWithGoogleAccount()" not in s or "nativeAuth.signInWithGoogle()" not in s:
+    raise SystemExit("APK patch failed: native Google Sign-In helper missing")
+if re.search(r"signInWithEmailAndPassword|createUserWithEmailAndPassword|sendPasswordResetEmail|id=\"password\"|newPassword",s):
+    raise SystemExit("APK patch failed: legacy Email/Password login remains in source")
 if 'async function assertVerifiedPlatformOwner()' not in s or 'await assertVerifiedPlatformOwner();' not in s:
     raise SystemExit("APK patch failed: refreshed Google-verified Platform Owner guard missing")
 
@@ -106,7 +109,7 @@ p.write_text(s,encoding="utf-8")
 print("APK-only additions applied: immediate post-sale receipt, dynamic shop branding on receipts and ad artwork.")
 
 p.write_text(s,encoding="utf-8")
-print("APK-only patch applied: shop-owner provisioning no longer depends on Cloudflare Worker; secondary Firebase Auth preserves Owner session; retry existing Gmail with matching password; password reset fallback; white/black high-contrast theme.")
+print("APK-only patch applied: Google-only Owner/Shop Owner/Staff authentication, verified invitations and dark high-contrast theme.")
 
 
 # APK-only user-selectable color themes and spreadsheet-style sales/purchase ledgers.

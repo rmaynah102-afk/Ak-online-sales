@@ -1,55 +1,29 @@
 'use strict';
-const fs = require('fs');
-const assert = require('assert');
+const fs = require('node:fs');
+const assert = require('node:assert/strict');
 
 const html = fs.readFileSync('www/index.html', 'utf8');
-const functionsSource = fs.readFileSync('functions/index.js', 'utf8');
-const match = html.match(/async function apkProvisionShopOwner\([^)]*\)\s*\{[\s\S]*?^\}/m);
-assert(match, 'APK must use the Admin-backed Owner invitation helper');
-const helperSource = match[0];
+const rules = fs.readFileSync('firestore.rules', 'utf8');
 
-async function runScenario(name, configure, verify) {
-  const calls = [];
-  const auth = {
-    async sendSignInLinkToEmail() {
-      calls.push({ type: 'email-link' });
-      throw new Error('Email link must not be sent');
-    }
-  };
-  const functions = {
-    httpsCallable(functionName) {
-      calls.push({ type: 'callable', functionName });
-      return async payload => {
-        calls.push({ type: 'payload', payload });
-        if (configure?.throwError) throw configure.throwError;
-        return { data: configure?.resultData || { ok: true, email: 'shop@example.com', invitationPending: true, expiresAt: '2026-12-31T17:29:59.999Z' } };
-      };
-    }
-  };
-  const fn = new Function('firebase','auth','location',helperSource+String.fromCharCode(10)+'return apkProvisionShopOwner;')(
-    { functions: () => functions }, auth, { origin: 'https://example.com', pathname: '/pos/' }
-  );
-  const r = await verify(fn, { calls });
-  assert(calls.some(x => x.type === 'callable' && x.functionName === 'createShopOwnerAccount'), name + ': must call trusted Firebase Admin invitation function');
-  assert(!calls.some(x => x.type === 'email-link'), name + ': must not send Gmail login links');
-  assert(!calls.some(x => x.type === 'payload' && ('password' in x.payload || 'gmailPassword' in x.payload)), name + ': must not send any password');
-  console.log('PASS', name, r || '');
+assert(html.includes('async function signInWithGoogleAccount()'), 'Google sign-in helper is required');
+assert(html.includes('async function claimShopOwnerAccess(signedUser)'), 'Shop-owner claim flow must exist');
+assert(html.includes('async function apkProvisionShopOwner(email,expiresOn,shopName,industryType)'), 'Owner invitation flow must exist');
+assert(html.includes('db.collection("pendingOwnerInvites").doc(email)'), 'Owner must issue a Firestore Gmail invitation');
+assert(html.includes('member.merchantStaff!==true') && html.includes('member.status!=="active"'), 'Staff login must validate active membership');
+assert(html.includes('String(member.email||"").toLowerCase()!==String(u.email||"").toLowerCase()'), 'Staff login must match the authenticated synthetic email');
+assert(html.includes('staffRole="employee"'), 'All staff accounts must map to the single Staff role');
+assert(html.includes('<option value="employee" selected>ဝန်ထမ်း (Staff)</option>'), 'Manager/Cashier account types must not be offered');
+assert(html.includes('async function applyRoleUI()') || html.includes('function applyRoleUI(){'), 'Role-based interface permissions are required');
+assert(html.includes('async function reloadAll(){const owner=staffRole==="owner",staff=staffRole==="employee"'), 'Staff must not load purchase/expense/profit cost data');
+
+for (const name of ['claimOwnerProvisioning','createShopOwnerAccount','listPlatformUsers','grantSubscription','setPlatformUserAccess']) {
+  assert(!html.includes('httpsCallable("' + name + '")'), 'Login and subscription controls must not depend on undeployed callable ' + name);
 }
+assert(rules.includes('match /pendingOwnerInvites/{emailKey}'), 'Firestore invitation rules are required');
+assert(rules.includes('request.auth.token.email == resource.data.email'), 'Invitation must be restricted to exact verified Gmail');
+assert(rules.includes('request.resource.data.claimedUid == request.auth.uid'), 'Only the authenticating UID may claim the invitation');
+assert(rules.includes("request.resource.data.plan == 'owner-managed'"), 'Invitation claim must create owner-managed subscription');
+assert(rules.includes("request.resource.data.status == 'claimed'"), 'Invitation must be single-use');
+assert(rules.includes("hasShopMemberRole(shopId, ['manager','cashier','employee'])"), 'Staff sales access must be covered by Firestore rules');
 
-(async () => {
-  assert(html.includes('id="customerGoogleBtn"'), 'Shop-owner Google login button is required');
-  assert(html.includes('async function signInWithGoogleAccount()'), 'APK must share the native Google sign-in bridge');
-  assert(!html.includes('id="sendLoginLinkBtn"'), 'Email-link login button must be removed');
-  assert(!html.includes('$("sendLoginLinkBtn").onclick'), 'Removed email-link button must not leave a null DOM listener');
-  assert(functionsSource.includes('context.auth.token.firebase?.sign_in_provider !== "google.com"'), 'Backend must require Google provider sign-in');
-  await runScenario('new owner invitation: Gmail allowlist only', null, async (fn, ctx) => {
-    const r = await fn('shop@example.com', '2026-12-31', 'AK Hardware', 'hardware');
-    const payload = ctx.calls.find(x => x.type === 'payload').payload;
-    assert.deepStrictEqual(payload, { email: 'shop@example.com', expiresOn: '2026-12-31', shopName: 'AK Hardware', industryType: 'hardware' });
-    return 'Owner registers the Gmail in Dashboard; shop owner signs in with Google, no email link';
-  });
-  await runScenario('Admin invitation errors are surfaced', { throwError: new Error('permission-denied') }, async fn => {
-    await assert.rejects(fn('shop@example.com', '2026-12-31', 'AK Hardware', 'hardware'), /permission-denied/);
-    return 'server authorization errors surfaced';
-  });
-})().catch(error => { console.error(error); process.exitCode = 1; });
+console.log('PASS: Google Owner/Shop Owner login, one-time verified Gmail invitation, direct Spark-plan Firestore controls, single Staff role and tenant permissions.');

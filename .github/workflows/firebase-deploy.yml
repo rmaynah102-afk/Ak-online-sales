@@ -1,4 +1,4 @@
-name: Deploy AK Free Firebase Resources
+name: Deploy AK Sale POS Platform Owner Backend
 
 on:
   push:
@@ -66,5 +66,5 @@ jobs:
           console.log('JavaScript syntax OK:', checked, 'inline script block(s) across', pages.length, 'pages');
           NODE
 
-      - name: Deploy Hosting, Firestore rules/indexes, and required Platform Owner functions
+      - name: Deploy Hosting, Firestore rules/indexes, and all required Platform Owner account-control functions
         run: firebase deploy --only hosting,firestore:rules,firestore:indexes,functions:createShopOwnerAccount,functions:claimOwnerProvisioning,functions:listPlatformUsers,functions:setPlatformUserAccess,functions:grantSubscription --project ak-onlin-sales --non-interactive

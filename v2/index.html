@@ -408,11 +408,14 @@ async function loadLicenses(){
  licenses=items.filter(x=>!x.isInvitation).map(x=>({...x,id:x.uid}));
  $("shopCount").textContent=items.length;
  $("licenseRows").innerHTML=items.map(x=>{
-  const id=x.uid,locked=x.status==="suspended"||x.disabled;
+  const id=String(x.uid||"");
+  const locked=x.status==="suspended"||x.disabled;
   const expiry=x.expiresAt?dateText(new Date(x.expiresAt)):"မသတ်မှတ်ရသေး";
   const state=x.isInvitation?(locked?"Invitation ပိတ်ထား":"Gmail ဖိတ်ကြားထား"):x.status;
-  const actions=x.isInvitation?'<button class="danger" onclick="changePlatformUserAccess(\\''+id+'\\',\\''+(locked?"reactivate":"suspend")+'\\')">'+(locked?"ပြန်ဖွင့်":"ပိတ်")+'</button>':'<button class="secondary" onclick="renewLicense(\\''+id+'\\')">သက်တမ်းတိုး</button> <button class="danger" onclick="toggleLicense(\\''+id+'\\')">'+(locked?"ပြန်ဖွင့်":"ပိတ်")+'</button>';
-  return '<tr><td><b>'+esc(x.shopName||"ဆိုင်")+'</b><br>'+esc(x.email||id)+'</td><td>'+esc(x.plan||"-")+'</td><td>'+esc(expiry)+'</td><td>'+esc(state)+'</td><td>'+actions+'</td></tr>';
+  const actions=x.isInvitation
+   ? `<button class="danger" onclick="changePlatformUserAccess('${esc(id)}','${locked?"reactivate":"suspend"}')">${locked?"ပြန်ဖွင့်":"ပိတ်"}</button>`
+   : `<button class="secondary" onclick="renewLicense('${esc(id)}')">သက်တမ်းတိုး</button> <button class="danger" onclick="toggleLicense('${esc(id)}')">${locked?"ပြန်ဖွင့်":"ပိတ်"}</button>`;
+  return `<tr><td><b>${esc(x.shopName||"ဆိုင်")}</b><br>${esc(x.email||id)}</td><td>${esc(x.plan||"-")}</td><td>${esc(expiry)}</td><td>${esc(state)}</td><td>${actions}</td></tr>`;
  }).join("")||'<tr><td colspan="5">ဆိုင်အကောင့် မရှိသေးပါ</td></tr>';
 }
 window.renewLicense=async id=>{try{

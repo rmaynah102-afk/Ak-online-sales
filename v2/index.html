@@ -176,11 +176,11 @@ details>summary{cursor:pointer;color:#edf0f3;font-weight:700;padding:8px 0}
 <header><div class="brand"><img src="./icon.svg" alt="AK Hardware & Electrical Logo"><div><h1>AK Sale POS 2.1</h1><small>Hardware & Electrical Shop Management</small></div></div><div id="userBadge" class="muted" style="color:#fff"></div></header>
 <main>
 <section id="loginPanel" class="card">
-<h2>အကောင့်ဝင်ရန်</h2>
-<div class="notice">ဆိုင်ရှင်သည် Platform Owner ပေးထားသော Gmail နှင့် Password ဖြင့်ဝင်ပါ။ ဝန်ထမ်းသည် ကိုယ်ပိုင် Gmail ဖြင့် Register လုပ်ပြီး Email အတည်ပြုပြီးနောက် ၃၂ လုံး Merchant Code ဖြင့် ဆိုင်ချိတ်ပါ။</div>
-<label>Login အမျိုးအစား</label><select id="loginType"><option value="shop">ဆိုင်ရှင်</option><option value="owner">Platform Owner · Google</option><option value="staff">ဝန်ထမ်း (Staff)</option></select>
-<div class="grid"><div id="emailLoginFields" class="hidden"><label>Gmail</label><input id="email" type="email" autocomplete="username" placeholder="name@gmail.com"></div><div id="staffLoginFields" class="hidden"><label>Merchant Code (၃၂ လုံး)</label><input id="merchantCode" maxlength="32" autocomplete="off" placeholder="၃၂ လုံး Code ထည့်ပါ"></div><div id="passwordLoginFields" class="hidden"><label>Password</label><input id="password" type="password" autocomplete="current-password" placeholder="Password"></div></div>
-<div class="row" style="margin-top:12px"><button id="customerGoogleBtn" class="secondary hidden">Google Login</button><button id="loginBtn" class="hidden">Login ဝင်မည်</button><button id="forgotPasswordBtn" class="secondary hidden">Password Reset Link ပို့ရန်</button><button id="staffRegisterBtn" class="secondary hidden">ဝန်ထမ်း Gmail အသစ် Register လုပ်မည်</button><button id="ownerGoogleBtn" class="secondary hidden">Google ဖြင့် Platform Owner ဝင်မည်</button></div>
+<h2>Google ဖြင့် အကောင့်ဝင်ရန်</h2>
+<div class="notice">Platform Owner၊ ဆိုင်ရှင်နှင့် ဝန်ထမ်းအားလုံး Google Gmail တစ်မျိုးတည်းဖြင့် Login ဝင်ရမည်။ ဆိုင်ရှင်ကို Platform Owner က ကြိုတင်ခွင့်ပြုထားရမည်။ ဝန်ထမ်းသည် Google Login ပြီးနောက် ၃၂ လုံး Merchant Code ဖြင့် မိမိဆိုင်ကို ချိတ်ဆက်ရမည်။</div>
+<label>အကောင့်အမျိုးအစား</label><select id="loginType"><option value="shop">ဆိုင်ရှင်</option><option value="owner">Platform Owner</option><option value="staff">ဝန်ထမ်း (Staff)</option></select>
+<div class="grid"><div id="staffLoginFields" class="hidden"><label>Merchant Code (၃၂ လုံး)</label><input id="merchantCode" maxlength="32" autocomplete="off" placeholder="ဝန်ထမ်း Code ထည့်ပါ"></div></div>
+<div class="row" style="margin-top:12px"><button id="customerGoogleBtn" class="secondary hidden">Google ဖြင့် ဝင်မည်</button><button id="ownerGoogleBtn" class="secondary hidden">Google ဖြင့် Platform Owner ဝင်မည်</button></div>
 <div id="status"></div>
 </section>
 <section id="ownerPanel" class="hidden">
@@ -188,9 +188,9 @@ details>summary{cursor:pointer;color:#edf0f3;font-weight:700;padding:8px 0}
 <div class="stats"><div class="stat">အသုံးပြုနေသော ဆိုင်<b id="shopCount">0</b></div><div class="stat">ဆိုင်အကောင့် အရေအတွက်<b>ကန့်သတ်ချက်မရှိ</b></div></div>
 </div>
 <div class="card"><h2>ဆိုင်ရှင်အကောင့်အသစ် ဖန်တီးရန်</h2>
-<div class="grid"><div><label>ဆိုင်အမည်</label><input id="shopName" placeholder="AK Hardware"></div><div><label>လုပ်ငန်းအမျိုးအစား</label><select id="industryType"><option value="general">အထွေထွေ / အခြား</option><option value="grocery">ကုန်စုံ / Supermarket</option><option value="hardware">ကုန်မာ / လျှပ်စစ်</option><option value="electronics">စက်ပစ္စည်း / Electronics</option><option value="mobile">ဖုန်းဆိုင်</option><option value="gold">ရွှေ / ရတနာဆိုင်</option><option value="restaurant">စားသောက်ဆိုင် / Café</option><option value="cosmetics">အလှကုန်</option><option value="fashion">အဝတ်အထည် / ဖိနပ်</option><option value="auto_parts">ကား / ဆိုင်ကယ်ပစ္စည်း</option><option value="pharmacy">ဆေးဆိုင်</option><option value="construction">ဆောက်လုပ်ရေးပစ္စည်း</option><option value="wholesale">လက်ကား / ဖြန့်ချိရေး</option><option value="beauty">အလှပြင် / ဆံပင်ညှပ်</option><option value="hotel">ဟိုတယ် / တည်းခိုခန်း</option><option value="laundry">အဝတ်လျှော်</option><option value="stationery">စာရေးကိရိယာ</option><option value="online">Online Shop</option><option value="other">အခြားလုပ်ငန်း</option></select></div><div><label>ဆိုင်ရှင် Gmail</label><input id="newEmail" type="email" placeholder="owner@gmail.com"></div><div><label>စတင် Password (အနည်းဆုံး ၈ လုံး)</label><input id="newPassword" type="password" minlength="8" autocomplete="new-password"></div><div><label>သက်တမ်းကုန်မည့်ရက်</label><input id="expiresOn" type="date"></div></div>
-<div class="row" style="margin-top:10px"><button id="createShopBtn">Gmail + Password ဖြင့် ဆိုင်ရှင်အကောင့် ဖန်တီးမည်</button></div>
-<p class="muted">Gmail အသစ်ဖြစ်ပါက သတ်မှတ်ထားသော Password ဖြင့် အကောင့်ဖန်တီးပြီး Verification Link ပို့မည်။ Gmail ရှိပြီးသားဖြစ်၍ Password မကိုက်ပါက Password Reset Link ပို့မည်။</p><div id="ownerStatus" class="muted"></div></div>
+<div class="grid"><div><label>ဆိုင်အမည်</label><input id="shopName" placeholder="AK Hardware"></div><div><label>လုပ်ငန်းအမျိုးအစား</label><select id="industryType"><option value="general">အထွေထွေ / အခြား</option><option value="grocery">ကုန်စုံ / Supermarket</option><option value="hardware">ကုန်မာ / လျှပ်စစ်</option><option value="electronics">စက်ပစ္စည်း / Electronics</option><option value="mobile">ဖုန်းဆိုင်</option><option value="gold">ရွှေ / ရတနာဆိုင်</option><option value="restaurant">စားသောက်ဆိုင် / Café</option><option value="cosmetics">အလှကုန်</option><option value="fashion">အဝတ်အထည် / ဖိနပ်</option><option value="auto_parts">ကား / ဆိုင်ကယ်ပစ္စည်း</option><option value="pharmacy">ဆေးဆိုင်</option><option value="construction">ဆောက်လုပ်ရေးပစ္စည်း</option><option value="wholesale">လက်ကား / ဖြန့်ချိရေး</option><option value="beauty">အလှပြင် / ဆံပင်ညှပ်</option><option value="hotel">ဟိုတယ် / တည်းခိုခန်း</option><option value="laundry">အဝတ်လျှော်</option><option value="stationery">စာရေးကိရိယာ</option><option value="online">Online Shop</option><option value="other">အခြားလုပ်ငန်း</option></select></div><div><label>ဆိုင်ရှင် Gmail</label><input id="newEmail" type="email" placeholder="owner@gmail.com"></div><div><label>သက်တမ်းကုန်မည့်ရက်</label><input id="expiresOn" type="date"></div></div>
+<div class="row" style="margin-top:10px"><button id="createShopBtn">Google Gmail ကို ဆိုင်ရှင်အဖြစ် ခွင့်ပြုမည်</button></div>
+<p class="muted">ဤ Gmail သည် Google ဖြင့် Login ဝင်နိုင်ရန် Invitation ရရှိမည်။ အကောင့်အသစ်ကို Google Login ပထမဆုံးဝင်ချိန်တွင် ဖန်တီးမည်။</p><div id="ownerStatus" class="muted"></div></div>
 <div class="card"><h2>ဆိုင်ရှင်စာရင်း / သက်တမ်းထိန်းချုပ်မှု</h2><div class="tablewrap"><table><thead><tr><th>ဆိုင် / Gmail</th><th>Package</th><th>သက်တမ်းကုန်ရက်</th><th>အခြေအနေ</th><th>လုပ်ဆောင်ချက်</th></tr></thead><tbody id="licenseRows"></tbody></table></div></div>
 <div class="card"><div class="row"><h2>အသုံးပြုသူအကောင့်များ ထိန်းချုပ်မှု</h2><button id="refreshPlatformUsers" class="secondary">စာရင်းပြန်ဖတ်ရန်</button></div><p class="muted">Platform Owner သာ User အကောင့်များကို ဖွင့်/ပိတ်နိုင်သည်။ ပိတ်ထားသောအကောင့်သည် POS အသုံးမပြုနိုင်ပါ။ ပြန်ဖွင့်ရာတွင် Subscription သက်တမ်းရှိရမည်။</p><div id="platformUsersStatus" class="muted"></div><div class="tablewrap"><table><thead><tr><th>Gmail</th><th>Gmail အတည်ပြု</th><th>သက်တမ်း / Plan</th><th>အခြေအနေ</th><th>ထိန်းချုပ်မှု</th></tr></thead><tbody id="platformUsersRows"></tbody></table></div><button id="morePlatformUsers" class="secondary hidden">နောက်ထပ် User များ</button></div>
 </section>
@@ -235,20 +235,20 @@ const $=id=>document.getElementById(id), money=n=>(Number(n)||0).toLocaleString(
 function status(msg,where="status"){ $(where).textContent=msg; }
 function show(id){$("loginPanel").classList.toggle("hidden",id!=="loginPanel");$("ownerPanel").classList.toggle("hidden",id!=="ownerPanel");$("shopPanel").classList.toggle("hidden",id!=="shopPanel");}
 async function boot(){
- $("loginBtn").disabled=true;
+ $("customerGoogleBtn").disabled=true;
  if(!PROJECT?.apiKey)throw Error("Firebase config မတွေ့ပါ");
  await new Promise((resolve,reject)=>{const x=document.createElement("script");x.src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js";x.onload=resolve;x.onerror=reject;document.head.appendChild(x)});
  await Promise.all(["firebase-auth-compat.js","firebase-firestore-compat.js","firebase-functions-compat.js"].map(name=>new Promise((resolve,reject)=>{const x=document.createElement("script");x.src="https://www.gstatic.com/firebasejs/10.12.2/"+name;x.onload=resolve;x.onerror=reject;document.head.appendChild(x)})));
  if(!firebase.apps.length)firebase.initializeApp(PROJECT);
  auth=firebase.auth();db=firebase.firestore();auth.languageCode="my";
  await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
- $("loginBtn").disabled=false;$("ownerGoogleBtn").disabled=false;
+ $("customerGoogleBtn").disabled=false;$("ownerGoogleBtn").disabled=false;
  auth.onAuthStateChanged(async u=>{
   user=u;if(!u){show("loginPanel");$("userBadge").textContent="";return}
   try{
    const email=(u.email||"").toLowerCase();
-   // Platform Owner is the fixed, password-authenticated control account; do not block Owner login on email verification.
-   if(!u.emailVerified && email!==OWNER){try{await u.sendEmailVerification()}catch(_){}await auth.signOut();show("loginPanel");status("Gmail အတည်ပြုမှု မပြီးသေးပါ။ Inbox/Spam ထဲသို့ Verification Link ပြန်ပို့ထားသည်။ Link ကိုဖွင့်ပြီးနောက် ပြန် Login ဝင်ပါ။");return}
+   // All account types authenticate only with a verified Google provider.
+   if(!u.emailVerified){await auth.signOut();show("loginPanel");status("Google Gmail အတည်ပြုချက် မရရှိပါ။ Google အကောင့်မှ ပြန်ဝင်ပါ။");return}
    if(email===OWNER){
     await u.reload();
     user=auth.currentUser||u;
@@ -323,7 +323,7 @@ async function assertVerifiedPlatformOwner(){
  user=fresh;
  const token=await fresh.getIdTokenResult(true);
  const google=Array.isArray(fresh.providerData)&&fresh.providerData.some(p=>p.providerId==="google.com");
- if(String(fresh.email||"").trim().toLowerCase()!==OWNER||!google||token.claims?.email_verified!==true){
+ if(String(fresh.email||"").trim().toLowerCase()!==OWNER||!google||token.claims?.email_verified!==true||token.claims?.firebase?.sign_in_provider!=="google.com"){
   throw Error("Platform Owner Gmail ("+OWNER+") ကို Google ဖြင့် Login ဝင်ထားကြောင်းနှင့် Google အတည်ပြုချက်ကို မရရှိပါ။ Login အမျိုးအစားတွင် Platform Owner ကိုရွေးပြီး မှန်ကန်သော Gmail ဖြင့် ပြန်ဝင်ပါ။");
  }
  return fresh;
@@ -331,8 +331,8 @@ async function assertVerifiedPlatformOwner(){
 async function claimShopOwnerAccess(signedUser){
  const current=auth.currentUser||signedUser;await current.reload();const fresh=auth.currentUser||current;
  const email=String(fresh.email||"").trim().toLowerCase(),token=await fresh.getIdTokenResult(true);
- const passwordProvider=Array.isArray(fresh.providerData)&&fresh.providerData.some(p=>p.providerId==="password");
- if(!email||!passwordProvider||token.claims?.email_verified!==true)throw Error("အတည်ပြုထားသော Gmail/Password အကောင့်ဖြင့်သာ ဆိုင်ရှင် Login ဝင်နိုင်သည်။");
+ const googleProvider=Array.isArray(fresh.providerData)&&fresh.providerData.some(p=>p.providerId==="google.com");
+ if(!email||!googleProvider||token.claims?.email_verified!==true||token.claims?.firebase?.sign_in_provider!=="google.com")throw Error("အတည်ပြုထားသော Google Gmail ဖြင့်သာ ဆိုင်ရှင် Login ဝင်နိုင်သည်။");
  if(email===OWNER)throw Error("Platform Owner Login အမျိုးအစားကို ရွေးပါ။");
  const licenseRef=db.collection("licenses").doc(fresh.uid),licenseSnap=await licenseRef.get();
  if(licenseSnap.exists){
@@ -357,7 +357,7 @@ async function claimShopOwnerAccess(signedUser){
 async function claimStaffInvite(signedUser,code){
  const current=auth.currentUser||signedUser;await current.reload();
  const fresh=auth.currentUser||current,token=await fresh.getIdTokenResult(true);
- if(!fresh.email||token.claims?.email_verified!==true)throw Error("ဝန်ထမ်း Gmail ကို အရင်အတည်ပြုပါ။");
+ if(!fresh.email||!Array.isArray(fresh.providerData)||!fresh.providerData.some(p=>p.providerId==="google.com")||token.claims?.email_verified!==true||token.claims?.firebase?.sign_in_provider!=="google.com")throw Error("ဝန်ထမ်းသည် အတည်ပြုထားသော Google Gmail ဖြင့်သာ ဝင်ရမည်။");
  if(!/^[A-F0-9]{32}$/.test(code))throw Error("၃၂ လုံး Merchant Code မှန်ကန်စွာ ထည့်ပါ။");
  const inviteRef=db.collection("shopInvites").doc(code),inviteSnap=await inviteRef.get();
  if(!inviteSnap.exists)throw Error("Merchant Code မမှန်ပါ၊ သက်တမ်းကုန်နေပါသည် သို့မဟုတ် အသုံးပြုပြီးဖြစ်သည်။");
@@ -379,16 +379,11 @@ async function claimStaffInvite(signedUser,code){
 
 $("loginType").onchange=()=>{
  const mode=$("loginType").value,staff=mode==="staff",owner=mode==="owner";
- $("emailLoginFields").classList.toggle("hidden",owner);
  $("staffLoginFields").classList.toggle("hidden",!staff);
- $("passwordLoginFields").classList.toggle("hidden",owner);
- $("customerGoogleBtn").classList.add("hidden");
- $("loginBtn").classList.toggle("hidden",owner);
- $("staffRegisterBtn").classList.toggle("hidden",!staff);
- $("forgotPasswordBtn").classList.toggle("hidden",owner);
- $("loginBtn").textContent=staff?"ဝန်ထမ်း Login ဝင်မည်":"ဆိုင်ရှင် Login ဝင်မည်";
+ $("customerGoogleBtn").classList.toggle("hidden",owner);
  $("ownerGoogleBtn").classList.toggle("hidden",!owner);
- status(owner?"Platform Owner သည် သတ်မှတ်ထားသော Google Gmail ဖြင့်ဝင်ပါ။":staff?"ကိုယ်ပိုင် Gmail ဖြင့် Register/Login ဝင်ပြီး အတည်ပြုပြီးနောက် ၃၂ လုံး Merchant Code ဖြည့်ပါ။":"Platform Owner ဖန်တီးပေးထားသော Gmail နှင့် Password ဖြင့် ဆိုင်ရှင် Login ဝင်ပါ။");
+ $("customerGoogleBtn").textContent=staff?"Google ဖြင့် ဝန်ထမ်းဝင်မည်":"Google ဖြင့် ဆိုင်ရှင်ဝင်မည်";
+ status(owner?"သတ်မှတ်ထားသော Platform Owner Google Gmail ဖြင့်ဝင်ပါ။":staff?"ဝန်ထမ်း၏ Google Gmail ဖြင့်ဝင်ပြီး ၃၂ လုံး Merchant Code ဖြင့် ဆိုင်ချိတ်ပါ။":"Owner ခွင့်ပြုထားသော Google Gmail ဖြင့်ဝင်ပါ။");
 };
 
 async function signInWithGoogleAccount(){
@@ -416,25 +411,23 @@ async function signInWithGoogleAccount(){
  const fresh=auth.currentUser||signed.user;
  const token=await fresh.getIdTokenResult(true);
  const google=Array.isArray(fresh.providerData)&&fresh.providerData.some(p=>p.providerId==="google.com");
- if(!google||token.claims?.email_verified!==true){
+ if(!google||token.claims?.email_verified!==true||token.claims?.firebase?.sign_in_provider!=="google.com"){
   await auth.signOut();
   throw Error("Google အကောင့်၏ email_verified အတည်ပြုချက် မရရှိပါ။ Google Account ထဲတွင် Gmail အတည်ပြုပြီး ပြန်ဝင်ပါ။");
  }
  return {user:fresh};
 }
 $("customerGoogleBtn").onclick=async()=>{
- const button=$("customerGoogleBtn");
+ const button=$("customerGoogleBtn"),mode=$("loginType").value;
  try{
-  button.disabled=true;button.textContent="Google Gmail စစ်ဆေးနေသည်...";
-  status("Google Gmail ကို စစ်ဆေးပြီး Owner ခွင့်ပြုစာရင်းနှင့် တိုက်စစ်နေသည်...");
+  button.disabled=true;button.textContent="Google အကောင့်စစ်ဆေးနေသည်...";
+  status(mode==="staff"?"ဝန်ထမ်း Google Gmail နှင့် Merchant Code စစ်ဆေးနေသည်...":"ဆိုင်ရှင် Google Gmail ကို Owner ခွင့်ပြုစာရင်းနှင့် စစ်ဆေးနေသည်...");
   const signed=await signInWithGoogleAccount();
-  if(String(signed.user.email||"").trim().toLowerCase()===OWNER){
-   status("ဤ Gmail သည် Platform Owner ဖြစ်သည်။ Login အမျိုးအစားတွင် Platform Owner ကိုရွေးပါ။");
-   await auth.signOut();return;
-  }
-  // onAuthStateChanged calls claimOwnerProvisioning and opens the shop only if this Gmail was invited.
- }catch(e){status("ဆိုင်ရှင် Google Login မအောင်မြင် ("+(e.code||"") +"): "+friendlyAuthError(e))}
- finally{button.disabled=false;button.textContent="Google ဖြင့် ဆိုင်ရှင် Login ဝင်မည်"}
+  if(String(signed.user.email||"").trim().toLowerCase()===OWNER){await auth.signOut();throw Error("Platform Owner အကောင့်ဖြစ်သည်။ Login အမျိုးအစားကို Platform Owner သို့ပြောင်းပါ။");}
+  // Auth-state handler verifies Staff membership, claims the one-time Staff code,
+  // or claims the exact Shop Owner invitation.
+ }catch(e){status("Google Login မအောင်မြင် ("+(e.code||"")+"): "+friendlyAuthError(e))}
+ finally{button.disabled=false;button.textContent=mode==="staff"?"Google ဖြင့် ဝန်ထမ်းဝင်မည်":"Google ဖြင့် ဆိုင်ရှင်ဝင်မည်"}
 };
 
 $("ownerGoogleBtn").onclick=async()=>{
@@ -453,80 +446,36 @@ $("ownerGoogleBtn").onclick=async()=>{
 $("ownerPOSBtn").onclick=async()=>{try{shopId=user.uid;staffRole="owner";await loadShop()}catch(e){status("Owner POS မဖွင့်နိုင်ပါ: "+errText(e),"ownerStatus")}};
 $("ownerControlBtn").onclick=async()=>{try{if(!isPlatformOwner())throw Error("Platform Owner အကောင့်ဖြင့်သာ ဝင်နိုင်သည်။");show("ownerPanel");$("userBadge").textContent="Platform Owner";await loadPlatformUsers(true);try{await loadLicenses()}catch(e){$("ownerStatus").textContent="User Control Center အလုပ်လုပ်နေသည်။ License အကျဉ်းချုပ် မဖတ်နိုင်ပါ: "+errText(e)}}catch(e){status("Control Center မဖွင့်နိုင်ပါ: "+errText(e),"ownerStatus")}};
 $("loginType").onchange();
-$("loginBtn").onclick=async()=>{
- try{
-  const mode=$("loginType").value,email=$("email").value.trim().toLowerCase(),password=$("password").value;
-  if(!email||!/^[^@ ]+@[^@ ]+[.][^@ .]+$/.test(email)||!password)throw Error("Gmail နှင့် Password ဖြည့်ပါ။");
-  status(mode==="staff"?"Staff Gmail Login စစ်ဆေးနေသည်...":"ဆိုင်ရှင် Gmail Login စစ်ဆေးနေသည်...");
-  await auth.signInWithEmailAndPassword(email,password);
- }catch(e){status("Login မအောင်မြင်: "+friendlyAuthError(e))}
-};
-$("forgotPasswordBtn").onclick=async()=>{
- try{
-  const email=$("email").value.trim().toLowerCase();
-  if(!email||!/^[^@ ]+@[^@ ]+[.][^@ .]+$/.test(email))throw Error("Password Reset ပို့ရန် Gmail ဖြည့်ပါ။");
-  await auth.sendPasswordResetEmail(email);
-  status("Password Reset Link ကို Gmail ထဲပို့ပြီးပါပြီ။ Inbox/Spam စစ်ပါ။");
- }catch(e){status("Password Reset မပို့နိုင်ပါ: "+friendlyAuthError(e))}
-};
-$("staffRegisterBtn").onclick=async()=>{
- let secondaryAuth;
- try{
-  const email=$("email").value.trim().toLowerCase(),password=$("password").value;
-  if(!email||!/^[^@ ]+@[^@ ]+[.][^@ .]+$/.test(email)||password.length<8)throw Error("Gmail မှန်ကန်စွာနှင့် အနည်းဆုံး ၈ လုံး Password ဖြည့်ပါ။");
-  const appName="akStaffRegistration",secondaryApp=firebase.apps.find(a=>a.name===appName)||firebase.initializeApp(PROJECT,appName);
-  secondaryAuth=secondaryApp.auth();
-  const credential=await secondaryAuth.createUserWithEmailAndPassword(email,password);
-  await credential.user.sendEmailVerification();
-  await secondaryAuth.signOut();
-  status("ဝန်ထမ်း Gmail အကောင့်ဖန်တီးပြီးပါပြီ။ Gmail Inbox/Spam ထဲက Verification Link ကိုဖွင့်ပြီးနောက် Staff Login ဝင်ကာ ၃၂ လုံး Merchant Code ထည့်ပါ။");
- }catch(e){if(secondaryAuth)try{await secondaryAuth.signOut()}catch(_){}status("Staff Register မအောင်မြင်: "+friendlyAuthError(e))}
-};
 
 function planDays(p){return Number(p.split("-")[0])}
 async function ownerToken(){const t=await user.getIdToken(true);return t}
 async function ensureCapacity(){const ref=db.collection("platformMeta").doc("shopCapacity"),[snap,allLicenses,betaUsers]=await Promise.all([ref.get(),db.collection("licenses").get(),db.collection("freeBetaUsers").get()]);const ids=new Set([...allLicenses.docs.map(d=>d.id),...betaUsers.docs.map(d=>d.id)]);const actualCount=ids.size;if(!snap.exists||Number(snap.data()?.activeShopCount)!==actualCount)await ref.set({activeShopCount:actualCount,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});}
 
-async function apkProvisionShopOwner(email,password,expiresOn,shopName,industryType){
- const owner=await assertVerifiedPlatformOwner(),expiry=new Date(expiresOn+"T23:59:59");
+async function apkProvisionShopOwner(email,expiresOn,shopName,industryType){
+ const owner=await assertVerifiedPlatformOwner(),expiry=new Date(expiresOn+"T23:59:59"),normalized=String(email||"").trim().toLowerCase();
  if(Number.isNaN(expiry.getTime())||expiry<=new Date())throw Error("သက်တမ်းကုန်ရက် မမှန်ပါ။");
- const ref=db.collection("pendingOwnerInvites").doc(email),old=await ref.get();
- if(old.exists&&["pending","claimed"].includes(old.data()?.status))throw Error("ဤ Gmail အတွက် Invitation ရှိပြီးသားဖြစ်သည်။");
- const token=await owner.getIdToken(true);
- const response=await fetch(GATEWAY+"/owner/provision",{method:"POST",headers:{"Authorization":"Bearer "+token,"Content-Type":"application/json"},body:JSON.stringify({email,password,apiKey:PROJECT.apiKey})});
- const result=await response.json().catch(()=>({}));
- const resetSent=response.status===409&&result.passwordResetSent===true;
- if(!response.ok&&!resetSent)throw Error(result.error||"Shop Owner Gmail အကောင့်ဖန်တီးမရပါ။");
- if(response.ok&&result.emailVerified!==true&&result.verificationEmailSent!==true)throw Error(result.verificationError||"Gmail Verification Link မပို့နိုင်ပါ။ ထပ်မံစမ်းပါ။");
- await ref.set({email,shopName,industryType:industryType||"general",status:"pending",invitedBy:owner.uid,createdAt:firebase.firestore.FieldValue.serverTimestamp(),expiresAt:firebase.firestore.Timestamp.fromDate(expiry)});
- return {ok:true,email,shopName,expiresAt:expiry.toISOString(),passwordResetSent:resetSent,verificationEmailSent:result.verificationEmailSent===true};
+ if(!normalized||normalized===OWNER||!/^[^@ ]+@[^@ ]+[.][^@ .]+$/.test(normalized))throw Error("ဆိုင်ရှင် Gmail မမှန်ပါ။");
+ const ref=db.collection("pendingOwnerInvites").doc(normalized),old=await ref.get();
+ if(old.exists&&old.data()?.status==="claimed")throw Error("ဤ Gmail သည် ဆိုင်အကောင့်နှင့် ချိတ်ပြီးဖြစ်သည်။");
+ const payload={email:normalized,shopName:String(shopName||"").trim(),industryType:industryType||"general",status:"pending",invitedBy:owner.uid,createdAt:firebase.firestore.FieldValue.serverTimestamp(),expiresAt:firebase.firestore.Timestamp.fromDate(expiry)};
+ if(old.exists)await ref.set({...payload,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});else await ref.set(payload);
+ return {ok:true,email:normalized,shopName:payload.shopName,expiresAt:expiry.toISOString()};
 }
-
-
 $("createShopBtn").onclick=async()=>{
  const out=$("ownerStatus");
  try{
   await assertVerifiedPlatformOwner();
-  const email=$("newEmail").value.trim().toLowerCase(),password=$("newPassword").value;
-  const shopName=$("shopName").value.trim(),industryType=$("industryType").value,expiresOn=$("expiresOn").value;
+  const email=$("newEmail").value.trim().toLowerCase(),shopName=$("shopName").value.trim(),industryType=$("industryType").value,expiresOn=$("expiresOn").value;
   if(!shopName||shopName.length<2||!email||!/^[^@ ]+@[^@ ]+[.][^@ .]+$/.test(email))throw Error("ဆိုင်အမည်နှင့် Gmail မှန်ကန်စွာ ဖြည့်ပါ။");
   if(email===OWNER)throw Error("Owner Gmail ကို ဆိုင်ရှင်အဖြစ် မသုံးနိုင်ပါ။");
-  if(password.length<8||password.length>128)throw Error("Password ကို အနည်းဆုံး ၈ လုံး ဖြည့်ပါ။");
   if(!expiresOn)throw Error("သက်တမ်းကုန်မည့်ရက် ရွေးပါ။");
-  if(!confirm(email+" အတွက် Password သတ်မှတ်ပြီး "+expiresOn+" အထိ ဆိုင်အကောင့်ဖွင့်မလား။ Gmail အတည်ပြုရန် Link ပို့မည်။"))return;
-  $("createShopBtn").disabled=true;
-  out.textContent="Gmail အကောင့်ဖန်တီးပြီး Verification ပို့နေသည်...";
-  const data=await apkProvisionShopOwner(email,password,expiresOn,shopName,industryType);
-  out.textContent="ပြီးပါပြီ။ "+data.email+" · "+shopName+" · "+(data.passwordResetSent?"ရှိပြီးသား Gmail ဖြစ်၍ Password Reset Link ပို့ပြီးပါပြီ။":"Password သတ်မှတ်ပြီး Verification Link ပို့ပြီးပါပြီ။")+" သက်တမ်းကုန်ရက်: "+dateText(new Date(data.expiresAt));
-  await loadPlatformUsers(true);
-  try { await loadLicenses(); } catch(e) {
-   out.textContent+=" User ဖိတ်ကြားမှု အောင်မြင်သည်။ License စာရင်းကို သီးခြားဖတ်မရပါ: "+errText(e);
-  }
- }catch(e){
-  out.textContent="မအောင်မြင်: "+errText(e);
- }finally{
-  $("createShopBtn").disabled=false;
- }
+  if(!confirm(email+" ကို Google Login ဖြင့် ဆိုင်ရှင်အဖြစ် ခွင့်ပြုပြီး "+expiresOn+" အထိ အသုံးပြုခွင့်ပေးမလား။"))return;
+  $("createShopBtn").disabled=true;out.textContent="Google Gmail Invitation သိမ်းဆည်းနေသည်...";
+  const data=await apkProvisionShopOwner(email,expiresOn,shopName,industryType);
+  out.textContent="ပြီးပါပြီ။ "+data.email+" · "+shopName+" · Google ဖြင့် ပထမဆုံး Login ဝင်နိုင်ပါပြီ။ သက်တမ်းကုန်ရက်: "+dateText(new Date(data.expiresAt));
+  await loadPlatformUsers(true);try{await loadLicenses()}catch(e){out.textContent+=" Invitation အောင်မြင်သည်။ License စာရင်းကို သီးခြားဖတ်မရပါ: "+errText(e);}
+ }catch(e){out.textContent="မအောင်မြင်: "+errText(e);}
+ finally{$("createShopBtn").disabled=false;}
 };
 async function getPlatformUserRows(){
  const [licenseSnap,inviteSnap]=await Promise.all([db.collection("licenses").get(),db.collection("pendingOwnerInvites").get()]);
@@ -1145,6 +1094,6 @@ $("exportCsv").onclick=()=>{
  const csv="\uFEFF"+rows.map(row=>row.map(v=>'"'+String(v??"").replace(/"/g,'""')+'"').join(",")).join("\r\n"),blob=new Blob([csv],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=(String(shopProfile.name||activeShopName||"Business").replace(/[^a-z0-9-_]/gi,"-").slice(0,35)||"Business")+"-POS-Backup-"+new Date().toISOString().slice(0,10)+".csv";a.click();URL.revokeObjectURL(a.href);
 };
 
-boot().catch(e=>{ $("loginBtn").disabled=true;$("ownerGoogleBtn").disabled=true; status("စနစ်စတင်မရပါ: "+friendlyAuthError(e)); });
+boot().catch(e=>{ $("customerGoogleBtn").disabled=true;$("ownerGoogleBtn").disabled=true; status("စနစ်စတင်မရပါ: "+friendlyAuthError(e)); });
 if("serviceWorker" in navigator)navigator.serviceWorker.register("./sw.js").catch(()=>{});
 </script></body></html>

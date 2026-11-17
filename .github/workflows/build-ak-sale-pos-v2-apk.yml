@@ -120,7 +120,7 @@ jobs:
           scripts.forEach(([, , code],i)=>new vm.Script(code,{filename:'v2-inline-'+(i+1)}));
           if(!html.includes('id="ownerGoogleBtn"')||!html.includes('nativeAuth.signInWithGoogle()')||!html.includes('GoogleAuthProvider.credential(idToken)')) throw new Error('Native Google Platform Owner login bridge is missing');
           if(!html.includes('src="./firebase-config.js"')) throw new Error('Firebase config script URL is malformed in APK bundle');
-          if(!html.includes("async function apkProvisionShopOwner")||html.includes('fetch(GATEWAY+"/owner/provision"')) throw new Error("APK owner account creation still depends on Cloudflare Worker");
+          if(!html.includes("async function apkProvisionShopOwner(email,password,expiresOn,shopName,industryType)")||!html.includes('fetch(GATEWAY+"/owner/provision"')) throw new Error("Shop Owner Gmail/password provisioning gateway is missing");
           if(!html.includes('async function claimShopOwnerAccess(signedUser)')||!html.includes('db.collection("pendingOwnerInvites").doc(email)')||!html.includes("APK-only AK dark monochrome high-contrast theme")) throw new Error("APK-only Spark-compatible verified Gmail provisioning or theme patch is missing");
           if(!html.includes('await window.printSaleReceipt(saleRef.id)')||!html.includes('id="adBrand"')||!html.includes("ctx.fillText(brand.slice(0,32),540,105)")||!html.includes('activeShopName||"ဆိုင်အမည်"')) throw new Error("APK receipt auto-print or editable shop advertising brand patch is missing");
           if(!html.includes('["profile","products","sales","purchases","people","expenses","reports","printer","ads","backup"]')) throw new Error('Printer/Ads tab click routing is missing');

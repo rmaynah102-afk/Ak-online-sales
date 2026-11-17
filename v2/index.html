@@ -488,6 +488,7 @@ async function apkProvisionShopOwner(email,password,expiresOn,shopName,industryT
  const result=await response.json().catch(()=>({}));
  const resetSent=response.status===409&&result.passwordResetSent===true;
  if(!response.ok&&!resetSent)throw Error(result.error||"Shop Owner Gmail အကောင့်ဖန်တီးမရပါ။");
+ if(response.ok&&result.emailVerified!==true&&result.verificationEmailSent!==true)throw Error(result.verificationError||"Gmail Verification Link မပို့နိုင်ပါ။ ထပ်မံစမ်းပါ။");
  await ref.set({email,shopName,industryType:industryType||"general",status:"pending",invitedBy:owner.uid,createdAt:firebase.firestore.FieldValue.serverTimestamp(),expiresAt:firebase.firestore.Timestamp.fromDate(expiry)});
  return {ok:true,email,shopName,expiresAt:expiry.toISOString(),passwordResetSent:resetSent,verificationEmailSent:result.verificationEmailSent===true};
 }

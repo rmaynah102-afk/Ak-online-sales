@@ -3,15 +3,15 @@ from pathlib import Path
 p = Path("www/index.html")
 s = p.read_text(encoding="utf-8")
 
-# Shop-owner provisioning is part of the canonical v2 source and uses the
-# Firestore rules with a one-time verified-Gmail invitation claim. Never create
-# a second Firebase client session or send password-reset/verification emails.
-if ("async function apkProvisionShopOwner(email,expiresOn,shopName,industryType)" not in s
-        and "async function apkProvisionShopOwner(email,password,expiresOn,shopName)" not in s
-        and "async function apkProvisionShopOwner(email,password,expiresOn,shopName,industryType)" not in s):
-    raise SystemExit("APK patch failed: Firestore-backed shop-owner invitation helper missing")
-if 'fetch(GATEWAY+"/owner/provision"' in s:
-    raise SystemExit("APK patch failed: legacy Cloudflare owner provisioning must not be used")
+# Shop-owner provisioning uses the authenticated Cloudflare gateway to create
+# Firebase Email/Password credentials and send verification or password-reset mail.
+# The app then writes the one-time, expiry-bound Firestore shop invitation.
+if "async function apkProvisionShopOwner(email,password,expiresOn,shopName,industryType)" not in s:
+    raise SystemExit("APK patch failed: password-based Shop Owner provisioning helper missing")
+if 'fetch(GATEWAY+"/owner/provision"' not in s:
+    raise SystemExit("APK patch failed: authenticated Shop Owner provisioning gateway is missing")
+if "async function claimStaffInvite(signedUser,code)" not in s or "akStaffRegistration" not in s:
+    raise SystemExit("APK patch failed: verified Gmail Staff registration and Merchant Code claim are missing")
 if 'async function assertVerifiedPlatformOwner()' not in s or 'await assertVerifiedPlatformOwner();' not in s:
     raise SystemExit("APK patch failed: refreshed Google-verified Platform Owner guard missing")
 

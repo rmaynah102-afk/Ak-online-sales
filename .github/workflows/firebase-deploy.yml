@@ -66,5 +66,5 @@ jobs:
           console.log('JavaScript syntax OK:', checked, 'inline script block(s) across', pages.length, 'pages');
           NODE
 
-      - name: Deploy only Hosting and Firestore rules/indexes (no Storage or Functions)
-        run: firebase deploy --only hosting,firestore:rules,firestore:indexes --project ak-onlin-sales --non-interactive
+      - name: Deploy Hosting, Firestore rules/indexes, and required Platform Owner functions
+        run: firebase deploy --only hosting,firestore:rules,firestore:indexes,functions:createShopOwnerAccount,functions:claimOwnerProvisioning,functions:listPlatformUsers,functions:setPlatformUserAccess,functions:grantSubscription --project ak-onlin-sales --non-interactive

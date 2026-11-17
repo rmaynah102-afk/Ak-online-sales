@@ -569,6 +569,9 @@ service cloud.firestore {
           && request.resource.data.claimedAt == request.time
           && existsAfter(/databases/$(database)/documents/licenses/$(request.auth.uid))
           && getAfter(/databases/$(database)/documents/licenses/$(request.auth.uid)).data.email == request.auth.token.email
+          && getAfter(/databases/$(database)/documents/licenses/$(request.auth.uid)).data.shopName == resource.data.shopName
+          && getAfter(/databases/$(database)/documents/licenses/$(request.auth.uid)).data.industryType == resource.data.industryType
+          && getAfter(/databases/$(database)/documents/licenses/$(request.auth.uid)).data.provisionedBy == resource.data.invitedBy
           && getAfter(/databases/$(database)/documents/licenses/$(request.auth.uid)).data.expiresAt == resource.data.expiresAt
           && getAfter(/databases/$(database)/documents/licenses/$(request.auth.uid)).data.status == 'active'
         );
@@ -612,6 +615,9 @@ service cloud.firestore {
           && exists(/databases/$(database)/documents/pendingOwnerInvites/$(request.auth.token.email))
           && get(/databases/$(database)/documents/pendingOwnerInvites/$(request.auth.token.email)).data.email == request.auth.token.email
           && get(/databases/$(database)/documents/pendingOwnerInvites/$(request.auth.token.email)).data.status == 'pending'
+          && get(/databases/$(database)/documents/pendingOwnerInvites/$(request.auth.token.email)).data.shopName == request.resource.data.shopName
+          && get(/databases/$(database)/documents/pendingOwnerInvites/$(request.auth.token.email)).data.industryType == request.resource.data.industryType
+          && get(/databases/$(database)/documents/pendingOwnerInvites/$(request.auth.token.email)).data.invitedBy == request.resource.data.provisionedBy
           && get(/databases/$(database)/documents/pendingOwnerInvites/$(request.auth.token.email)).data.expiresAt == request.resource.data.expiresAt
           && existsAfter(/databases/$(database)/documents/pendingOwnerInvites/$(request.auth.token.email))
           && getAfter(/databases/$(database)/documents/pendingOwnerInvites/$(request.auth.token.email)).data.status == 'claimed'

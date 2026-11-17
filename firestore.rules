@@ -287,7 +287,7 @@ service cloud.firestore {
     // Owner can suspend an account; each Gmail address can claim only once.
     match /freeBetaUsers/{userId} {
       allow read: if isVerifiedOwner()
-        || (request.auth != null && request.auth.uid == userId);
+        || (isVerifiedGoogleUser() && request.auth.uid == userId);
       allow create: if (
           request.auth != null
           && request.auth.uid == userId
@@ -402,7 +402,7 @@ service cloud.firestore {
 
     match /freeTrialClaims/{email} {
       allow read: if isVerifiedOwner()
-        || (request.auth != null && request.auth.token.email == email);
+        || (isVerifiedGoogleUser() && request.auth.token.email == email);
       allow create: if (
           request.auth != null
           && isVerifiedGoogleUser()
@@ -525,7 +525,7 @@ service cloud.firestore {
     }
 
     match /licenses/{userId} {
-      allow read: if request.auth != null && (
+      allow read: if isVerifiedGoogleUser() && (
         request.auth.uid == userId
         || isVerifiedOwner()
         || (exists(/databases/$(database)/documents/shopMembers/$(request.auth.uid))

@@ -10,6 +10,7 @@ assert(html.includes('async function assertVerifiedPlatformOwner()'), 'Platform 
 assert(html.includes('async function apkProvisionShopOwner(email,password,expiresOn,shopName,industryType)'), 'Shop Owner provisioning must accept Owner-set password');
 assert(html.includes('fetch(GATEWAY+"/owner/provision"'), 'Shop Owner provisioning must use authenticated Firebase REST gateway');
 assert(html.includes('passwordResetSent'), 'Existing Gmail password mismatch must trigger password-reset flow');
+assert(html.includes('forgotPasswordBtn') && html.includes('auth.sendPasswordResetEmail(email)'), 'Shop Owner and Staff must be able to reset their own password');
 assert(html.includes('sendEmailVerification'), 'Shop Owner and Staff email verification must be supported');
 assert(html.includes('async function claimShopOwnerAccess(signedUser)'), 'Shop Owner must claim their invitation after verification');
 assert(html.includes('db.collection("pendingOwnerInvites").doc(email)'), 'Shop Owner invitation must be stored in Firestore');

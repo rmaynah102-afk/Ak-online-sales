@@ -222,8 +222,12 @@ describe('AK Sale POS role and tenant security',function(){
   await seedInvite('shop-a',code);
   await claimInvite('staff-a','staff-a@example.com','shop-a',code);
   const owner=testEnv.authenticatedContext('shop-a',{email:'shop-a@example.com',email_verified:true}).firestore();
-  await assertSucceeds(deleteDoc(doc(owner,'shopMembers','staff-a')));
-  await assertSucceeds(deleteDoc(doc(owner,'shopStaffSlots','shop-a_1')));
+  const revoke=writeBatch(owner);
+  revoke.update(doc(owner,'shopMembers','staff-a'),{status:'suspended',revokedAt:serverTimestamp()});
+  revoke.delete(doc(owner,'shopStaffSlots','shop-a_1'));
+  await assertSucceeds(revoke.commit());
+  const staff=testEnv.authenticatedContext('staff-a',{email:'staff-a@example.com',email_verified:true}).firestore();
+  await assertFails(getDoc(doc(staff,'shopMembers','staff-a')));
  });
 
  it('does not allow legacy Manager, Cashier or synthetic staff account creation',async()=>{

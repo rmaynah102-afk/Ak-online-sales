@@ -12,6 +12,7 @@ on:
       - 'firebase-config.js'
       - 'firebase.json'
       - 'firestore.rules'
+      - 'tests/firestore/**'
       - 'firestore.indexes.json'
       - '.firebaserc'
       - 'sw.js'

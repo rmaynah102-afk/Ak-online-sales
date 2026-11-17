@@ -283,9 +283,9 @@ async function boot(){
     if(!memberSnap.exists||member.merchantStaff!==true||member.status!=="active"||!member.shopId){await auth.signOut();show("loginPanel");status("ဝန်ထမ်းအကောင့် ပိတ်ထားခြင်း သို့မဟုတ် မမှန်ကန်ပါ။");return}
     shopId=member.shopId;staffRole=member.role||"employee";await loadShop()
    }else{
-    const claim=firebase.functions().httpsCallable("claimOwnerProvisioning");
-    await claim({});
+    await claimShopOwnerAccess(u);
     shopId=u.uid;staffRole="owner";await loadShop()
+   }
    }
   }catch(e){
    const email=(u.email||"").toLowerCase();
@@ -326,7 +326,33 @@ async function assertVerifiedPlatformOwner(){
  }
  return fresh;
 }
-$("loginType").onchange=()=>{
+async function claimShopOwnerAccess(signedUser){
+ const current=auth.currentUser||signedUser;await current.reload();const fresh=auth.currentUser||current;
+ const email=String(fresh.email||"").trim().toLowerCase(),token=await fresh.getIdTokenResult(true);
+ const google=Array.isArray(fresh.providerData)&&fresh.providerData.some(p=>p.providerId==="google.com");
+ if(!email||!google||token.claims?.email_verified!==true)throw Error("အတည်ပြုထားသော Google Gmail ဖြင့်သာ ဆိုင်ရှင် Login ဝင်နိုင်သည်။");
+ if(email===OWNER)throw Error("Platform Owner Login အမျိုးအစားကို ရွေးပါ။");
+ const licenseRef=db.collection("licenses").doc(fresh.uid),licenseSnap=await licenseRef.get();
+ if(licenseSnap.exists){
+  const license=licenseSnap.data()||{};
+  if(String(license.email||"").toLowerCase()!==email)throw Error("ဤ Gmail သည် အခြားဆိုင်အကောင့်နှင့် ချိတ်ထားပြီးဖြစ်သည်။");
+  if(license.status!=="active")throw Error("Platform Owner က ဤဆိုင်အကောင့်ကို ပိတ်ထားသည်။");
+  if(!license.expiresAt||license.expiresAt.toDate()<=new Date())throw Error("ဆိုင်သက်တမ်းကုန်နေပါသည်။ Platform Owner ထံ သက်တမ်းတိုးရန် ဆက်သွယ်ပါ။");
+  return {status:"active"};
+ }
+ const betaSnap=await db.collection("freeBetaUsers").doc(fresh.uid).get();
+ if(betaSnap.exists){const beta=betaSnap.data()||{};if(beta.email===email&&beta.status==="active")return {status:"free-beta"};}
+ const inviteRef=db.collection("pendingOwnerInvites").doc(email),inviteSnap=await inviteRef.get();
+ if(!inviteSnap.exists)throw Error("ဤ Gmail ကို Platform Owner က ခွင့်ပြုမထားသေးပါ။");
+ const invite=inviteSnap.data()||{};
+ if(invite.email!==email||invite.status!=="pending")throw Error("Gmail Invitation ကို ပိတ်ထားခြင်း သို့မဟုတ် အသုံးပြုပြီးဖြစ်သည်။");
+ if(!invite.expiresAt||invite.expiresAt.toDate()<=new Date())throw Error("Invitation သက်တမ်းကုန်နေပါသည်။ Platform Owner ထံ ဆက်သွယ်ပါ။");
+ const batch=db.batch();
+ batch.set(licenseRef,{uid:fresh.uid,email,shopName:String(invite.shopName||"ဆိုင်အမည်"),industryType:String(invite.industryType||"general"),status:"active",plan:"owner-managed",expiresAt:invite.expiresAt,provisionedBy:String(invite.invitedBy||""),provisionedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+ batch.update(inviteRef,{status:"claimed",claimedUid:fresh.uid,claimedAt:firebase.firestore.FieldValue.serverTimestamp()});
+ await batch.commit();return {status:"active"};
+}
+=()=>{
  const mode=$("loginType").value,staff=mode==="staff",owner=mode==="owner",shop=mode==="shop";
  $("emailLoginFields").classList.add("hidden");
  $("staffLoginFields").classList.toggle("hidden",!staff);
@@ -412,12 +438,14 @@ async function ownerToken(){const t=await user.getIdToken(true);return t}
 async function ensureCapacity(){const ref=db.collection("platformMeta").doc("shopCapacity"),[snap,allLicenses,betaUsers]=await Promise.all([ref.get(),db.collection("licenses").get(),db.collection("freeBetaUsers").get()]);const ids=new Set([...allLicenses.docs.map(d=>d.id),...betaUsers.docs.map(d=>d.id)]);const actualCount=ids.size;if(!snap.exists||Number(snap.data()?.activeShopCount)!==actualCount)await ref.set({activeShopCount:actualCount,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});}
 
 async function apkProvisionShopOwner(email,expiresOn,shopName,industryType){
- const call=firebase.functions().httpsCallable("createShopOwnerAccount");
- const result=await call({email,expiresOn,shopName,industryType:industryType||"general"});
- const data=result.data||{};
- if(!data.ok||!data.invitationPending)throw Error("Server မှ Gmail Invitation ကို အတည်မပြုနိုင်ပါ။");
- return data;
+ const owner=await assertVerifiedPlatformOwner(),expiry=new Date(expiresOn+"T23:59:59");
+ if(Number.isNaN(expiry.getTime())||expiry<=new Date())throw Error("သက်တမ်းကုန်ရက် မမှန်ပါ။");
+ const ref=db.collection("pendingOwnerInvites").doc(email),old=await ref.get();
+ if(old.exists&&["pending","claimed"].includes(old.data()?.status))throw Error("ဤ Gmail အတွက် Invitation ရှိပြီးသားဖြစ်သည်။");
+ await ref.set({email,shopName,industryType:industryType||"general",status:"pending",invitedBy:owner.uid,createdAt:firebase.firestore.FieldValue.serverTimestamp(),expiresAt:firebase.firestore.Timestamp.fromDate(expiry)});
+ return {ok:true,email,shopName,expiresAt:expiry.toISOString(),invitationPending:true};
 }
+
 $("createShopBtn").onclick=async()=>{
  const out=$("ownerStatus");
  try{
@@ -444,67 +472,65 @@ $("createShopBtn").onclick=async()=>{
   $("createShopBtn").disabled=false;
  }
 };
+async function getPlatformUserRows(){
+ const [licenseSnap,inviteSnap]=await Promise.all([db.collection("licenses").get(),db.collection("pendingOwnerInvites").get()]);
+ const registered=licenseSnap.docs.map(d=>({uid:d.id,...d.data(),isInvitation:false}));
+ const emails=new Set(registered.map(x=>String(x.email||"").toLowerCase()));
+ const invites=inviteSnap.docs.map(d=>({uid:"invite:"+d.id,email:d.id,...d.data(),isInvitation:true})).filter(x=>["pending","suspended"].includes(x.status)&&!emails.has(String(x.email||"").toLowerCase()));
+ return [...registered,...invites].filter(x=>String(x.email||"").toLowerCase()!==OWNER);
+}
 async function loadLicenses(){
- const call=firebase.functions().httpsCallable("listPlatformUsers");
- const result=await call({pageToken:""});
- const items=(result.data&&result.data.users)||[];
- licenses=items.filter(x=>!x.isInvitation).map(x=>({...x,id:x.uid}));
- $("shopCount").textContent=items.length;
+ const items=await getPlatformUserRows();licenses=items.filter(x=>!x.isInvitation).map(x=>({...x,id:x.uid}));$("shopCount").textContent=items.length;
  $("licenseRows").innerHTML=items.map(x=>{
-  const id=String(x.uid||"");
-  const locked=x.status==="suspended"||x.disabled;
-  const expiry=x.expiresAt?dateText(new Date(x.expiresAt)):"မသတ်မှတ်ရသေး";
+  const id=String(x.uid||""),locked=x.status==="suspended"||x.disabled;
+  const expiry=x.expiresAt?.toDate?dateText(x.expiresAt):x.expiresAt?dateText(new Date(x.expiresAt)):"မသတ်မှတ်ရသေး";
   const state=x.isInvitation?(locked?"Invitation ပိတ်ထား":"Gmail ဖိတ်ကြားထား"):x.status;
-  const actions=x.isInvitation
-   ? `<button class="danger" onclick="changePlatformUserAccess('${esc(id)}','${locked?"reactivate":"suspend"}')">${locked?"ပြန်ဖွင့်":"ပိတ်"}</button>`
-   : `<button class="secondary" onclick="renewLicense('${esc(id)}')">သက်တမ်းတိုး</button> <button class="danger" onclick="toggleLicense('${esc(id)}')">${locked?"ပြန်ဖွင့်":"ပိတ်"}</button>`;
+  const actions=x.isInvitation?`<button class="danger" onclick="changePlatformUserAccess('${esc(id)}','${locked?"reactivate":"suspend"}')">${locked?"ပြန်ဖွင့်":"ပိတ်"}</button>`:`<button class="secondary" onclick="renewLicense('${esc(id)}')">သက်တမ်းတိုး</button> <button class="danger" onclick="toggleLicense('${esc(id)}')">${locked?"ပြန်ဖွင့်":"ပိတ်"}</button>`;
   return `<tr><td><b>${esc(x.shopName||"ဆိုင်")}</b><br>${esc(x.email||id)}</td><td>${esc(x.plan||"-")}</td><td>${esc(expiry)}</td><td>${esc(state)}</td><td>${actions}</td></tr>`;
  }).join("")||'<tr><td colspan="5">ဆိုင်အကောင့် မရှိသေးပါ</td></tr>';
 }
 window.renewLicense=async id=>{try{
- const p=prompt("သက်တမ်းတိုးမည့်ရက် (30 / 90 / 180 / 365)");
- if(!["30","90","180","365"].includes(p))return;
- const call=firebase.functions().httpsCallable("grantSubscription");
- await call({uid:id,days:Number(p)});
+ const p=prompt("သက်တမ်းတိုးမည့်ရက် (30 / 90 / 180 / 365)");if(!["30","90","180","365"].includes(p))return;
+ await assertVerifiedPlatformOwner();const ref=db.collection("licenses").doc(id),snap=await ref.get();if(!snap.exists)throw Error("ဆိုင်အကောင့် မတွေ့ပါ။");
+ const old=snap.data()||{},oldExpiry=old.expiresAt?.toDate?old.expiresAt.toDate().getTime():0,expiry=new Date(Math.max(Date.now(),oldExpiry)+Number(p)*86400000);
+ await ref.update({status:"active",plan:p+"-days",expiresAt:firebase.firestore.Timestamp.fromDate(expiry),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
  await Promise.all([loadLicenses(),loadPlatformUsers(true)]);
-}catch(e){alert("သက်တမ်းတိုးမရပါ: "+errText(e))}};
+ }catch(e){alert("သက်တမ်းတိုးမရပါ: "+errText(e))}};
 window.toggleLicense=async id=>{try{
- const x=licenses.find(a=>a.id===id);if(!x)return;
- const action=x.status==="suspended"||x.disabled?"reactivate":"suspend";
- if(!confirm(action==="suspend"?"ဤ User အကောင့်ကို ပိတ်မလား။":"ဤ User အကောင့်ကို ပြန်ဖွင့်မလား။"))return;
- const call=firebase.functions().httpsCallable("setPlatformUserAccess");
- await call({uid:id,action});
+ const x=licenses.find(a=>a.id===id);if(!x)return;const action=x.status==="suspended"||x.disabled?"reactivate":"suspend";
+ if(!confirm(action==="suspend"?"ဤဆိုင်အကောင့်ကို ပိတ်မလား။":"ဤဆိုင်အကောင့်ကို ပြန်ဖွင့်မလား။ သက်တမ်းရှိရမည်။"))return;
+ await assertVerifiedPlatformOwner();const ref=db.collection("licenses").doc(id),snap=await ref.get();if(!snap.exists)throw Error("ဆိုင်အကောင့် မတွေ့ပါ။");
+ const lic=snap.data()||{};if(action==="reactivate"&&(!lic.expiresAt||lic.expiresAt.toDate()<=new Date()))throw Error("သက်တမ်းကုန်နေပါသည်။ အရင်သက်တမ်းတိုးပါ။");
+ await ref.update({status:action==="suspend"?"suspended":"active",updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
  await Promise.all([loadLicenses(),loadPlatformUsers(true)]);
-}catch(e){alert("အကောင့်ထိန်းချုပ်မှု မအောင်မြင်ပါ: "+errText(e))}};
+ }catch(e){alert("အကောင့်ထိန်းချုပ်မှု မအောင်မြင်ပါ: "+errText(e))}};
 let platformUsersPageToken="";
 async function loadPlatformUsers(reset=true){
  const statusEl=$("platformUsersStatus"),rows=$("platformUsersRows");
  try{
-  if(reset){platformUsersPageToken="";rows.innerHTML="";}
-  statusEl.textContent="User စာရင်း ဖတ်နေသည်...";
-  const call=firebase.functions().httpsCallable("listPlatformUsers");
-  const result=await call({pageToken:platformUsersPageToken||""});
-  const data=result.data||{},items=data.users||[];
-  rows.insertAdjacentHTML("beforeend",items.map(x=>{
-   const locked=x.status==="suspended"||x.disabled;
-   const expiry=x.expiresAt?dateText(new Date(x.expiresAt)):"မသတ်မှတ်ရသေး";
-   const action=locked?"reactivate":"suspend";
-   const label=locked?"ပြန်ဖွင့်ရန်":"ပိတ်ရန်";
-   const state=x.isInvitation?(locked?"Invitation ပိတ်ထား":"Gmail Link စောင့်နေသည်"):(x.disabled?"Auth ပိတ်ထား":x.status);
-   return '<tr><td>'+esc(x.email||x.uid)+'</td><td>'+(x.emailVerified?"အတည်ပြုပြီး":(x.isInvitation?"မဝင်ရောက်ရသေး":"မအတည်ပြုရသေး"))+'</td><td>'+esc(x.plan||"-")+'<br>'+esc(expiry)+'</td><td>'+esc(state)+'</td><td><button class="'+(locked?"secondary":"danger")+'" onclick="changePlatformUserAccess(\''+x.uid+'\',\''+action+'\')">'+label+'</button></td></tr>';
-  }).join(""));
-  platformUsersPageToken=data.nextPageToken||"";
-  $("morePlatformUsers").classList.toggle("hidden",!platformUsersPageToken);
-  statusEl.textContent=items.length?"User "+items.length+" ဦးကို ပြသထားသည်။":"User မရှိသေးပါ။";
+  statusEl.textContent="User စာရင်း ဖတ်နေသည်...";const items=await getPlatformUserRows();
+  rows.innerHTML=items.map(x=>{
+   const locked=x.status==="suspended"||x.disabled,expiry=x.expiresAt?.toDate?dateText(x.expiresAt):x.expiresAt?dateText(new Date(x.expiresAt)):"မသတ်မှတ်ရသေး";
+   const action=locked?"reactivate":"suspend",label=locked?"ပြန်ဖွင့်ရန်":"ပိတ်ရန်",state=x.isInvitation?(locked?"Invitation ပိတ်ထား":"Google Login စောင့်နေသည်"):(x.status==="active"?"အသုံးပြုခွင့်ရှိ":"အကောင့်ပိတ်ထား");
+   return '<tr><td>'+esc(x.email||x.uid)+'</td><td>'+(x.isInvitation?"မဝင်ရောက်ရသေး":"Gmail ခွင့်ပြုထား")+'</td><td>'+esc(x.plan||"Invitation")+'<br>'+esc(expiry)+'</td><td>'+esc(state)+'</td><td><button class="'+(locked?"secondary":"danger")+'" onclick="changePlatformUserAccess(\\''+esc(x.uid)+'\\',\\''+action+'\\')">'+label+'</button></td></tr>';
+  }).join("")||'<tr><td colspan="5">User မရှိသေးပါ။</td></tr>';
+  $("morePlatformUsers").classList.add("hidden");statusEl.textContent="ဆိုင်ရှင် / Invitation စုစုပေါင်း "+items.length+" ခု။";
  }catch(e){statusEl.textContent="User စာရင်း မဖတ်နိုင်ပါ: "+errText(e);}
 }
 window.changePlatformUserAccess=async(uid,action)=>{
- const promptText=action==="suspend"?"ဤ User အကောင့်ကို ပိတ်မလား။":"ဤ User အကောင့်ကို ပြန်ဖွင့်မလား။ သက်တမ်းရှိရမည်။";
+ const promptText=action==="suspend"?"ဤ Gmail Invitation ကို ပိတ်မလား။":"ဤ Gmail Invitation ကို ပြန်ဖွင့်မလား။";
  if(!confirm(promptText))return;
  try{
-  $("platformUsersStatus").textContent="အကောင့်အခြေအနေ ပြောင်းနေသည်...";
-  const call=firebase.functions().httpsCallable("setPlatformUserAccess");
-  await call({uid,action});
+  $("platformUsersStatus").textContent="အကောင့်အခြေအနေ ပြောင်းနေသည်...";await assertVerifiedPlatformOwner();
+  if(String(uid).startsWith("invite:")){
+   const email=String(uid).slice(7),ref=db.collection("pendingOwnerInvites").doc(email),snap=await ref.get();if(!snap.exists)throw Error("Invitation မတွေ့ပါ။");
+   if(action==="reactivate"&&snap.data().expiresAt?.toDate()<=new Date())throw Error("Invitation သက်တမ်းကုန်နေသည်။ အသစ်ဖန်တီးပါ။");
+   await ref.update({status:action==="suspend"?"suspended":"pending",updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+  }else{
+   const ref=db.collection("licenses").doc(uid),snap=await ref.get();if(!snap.exists)throw Error("ဆိုင်အကောင့် မတွေ့ပါ။");
+   const lic=snap.data()||{};if(action==="reactivate"&&(!lic.expiresAt||lic.expiresAt.toDate()<=new Date()))throw Error("သက်တမ်းကုန်နေပါသည်။ သက်တမ်းတိုးပြီးမှ ပြန်ဖွင့်ပါ။");
+   await ref.update({status:action==="suspend"?"suspended":"active",updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+  }
   await Promise.all([loadPlatformUsers(true),loadLicenses()]);
  }catch(e){$("platformUsersStatus").textContent="ပြောင်းလဲမှု မအောင်မြင်ပါ: "+errText(e);}
 };

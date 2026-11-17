@@ -1,4 +1,4 @@
-name: Deploy AK Sale POS Platform Owner Backend
+name: Deploy AK Sale POS Firestore Security Rules
 
 on:
   push:
@@ -20,7 +20,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: ak-free-firebase-deploy
+  group: ak-pos-firestore-rules-deploy
   cancel-in-progress: false
 
 permissions:
@@ -66,5 +66,5 @@ jobs:
           console.log('JavaScript syntax OK:', checked, 'inline script block(s) across', pages.length, 'pages');
           NODE
 
-      - name: Deploy Hosting, Firestore rules/indexes, and all required Platform Owner account-control functions
-        run: firebase deploy --only hosting,firestore:rules,firestore:indexes,functions:createShopOwnerAccount,functions:claimOwnerProvisioning,functions:listPlatformUsers,functions:setPlatformUserAccess,functions:grantSubscription --project ak-onlin-sales --non-interactive
+      - name: Deploy Spark-compatible Firestore rules and indexes only
+        run: firebase deploy --only firestore:rules,firestore:indexes --project ak-onlin-sales --non-interactive

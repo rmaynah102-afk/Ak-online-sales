@@ -598,7 +598,7 @@ async function loadShop(){
    $("ownerControlBtn").classList.add("hidden");
  }
  await loadShopProfile();
- show("shopPanel");$("userBadge").textContent=platformOwner?"Platform Owner · POS":staffRole==="owner"?"ဆိုင်ရှင်":("ဝန်ထမ်း · "+staffRole);
+ show("shopPanel");$("userBadge").textContent=platformOwner?"Platform Owner · POS":staffRole==="owner"?"ဆိုင်ရှင်":("ဝန်ထမ်း (Staff)");
  printerRender();applyRoleUI();
  if(staffRole==="owner"&&!platformOwner)await loadMerchantStaff();
  await reloadAll();
@@ -742,7 +742,7 @@ $("clearProductSheet").onclick=clearProductSheet;
 $("saveProductSheet").onclick=async()=>{
  const btn=$("saveProductSheet");
  try{
-  if(!(staffRole==="owner"||staffRole==="manager"))throw Error("ဆိုင်ရှင်သာ ပစ္စည်းစာရင်းအသစ် ထည့်နိုင်သည်။");
+  if(staffRole!=="owner")throw Error("ဆိုင်ရှင်သာ ပစ္စည်းစာရင်းအသစ် ထည့်နိုင်သည်။");
   const rows=[...$("productSheetRows").querySelectorAll("tr")].map(tr=>{
    const v=k=>tr.querySelector('[data-k="'+k+'"]').value.trim();
    return {name:v("name"),sku:v("sku"),category:v("category")||"အထွေထွေ",unit:v("unit")||"ခု",cost:Number(v("cost")||0),retail:Number(v("retail")||0),wholesale:Number(v("wholesale")||0),stock:Number(v("stock")||0),alert:Number(v("alert")||0)};
@@ -790,11 +790,11 @@ $("saveSale").onclick=async()=>{
   const customer=$("saleCustomer").value.trim(),saleRef=col("sales").doc(),costRef=col("saleCosts").doc(saleRef.id);
   await db.runTransaction(async tx=>{
    const snapshots=[];for(const line of lines){const pr=col("products").doc(line.productId),ps=await tx.get(pr);if(!ps.exists)throw Error("ပစ္စည်းမတွေ့ပါ: "+line.name);snapshots.push({line,ref:pr,data:ps.data()})}
-   let costTotal=0;if(staffRole==="owner"||staffRole==="manager"){for(const item of snapshots){const cs=await tx.get(col("productCosts").doc(item.line.productId));costTotal+=Number(cs.data()?.cost||0)*item.line.qty}}
+   let costTotal=0;if(staffRole==="owner"){for(const item of snapshots){const cs=await tx.get(col("productCosts").doc(item.line.productId));costTotal+=Number(cs.data()?.cost||0)*item.line.qty}}
    snapshots.forEach(({line,ref,data})=>{const stock=Number(data.stock||0);if(line.qty>stock)throw Error("လက်ကျန်မလုံလောက်ပါ: "+line.name+" · "+stock);tx.update(ref,{stock:stock-line.qty})});
    const qty=lines.reduce((a,x)=>a+x.qty,0);
    tx.set(saleRef,{lines,productId:lines.length===1?lines[0].productId:"multi",productName:lines.map(x=>x.name).join(", "),qty,price:total/Math.max(1,qty),total,paid,due:total-paid,customer,payment:payType,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
-   if(staffRole==="owner"||staffRole==="manager")tx.set(costRef,{cost:costTotal,profit:total-costTotal});
+   if(staffRole==="owner")tx.set(costRef,{cost:costTotal,profit:total-costTotal});
   });
   saleCart=[];$("salePaid").value="0";$("saleCustomer").value="";renderSaleCart();await reloadAll();
   const readyPrinter=printerRead().find(x=>x.default)||printerRead()[0];

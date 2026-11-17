@@ -64,6 +64,39 @@ describe('AK Sale Firestore security baseline', function () {
     await testEnv.clearFirestore();
   });
 
+  it('gives Staff sales access but blocks purchases, expenses, costs and price edits', async () => {
+    await seedLicense('shop-a');
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      const db = context.firestore();
+      await setDoc(doc(db, 'shopMembers', 'staff-a'), {
+        shopId: 'shop-a', role: 'employee', status: 'active',
+        email: 'staff@example.com', merchantStaff: true,
+      });
+      await setDoc(doc(db, 'shops', 'shop-a', 'pos', 'products', 'records', 'item-a'), {
+        name: 'Hammer', retail: 5000, wholesale: 4500, stock: 10,
+      });
+      await setDoc(doc(db, 'shops', 'shop-a', 'pos', 'productCosts', 'records', 'item-a'), {
+        cost: 3000,
+      });
+    });
+    const staffDb = testEnv.authenticatedContext('staff-a', {
+      email: 'staff@example.com', email_verified: true,
+    }).firestore();
+    await assertSucceeds(getDoc(doc(staffDb, 'shops', 'shop-a', 'pos', 'products', 'records', 'item-a')));
+    await assertSucceeds(setDoc(doc(staffDb, 'shops', 'shop-a', 'pos', 'sales', 'records', 'sale-a'), {
+      total: 5000, paid: 5000, due: 0, productName: 'Hammer', qty: 1,
+    }));
+    await assertSucceeds(setDoc(doc(staffDb, 'shops', 'shop-a', 'pos', 'products', 'records', 'item-a'), {
+      name: 'Hammer', retail: 5000, wholesale: 4500, stock: 9,
+    }));
+    await assertFails(setDoc(doc(staffDb, 'shops', 'shop-a', 'pos', 'products', 'records', 'item-a'), {
+      name: 'Hammer', retail: 7000, wholesale: 6500, stock: 9,
+    }));
+    await assertFails(getDoc(doc(staffDb, 'shops', 'shop-a', 'pos', 'productCosts', 'records', 'item-a')));
+    await assertFails(getDoc(doc(staffDb, 'shops', 'shop-a', 'pos', 'purchases', 'records', 'purchase-a')));
+    await assertFails(getDoc(doc(staffDb, 'shops', 'shop-a', 'pos', 'expenses', 'records', 'expense-a')));
+  });
+
   it('allows only the exact invited, verified Gmail to claim a shop-owner license once', async () => {
     const ownerDb = testEnv.authenticatedContext('platform-owner-uid', {
       email: 'painglin102@gmail.com', email_verified: true,

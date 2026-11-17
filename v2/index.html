@@ -127,6 +127,49 @@ th{background:#eaf0f7;color:#183c60}
 @media(max-width:599px){body{font-size:16px}main{padding:10px}.card{padding:14px;margin:10px 0;border-radius:14px}.grid{gap:10px}.tabs button{flex:1 1 42%;font-size:14px;padding:10px 8px}th,td{font-size:13px;padding:9px 8px}input,select,textarea{font-size:16px}.stat b{font-size:19px}}
 .printer-highlight{border:1px solid #c6d8eb;background:linear-gradient(135deg,#f5f9ff,#fff);border-radius:14px;padding:14px}
 
+
+/* AK monochrome compact interface */
+:root{color-scheme:dark;--navy:#080a0d;--blue:#171b20;--gold:#d7dce2;--bg:#090b0e;--line:#30363d;--ink:#f1f3f5;--muted:#aeb6bf;--green:#d7dce2;--red:#c7cbd0}
+html,body{background:#090b0e!important;color:#f1f3f5!important}
+body{font-size:14px;line-height:1.42;background:#090b0e!important}
+header{background:#090b0e!important;color:#fff;border-bottom:1px solid #555b63;padding:9px 13px}
+header h1{font-size:17px;font-weight:750}header small{color:#c9cdd2}
+main{max-width:1500px;padding:9px}
+.card{background:#11151a!important;border:1px solid #343b43!important;border-radius:9px;box-shadow:none!important;padding:11px;margin:8px 0}
+h2{font-size:16px;color:#f1f3f5;margin:0 0 8px}h3{font-size:14px;color:#f1f3f5}
+label{font-size:12px;color:#c5cbd2;margin:6px 0 3px}
+input,select,textarea{background:#090c10!important;color:#f4f5f6!important;border:1px solid #424a53!important;border-radius:5px!important;min-height:36px;padding:7px 9px;font-size:14px}
+input::placeholder,textarea::placeholder{color:#858e98}
+button{background:#d8dde3!important;color:#11151a!important;border:1px solid #d8dde3!important;border-radius:5px!important;min-height:35px;padding:7px 11px;font-size:13px;font-weight:700}
+button.secondary{background:#171c22!important;color:#edf0f3!important;border:1px solid #555e68!important}
+button.danger{background:#333941!important;color:#fff!important;border-color:#666e78!important}
+button:disabled{opacity:.45}
+.tabs{background:#090b0e!important;padding:5px 0;gap:5px}
+.tabs button{background:#171c22!important;color:#e8ebee!important;border-color:#454d57!important;min-height:35px;padding:7px 10px}
+.tabs button.active{background:#e1e5e9!important;color:#0b0d10!important;border-color:#e1e5e9!important}
+.stats{gap:6px}.stat{background:#0c1014!important;border:1px solid #303740!important;border-radius:7px;padding:9px}
+.stat b{color:#f4f5f6;font-size:18px}
+.notice,.pill,.printer-highlight{background:#1a2026!important;color:#e9edf0!important;border:1px solid #434b54!important;border-radius:6px}
+.muted,#status{color:#aeb6bf!important;font-size:12px}
+.tablewrap{border:1px solid #343b43;border-radius:6px;overflow:auto}
+table{border-collapse:separate;border-spacing:0;min-width:650px;background:#0c1014}
+th,td{background:#0c1014!important;color:#e8ebee!important;border-bottom:1px solid #303740!important;border-right:1px solid #252c33!important;padding:7px 8px;font-size:12px}
+th{background:#1a2026!important;color:#fff!important;font-weight:750}
+tr:hover td{background:#151a20!important}
+#loginPanel{max-width:560px;margin:5vh auto;background:#11151a!important;border:1px solid #555e68}
+#loginPanel .notice{font-size:12px}
+#productSheetWrap{margin:10px 0}
+#productSheet{min-width:1050px;width:100%;table-layout:fixed}
+#productSheet th{position:sticky;top:0;z-index:2}
+#productSheet td{padding:3px}
+#productSheet input{min-width:78px;width:100%;min-height:32px;padding:5px 6px;border-radius:3px!important;font-size:12px}
+#productSheet .sheet-name{min-width:145px}
+#productSheet .sheet-sku{min-width:110px}
+#productSheet .sheet-num{min-width:82px;text-align:right}
+.sheet-actions{display:flex;gap:6px;flex-wrap:wrap;margin:7px 0}
+details>summary{cursor:pointer;color:#edf0f3;font-weight:700;padding:8px 0}
+@media(max-width:599px){main{padding:7px}.card{padding:9px}.grid{gap:7px}.stats{gap:5px}.stat{padding:8px}.tabs button{flex:0 0 auto;font-size:12px;padding:7px 9px}.row{gap:6px}}
+
 </style>
 </head>
 <body>
@@ -163,7 +206,7 @@ th{background:#eaf0f7;color:#183c60}
 </section>
 <nav class="tabs no-print" id="tabs"><button data-tab="profile">ဆိုင်အချက်အလက်</button><button data-tab="products" class="active">ကုန်ပစ္စည်း</button><button data-tab="sales">အရောင်း</button><button data-tab="purchases">အဝယ်</button><button data-tab="people">ဖောက်သည်/ပေးသွင်းသူ</button><button data-tab="expenses">အသုံးစရိတ်</button><button data-tab="reports">စာရင်းချုပ်</button><button data-tab="printer">Printer</button><button data-tab="ads">ကြော်ငြာ</button><button data-tab="backup">Backup</button></nav>
 <section id="staffManagement" class="card hidden"><h2>ဝန်ထမ်းအကောင့် စီမံခန့်ခွဲမှု</h2><p class="muted">ဝန်ထမ်းအတွက် ကိုယ်ပိုင် Gmail မလိုပါ။ Merchant Code နှင့် Password ဖြင့် ဝင်နိုင်သည်။ ဝန်ထမ်း ၂ ဦးအထိသာ ဖန်တီးနိုင်သည်။ Code ကို တစ်ကြိမ်သာ ပြသမည်။</p><div class="grid"><div><label>ဝန်ထမ်းအမည်</label><input id="staffName" placeholder="ဝန်ထမ်းအမည်"></div><div><label>ရာထူး</label><select id="staffRole"><option value="cashier">ငွေကိုင်</option><option value="manager">မန်နေဂျာ</option><option value="employee">ပစ္စည်းကြည့်ရှုသူ</option></select></div><div><label>Password (အနည်းဆုံး ၈ လုံး)</label><input id="staffPassword" type="password" minlength="8"></div></div><div class="row" style="margin-top:10px"><button id="createStaffBtn">Merchant Code ဖန်တီးမည်</button><button id="refreshStaffBtn" class="secondary">စာရင်းပြန်ဖတ်မည်</button></div><div id="staffStatus" class="muted"></div><div class="tablewrap"><table><thead><tr><th>အမည်</th><th>ရာထူး</th><th>အခြေအနေ</th><th></th></tr></thead><tbody id="staffRows"></tbody></table></div></section><section id="tab-profile" class="card hidden"><h2>ကိုယ်ပိုင်ဆိုင်အမည် / ဘောင်ချာဒီဇိုင်း</h2><p class="muted">AK အမည်တစ်ခုတည်းမဟုတ်ဘဲ ကိုယ့်လုပ်ငန်းအမည်၊ လိပ်စာ၊ ဖုန်းနှင့် ဘောင်ချာအရောင်ကို သတ်မှတ်နိုင်သည်။</p><div class="grid"><div><label>လုပ်ငန်း / ဆိုင်အမည်</label><input id="profileName" maxlength="90"></div><div><label>လုပ်ငန်းအမျိုးအစား</label><input id="profileType" maxlength="60"></div><div><label>ဖုန်း / Viber</label><input id="profilePhone" maxlength="50"></div><div><label>လိပ်စာ</label><input id="profileAddress" maxlength="160"></div><div><label>ဘောင်ချာအရောင်</label><select id="profileTheme"><option value="blue">အပြာ / ရွှေရောင်</option><option value="green">အစိမ်း / ရွှေရောင်</option><option value="purple">ခရမ်း / ပန်းရောင်</option><option value="red">အနီ / လိမ္မော်</option><option value="teal">စိမ်းပြာ / အဖြူ</option></select></div><div><label>ဘောင်ချာအောက်ခြေစာသား</label><input id="profileFooter" maxlength="120"></div></div><div class="row"><button id="saveShopProfile">ဆိုင်အချက်အလက် သိမ်းမည်</button><button id="previewVoucher" class="secondary">ဘောင်ချာနမူနာကြည့်ရန်</button></div><div id="profileStatus" class="muted"></div></section><section id="tab-products" class="card">
-<h2>ကုန်ပစ္စည်းစာရင်း</h2><div class="grid no-print" style="margin-bottom:10px"><div><label>ပစ္စည်းအမည် / SKU / Barcode ရှာရန်</label><input id="productSearch" type="search" placeholder="အမည် သို့မဟုတ် Barcode ရိုက်ရှာပါ"></div><div><label>တစ်မျက်နှာပြလမည့်အရေအတွက်</label><select id="productPageSize"><option value="25">25</option><option value="50" selected>50</option><option value="100">100</option></select></div></div><div class="row no-print" style="justify-content:space-between"><span id="productPageInfo" class="muted">စာရင်းပြင်ဆင်နေသည်...</span><div><button type="button" class="secondary" id="productPrev">ရှေ့</button> <button type="button" class="secondary" id="productNext">နောက်</button></div></div><div id="productForm"><div class="grid"><div><label>ပစ္စည်းအမည်</label><input id="pName"></div><div><label>SKU / Barcode</label><input id="pSku"><button type="button" class="secondary" id="scanProductBtn">Camera Scan</button></div><div><label>ကုန်ပစ္စည်းအမျိုးအစား</label><input id="pCategory" list="shopCategoryOptions" placeholder="ဥပမာ - ကုန်မာ၊ အစားအသောက်၊ အဝတ်အထည်"><datalist id="shopCategoryOptions"><option value="ကုန်မာ"><option value="လျှပ်စစ်"><option value="ကုန်စုံ"><option value="အစားအသောက်"><option value="အဖျော်ယမကာ"><option value="အဝတ်အထည်"><option value="ဖိနပ်"><option value="အလှကုန်"><option value="ဖုန်းနှင့် Accessories"><option value="ကွန်ပျူတာ"><option value="ဆေးဆိုင်"><option value="စာရေးကိရိယာ"><option value="အိမ်သုံးပစ္စည်း"><option value="မော်တော်ယာဉ်ပစ္စည်း"><option value="စားသောက်ဆိုင်"></datalist></div><div><label>အရေအတွက်ယူနစ်</label><input id="pUnit" list="shopUnitOptions" placeholder="ခု / ဘူး / ထုပ် / kg / ပေ"><datalist id="shopUnitOptions"><option value="ခု"><option value="လုံး"><option value="ဘူး"><option value="ထုပ်"><option value="ထည်"><option value="စုံ"><option value="kg"><option value="g"><option value="လီတာ"><option value="ml"><option value="ပေ"><option value="မီတာ"><option value="ပုံး"><option value="ပါကင်"></datalist></div><div><label>ဝယ်ဈေး</label><input id="pCost" type="number" min="0"></div><div><label>လက်လီဈေး</label><input id="pRetail" type="number" min="0"></div><div><label>လက်ကားဈေး</label><input id="pWholesale" type="number" min="0"></div><div><label>လက်ကျန်အရေအတွက်</label><input id="pStock" type="number" min="0"></div><div><label>ကုန်နည်းသတိပေးအဆင့်</label><input id="pAlert" type="number" min="0" value="5"></div><div><label>ပစ္စည်းဓာတ်ပုံ</label><input id="pPhoto" type="file" accept="image/*"><img id="pPhotoPreview" class="hidden" alt="Product preview" style="width:88px;height:88px;object-fit:cover;border-radius:10px;margin-top:8px"></div></div>
+<h2>ကုန်ပစ္စည်းစာရင်း</h2><div class="grid no-print" style="margin-bottom:10px"><div><label>ပစ္စည်းအမည် / SKU / Barcode ရှာရန်</label><input id="productSearch" type="search" placeholder="အမည် သို့မဟုတ် Barcode ရိုက်ရှာပါ"></div><div><label>တစ်မျက်နှာပြလမည့်အရေအတွက်</label><select id="productPageSize"><option value="25">25</option><option value="50" selected>50</option><option value="100">100</option></select></div></div><div class="row no-print" style="justify-content:space-between"><span id="productPageInfo" class="muted">စာရင်းပြင်ဆင်နေသည်...</span><div><button type="button" class="secondary" id="productPrev">ရှေ့</button> <button type="button" class="secondary" id="productNext">နောက်</button></div></div><details id="productForm"><summary>တစ်ခုချင်းထည့်ရန် / ဓာတ်ပုံပါထည့်ရန် (အသေးစိတ်)</summary><div class="grid"><div><label>ပစ္စည်းအမည်</label><input id="pName"></div><div><label>SKU / Barcode</label><input id="pSku"><button type="button" class="secondary" id="scanProductBtn">Camera Scan</button></div><div><label>ကုန်ပစ္စည်းအမျိုးအစား</label><input id="pCategory" list="shopCategoryOptions" placeholder="ဥပမာ - ကုန်မာ၊ အစားအသောက်၊ အဝတ်အထည်"><datalist id="shopCategoryOptions"><option value="ကုန်မာ"><option value="လျှပ်စစ်"><option value="ကုန်စုံ"><option value="အစားအသောက်"><option value="အဖျော်ယမကာ"><option value="အဝတ်အထည်"><option value="ဖိနပ်"><option value="အလှကုန်"><option value="ဖုန်းနှင့် Accessories"><option value="ကွန်ပျူတာ"><option value="ဆေးဆိုင်"><option value="စာရေးကိရိယာ"><option value="အိမ်သုံးပစ္စည်း"><option value="မော်တော်ယာဉ်ပစ္စည်း"><option value="စားသောက်ဆိုင်"></datalist></div><div><label>အရေအတွက်ယူနစ်</label><input id="pUnit" list="shopUnitOptions" placeholder="ခု / ဘူး / ထုပ် / kg / ပေ"><datalist id="shopUnitOptions"><option value="ခု"><option value="လုံး"><option value="ဘူး"><option value="ထုပ်"><option value="ထည်"><option value="စုံ"><option value="kg"><option value="g"><option value="လီတာ"><option value="ml"><option value="ပေ"><option value="မီတာ"><option value="ပုံး"><option value="ပါကင်"></datalist></div><div><label>ဝယ်ဈေး</label><input id="pCost" type="number" min="0"></div><div><label>လက်လီဈေး</label><input id="pRetail" type="number" min="0"></div><div><label>လက်ကားဈေး</label><input id="pWholesale" type="number" min="0"></div><div><label>လက်ကျန်အရေအတွက်</label><input id="pStock" type="number" min="0"></div><div><label>ကုန်နည်းသတိပေးအဆင့်</label><input id="pAlert" type="number" min="0" value="5"></div><div><label>ပစ္စည်းဓာတ်ပုံ</label><input id="pPhoto" type="file" accept="image/*"><img id="pPhotoPreview" class="hidden" alt="Product preview" style="width:88px;height:88px;object-fit:cover;border-radius:10px;margin-top:8px"></div></div>
 <div class="row" style="margin-top:10px"><button id="saveProduct">ပစ္စည်းသိမ်းမည်</button><button id="clearProduct" class="secondary">ရှင်းမည်</button></div></div>
 <div class="tablewrap"><table><thead><tr><th>ပစ္စည်း</th><th>အမျိုးအစား</th><th>လက်ကျန်</th><th>ယူနစ်</th><th>လက်လီ</th><th>လက်ကား</th><th>ဝယ်ဈေး</th><th></th></tr></thead><tbody id="productRows"></tbody></table></div>
 </section>
@@ -656,6 +699,39 @@ $("saveProduct").onclick=async()=>{try{
  }catch(e){alert(errText(e))}};
 window.editProduct=id=>{const p=products.find(x=>x.id===id);if(!p)return;editingProduct=id;$("pName").value=p.name;$("pSku").value=p.sku||"";$("pCategory").value=p.category||"အထွေထွေ";$("pUnit").value=p.unit||"ခု";$("pRetail").value=p.retail;$("pWholesale").value=p.wholesale;$("pStock").value=p.stock;$("pAlert").value=p.alert;$("pPhoto").value="";if(p.photoData){$("pPhotoPreview").src=p.photoData;$("pPhotoPreview").classList.remove("hidden")}else $("pPhotoPreview").classList.add("hidden");col("productCosts").doc(id).get().then(s=>$("pCost").value=s.data()?.cost||0)};
 $("clearProduct").onclick=()=>{editingProduct=null;["pName","pSku","pCategory","pUnit","pCost","pRetail","pWholesale","pStock","pPhoto"].forEach(k=>$(k).value="");$("pPhotoPreview").classList.add("hidden")};
+
+function addProductSheetRows(count=5){
+ const body=$("productSheetRows"),start=body.children.length;
+ for(let i=0;i<count;i++){
+  const tr=document.createElement("tr"),n=start+i;
+  tr.innerHTML='<td>'+(n+1)+'</td><td><input class="sheet-name" data-k="name" aria-label="ပစ္စည်းအမည်"></td><td><input class="sheet-sku" data-k="sku" aria-label="SKU"></td><td><input data-k="category" aria-label="အမျိုးအစား" value="ကုန်မာ"></td><td><input data-k="unit" aria-label="ယူနစ်" value="ခု"></td><td><input class="sheet-num" data-k="cost" type="number" min="0" step="any" value="0"></td><td><input class="sheet-num" data-k="retail" type="number" min="0" step="any" value="0"></td><td><input class="sheet-num" data-k="wholesale" type="number" min="0" step="any" value="0"></td><td><input class="sheet-num" data-k="stock" type="number" min="0" step="any" value="0"></td><td><input class="sheet-num" data-k="alert" type="number" min="0" step="any" value="5"></td>';
+  body.appendChild(tr);
+ }
+}
+function clearProductSheet(){ $("productSheetRows").innerHTML="";addProductSheetRows(5);$("productSheetStatus").textContent="ဇယားအသစ် ပြင်ဆင်ပြီးပါပြီ။"; }
+addProductSheetRows(5);
+$("addProductSheetRows").onclick=()=>addProductSheetRows(5);
+$("clearProductSheet").onclick=clearProductSheet;
+$("saveProductSheet").onclick=async()=>{
+ const btn=$("saveProductSheet");
+ try{
+  if(!(staffRole==="owner"||staffRole==="manager"))throw Error("ဆိုင်ရှင်သာ ပစ္စည်းစာရင်းအသစ် ထည့်နိုင်သည်။");
+  const rows=[...$("productSheetRows").querySelectorAll("tr")].map(tr=>{
+   const v=k=>tr.querySelector('[data-k="'+k+'"]').value.trim();
+   return {name:v("name"),sku:v("sku"),category:v("category")||"အထွေထွေ",unit:v("unit")||"ခု",cost:Number(v("cost")||0),retail:Number(v("retail")||0),wholesale:Number(v("wholesale")||0),stock:Number(v("stock")||0),alert:Number(v("alert")||0)};
+  }).filter(x=>x.name);
+  if(!rows.length)throw Error("ပစ္စည်းအမည် အနည်းဆုံးတစ်မျိုး ဖြည့်ပါ။");
+  if(rows.some(x=>[x.cost,x.retail,x.wholesale,x.stock,x.alert].some(n=>!Number.isFinite(n)||n<0)))throw Error("ဈေးနှုန်း၊ လက်ကျန်နှင့် သတိပေးအဆင့်များကို သုညအောက်မဖြည့်ရပါ။");
+  const duplicate=rows.find((x,i)=>x.sku&&rows.findIndex(y=>y.sku.toLowerCase()===x.sku.toLowerCase())!==i);
+  if(duplicate)throw Error("ဇယားအတွင်း SKU / Barcode ထပ်နေသည်: "+duplicate.sku);
+  btn.disabled=true;$("productSheetStatus").textContent="ပစ္စည်း "+rows.length+" မျိုး သိမ်းဆည်းနေသည်...";
+  const batch=db.batch();
+  rows.forEach(x=>{const id=db.collection("_ids").doc().id;batch.set(col("products").doc(id),{name:x.name,sku:x.sku,category:x.category,unit:x.unit,retail:x.retail,wholesale:x.wholesale,stock:x.stock,alert:x.alert,photoData:""});batch.set(col("productCosts").doc(id),{cost:x.cost})});
+  await batch.commit();await reloadAll();clearProductSheet();$("productSheetStatus").textContent="ပစ္စည်း "+rows.length+" မျိုး သိမ်းပြီးပါပြီ။";
+ }catch(e){$("productSheetStatus").textContent="မသိမ်းနိုင်ပါ: "+errText(e)}
+ finally{btn.disabled=false}
+};
+
 function renderSaleCart(){
  $("saleCartRows").innerHTML=saleCart.map((x,i)=>'<tr><td>'+esc(x.name)+'</td><td>'+x.qty+'</td><td>'+money(x.price)+'</td><td>'+money(x.qty*x.price)+'</td><td><button type="button" class="danger" data-cart-remove="'+i+'">ဖယ်</button></td></tr>').join("")||'<tr><td colspan="5">ဈေးခြင်းထဲ ပစ္စည်းမထည့်ရသေးပါ</td></tr>';
  $("saleCartTotal").textContent="စုစုပေါင်း "+money(saleCart.reduce((a,x)=>a+x.qty*x.price,0));

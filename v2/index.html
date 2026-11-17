@@ -180,7 +180,7 @@ details>summary{cursor:pointer;color:#edf0f3;font-weight:700;padding:8px 0}
 <div class="notice">ဆိုင်ရှင်သည် Platform Owner ပေးထားသော Gmail နှင့် Password ဖြင့်ဝင်ပါ။ ဝန်ထမ်းသည် ကိုယ်ပိုင် Gmail ဖြင့် Register လုပ်ပြီး Email အတည်ပြုပြီးနောက် ၃၂ လုံး Merchant Code ဖြင့် ဆိုင်ချိတ်ပါ။</div>
 <label>Login အမျိုးအစား</label><select id="loginType"><option value="shop">ဆိုင်ရှင်</option><option value="owner">Platform Owner · Google</option><option value="staff">ဝန်ထမ်း (Staff)</option></select>
 <div class="grid"><div id="emailLoginFields" class="hidden"><label>Gmail</label><input id="email" type="email" autocomplete="username" placeholder="name@gmail.com"></div><div id="staffLoginFields" class="hidden"><label>Merchant Code (၃၂ လုံး)</label><input id="merchantCode" maxlength="32" autocomplete="off" placeholder="၃၂ လုံး Code ထည့်ပါ"></div><div id="passwordLoginFields" class="hidden"><label>Password</label><input id="password" type="password" autocomplete="current-password" placeholder="Password"></div></div>
-<div class="row" style="margin-top:12px"><button id="customerGoogleBtn" class="secondary hidden">Google Login</button><button id="loginBtn" class="hidden">Login ဝင်မည်</button><button id="staffRegisterBtn" class="secondary hidden">ဝန်ထမ်း Gmail အသစ် Register လုပ်မည်</button><button id="ownerGoogleBtn" class="secondary hidden">Google ဖြင့် Platform Owner ဝင်မည်</button></div>
+<div class="row" style="margin-top:12px"><button id="customerGoogleBtn" class="secondary hidden">Google Login</button><button id="loginBtn" class="hidden">Login ဝင်မည်</button><button id="forgotPasswordBtn" class="secondary hidden">Password Reset Link ပို့ရန်</button><button id="staffRegisterBtn" class="secondary hidden">ဝန်ထမ်း Gmail အသစ် Register လုပ်မည်</button><button id="ownerGoogleBtn" class="secondary hidden">Google ဖြင့် Platform Owner ဝင်မည်</button></div>
 <div id="status"></div>
 </section>
 <section id="ownerPanel" class="hidden">
@@ -385,6 +385,7 @@ $("loginType").onchange=()=>{
  $("customerGoogleBtn").classList.add("hidden");
  $("loginBtn").classList.toggle("hidden",owner);
  $("staffRegisterBtn").classList.toggle("hidden",!staff);
+ $("forgotPasswordBtn").classList.toggle("hidden",owner);
  $("loginBtn").textContent=staff?"ဝန်ထမ်း Login ဝင်မည်":"ဆိုင်ရှင် Login ဝင်မည်";
  $("ownerGoogleBtn").classList.toggle("hidden",!owner);
  status(owner?"Platform Owner သည် သတ်မှတ်ထားသော Google Gmail ဖြင့်ဝင်ပါ။":staff?"ကိုယ်ပိုင် Gmail ဖြင့် Register/Login ဝင်ပြီး အတည်ပြုပြီးနောက် ၃၂ လုံး Merchant Code ဖြည့်ပါ။":"Platform Owner ဖန်တီးပေးထားသော Gmail နှင့် Password ဖြင့် ဆိုင်ရှင် Login ဝင်ပါ။");
@@ -459,6 +460,14 @@ $("loginBtn").onclick=async()=>{
   status(mode==="staff"?"Staff Gmail Login စစ်ဆေးနေသည်...":"ဆိုင်ရှင် Gmail Login စစ်ဆေးနေသည်...");
   await auth.signInWithEmailAndPassword(email,password);
  }catch(e){status("Login မအောင်မြင်: "+friendlyAuthError(e))}
+};
+$("forgotPasswordBtn").onclick=async()=>{
+ try{
+  const email=$("email").value.trim().toLowerCase();
+  if(!email||!/^[^@ ]+@[^@ ]+[.][^@ .]+$/.test(email))throw Error("Password Reset ပို့ရန် Gmail ဖြည့်ပါ။");
+  await auth.sendPasswordResetEmail(email);
+  status("Password Reset Link ကို Gmail ထဲပို့ပြီးပါပြီ။ Inbox/Spam စစ်ပါ။");
+ }catch(e){status("Password Reset မပို့နိုင်ပါ: "+friendlyAuthError(e))}
 };
 $("staffRegisterBtn").onclick=async()=>{
  let secondaryAuth;

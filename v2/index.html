@@ -607,7 +607,7 @@ let merchantStaffCount=0;
 async function loadMerchantStaff(){
  try{
   const r=await staffGateway("/staff/list");
-  const members=Array.isArray(r.members)?r.members:[];
+  const members=(Array.isArray(r.members)?r.members:[]).filter(m=>m.status==="active");
   merchantStaffCount=members.length;
   $("staffRows").innerHTML=members.map(m=>'<tr><td>'+esc(m.name)+'</td><td>'+esc(m.role)+'</td><td>'+esc(m.status)+'</td><td><button class="danger" data-remove-staff="'+esc(m.uid)+'">ဖယ်ရှား</button></td></tr>').join("")||'<tr><td colspan="4">ဝန်ထမ်း မရှိသေးပါ</td></tr>';
   $("staffRows").querySelectorAll("[data-remove-staff]").forEach(button=>button.onclick=()=>removeMerchantStaff(button.dataset.removeStaff));

@@ -111,7 +111,7 @@ service cloud.firestore {
     }
 
     function canWriteShopWorkspaceMeta(shopId) {
-      return isPosShopOwner(shopId) || hasShopMemberRole(shopId, ['manager','cashier']);
+      return isPosShopOwner(shopId);
     }
 
     // Tenant-scoped POS data: collection-level rules enforce role permissions.
@@ -125,8 +125,7 @@ service cloud.firestore {
         && ((collection != 'products' && collection != 'sales')
           || posRecordHasNoCostFields(request.resource.data))
         && (collection != 'products' || isPosShopOwner(shopId)
-          || hasShopMemberRole(shopId, ['manager'])
-          || (hasShopMemberRole(shopId, ['cashier','employee'])
+          || (hasShopMemberRole(shopId, ['employee'])
             && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stock'])));
       allow delete: if canDeletePosCollection(shopId, collection);
     }

@@ -276,6 +276,53 @@ jobs:
           AK_RELEASE_KEY_ALIAS: ${{ secrets.AK_RELEASE_KEY_ALIAS }}
           AK_RELEASE_KEY_PASSWORD: ${{ secrets.AK_RELEASE_KEY_PASSWORD }}
         run: ./gradlew assembleRelease --no-daemon
+      - name: Audit the built APK payload (Google-only login)
+        if: steps.signing.outputs.ready == 'true'
+        working-directory: android
+        run: |
+          set -euo pipefail
+          APK=app/build/outputs/apk/release/app-release.apk
+          test -s "$APK"
+          unzip -p "$APK" assets/public/index.html > /tmp/ak-apk-index.html
+          node - <<'NODE'
+          const fs=require('fs');
+          const h=fs.readFileSync('/tmp/ak-apk-index.html','utf8');
+          const required=[
+            'async function signInWithGoogleAccount()',
+            'nativeAuth.signInWithGoogle()',
+            'async function claimShopOwnerAccess(signedUser)',
+            'async function claimStaffInvite(signedUser,code)',
+            'providerId==="google.com"',
+            'id="merchantCode"',
+            '^[A-F0-9]{32}        if: steps.signing.outputs.ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: AK-Sale-POS-2.1-SIGNED-RELEASE-APK
+          path: android/app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
+          retention-days: 30
+      - name: Build temporary debug APK when release key is unavailable
+        if: steps.signing.outputs.ready != 'true'
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon
+      - name: Upload temporary debug APK
+        if: steps.signing.outputs.ready != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: AK-Sale-POS-2.0-TEST-DEBUG-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 30
+,
+            'pendingOwnerInvites',
+            'shopInvites'
+          ];
+          for(const x of required) if(!h.includes(x)) throw new Error('APK payload missing: '+x);
+          const forbidden=[/signInWithEmailAndPassword/,/createUserWithEmailAndPassword/,/sendPasswordResetEmail/,/id="password"/,/passwordLoginFields/,/Email Link/];
+          for(const x of forbidden) if(x.test(h)) throw new Error('APK still contains a forbidden login path: '+x);
+          if(!h.includes('Platform Owner')||!h.includes('ဝန်ထမ်း (Staff)')) throw new Error('APK role screens are missing');
+          console.log('PASS: built APK payload itself contains Google-only Owner/Shop Owner/Staff authentication; no password or email-link login.');
+          NODE
       - name: Upload signed release APK
         if: steps.signing.outputs.ready == 'true'
         uses: actions/upload-artifact@v4

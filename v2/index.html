@@ -351,7 +351,7 @@ async function claimShopOwnerAccess(signedUser){
  batch.update(inviteRef,{status:"claimed",claimedUid:fresh.uid,claimedAt:firebase.firestore.FieldValue.serverTimestamp()});
  await batch.commit();return {status:"active"};
 }
-=()=>{
+$("loginType").onchange=()=>{
  const mode=$("loginType").value,staff=mode==="staff",owner=mode==="owner",shop=mode==="shop";
  $("emailLoginFields").classList.add("hidden");
  $("staffLoginFields").classList.toggle("hidden",!staff);

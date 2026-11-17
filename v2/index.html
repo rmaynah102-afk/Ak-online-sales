@@ -201,7 +201,7 @@ details>summary{cursor:pointer;color:#edf0f3;font-weight:700;padding:8px 0}
  <div class="row" style="justify-content:space-between"><div><h2 style="margin-bottom:3px">အရောင်းအဝယ် အတက်အကျဇယား</h2><span class="muted">ဤဆိုင်၏ သိမ်းဆည်းထားသော အရောင်း/အဝယ်မှတ်တမ်းများကို အခြေခံထားသည်</span></div><div class="row no-print" style="flex:0 1 auto"><button type="button" class="secondary trade-range active" data-range="7">၇ ရက်</button><button type="button" class="secondary trade-range" data-range="30">၃၀ ရက်</button><button type="button" class="secondary trade-range" data-range="12m">၁၂ လ</button></div></div>
  <div class="stats" style="margin:12px 0"><div class="stat">ကာလအတွင်း အရောင်း<b id="trendSalesTotal">0 ကျပ်</b></div><div class="stat">ကာလအတွင်း အဝယ်<b id="trendPurchasesTotal">0 ကျပ်</b></div><div class="stat">အရောင်း − အဝယ်<b id="trendDifference">0 ကျပ်</b></div></div>
  <div style="position:relative;width:100%;height:260px"><canvas id="tradeTrendCanvas" aria-label="အရောင်းနှင့် အဝယ် အတက်အကျဇယား" role="img" style="width:100%;height:260px;display:block"></canvas></div>
- <div class="row" style="justify-content:center;margin-top:8px"><span class="muted"><span style="display:inline-block;width:18px;height:3px;background:#1767c2;vertical-align:middle"></span> အရောင်း</span><span class="muted"><span style="display:inline-block;width:18px;height:3px;background:#e08a24;vertical-align:middle"></span> အဝယ်</span></div>
+ <div class="row" style="justify-content:center;margin-top:8px"><span class="muted"><span style="display:inline-block;width:18px;height:3px;background:#d7dce2;vertical-align:middle"></span> အရောင်း</span><span class="muted"><span style="display:inline-block;width:18px;height:3px;background:#aeb6bf;vertical-align:middle"></span> အဝယ်</span></div>
  <p id="trendChartNote" class="muted" style="margin-bottom:0">ဒေတာဖတ်နေသည်...</p>
 </section>
 <nav class="tabs no-print" id="tabs"><button data-tab="profile">ဆိုင်အချက်အလက်</button><button data-tab="products" class="active">ကုန်ပစ္စည်း</button><button data-tab="sales">အရောင်း</button><button data-tab="purchases">အဝယ်</button><button data-tab="people">ဖောက်သည်/ပေးသွင်းသူ</button><button data-tab="expenses">အသုံးစရိတ်</button><button data-tab="reports">စာရင်းချုပ်</button><button data-tab="printer">Printer</button><button data-tab="ads">ကြော်ငြာ</button><button data-tab="backup">Backup</button></nav>
@@ -622,7 +622,7 @@ function renderTradeTrend(){
  for(let i=0;i<=4;i++){const y=top+plotH*i/4,val=axisMax*(1-i/4);c.beginPath();c.moveTo(left,y);c.lineTo(w-right,y);c.stroke();c.textAlign="right";c.fillText(val>=1000000?(val/1000000).toFixed(1)+"M":val>=1000?(val/1000).toFixed(0)+"k":String(Math.round(val)),left-8,y)}
  const xAt=i=>left+(keys.length===1?plotW/2:i*plotW/(keys.length-1)),yAt=v=>top+plotH-(v/axisMax)*plotH;
  const draw=(data,color)=>{c.beginPath();data.forEach((v,i)=>{const x=xAt(i),y=yAt(v);if(i===0)c.moveTo(x,y);else c.lineTo(x,y)});c.strokeStyle=color;c.lineWidth=2.6;c.lineJoin="round";c.lineCap="round";c.stroke();data.forEach((v,i)=>{c.beginPath();c.arc(xAt(i),yAt(v),3,0,Math.PI*2);c.fillStyle=color;c.fill()})};
- draw(salesData,"#1767c2");draw(purchaseData,"#e08a24");
+ draw(salesData,"#d7dce2");draw(purchaseData,"#aeb6bf");
  const step=Math.max(1,Math.ceil(keys.length/(w<440?4:7)));c.fillStyle="#68788b";c.textAlign="center";c.textBaseline="top";
  labels.forEach((label,i)=>{if(i%step===0||i===labels.length-1)c.fillText(label,xAt(i),top+plotH+9)});
  $("trendChartNote").textContent=st===0&&pt===0?"ရွေးထားသောကာလအတွင်း အရောင်း/အဝယ်မှတ်တမ်း မရှိသေးပါ။ အရောင်းနှင့် အဝယ်သိမ်းပြီးနောက် ဇယားသည် အလိုအလျောက် ပြောင်းလဲမည်။":"ရွေးထားသောကာလ၏ မှတ်တမ်း "+keys.length+" ခုကို ပြထားသည်။ ဇယားသည် ဆိုင်ဒေတာအပေါ် အခြေခံပြီး ပြင်ပဈေးကွက်ဒေတာ မဟုတ်ပါ။";
@@ -725,9 +725,9 @@ $("saveProductSheet").onclick=async()=>{
   const duplicate=rows.find((x,i)=>x.sku&&rows.findIndex(y=>y.sku.toLowerCase()===x.sku.toLowerCase())!==i);
   if(duplicate)throw Error("ဇယားအတွင်း SKU / Barcode ထပ်နေသည်: "+duplicate.sku);
   btn.disabled=true;$("productSheetStatus").textContent="ပစ္စည်း "+rows.length+" မျိုး သိမ်းဆည်းနေသည်...";
-  const batch=db.batch();
-  rows.forEach(x=>{const id=db.collection("_ids").doc().id;batch.set(col("products").doc(id),{name:x.name,sku:x.sku,category:x.category,unit:x.unit,retail:x.retail,wholesale:x.wholesale,stock:x.stock,alert:x.alert,photoData:""});batch.set(col("productCosts").doc(id),{cost:x.cost})});
-  await batch.commit();await reloadAll();clearProductSheet();$("productSheetStatus").textContent="ပစ္စည်း "+rows.length+" မျိုး သိမ်းပြီးပါပြီ။";
+  const writes=[];
+  rows.forEach(x=>{const id=db.collection("_ids").doc().id;writes.push(batch=>batch.set(col("products").doc(id),{name:x.name,sku:x.sku,category:x.category,unit:x.unit,retail:x.retail,wholesale:x.wholesale,stock:x.stock,alert:x.alert,photoData:""}),batch=>batch.set(col("productCosts").doc(id),{cost:x.cost}))});
+  await commitInChunks(writes);await reloadAll();clearProductSheet();$("productSheetStatus").textContent="ပစ္စည်း "+rows.length+" မျိုး သိမ်းပြီးပါပြီ။";
  }catch(e){$("productSheetStatus").textContent="မသိမ်းနိုင်ပါ: "+errText(e)}
  finally{btn.disabled=false}
 };

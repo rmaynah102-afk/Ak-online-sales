@@ -31,9 +31,7 @@ service cloud.firestore {
             && exists(freeTrialClaimPath(request.auth.token.email))
             && get(freeTrialClaimPath(request.auth.token.email)).data.uid == uid
             && get(freeTrialClaimPath(request.auth.token.email)).data.email == request.auth.token.email)
-          || ((isVerifiedGoogleUser()
-              || (request.auth.token.phone_number is string
-                && request.auth.token.phone_number.size() >= 8))
+          || (isVerifiedGoogleUser()
             && exists(/databases/$(database)/documents/licenses/$(uid))
             && get(/databases/$(database)/documents/licenses/$(uid)).data.status == 'active'
             && get(/databases/$(database)/documents/licenses/$(uid)).data.expiresAt is timestamp
@@ -71,7 +69,7 @@ service cloud.firestore {
     }
 
     function isPosShopOwner(shopId) {
-      return request.auth != null && request.auth.uid == shopId
+      return isVerifiedGoogleUser() && request.auth.uid == shopId
         && (isVerifiedOwner() || activeShopLicense(shopId));
     }
 
@@ -194,7 +192,7 @@ service cloud.firestore {
         && getAfter(/databases/$(database)/documents/shopStaffSlots/$(request.resource.data.slotId)).data.uid == memberUid
         && getAfter(/databases/$(database)/documents/shopStaffSlots/$(request.resource.data.slotId)).data.shopId == request.resource.data.shopId
         && getAfter(/databases/$(database)/documents/shopStaffSlots/$(request.resource.data.slotId)).data.inviteCode == request.resource.data.inviteCode;
-      allow update: if request.auth != null
+      allow update: if isVerifiedGoogleUser()
         && request.auth.uid == resource.data.shopId
         && activeShopLicense(resource.data.shopId)
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['canPrint','status','revokedAt'])
@@ -203,7 +201,7 @@ service cloud.firestore {
           || (resource.data.merchantStaff == true
               && request.resource.data.status == 'suspended'
               && request.resource.data.revokedAt is timestamp));
-      allow delete: if request.auth != null
+      allow delete: if isVerifiedGoogleUser()
         && request.auth.uid == resource.data.shopId
         && activeShopLicense(resource.data.shopId);
     }
@@ -211,14 +209,14 @@ service cloud.firestore {
     match /shopInvites/{code} {
       // The 128-bit code is a bearer secret. Only verified users who know it
       // can read an open, unexpired invite to claim it.
-      allow read: if request.auth != null
+      allow read: if isVerifiedGoogleUser()
         && ((request.auth.uid == resource.data.shopId
             && activeShopLicense(resource.data.shopId))
           || (isVerifiedGoogleUser()
             && resource.data.status == 'open'
             && resource.data.expiresAt is timestamp
             && resource.data.expiresAt > request.time));
-      allow create: if request.auth != null
+      allow create: if isVerifiedGoogleUser()
         && request.auth.uid == request.resource.data.shopId
         && activeShopLicense(request.resource.data.shopId)
         && request.resource.data.keys().hasOnly(['shopId','role','status','createdAt','expiresAt','createdBy','name'])
@@ -237,7 +235,7 @@ service cloud.firestore {
         && !exists(/databases/$(database)/documents/shopInvites/$(code))
         && (!exists(/databases/$(database)/documents/shopStaffSlots/$(request.auth.uid + '_1'))
           || !exists(/databases/$(database)/documents/shopStaffSlots/$(request.auth.uid + '_2')));
-      allow update: if request.auth != null
+      allow update: if isVerifiedGoogleUser()
         && resource.data.status == 'open'
         && resource.data.expiresAt is timestamp
         && resource.data.expiresAt > request.time

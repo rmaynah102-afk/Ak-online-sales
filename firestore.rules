@@ -2,22 +2,27 @@ rules_version = '2';
 // AK POS roles: Platform Owner, Shop Owner and Staff only; legacy Manager/Cashier roles are denied.
 service cloud.firestore {
   match /databases/{database}/documents {
-    function isVerifiedOwner() {
+    function isVerifiedGoogleUser() {
       return request.auth != null
-        && request.auth.token.email == 'painglin102@gmail.com'
-        && request.auth.token.email_verified == true;
+        && request.auth.token.email_verified == true
+        && request.auth.token.firebase.sign_in_provider == 'google.com';
+    }
+
+    function isVerifiedOwner() {
+      return isVerifiedGoogleUser()
+        && request.auth.token.email == 'painglin102@gmail.com';
     }
 
     // Marketplace is a separate public web service: verified Gmail users do not need a POS license or APK device slot.
     function isVerifiedMarketplaceUser() {
-      return request.auth != null && request.auth.token.email_verified == true;
+      return request.auth != null && isVerifiedGoogleUser();
     }
 
     function hasActiveLicense(uid) {
       return request.auth != null
         && request.auth.uid == uid
         && (isVerifiedOwner()
-          || (request.auth.token.email_verified == true
+          || (isVerifiedGoogleUser()
             && request.auth.token.email is string
             && exists(/databases/$(database)/documents/freeBetaUsers/$(uid))
             && get(/databases/$(database)/documents/freeBetaUsers/$(uid)).data.uid == uid
@@ -26,7 +31,7 @@ service cloud.firestore {
             && exists(freeTrialClaimPath(request.auth.token.email))
             && get(freeTrialClaimPath(request.auth.token.email)).data.uid == uid
             && get(freeTrialClaimPath(request.auth.token.email)).data.email == request.auth.token.email)
-          || ((request.auth.token.email_verified == true
+          || ((isVerifiedGoogleUser()
               || (request.auth.token.phone_number is string
                 && request.auth.token.phone_number.size() >= 8))
             && exists(/databases/$(database)/documents/licenses/$(uid))
@@ -42,7 +47,7 @@ service cloud.firestore {
     function activeShopLicense(shopId) {
       return (isVerifiedOwner() && request.auth.uid == shopId)
         || (request.auth != null
-          && request.auth.token.email_verified == true
+          && isVerifiedGoogleUser()
           && exists(/databases/$(database)/documents/freeBetaUsers/$(shopId))
           && get(/databases/$(database)/documents/freeBetaUsers/$(shopId)).data.status == 'active'
           && ((request.auth.uid == shopId
@@ -58,7 +63,7 @@ service cloud.firestore {
 
     function isActiveShopMember(shopId) {
       return request.auth != null
-        && request.auth.token.email_verified == true
+        && isVerifiedGoogleUser()
         && activeShopLicense(shopId)
         && exists(/databases/$(database)/documents/shopMembers/$(request.auth.uid))
         && get(/databases/$(database)/documents/shopMembers/$(request.auth.uid)).data.shopId == shopId
@@ -152,7 +157,7 @@ service cloud.firestore {
     // Spark-compatible staff membership: a verified employee claims a one-time
     // invite and reserves one of two fixed staff slots in the same atomic batch.
     match /shopMembers/{memberUid} {
-      allow read: if request.auth != null
+      allow read: if isVerifiedGoogleUser()
         && ((request.auth.uid == memberUid
             && !exists(/databases/$(database)/documents/shopMembers/$(memberUid)))
           || (request.auth.uid == memberUid
@@ -162,7 +167,7 @@ service cloud.firestore {
             && activeShopLicense(resource.data.shopId)));
       allow create: if request.auth != null
         && request.auth.uid == memberUid
-        && request.auth.token.email_verified == true
+        && isVerifiedGoogleUser()
         && request.resource.data.keys().hasOnly(['shopId','role','status','email','createdAt','createdBy','inviteCode','slotId','canPrint','merchantStaff','name'])
         && request.resource.data.shopId is string
         && request.resource.data.role == 'employee'
@@ -209,7 +214,7 @@ service cloud.firestore {
       allow read: if request.auth != null
         && ((request.auth.uid == resource.data.shopId
             && activeShopLicense(resource.data.shopId))
-          || (request.auth.token.email_verified == true
+          || (isVerifiedGoogleUser()
             && resource.data.status == 'open'
             && resource.data.expiresAt is timestamp
             && resource.data.expiresAt > request.time));
@@ -249,12 +254,12 @@ service cloud.firestore {
     }
 
     match /shopStaffSlots/{slotId} {
-      allow read: if request.auth != null
+      allow read: if isVerifiedGoogleUser()
         && ((resource.data != null && resource.data.uid == request.auth.uid)
           || (slotId in [request.auth.uid + '_1', request.auth.uid + '_2']
             && activeShopLicense(request.auth.uid)));
       allow create: if request.auth != null
-        && request.auth.token.email_verified == true
+        && isVerifiedGoogleUser()
         && request.resource.data.keys().hasOnly(['shopId','uid','slot','createdAt','inviteCode'])
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.shopId is string
@@ -288,7 +293,7 @@ service cloud.firestore {
       allow create: if (
           request.auth != null
           && request.auth.uid == userId
-          && request.auth.token.email_verified == true
+          && isVerifiedGoogleUser()
           && request.resource.data.uid == userId
           && request.resource.data.email == request.auth.token.email
           && request.resource.data.status == 'active'
@@ -342,9 +347,9 @@ service cloud.firestore {
 
     match /freeBetaCapacity/{documentId} {
       allow read: if isVerifiedOwner()
-        || (request.auth != null && request.auth.token.email_verified == true);
+        || (request.auth != null && isVerifiedGoogleUser());
       allow create: if (request.auth != null
-          && request.auth.token.email_verified == true
+          && isVerifiedGoogleUser()
           && documentId == 'slots'
           && request.resource.data.keys().hasOnly(['count','updatedAt'])
           && request.resource.data.count == 1
@@ -367,7 +372,7 @@ service cloud.firestore {
           && existsAfter(freeTrialClaimPath(getAfter(/databases/$(database)/documents/freeBetaUsers/$(request.resource.data.lastIssuedUid)).data.email))
           && getAfter(freeTrialClaimPath(getAfter(/databases/$(database)/documents/freeBetaUsers/$(request.resource.data.lastIssuedUid)).data.email)).data.uid == request.resource.data.lastIssuedUid);
       allow update: if (request.auth != null
-          && request.auth.token.email_verified == true
+          && isVerifiedGoogleUser()
           && documentId == 'slots'
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['count','updatedAt'])
           && resource.data.count is int
@@ -402,7 +407,7 @@ service cloud.firestore {
         || (request.auth != null && request.auth.token.email == email);
       allow create: if (
           request.auth != null
-          && request.auth.token.email_verified == true
+          && isVerifiedGoogleUser()
           && request.auth.token.email == email
           && request.resource.data.uid == request.auth.uid
           && request.resource.data.email == email
@@ -473,7 +478,7 @@ service cloud.firestore {
     match /pendingOwnerInvites/{emailKey} {
       allow read: if isVerifiedOwner()
         || (request.auth != null
-          && request.auth.token.email_verified == true
+          && isVerifiedGoogleUser()
           && request.auth.token.email == resource.data.email
           && emailKey == request.auth.token.email);
       allow create: if isVerifiedOwner()
@@ -500,7 +505,7 @@ service cloud.firestore {
           && request.resource.data.expiresAt > request.time
         ) || (
           request.auth != null
-          && request.auth.token.email_verified == true
+          && isVerifiedGoogleUser()
           && request.auth.token.email == resource.data.email
           && emailKey == request.auth.token.email
           && resource.data.status == 'pending'
@@ -548,7 +553,7 @@ service cloud.firestore {
         ) || (
           request.auth != null
           && request.auth.uid == userId
-          && request.auth.token.email_verified == true
+          && isVerifiedGoogleUser()
           && request.resource.data.uid == userId
           && request.resource.data.email == request.auth.token.email
           && request.resource.data.status == 'active'
@@ -579,7 +584,7 @@ service cloud.firestore {
 
     match /subscriptionAccessRequests/{userId} {
       allow create: if request.auth != null
-        && request.auth.token.email_verified == true
+        && isVerifiedGoogleUser()
         && request.auth.uid == userId
         && request.resource.data.uid == userId
         && request.resource.data.email == request.auth.token.email
@@ -929,7 +934,7 @@ service cloud.firestore {
       allow read: if resource.data.status == 'published'
         || (request.auth != null && resource.data.ownerUid == request.auth.uid);
       allow create: if request.auth != null
-        && request.auth.token.email_verified == true
+        && isVerifiedGoogleUser()
         && request.resource.data.keys().hasOnly(['ownerUid','displayName','kind','body','country','product','price','currency','link','status','createdAt'])
         && request.resource.data.ownerUid == request.auth.uid
         && request.resource.data.displayName is string
@@ -955,7 +960,7 @@ service cloud.firestore {
       match /likes/{userId} {
         allow read: if true;
         allow create: if request.auth != null
-          && request.auth.token.email_verified == true
+          && isVerifiedGoogleUser()
           && request.auth.uid == userId
           && exists(/databases/$(database)/documents/globalCommunityPosts/$(postId))
           && get(/databases/$(database)/documents/globalCommunityPosts/$(postId)).data.status == 'published'
@@ -968,7 +973,7 @@ service cloud.firestore {
       match /comments/{commentId} {
         allow read: if true;
         allow create: if request.auth != null
-          && request.auth.token.email_verified == true
+          && isVerifiedGoogleUser()
           && exists(/databases/$(database)/documents/globalCommunityPosts/$(postId))
           && get(/databases/$(database)/documents/globalCommunityPosts/$(postId)).data.status == 'published'
           && request.resource.data.keys().hasOnly(['uid','displayName','body','createdAt'])
@@ -986,7 +991,7 @@ service cloud.firestore {
     // AK Global: verified business enquiries. Private to the submitter and platform owner.
     match /globalTradeLeads/{leadId} {
       allow create: if request.auth != null
-        && request.auth.token.email_verified == true
+        && isVerifiedGoogleUser()
         && request.resource.data.keys().hasOnly(['ownerUid','email','name','country','type','message','status','createdAt'])
         && request.resource.data.ownerUid == request.auth.uid
         && request.resource.data.email == request.auth.token.email
@@ -1011,7 +1016,7 @@ service cloud.firestore {
     // verify payment and approve the campaign; clients cannot mark an ad as paid/live.
     match /globalAdApplications/{applicationId} {
       allow create: if request.auth != null
-        && request.auth.token.email_verified == true
+        && isVerifiedGoogleUser()
         && request.resource.data.keys().hasOnly(['ownerUid','email','business','title','url','targetMarket','contactEmail','plan','amountUSD','currency','status','createdAt'])
         && request.resource.data.ownerUid == request.auth.uid
         && request.resource.data.email == request.auth.token.email

@@ -331,7 +331,6 @@ export default {
     }
 
     if (url.pathname === "/owner/provision" && request.method === "POST") return provisionShopOwner(request, env, origin);
-    if (url.pathname === "/staff/provision" && request.method === "POST") return staffProvision(request, origin);
     if (url.pathname === "/staff/list" && request.method === "POST") return staffList(request, origin);
     if (url.pathname === "/staff/revoke" && request.method === "POST") return staffRevoke(request, origin);
 

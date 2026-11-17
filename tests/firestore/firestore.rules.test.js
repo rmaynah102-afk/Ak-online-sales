@@ -64,6 +64,82 @@ describe('AK Sale Firestore security baseline', function () {
     await testEnv.clearFirestore();
   });
 
+  it('allows only the exact invited, verified Gmail to claim a shop-owner license once', async () => {
+    const ownerDb = testEnv.authenticatedContext('platform-owner-uid', {
+      email: 'painglin102@gmail.com', email_verified: true,
+    }).firestore();
+    const inviteRef = doc(ownerDb, 'pendingOwnerInvites', 'shop@example.com');
+    await assertSucceeds(setDoc(inviteRef, {
+      email: 'shop@example.com', shopName: 'AK Hardware', industryType: 'hardware',
+      status: 'pending', invitedBy: 'platform-owner-uid',
+      createdAt: serverTimestamp(), expiresAt: futureTimestamp(30),
+    }));
+
+    const uninvited = testEnv.authenticatedContext('other-user', {
+      email: 'other@example.com', email_verified: true,
+    }).firestore();
+    await assertFails(getDoc(doc(uninvited, 'pendingOwnerInvites', 'shop@example.com')));
+
+    const unverified = testEnv.authenticatedContext('unverified-user', {
+      email: 'shop@example.com', email_verified: false,
+    }).firestore();
+    await assertFails(getDoc(doc(unverified, 'pendingOwnerInvites', 'shop@example.com')));
+
+    const invitee = testEnv.authenticatedContext('shop-owner-uid', {
+      email: 'shop@example.com', email_verified: true,
+    }).firestore();
+    const readable = await assertSucceeds(getDoc(doc(invitee, 'pendingOwnerInvites', 'shop@example.com')));
+    assert.equal(readable.data().status, 'pending');
+
+    const batch = writeBatch(invitee);
+    batch.set(doc(invitee, 'licenses', 'shop-owner-uid'), {
+      uid: 'shop-owner-uid', email: 'shop@example.com', shopName: 'AK Hardware',
+      industryType: 'hardware', status: 'active', plan: 'owner-managed',
+      expiresAt: futureTimestamp(30), provisionedBy: 'platform-owner-uid',
+      provisionedAt: serverTimestamp(), updatedAt: serverTimestamp(),
+    });
+    batch.update(doc(invitee, 'pendingOwnerInvites', 'shop@example.com'), {
+      status: 'claimed', claimedUid: 'shop-owner-uid', claimedAt: serverTimestamp(),
+    });
+    await assertSucceeds(batch.commit());
+
+    const secondClaim = writeBatch(invitee);
+    secondClaim.set(doc(invitee, 'licenses', 'shop-owner-uid-2'), {
+      uid: 'shop-owner-uid-2', email: 'shop@example.com', shopName: 'Hijack',
+      industryType: 'general', status: 'active', plan: 'owner-managed',
+      expiresAt: futureTimestamp(30), provisionedAt: serverTimestamp(), updatedAt: serverTimestamp(),
+    });
+    secondClaim.update(doc(invitee, 'pendingOwnerInvites', 'shop@example.com'), {
+      status: 'claimed', claimedUid: 'shop-owner-uid-2', claimedAt: serverTimestamp(),
+    });
+    await assertFails(secondClaim.commit());
+  });
+
+  it('allows only Platform Owner to create and manage Gmail invitations', async () => {
+    const ownerDb = testEnv.authenticatedContext('platform-owner-uid', {
+      email: 'painglin102@gmail.com', email_verified: true,
+    }).firestore();
+    const invite = doc(ownerDb, 'pendingOwnerInvites', 'shop@example.com');
+    await assertSucceeds(setDoc(invite, {
+      email: 'shop@example.com', shopName: 'Shop A', industryType: 'general',
+      status: 'pending', invitedBy: 'platform-owner-uid',
+      createdAt: serverTimestamp(), expiresAt: futureTimestamp(30),
+    }));
+    const customerDb = testEnv.authenticatedContext('shop-a', {
+      email: 'shop-a@example.com', email_verified: true,
+    }).firestore();
+    await assertFails(setDoc(doc(customerDb, 'pendingOwnerInvites', 'other@example.com'), {
+      email: 'other@example.com', shopName: 'Fake', industryType: 'general',
+      status: 'pending', invitedBy: 'shop-a',
+      createdAt: serverTimestamp(), expiresAt: futureTimestamp(30),
+    }));
+    await assertFails(setDoc(doc(customerDb, 'pendingOwnerInvites', 'shop@example.com'), {
+      email: 'shop@example.com', shopName: 'Hijack', industryType: 'general',
+      status: 'pending', invitedBy: 'shop-a',
+      createdAt: serverTimestamp(), expiresAt: futureTimestamp(365),
+    }));
+  });
+
   it('allows an authenticated user to check their own missing staff membership', async () => {
     const db = testEnv.authenticatedContext('new-user', {
       email: 'new-user@example.com', email_verified: true,

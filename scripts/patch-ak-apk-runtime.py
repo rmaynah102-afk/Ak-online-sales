@@ -12,8 +12,8 @@ if ("async function apkProvisionShopOwner(email,expiresOn,shopName,industryType)
     raise SystemExit("APK patch failed: Admin-backed shop-owner provisioning helper missing")
 if 'fetch(GATEWAY+"/owner/provision"' in s:
     raise SystemExit("APK patch failed: legacy Cloudflare owner provisioning must not be used")
-if 'if(!isPlatformOwner()||!user||user.emailVerified!==true)' not in s:
-    raise SystemExit("APK patch failed: verified Platform Owner guard missing")
+if 'async function assertVerifiedPlatformOwner()' not in s or 'await assertVerifiedPlatformOwner();' not in s:
+    raise SystemExit("APK patch failed: refreshed Google-verified Platform Owner guard missing")
 
 # APK-only visual baseline: white surfaces, black text, neutral buttons/header.
 css_anchor = "</style>"

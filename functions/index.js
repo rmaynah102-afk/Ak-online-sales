@@ -434,7 +434,7 @@ exports.listPlatformUsers = functions.https.onCall(async (data, context) => {
     users: page.users.map(u => {
       const license = byUid.get(u.uid) || {};
       return {
-        uid: u.uid, email: u.email || "", emailVerified: !!u.emailVerified,
+        uid: u.uid, email: u.email || "", shopName: String(license.shopName || ""), emailVerified: !!u.emailVerified,
         disabled: !!u.disabled, status: String(license.status || "pending_payment"),
         plan: String(license.plan || ""), expiresAt: license.expiresAt && license.expiresAt.toDate
           ? license.expiresAt.toDate().toISOString() : ""

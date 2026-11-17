@@ -182,11 +182,15 @@ service cloud.firestore {
         request.auth != null
         && request.auth.uid == memberUid
         && request.auth.token.email_verified == true
-        && request.resource.data.keys().hasOnly(['shopId','role','status','email','createdAt','createdBy','inviteCode','slotId','canPrint'])
+        && request.resource.data.keys().hasOnly(['shopId','role','status','email','createdAt','createdBy','inviteCode','slotId','canPrint','merchantStaff','name'])
         && request.resource.data.shopId is string
-        && request.resource.data.role in ['manager','cashier','employee']
+        && request.resource.data.role == 'employee'
         && request.resource.data.status == 'active'
         && request.resource.data.email == request.auth.token.email
+        && request.resource.data.merchantStaff == true
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 2
+        && request.resource.data.name.size() <= 80
         && request.resource.data.createdAt == request.time
         && request.resource.data.createdBy == request.resource.data.shopId
         && request.resource.data.inviteCode is string
@@ -255,8 +259,11 @@ service cloud.firestore {
       allow create: if request.auth != null
         && request.auth.uid == request.resource.data.shopId
         && activeShopLicense(request.resource.data.shopId)
-        && request.resource.data.keys().hasOnly(['shopId','role','status','createdAt','expiresAt','createdBy'])
-        && request.resource.data.role in ['manager','cashier','employee']
+        && request.resource.data.keys().hasOnly(['shopId','role','status','createdAt','expiresAt','createdBy','name'])
+        && request.resource.data.role == 'employee'
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 2
+        && request.resource.data.name.size() <= 80
         && request.resource.data.status == 'open'
         && request.resource.data.createdAt == request.time
         && request.resource.data.createdBy == request.auth.uid

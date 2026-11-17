@@ -88,10 +88,10 @@ service cloud.firestore {
     function canReadPosCollection(shopId, collection) {
       return isPosShopOwner(shopId)
         || (collection == 'products' && hasShopMemberRole(shopId, ['manager','cashier','employee']))
-        || (collection == 'sales' && hasShopMemberRole(shopId, ['manager','cashier']))
+        || (collection == 'sales' && hasShopMemberRole(shopId, ['manager','cashier','employee']))
         || (collection == 'purchases' && hasShopMemberRole(shopId, ['manager']))
-        || (collection == 'people' && hasShopMemberRole(shopId, ['manager','cashier']))
-        || (collection == 'payments' && hasShopMemberRole(shopId, ['manager','cashier']))
+        || (collection == 'people' && hasShopMemberRole(shopId, ['manager','cashier','employee']))
+        || (collection == 'payments' && hasShopMemberRole(shopId, ['manager','cashier','employee']))
         || (collection == 'expenses' && hasShopMemberRole(shopId, ['manager']))
         || (collection in ['productCosts','saleCosts'] && hasShopMemberRole(shopId, ['manager']));
     }
@@ -99,10 +99,10 @@ service cloud.firestore {
     function canCreatePosCollection(shopId, collection) {
       return isPosShopOwner(shopId)
         || (collection == 'products' && hasShopMemberRole(shopId, ['manager']))
-        || (collection == 'sales' && hasShopMemberRole(shopId, ['manager','cashier']))
+        || (collection == 'sales' && hasShopMemberRole(shopId, ['manager','cashier','employee']))
         || (collection == 'purchases' && hasShopMemberRole(shopId, ['manager']))
-        || (collection == 'people' && hasShopMemberRole(shopId, ['manager','cashier']))
-        || (collection == 'payments' && hasShopMemberRole(shopId, ['manager','cashier']))
+        || (collection == 'people' && hasShopMemberRole(shopId, ['manager','cashier','employee']))
+        || (collection == 'payments' && hasShopMemberRole(shopId, ['manager','cashier','employee']))
         || (collection == 'expenses' && hasShopMemberRole(shopId, ['manager']))
         || (collection in ['productCosts','saleCosts'] && hasShopMemberRole(shopId, ['manager']));
     }

@@ -270,7 +270,7 @@ async function staffList(request,origin) {
     const d=x.document,fields=d.fields||{};
     return {uid:d.name.split("/").pop(),name:fields.name?.stringValue||"",role:fields.role?.stringValue||"",
       status:fields.status?.stringValue||"",merchantStaff:fields.merchantStaff?.booleanValue===true};
-  }).filter(x=>x.merchantStaff);
+  }).filter(x=>x.merchantStaff && x.status==="active");
   return json({ok:true,maxStaff:2,members},200,origin);
 }
 async function staffRevoke(request,origin) {

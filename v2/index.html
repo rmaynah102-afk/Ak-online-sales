@@ -401,9 +401,35 @@ $("createShopBtn").onclick=async()=>{
   $("createShopBtn").disabled=false;
  }
 };
-async function loadLicenses(){const [snap,betaSnap]=await Promise.all([db.collection("licenses").get(),db.collection("freeBetaUsers").get()]);const merged=new Map(snap.docs.map(d=>[d.id,{id:d.id,...d.data()}]));betaSnap.docs.forEach(d=>merged.set(d.id,{...(merged.get(d.id)||{}),id:d.id,...d.data(),plan:"free-beta",isFreeBeta:true}));licenses=[...merged.values()];$("shopCount").textContent=licenses.length;$("licenseRows").innerHTML=licenses.map(x=>'<tr><td><b>'+esc(x.shopName||"ဆိုင်")+'</b><br>'+esc(x.email||x.id)+'</td><td>'+esc(x.plan||"-")+'</td><td>'+(x.isFreeBeta?"မကုန်ဆုံး":dateText(x.expiresAt))+'</td><td>'+esc(x.status||"-")+'</td><td>'+(x.isFreeBeta?'<span class="pill">Free Beta</span>':'<button class="secondary" onclick="renewLicense(\''+x.id+'\')">သက်တမ်းတိုး</button>')+' <button class="danger" onclick="toggleLicense(\''+x.id+'\')">'+(x.status==="suspended"||x.status==="disabled"?"ပြန်ဖွင့်":"ပိတ်")+'</button></td></tr>').join("")||'<tr><td colspan="5">ဆိုင်အကောင့် မရှိသေးပါ</td></tr>'}
-window.renewLicense=async id=>{try{const p=prompt("သက်တမ်းတိုးမည့်ရက် (30 / 90 / 180 / 365)");if(!["30","90","180","365"].includes(p))return;const d=licenses.find(x=>x.id===id);const base=d.expiresAt?.toDate&&d.expiresAt.toDate()>new Date()?d.expiresAt.toDate():new Date();const expires=new Date(base.getTime()+Number(p)*86400000),plan=p+"-days";await db.collection("licenses").doc(id).update({status:"active",plan,expiresAt:firebase.firestore.Timestamp.fromDate(expires)});await loadLicenses()}catch(e){alert(errText(e))}};
-window.toggleLicense=async id=>{try{const x=licenses.find(a=>a.id===id),statusNext=x.status==="suspended"||x.status==="disabled"?"active":"suspended";await db.collection(x.isFreeBeta?"freeBetaUsers":"licenses").doc(id).update({status:x.isFreeBeta?(statusNext==="active"?"active":"disabled"):statusNext});await loadLicenses()}catch(e){alert(errText(e))}};
+async function loadLicenses(){
+ const call=firebase.functions().httpsCallable("listPlatformUsers");
+ const result=await call({pageToken:""});
+ const items=(result.data&&result.data.users)||[];
+ licenses=items.filter(x=>!x.isInvitation).map(x=>({...x,id:x.uid}));
+ $("shopCount").textContent=items.length;
+ $("licenseRows").innerHTML=items.map(x=>{
+  const id=x.uid,locked=x.status==="suspended"||x.disabled;
+  const expiry=x.expiresAt?dateText(new Date(x.expiresAt)):"မသတ်မှတ်ရသေး";
+  const state=x.isInvitation?(locked?"Invitation ပိတ်ထား":"Gmail ဖိတ်ကြားထား"):x.status;
+  const renew=x.isInvitation?"":'<button class="secondary" onclick="renewLicense(\\''+id+'\\')">သက်တမ်းတိုး</button>';
+  return '<tr><td><b>'+esc(x.shopName||"ဆိုင်")+'</b><br>'+esc(x.email||id)+'</td><td>'+esc(x.plan||"-")+'</td><td>'+esc(expiry)+'</td><td>'+esc(state)+'</td><td>'+renew+' <button class="danger" onclick="toggleLicense(\\''+id+'\\')">'+(locked?"ပြန်ဖွင့်":"ပိတ်")+'</button></td></tr>';
+ }).join("")||'<tr><td colspan="5">ဆိုင်အကောင့် မရှိသေးပါ</td></tr>';
+}
+window.renewLicense=async id=>{try{
+ const p=prompt("သက်တမ်းတိုးမည့်ရက် (30 / 90 / 180 / 365)");
+ if(!["30","90","180","365"].includes(p))return;
+ const call=firebase.functions().httpsCallable("grantSubscription");
+ await call({uid:id,days:Number(p)});
+ await Promise.all([loadLicenses(),loadPlatformUsers(true)]);
+}catch(e){alert("သက်တမ်းတိုးမရပါ: "+errText(e))}};
+window.toggleLicense=async id=>{try{
+ const x=licenses.find(a=>a.id===id);if(!x)return;
+ const action=x.status==="suspended"||x.disabled?"reactivate":"suspend";
+ if(!confirm(action==="suspend"?"ဤ User အကောင့်ကို ပိတ်မလား။":"ဤ User အကောင့်ကို ပြန်ဖွင့်မလား။"))return;
+ const call=firebase.functions().httpsCallable("setPlatformUserAccess");
+ await call({uid:id,action});
+ await Promise.all([loadLicenses(),loadPlatformUsers(true)]);
+}catch(e){alert("အကောင့်ထိန်းချုပ်မှု မအောင်မြင်ပါ: "+errText(e))}};
 let platformUsersPageToken="";
 async function loadPlatformUsers(reset=true){
  const statusEl=$("platformUsersStatus"),rows=$("platformUsersRows");

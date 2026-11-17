@@ -8,6 +8,12 @@ const {doc,getDoc,setDoc,deleteDoc,writeBatch,Timestamp,serverTimestamp} = requi
 const PROJECT_ID='demo-ak-sale-rules';
 let testEnv;
 const futureTimestamp=(hours=24)=>Timestamp.fromMillis(Date.now()+hours*60*60*1000);
+function googleContext(uid,claims={}) {
+ return testEnv.authenticatedContext(uid,{...claims,firebase:{...(claims.firebase||{}),sign_in_provider:'google.com'}});
+}
+function passwordContext(uid,claims={}) {
+ return testEnv.authenticatedContext(uid,{...claims,firebase:{...(claims.firebase||{}),sign_in_provider:'password'}});
+}
 
 async function seedLicense(uid,hours=24*30){
  await testEnv.withSecurityRulesDisabled(async ctx=>{
@@ -41,6 +47,27 @@ async function claimInvite(staffUid,email,shopId,code,slot=1,name='Staff Member'
  await batch.commit();
  return db;
 }
+
+describe('AK Sale POS Google-only authentication',function(){
+ this.timeout(30000);
+ before(async()=>{
+  const rules=fs.readFileSync(path.join(__dirname,'..','..','firestore.rules'),'utf8');
+  testEnv=await initializeTestEnvironment({projectId:PROJECT_ID,firestore:{rules}});
+ });
+ after(async()=>{if(testEnv)await testEnv.cleanup()});
+ beforeEach(async()=>{await testEnv.clearFirestore()});
+ it('rejects verified Email/Password users from Platform Owner and Shop Owner POS access',async()=>{
+  await seedLicense('shop-a');
+  const passwordShop=passwordContext('shop-a',{email:'shop-a@example.com',email_verified:true}).firestore();
+  await assertFails(getDoc(doc(passwordShop,'licenses','shop-a')));
+  await assertFails(getDoc(doc(passwordShop,'shops','shop-a','pos','products','records','p1')));
+  const passwordOwner=passwordContext('owner-uid',{email:'painglin102@gmail.com',email_verified:true}).firestore();
+  await assertFails(setDoc(doc(passwordOwner,'pendingOwnerInvites','bad@example.com'),{
+   email:'bad@example.com',shopName:'Bad Shop',industryType:'general',status:'pending',
+   invitedBy:'owner-uid',createdAt:serverTimestamp(),expiresAt:futureTimestamp()
+  }));
+ });
+});
 
 describe('AK Sale POS role and tenant security',function(){
  this.timeout(30000);

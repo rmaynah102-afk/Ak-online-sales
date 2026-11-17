@@ -421,7 +421,7 @@ exports.listPlatformUsers = functions.https.onCall(async (data, context) => {
     const status = betaData.status === "suspended" || license.status === "suspended"
       ? "suspended" : (betaData.status === "active" ? "active" : String(license.status || "pending_payment"));
     return {
-      uid: u.uid, email: u.email || "", emailVerified: !!u.emailVerified,
+      uid: u.uid, email: u.email || "", shopName: String(license.shopName || ""), emailVerified: !!u.emailVerified,
       disabled: !!u.disabled, status,
       plan: betaData.status === "active" || betaData.status === "suspended" ? "free-beta" : String(license.plan || ""),
       expiresAt: license.expiresAt && license.expiresAt.toDate

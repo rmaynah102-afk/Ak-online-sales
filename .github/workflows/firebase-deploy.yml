@@ -43,8 +43,20 @@ jobs:
         with:
           node-version: 20
 
+      - name: Set up Java for Firestore Emulator
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Install Firestore rules test dependencies
+        run: npm install --no-save firebase@10.12.2 @firebase/rules-unit-testing@3 mocha
+
       - name: Install Firebase CLI
         run: npm install --global firebase-tools
+
+      - name: Test Firestore access rules in the Emulator
+        run: firebase emulators:exec --only firestore --project demo-ak-sale-rules "npx mocha tests/firestore/firestore.rules.test.js"
 
       - name: Validate app JavaScript before deployment
         run: |

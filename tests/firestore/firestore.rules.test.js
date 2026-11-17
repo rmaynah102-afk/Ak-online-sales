@@ -32,7 +32,7 @@ async function seedInvite(shopId,code,name='Staff Member',hours=24){
  });
 }
 async function claimInvite(staffUid,email,shopId,code,slot=1,name='Staff Member'){
- const db=testEnv.authenticatedContext(staffUid,{email,email_verified:true}).firestore();
+ const db=googleContext(staffUid,{email,email_verified:true}).firestore();
  const slotId=shopId+'_'+slot,batch=writeBatch(db);
  batch.set(doc(db,'shopMembers',staffUid),{
   shopId,role:'employee',status:'active',email,createdAt:serverTimestamp(),
@@ -79,13 +79,13 @@ describe('AK Sale POS role and tenant security',function(){
  beforeEach(async()=>{await testEnv.clearFirestore()});
 
  it('allows only the verified Platform Owner to issue a Shop Owner Gmail invitation',async()=>{
-  const owner=testEnv.authenticatedContext('platform-owner-uid',{email:'painglin102@gmail.com',email_verified:true}).firestore();
+  const owner=googleContext('platform-owner-uid',{email:'painglin102@gmail.com',email_verified:true}).firestore();
   const expires=futureTimestamp(24*30);
   await assertSucceeds(setDoc(doc(owner,'pendingOwnerInvites','shop@example.com'),{
    email:'shop@example.com',shopName:'AK Hardware',industryType:'hardware',status:'pending',
    invitedBy:'platform-owner-uid',createdAt:serverTimestamp(),expiresAt:expires
   }));
-  const customer=testEnv.authenticatedContext('shop-a',{email:'shop-a@example.com',email_verified:true}).firestore();
+  const customer=googleContext('shop-a',{email:'shop-a@example.com',email_verified:true}).firestore();
   await assertFails(setDoc(doc(customer,'pendingOwnerInvites','fake@example.com'),{
    email:'fake@example.com',shopName:'Fake Shop',industryType:'general',status:'pending',
    invitedBy:'shop-a',createdAt:serverTimestamp(),expiresAt:futureTimestamp()
@@ -93,17 +93,17 @@ describe('AK Sale POS role and tenant security',function(){
  });
 
  it('lets only the exact verified Gmail claim its Shop Owner license once',async()=>{
-  const owner=testEnv.authenticatedContext('platform-owner-uid',{email:'painglin102@gmail.com',email_verified:true}).firestore();
+  const owner=googleContext('platform-owner-uid',{email:'painglin102@gmail.com',email_verified:true}).firestore();
   const expires=futureTimestamp(24*30);
   await assertSucceeds(setDoc(doc(owner,'pendingOwnerInvites','shop@example.com'),{
    email:'shop@example.com',shopName:'AK Hardware',industryType:'hardware',status:'pending',
    invitedBy:'platform-owner-uid',createdAt:serverTimestamp(),expiresAt:expires
   }));
-  const wrong=testEnv.authenticatedContext('wrong-user',{email:'wrong@example.com',email_verified:true}).firestore();
+  const wrong=googleContext('wrong-user',{email:'wrong@example.com',email_verified:true}).firestore();
   await assertFails(getDoc(doc(wrong,'pendingOwnerInvites','shop@example.com')));
-  const unverified=testEnv.authenticatedContext('unverified',{email:'shop@example.com',email_verified:false}).firestore();
+  const unverified=googleContext('unverified',{email:'shop@example.com',email_verified:false}).firestore();
   await assertFails(getDoc(doc(unverified,'pendingOwnerInvites','shop@example.com')));
-  const invitee=testEnv.authenticatedContext('shop-owner-uid',{email:'shop@example.com',email_verified:true}).firestore();
+  const invitee=googleContext('shop-owner-uid',{email:'shop@example.com',email_verified:true}).firestore();
   const readable=await assertSucceeds(getDoc(doc(invitee,'pendingOwnerInvites','shop@example.com')));
   assert.equal(readable.data().status,'pending');
   const batch=writeBatch(invitee);
@@ -130,13 +130,13 @@ describe('AK Sale POS role and tenant security',function(){
 
  it('allows a licensed Shop Owner and verified Platform Owner to create 32-character Staff invites',async()=>{
   await seedLicense('shop-a');
-  const owner=testEnv.authenticatedContext('shop-a',{email:'shop-a@example.com',email_verified:true}).firestore();
+  const owner=googleContext('shop-a',{email:'shop-a@example.com',email_verified:true}).firestore();
   const code='ABCDEF0123456789ABCDEF0123456789';
   await assertSucceeds(setDoc(doc(owner,'shopInvites',code),{
    shopId:'shop-a',role:'employee',name:'Staff One',status:'open',
    createdAt:serverTimestamp(),expiresAt:futureTimestamp(24),createdBy:'shop-a'
   }));
-  const platform=testEnv.authenticatedContext('platform-owner',{email:'painglin102@gmail.com',email_verified:true}).firestore();
+  const platform=googleContext('platform-owner',{email:'painglin102@gmail.com',email_verified:true}).firestore();
   await assertSucceeds(setDoc(doc(platform,'shopInvites','FEDCBA9876543210FEDCBA9876543210'),{
    shopId:'platform-owner',role:'employee',name:'Owner Staff',status:'open',
    createdAt:serverTimestamp(),expiresAt:futureTimestamp(24),createdBy:'platform-owner'
@@ -165,7 +165,7 @@ describe('AK Sale POS role and tenant security',function(){
   await seedLicense('shop-a');
   const code='AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
   await seedInvite('shop-a',code);
-  const unverified=testEnv.authenticatedContext('unverified-staff',{email:'staff@example.com',email_verified:false}).firestore();
+  const unverified=googleContext('unverified-staff',{email:'staff@example.com',email_verified:false}).firestore();
   const batch=writeBatch(unverified);
   batch.set(doc(unverified,'shopMembers','unverified-staff'),{
    shopId:'shop-a',role:'employee',status:'active',email:'staff@example.com',
@@ -181,7 +181,7 @@ describe('AK Sale POS role and tenant security',function(){
   await assertFails(claimInvite('staff-b','staff-b@example.com','shop-a',code,2));
   const expired='EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE';
   await seedInvite('shop-a',expired,'Expired Staff',-1);
-  const other=testEnv.authenticatedContext('staff-c',{email:'staff-c@example.com',email_verified:true}).firestore();
+  const other=googleContext('staff-c',{email:'staff-c@example.com',email_verified:true}).firestore();
   await assertFails(getDoc(doc(other,'shopInvites',expired)));
  });
 
@@ -248,18 +248,18 @@ describe('AK Sale POS role and tenant security',function(){
   const code='EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE';
   await seedInvite('shop-a',code);
   await claimInvite('staff-a','staff-a@example.com','shop-a',code);
-  const owner=testEnv.authenticatedContext('shop-a',{email:'shop-a@example.com',email_verified:true}).firestore();
+  const owner=googleContext('shop-a',{email:'shop-a@example.com',email_verified:true}).firestore();
   const revoke=writeBatch(owner);
   revoke.update(doc(owner,'shopMembers','staff-a'),{status:'suspended',revokedAt:serverTimestamp()});
   revoke.delete(doc(owner,'shopStaffSlots','shop-a_1'));
   await assertSucceeds(revoke.commit());
-  const staff=testEnv.authenticatedContext('staff-a',{email:'staff-a@example.com',email_verified:true}).firestore();
+  const staff=googleContext('staff-a',{email:'staff-a@example.com',email_verified:true}).firestore();
   await assertFails(getDoc(doc(staff,'shopMembers','staff-a')));
  });
 
  it('does not allow legacy Manager, Cashier or synthetic staff account creation',async()=>{
   await seedLicense('shop-a');
-  const owner=testEnv.authenticatedContext('shop-a',{email:'shop-a@example.com',email_verified:true}).firestore();
+  const owner=googleContext('shop-a',{email:'shop-a@example.com',email_verified:true}).firestore();
   await assertFails(setDoc(doc(owner,'shopInvites','FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF'),{
    shopId:'shop-a',role:'manager',name:'Legacy Manager',status:'open',
    createdAt:serverTimestamp(),expiresAt:futureTimestamp(24),createdBy:'shop-a'

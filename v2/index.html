@@ -492,6 +492,16 @@ $("ownerGoogleBtn").onclick=async()=>{
 };
 
 $("ownerPOSBtn").onclick=async()=>{try{shopId=user.uid;staffRole="owner";await loadShop()}catch(e){status("Owner POS မဖွင့်နိုင်ပါ: "+errText(e),"ownerStatus")}};
+async function akLogout(){
+ const ownerButton=$("logoutOwner"),shopButton=$("logoutShop");
+ if(ownerButton)ownerButton.disabled=true;if(shopButton)shopButton.disabled=true;
+ try{await auth.signOut();user=null;shopId="";staffRole="";activeShopName="";shopProfile={};products=[];sales=[];purchases=[];people=[];expenses=[];payments=[];$("userBadge").textContent="";show("loginPanel");status("အကောင့်မှ ထွက်ပြီးပါပြီ။");}
+ catch(e){status("Logout မအောင်မြင်ပါ: "+friendlyAuthError(e));}
+ finally{if(ownerButton)ownerButton.disabled=false;if(shopButton)shopButton.disabled=false;}
+}
+$("logoutOwner").onclick=akLogout;
+$("logoutShop").onclick=akLogout;
+
 $("ownerControlBtn").onclick=async()=>{try{if(!isPlatformOwner())throw Error("Platform Owner အကောင့်ဖြင့်သာ ဝင်နိုင်သည်။");show("ownerPanel");$("userBadge").textContent="Platform Owner";await loadPlatformUsers(true);try{await loadLicenses()}catch(e){$("ownerStatus").textContent="User Control Center အလုပ်လုပ်နေသည်။ License အကျဉ်းချုပ် မဖတ်နိုင်ပါ: "+errText(e)}}catch(e){status("Control Center မဖွင့်နိုင်ပါ: "+errText(e),"ownerStatus")}};
 $("loginType").onchange();
 
@@ -1173,6 +1183,9 @@ $("reportVoucher").onclick=async()=>{const r=currentReportVoucherData();await sh
 async function openVoucherPrint(title,id,date,rows,total,paid,due){
  const canvas=voucherCanvas(title,id,date,rows,total,paid,due),img=canvas.toDataURL("image/png"),paper=String($("printerPaper")?.value||"80mm");
  const native=window.Capacitor?.isNativePlatform?.()&&window.Capacitor?.Plugins?.AkPrinter;
+ if(native?.printReceiptImage){
+  try{const data=await new Promise((resolve,reject)=>{canvas.toBlob(blob=>{if(!blob){reject(Error("ဘောက်ချာပုံ မဖန်တီးနိုင်ပါ။"));return}const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(",")[1]);reader.onerror=reject;reader.readAsDataURL(blob)},"image/png")});await native.printReceiptImage({data,fileName:"AK-Receipt-"+String(id||"print")+".png",title:title||"AK Sale Receipt"});status("Android Print စနစ်သို့ ဘောက်ချာပို့ပြီးပါပြီ။","printerStatus");return}catch(e){status("Native Print မအောင်မြင်ပါ: "+errText(e),"printerStatus");return}
+ }
  if(native&&["bluetooth","wifi"].includes(printerRead().find(x=>x.default)?.type||printerRead()[0]?.type)){
   if(title==="အရောင်းဘောင်ချာ"&&window.akPrintRawToDefault){const sale=sales.find(x=>x.id===id);if(sale){const b=saleBalance(sale);await window.akPrintRawToDefault(buildReceiptEscPos({...sale,...b,id},receiptPaper()));status("အရောင်းဘောင်ချာကို Printer သို့ ပို့ပြီးပါပြီ။","printerStatus");return}}
   status("ဤဘောင်ချာအမျိုးအစားကို Android System Print ဖြင့်ထုတ်ပါ။","printerStatus");
@@ -1235,7 +1248,11 @@ $("exportCsv").onclick=()=>{
  purchases.forEach(x=>{const paid=Number(x.paid||0)+payments.filter(p=>p.kind==="purchase"&&p.purchaseId===x.id).reduce((a,p)=>a+Number(p.amount||0),0);rows.push(["Purchase",x.productName,"","",x.qty,"",x.cost,x.total,paid,Math.max(0,x.total-paid),dateText(x.createdAt),x.supplier||"",shopProfile.name||activeShopName])});
  expenses.forEach(x=>rows.push(["Expense",x.name,"","","","","",x.amount,"","","",dateText(x.createdAt),"",shopProfile.name||activeShopName]));
  people.forEach(x=>rows.push(["Person",x.name,x.type,x.phone,"","","","","","","","",shopProfile.name||activeShopName]));
- const csv="\uFEFF"+rows.map(row=>row.map(v=>'"'+String(v??"").replace(/"/g,'""')+'"').join(",")).join("\r\n"),blob=new Blob([csv],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=(String(shopProfile.name||activeShopName||"Business").replace(/[^a-z0-9-_]/gi,"-").slice(0,35)||"Business")+"-POS-Backup-"+new Date().toISOString().slice(0,10)+".csv";a.click();URL.revokeObjectURL(a.href);
+ const csv="\\uFEFF"+rows.map(row=>row.map(v=>'"'+String(v??"").replace(/"/g,'""')+'"').join(",")).join("\\r\\n");
+ const filename=(String(shopProfile.name||activeShopName||"Business").replace(/[^a-z0-9-_]/gi,"-").slice(0,35)||"Business")+"-POS-Export-"+new Date().toISOString().slice(0,10)+".csv";
+ const native=window.Capacitor?.isNativePlatform?.()&&window.Capacitor?.Plugins?.AkPrinter;
+ if(native?.shareCsv){const data=btoa(unescape(encodeURIComponent(csv)));native.shareCsv({data,fileName:filename,title:"AK Sale POS CSV"}).then(()=>status("CSV ဖိုင်ကို Share Menu သို့ ပို့ပြီးပါပြီ။")).catch(e=>status("CSV Share မအောင်မြင်ပါ: "+errText(e)));return}
+ const blob=new Blob([csv],{type:"text/csv;charset=utf-8"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=filename;a.style.display="none";document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(url);a.remove()},3000);
 };
 
 window.akFirebaseBootPromise=boot().catch(e=>{ $("customerGoogleBtn").disabled=true;$("ownerGoogleBtn").disabled=true; status("Firebase စနစ်စတင်မရပါ: "+friendlyAuthError(e)+" · "+(e?.message||"")); throw e; }); window.akFirebaseBootPromise.catch(()=>{});

@@ -352,7 +352,7 @@ async function claimShopOwnerAccess(signedUser){
   return {status:"active"};
  }
  const betaSnap=await db.collection("freeBetaUsers").doc(fresh.uid).get();
- if(betaSnap.exists){const beta=betaSnap.data()||{};if(beta.email===email&&beta.status==="active")return {status:"free-beta"};}
+ if(betaSnap.exists){const beta=betaSnap.data()||{};if(String(beta.email||"").toLowerCase()!==email)throw Error("ဤ Gmail သည် Free Beta အကောင့်နှင့် မကိုက်ညီပါ။");if(beta.status!=="active")throw Error("Platform Owner က ဤ Free Beta အကောင့်ကို ပိတ်ထားသည်။");return {status:"free-beta"};}
  const inviteRef=db.collection("pendingOwnerInvites").doc(email),inviteSnap=await inviteRef.get();
  if(!inviteSnap.exists)throw Error("ဤ Gmail ကို Platform Owner က ခွင့်ပြုမထားသေးပါ။");
  const invite=inviteSnap.data()||{};
@@ -498,7 +498,7 @@ async function getPlatformUserRows(){
 async function loadLicenses(){
  const items=await getPlatformUserRows();licenses=items.filter(x=>!x.isInvitation).map(x=>({...x,id:x.uid}));$("shopCount").textContent=items.length;
  $("licenseRows").innerHTML=items.map(x=>{
-  const id=String(x.uid||""),locked=x.status==="suspended"||x.disabled;
+  const id=String(x.uid||""),locked=x.status==="suspended"||x.status==="disabled"||x.disabled;
   const expiry=x.expiresAt?.toDate?dateText(x.expiresAt):x.expiresAt?dateText(new Date(x.expiresAt)):"မသတ်မှတ်ရသေး";
   const state=x.isInvitation?(locked?"Invitation ပိတ်ထား":"Gmail ဖိတ်ကြားထား"):x.status;
   const actions=(x.isInvitation||x.isBeta)?'<button class="danger" onclick="changePlatformUserAccess(\''+esc(id)+'\',\''+(locked?"reactivate":"suspend")+'\')">'+(locked?"ပြန်ဖွင့်":"ပိတ်")+'</button>':'<button class="secondary" onclick="renewLicense(\''+esc(id)+'\')">သက်တမ်းတိုး</button> <button class="danger" onclick="toggleLicense(\''+esc(id)+'\')">'+(locked?"ပြန်ဖွင့်":"ပိတ်")+'</button>';

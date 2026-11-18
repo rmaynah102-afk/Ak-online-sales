@@ -133,17 +133,17 @@ describe('AK Sale POS role and tenant security',function(){
  it('allows a licensed Shop Owner and verified Platform Owner to create 32-character Staff invites',async()=>{
   await seedLicense('shop-a');
   const owner=googleContext('shop-a',{email:'shop-a@example.com',email_verified:true}).firestore();
-  const code='ABCDEF0123456789ABCDEF0123456789';
+  const code='12345678';
   await assertSucceeds(setDoc(doc(owner,'shopInvites',code),{
    shopId:'shop-a',role:'employee',name:'Staff One',status:'open',
    createdAt:serverTimestamp(),expiresAt:futureTimestamp(24),createdBy:'shop-a'
   }));
   const platform=googleContext('platform-owner',{email:'painglin102@gmail.com',email_verified:true}).firestore();
-  await assertSucceeds(setDoc(doc(platform,'shopInvites','FEDCBA9876543210FEDCBA9876543210'),{
+  await assertSucceeds(setDoc(doc(platform,'shopInvites','87654321'),{
    shopId:'platform-owner',role:'employee',name:'Owner Staff',status:'open',
    createdAt:serverTimestamp(),expiresAt:futureTimestamp(24),createdBy:'platform-owner'
   }));
-  await assertFails(setDoc(doc(owner,'shopInvites','not-32-chars'),{
+  await assertFails(setDoc(doc(owner,'shopInvites','not-8-digit'),{
    shopId:'shop-a',role:'employee',name:'Staff Two',status:'open',
    createdAt:serverTimestamp(),expiresAt:futureTimestamp(24),createdBy:'shop-a'
   }));
@@ -151,7 +151,7 @@ describe('AK Sale POS role and tenant security',function(){
 
  it('lets a verified personal Gmail claim a one-time Staff invite and reserve one of two slots atomically',async()=>{
   await seedLicense('shop-a');
-  const code='0123456789ABCDEF0123456789ABCDEF';
+  const code='23456789';
   await seedInvite('shop-a',code,'Staff A');
   const db=await claimInvite('staff-a','staff-a@example.com','shop-a',code,1,'Staff A');
   const member=await assertSucceeds(getDoc(doc(db,'shopMembers','staff-a')));
@@ -165,9 +165,9 @@ describe('AK Sale POS role and tenant security',function(){
 
  it('supports one Shop Owner plus exactly two linked Staff accounts per shop',async()=>{
   await seedLicense('shop-a');
-  const code1='11111111111111111111111111111111';
-  const code2='22222222222222222222222222222222';
-  const code3='33333333333333333333333333333333';
+  const code1='11111111';
+  const code2='22222222';
+  const code3='33333333';
   await seedInvite('shop-a',code1,'Staff One');
   await claimInvite('staff-one','staff-one@example.com','shop-a',code1,1,'Staff One');
   await seedInvite('shop-a',code2,'Staff Two');
@@ -182,7 +182,7 @@ describe('AK Sale POS role and tenant security',function(){
  });
  it('rejects unverified, expired, cross-shop and reused Staff invitations',async()=>{
   await seedLicense('shop-a');
-  const code='AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
+  const code='44444444';
   await seedInvite('shop-a',code);
   const unverified=googleContext('unverified-staff',{email:'staff@example.com',email_verified:false}).firestore();
   const batch=writeBatch(unverified);
@@ -198,7 +198,7 @@ describe('AK Sale POS role and tenant security',function(){
   await assertFails(batch.commit());
   await claimInvite('staff-a','staff-a@example.com','shop-a',code);
   await assertFails(claimInvite('staff-b','staff-b@example.com','shop-a',code,2));
-  const expired='EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE';
+  const expired='55555555';
   await seedInvite('shop-a',expired,'Expired Staff',-1);
   const other=googleContext('staff-c',{email:'staff-c@example.com',email_verified:true}).firestore();
   await assertFails(getDoc(doc(other,'shopInvites',expired)));
@@ -211,7 +211,7 @@ describe('AK Sale POS role and tenant security',function(){
    await setDoc(doc(adminDb,'shops','shop-a','pos','productCosts','records','p1'),{cost:100});
    await setDoc(doc(adminDb,'shops','shop-a','pos','saleCosts','records','s1'),{cost:100,profit:50});
   });
-  const code='BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB';
+  const code='66666666';
   await seedInvite('shop-a',code);
   const db=await claimInvite('staff-a','staff-a@example.com','shop-a',code);
   await assertFails(setDoc(doc(db,'shopMembers','staff-a'),{
@@ -226,7 +226,7 @@ describe('AK Sale POS role and tenant security',function(){
 
  it('allows Staff to read products and create sales, but not purchase or expense records',async()=>{
   await seedLicense('shop-a');
-  const code='CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC';
+  const code='77777777';
   await seedInvite('shop-a',code);
   const db=await claimInvite('staff-a','staff-a@example.com','shop-a',code);
   await testEnv.withSecurityRulesDisabled(async ctx=>{
@@ -250,7 +250,7 @@ describe('AK Sale POS role and tenant security',function(){
  it('prevents cross-tenant access and blocks Staff when the Shop Owner subscription expires',async()=>{
   await seedLicense('shop-a');
   await seedLicense('shop-b');
-  const code='DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD';
+  const code='88888888';
   await seedInvite('shop-a',code);
   const db=await claimInvite('staff-a','staff-a@example.com','shop-a',code);
   await assertFails(getDoc(doc(db,'shops','shop-b','pos','products','records','p1')));
@@ -267,7 +267,7 @@ describe('AK Sale POS role and tenant security',function(){
 
  it('allows Shop Owner to revoke a Staff member and release their slot',async()=>{
   await seedLicense('shop-a');
-  const code='EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE';
+  const code='55555555';
   await seedInvite('shop-a',code);
   await claimInvite('staff-a','staff-a@example.com','shop-a',code);
   const owner=googleContext('shop-a',{email:'shop-a@example.com',email_verified:true}).firestore();
@@ -282,11 +282,11 @@ describe('AK Sale POS role and tenant security',function(){
  it('does not allow legacy Manager, Cashier or synthetic staff account creation',async()=>{
   await seedLicense('shop-a');
   const owner=googleContext('shop-a',{email:'shop-a@example.com',email_verified:true}).firestore();
-  await assertFails(setDoc(doc(owner,'shopInvites','FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF'),{
+  await assertFails(setDoc(doc(owner,'shopInvites','99999999'),{
    shopId:'shop-a',role:'manager',name:'Legacy Manager',status:'open',
    createdAt:serverTimestamp(),expiresAt:futureTimestamp(24),createdBy:'shop-a'
   }));
-  await assertFails(setDoc(doc(owner,'shopInvites','99999999999999999999999999999999'),{
+  await assertFails(setDoc(doc(owner,'shopInvites','00000000'),{
    shopId:'shop-a',role:'cashier',name:'Legacy Cashier',status:'open',
    createdAt:serverTimestamp(),expiresAt:futureTimestamp(24),createdBy:'shop-a'
   }));

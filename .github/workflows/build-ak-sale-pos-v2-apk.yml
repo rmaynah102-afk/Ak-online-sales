@@ -237,6 +237,18 @@ jobs:
           path: android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 30
+      - name: Build Google Play Android App Bundle
+        if: steps.signing.outputs.ready == 'true'
+        working-directory: android
+        run: ./gradlew bundleRelease --no-daemon
+      - name: Upload Google Play AAB
+        if: steps.signing.outputs.ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: AK-Sale-POS-2.0-GOOGLE-PLAY-AAB
+          path: android/app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+          retention-days: 30
       - name: Build temporary debug APK when release key is unavailable
         if: steps.signing.outputs.ready != 'true'
         working-directory: android

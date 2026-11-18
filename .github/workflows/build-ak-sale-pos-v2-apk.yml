@@ -31,6 +31,12 @@ on:
       - "package-lock.json"
       - ".github/workflows/build-ak-sale-pos-v2-apk.yml"
   workflow_dispatch:
+    inputs:
+      publish_release:
+        description: "Publish a public APK release only after phone login testing passes"
+        required: false
+        type: boolean
+        default: false
 permissions:
   contents: write
 jobs:
@@ -72,12 +78,27 @@ jobs:
           cp v2/manifest.webmanifest www/manifest.webmanifest
           cp v2/sw.js www/sw.js
           cp v2/icon.svg www/icon.svg
+          mkdir -p www/vendor
+          npx esbuild scripts/firebase-compat-entry.js --bundle --platform=browser --format=iife --target=es2018 --outfile=www/vendor/firebase-compat.js
           # Keep the copied Firebase config script URL intact. The old sed pattern used
           # unescaped dots and stripped the quotes from src="./firebase-config.js".
           python3 - <<'PY'
           from pathlib import Path
           p = Path("www/index.html")
           s = p.read_text()
+          # Bundle Firebase locally for Android WebView; avoid a permanently disabled
+          # Google button when remote gstatic scripts are slow or blocked.
+          old_loader = ''' await new Promise((resolve,reject)=>{const x=document.createElement("script");x.src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js";x.onload=resolve;x.onerror=reject;document.head.appendChild(x)});
+           await Promise.all(["firebase-auth-compat.js","firebase-firestore-compat.js","firebase-functions-compat.js"].map(name=>new Promise((resolve,reject)=>{const x=document.createElement("script");x.src="https://www.gstatic.com/firebasejs/10.12.2/"+name;x.onload=resolve;x.onerror=()=>reject(Error("Firebase SDK ဖိုင် မတင်နိုင်ပါ: "+name));const timer=setTimeout(()=>reject(Error("Firebase SDK တင်ရန် အချိန်ကျော်ပါသည်: "+name)),15000);x.onload=()=>{clearTimeout(timer);resolve()};document.head.appendChild(x)})));'''
+          new_loader = ' if(typeof firebase==="undefined"||!firebase.auth||!firebase.firestore)throw Error("APK ထဲရှိ Firebase SDK မတင်နိုင်ပါ။ App ကိုပိတ်ပြီး ပြန်ဖွင့်ပါ။");'
+          if old_loader not in s:
+              raise SystemExit("Remote Firebase CDN loader block not found; refusing an incomplete APK bundle")
+          s = s.replace(old_loader, new_loader, 1)
+          script_tag = '<script src="./vendor/firebase-compat.js"></script>'
+          if script_tag not in s:
+              s = s.replace('</head>', script_tag + '\\n</head>', 1)
+          if not (Path("www/vendor/firebase-compat.js").is_file() and Path("www/vendor/firebase-compat.js").stat().st_size > 100000):
+              raise SystemExit("Locally bundled Firebase SDK is missing or unexpectedly small")
           # v2/index.html already defines the current navigation. Do not re-add removed Expenses/Printer tabs.
           required = 'window.akFirebaseBootPromise=boot().catch(e=>{ $("customerGoogleBtn").disabled=true;$("ownerGoogleBtn").disabled=true; status("Firebase စနစ်စတင်မရပါ: "+friendlyAuthError(e)+" · "+(e?.message||"")); throw e; }); window.akFirebaseBootPromise.catch(()=>{});'
           if required not in s:
@@ -115,6 +136,7 @@ jobs:
           scripts.forEach(([, , code],i)=>new vm.Script(code,{filename:'v2-inline-'+(i+1)}));
           if(!html.includes('id="ownerGoogleBtn"')||!html.includes('id="customerGoogleBtn"')||!html.includes('nativeAuth.signInWithGoogle()')||!html.includes('GoogleAuthProvider.credential(idToken)')) throw new Error('Native Google-only login bridge is missing');
           if(!html.includes('window.AK_FIREBASE_PUBLIC_CONFIG=Object.freeze({')||!html.includes('projectId:"ak-onlin-sales"')) throw new Error('Embedded Firebase config is missing from APK bundle');
+          if(!html.includes('<script src="./vendor/firebase-compat.js"></script>')||html.includes('https://www.gstatic.com/firebasejs/10.12.2/')) throw new Error('APK must use the locally bundled Firebase SDK, not remote CDN scripts');
           if(!html.includes("async function apkProvisionShopOwner(email,expiresOn,shopName,industryType)")||!html.includes("async function claimShopOwnerAccess(signedUser)")||!html.includes("async function claimStaffInvite(signedUser,code)")||!html.includes('providerId==="google.com"')) throw new Error("Google-only Owner/Shop Owner/Staff invitation flow is missing");
           if(/signInWithEmailAndPassword|createUserWithEmailAndPassword|sendPasswordResetEmail|id="password"|newPassword/.test(html)) throw new Error("Legacy Email/Password login controls remain");
           if(!html.includes('async function claimShopOwnerAccess(signedUser)')||!html.includes('db.collection("pendingOwnerInvites").doc(email)')||!html.includes("APK-only AK dark monochrome high-contrast theme")) throw new Error("APK-only Spark-compatible verified Gmail provisioning or theme patch is missing");
@@ -306,7 +328,7 @@ jobs:
           if-no-files-found: error
           retention-days: 30
       - name: Create permanent public GitHub Release
-        if: steps.signing.outputs.ready == 'true' && github.event_name != 'pull_request'
+        if: steps.signing.outputs.ready == 'true' && github.event_name == 'workflow_dispatch' && inputs.publish_release == true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |

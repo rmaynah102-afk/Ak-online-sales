@@ -32,7 +32,7 @@ on:
       - ".github/workflows/build-ak-sale-pos-v2-apk.yml"
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -298,6 +298,20 @@ jobs:
           path: android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 30
+      - name: Create permanent public GitHub Release
+        if: steps.signing.outputs.ready == 'true' && github.event_name != 'pull_request'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          APK=android/app/build/outputs/apk/release/app-release.apk
+          sha256sum "$APK" > android/app/build/outputs/apk/release/app-release.apk.sha256
+          gh release create "v2.1.${GITHUB_RUN_NUMBER}" \
+            "$APK" \
+            "android/app/build/outputs/apk/release/app-release.apk.sha256" \
+            --title "AK Sale POS 2.1.${GITHUB_RUN_NUMBER}" \
+            --notes "AK Sale POS Android release. Install the APK on Android. SHA-256 checksum is included." \
+            --latest
       - name: Build temporary debug APK when release key is unavailable
         if: steps.signing.outputs.ready != 'true'
         working-directory: android

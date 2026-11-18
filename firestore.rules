@@ -90,32 +90,32 @@ service cloud.firestore {
     }
 
     function canReadPosCollection(shopId, collection) {
-      return isPosShopOwner(shopId)
+      return isVerifiedOwner() || isPosShopOwner(shopId)
         || (collection in ['products','sales','people','payments']
           && hasShopMemberRole(shopId, ['employee']));
     }
 
     function canCreatePosCollection(shopId, collection) {
-      return isPosShopOwner(shopId)
+      return isVerifiedOwner() || isPosShopOwner(shopId)
         || (collection in ['sales','people','payments']
           && hasShopMemberRole(shopId, ['employee']));
     }
 
     function canUpdatePosCollection(shopId, collection) {
-      return isPosShopOwner(shopId)
+      return isVerifiedOwner() || isPosShopOwner(shopId)
         || (collection == 'products' && hasShopMemberRole(shopId, ['employee']));
     }
 
     function canDeletePosCollection(shopId, collection) {
-      return isPosShopOwner(shopId);
+      return isVerifiedOwner() || isPosShopOwner(shopId);
     }
 
     function canReadShopWorkspaceMeta(shopId) {
-      return isPosShopOwner(shopId) || isActiveShopMember(shopId);
+      return isVerifiedOwner() || isPosShopOwner(shopId) || isActiveShopMember(shopId);
     }
 
     function canWriteShopWorkspaceMeta(shopId) {
-      return isPosShopOwner(shopId);
+      return isVerifiedOwner() || isPosShopOwner(shopId);
     }
 
     // Tenant-scoped POS data: collection-level rules enforce role permissions.

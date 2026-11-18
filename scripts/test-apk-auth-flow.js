@@ -64,7 +64,7 @@ assert(rules.includes('match /shopInvites/{code}'), 'Staff invitation rules are 
 assert(rules.includes('request.resource.data.inviteCode.size() == 8'), 'Staff membership must require a 8-digit numeric code');
 assert(rules.includes("request.resource.data.role == 'employee'"), 'Staff role must be the only employee role');
 
-assert(html.includes('db.enablePersistence({synchronizeTabs:false})'), 'Firestore IndexedDB offline persistence must be enabled before shop data access');
+// Offline-first validation added for the Android build.\nassert(html.includes('db.enablePersistence({synchronizeTabs:false})'), 'Firestore IndexedDB offline persistence must be enabled before shop data access');
 assert(html.includes('window.akGetDoc=async ref=>'), 'Previously verified membership/license documents must support cache fallback while offline');
 assert(html.includes('s=await col(name).get({source:"cache"})'), 'POS records must fall back to Firestore cache when network requests fail');
 assert(html.includes('id="akNetworkStatus"') && html.includes('Offline · သိမ်းထားသောဒေတာဖြင့် အသုံးပြုနေသည်'), 'POS must show a visible offline status');

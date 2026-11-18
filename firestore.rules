@@ -122,15 +122,15 @@ service cloud.firestore {
     // APK migration must split the legacy appData blob before using these paths.
     match /shops/{shopId}/pos/{collection}/records/{documentId} {
       allow read: if canReadPosCollection(shopId, collection);
-      allow create: if canCreatePosCollection(shopId, collection)
+      allow create: if isVerifiedOwner() || (canCreatePosCollection(shopId, collection)
         && ((collection != 'products' && collection != 'sales')
-          || posRecordHasNoCostFields(request.resource.data));
-      allow update: if canUpdatePosCollection(shopId, collection)
+          || posRecordHasNoCostFields(request.resource.data)));
+      allow update: if isVerifiedOwner() || (canUpdatePosCollection(shopId, collection)
         && ((collection != 'products' && collection != 'sales')
           || posRecordHasNoCostFields(request.resource.data))
         && (collection != 'products' || isPosShopOwner(shopId)
           || (hasShopMemberRole(shopId, ['employee'])
-            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stock'])));
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stock']))));
       allow delete: if canDeletePosCollection(shopId, collection);
     }
 
@@ -204,6 +204,7 @@ service cloud.firestore {
       allow delete: if isVerifiedGoogleUser()
         && request.auth.uid == resource.data.shopId
         && activeShopLicense(resource.data.shopId);
+      allow read, write: if isVerifiedOwner();
     }
 
     match /shopInvites/{code} {
@@ -249,6 +250,7 @@ service cloud.firestore {
       allow delete: if request.auth != null
         && request.auth.uid == resource.data.shopId
         && activeShopLicense(resource.data.shopId);
+      allow read, write: if isVerifiedOwner();
     }
 
     match /shopStaffSlots/{slotId} {
@@ -281,6 +283,7 @@ service cloud.firestore {
       allow delete: if request.auth != null
         && request.auth.uid == resource.data.shopId
         && activeShopLicense(resource.data.shopId);
+      allow read, write: if isVerifiedOwner();
     }
 
     // The first 100 verified shop-owner accounts receive permanent Free Beta access.

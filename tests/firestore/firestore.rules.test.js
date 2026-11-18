@@ -3,7 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const assert = require('node:assert/strict');
 const {initializeTestEnvironment,assertSucceeds,assertFails} = require('@firebase/rules-unit-testing');
-const {doc,getDoc,setDoc,deleteDoc,writeBatch,Timestamp,serverTimestamp} = require('firebase/firestore');
+const {doc,getDoc,setDoc,deleteDoc,writeBatch,Timestamp,serverTimestamp,collection,getDocs,query,where} = require('firebase/firestore');
 
 const PROJECT_ID='demo-ak-sale-rules';
 let testEnv;
@@ -163,6 +163,27 @@ describe('AK Sale POS role and tenant security',function(){
   await assertSucceeds(getDoc(doc(db,'shopStaffSlots','shop-a_1')));
  });
 
+ it('supports one Shop Owner plus exactly two linked Staff accounts per shop',async()=>{
+  await seedLicense('shop-a');
+  const code1='11111111111111111111111111111111';
+  const code2='22222222222222222222222222222222';
+  const code3='33333333333333333333333333333333';
+  await seedInvite('shop-a',code1,'Staff One');
+  await claimInvite('staff-one','staff-one@example.com','shop-a',code1,1,'Staff One');
+  await seedInvite('shop-a',code2,'Staff Two');
+  await claimInvite('staff-two','staff-two@example.com','shop-a',code2,2,'Staff Two');
+  const owner=googleContext('shop-a',{email:'shop-a@example.com',email_verified:true}).firestore();
+  const listed=await assertSucceeds(getDocs(query(collection(owner,'shopMembers'),where('shopId','==','shop-a'))));
+  assert.equal(listed.size,2,'Shop Owner should see exactly the two Staff linked to this shop');
+  await seedInvite('shop-a',code3,'Staff Three');
+  for(const slot of [1,2]){
+   const uid='staff-three-'+slot,email='staff-three@example.com',db=googleContext(uid,{email,email_verified:true}).firestore(),slotId='shop-a_'+slot,batch=writeBatch(db);
+   batch.set(doc(db,'shopMembers',uid),{shopId:'shop-a',role:'employee',status:'active',email,createdAt:serverTimestamp(),createdBy:'shop-a',inviteCode:code3,slotId,canPrint:false,merchantStaff:true,name:'Staff Three'});
+   batch.update(doc(db,'shopInvites',code3),{status:'claimed',claimedBy:uid,claimedAt:serverTimestamp()});
+   batch.set(doc(db,'shopStaffSlots',slotId),{shopId:'shop-a',uid,slot,createdAt:serverTimestamp(),inviteCode:code3});
+   await assertFails(batch.commit());
+  }
+ });
  it('rejects unverified, expired, cross-shop and reused Staff invitations',async()=>{
   await seedLicense('shop-a');
   const code='AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';

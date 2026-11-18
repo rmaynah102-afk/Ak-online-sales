@@ -175,14 +175,10 @@ describe('AK Sale POS role and tenant security',function(){
   const owner=googleContext('shop-a',{email:'shop-a@example.com',email_verified:true}).firestore();
   const listed=await assertSucceeds(getDocs(query(collection(owner,'shopMembers'),where('shopId','==','shop-a'))));
   assert.equal(listed.size,2,'Shop Owner should see exactly the two Staff linked to this shop');
-  await seedInvite('shop-a',code3,'Staff Three');
-  for(const slot of [1,2]){
-   const uid='staff-three-'+slot,email='staff-three@example.com',db=googleContext(uid,{email,email_verified:true}).firestore(),slotId='shop-a_'+slot,batch=writeBatch(db);
-   batch.set(doc(db,'shopMembers',uid),{shopId:'shop-a',role:'employee',status:'active',email,createdAt:serverTimestamp(),createdBy:'shop-a',inviteCode:code3,slotId,canPrint:false,merchantStaff:true,name:'Staff Three'});
-   batch.update(doc(db,'shopInvites',code3),{status:'claimed',claimedBy:uid,claimedAt:serverTimestamp()});
-   batch.set(doc(db,'shopStaffSlots',slotId),{shopId:'shop-a',uid,slot,createdAt:serverTimestamp(),inviteCode:code3});
-   await assertFails(batch.commit());
-  }
+  await assertFails(setDoc(doc(owner,'shopInvites',code3),{
+   shopId:'shop-a',role:'employee',name:'Staff Three',status:'open',
+   createdAt:serverTimestamp(),expiresAt:futureTimestamp(24),createdBy:'shop-a'
+  }),'A third Staff invitation must be rejected when both Staff slots are occupied');
  });
  it('rejects unverified, expired, cross-shop and reused Staff invitations',async()=>{
   await seedLicense('shop-a');

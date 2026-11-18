@@ -1,5 +1,5 @@
 const CACHE="ak-sale-pos-v2-offline-9";
-const CORE=["./","./index.html","./manifest.webmanifest","./icon.svg","../firebase-config.js"];
+const CORE=["./","./index.html","./manifest.webmanifest","./icon.svg"];
 const FIREBASE=[
  "https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js",
  "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js",

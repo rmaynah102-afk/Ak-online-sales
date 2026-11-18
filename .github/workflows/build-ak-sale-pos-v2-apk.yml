@@ -79,13 +79,13 @@ jobs:
           p = Path("www/index.html")
           s = p.read_text()
           # v2/index.html already defines the current navigation. Do not re-add removed Expenses/Printer tabs.
-          old_catch = 'boot().catch(e=>{ $("customerGoogleBtn").disabled=true;$("ownerGoogleBtn").disabled=true; status("စနစ်စတင်မရပါ: "+friendlyAuthError(e)); });'
-          new_catch = 'boot().catch(e=>{ $("customerGoogleBtn").disabled=false;$("ownerGoogleBtn").disabled=false; status("စနစ်စတင်မရပါ: "+friendlyAuthError(e)); });'
-          if old_catch not in s:
-              raise SystemExit("Expected boot error handler not found")
-          s = s.replace(old_catch, new_catch, 1)
+          required = 'boot().catch(e=>{ $("customerGoogleBtn").disabled=true;$("ownerGoogleBtn").disabled=true; status("Firebase စနစ်စတင်မရပါ: "+friendlyAuthError(e)+" · "+(e?.message||"")); });'
+          if required not in s:
+              raise SystemExit("Firebase startup must fail closed and keep Google login disabled when initialization fails")
+          if 'window.AK_FIREBASE_PUBLIC_CONFIG=Object.freeze({' not in s:
+              raise SystemExit("Embedded Firebase public config missing from APK web bundle")
           p.write_text(s)
-          print("APK-only runtime patch applied: Firebase config URL preserved, Printer/Ads tabs enabled, startup errors remain actionable")
+          print("APK-only runtime patch applied: embedded Firebase config verified; failed startup keeps Google login disabled")
           PY
           python3 scripts/patch-ak-apk-runtime.py
           cat > capacitor.config.json <<'JSON'
@@ -114,13 +114,13 @@ jobs:
           if(!scripts.length)throw new Error('No inline JavaScript found');
           scripts.forEach(([, , code],i)=>new vm.Script(code,{filename:'v2-inline-'+(i+1)}));
           if(!html.includes('id="ownerGoogleBtn"')||!html.includes('id="customerGoogleBtn"')||!html.includes('nativeAuth.signInWithGoogle()')||!html.includes('GoogleAuthProvider.credential(idToken)')) throw new Error('Native Google-only login bridge is missing');
-          if(!html.includes('src="./firebase-config.js"')) throw new Error('Firebase config script URL is malformed in APK bundle');
+          if(!html.includes('window.AK_FIREBASE_PUBLIC_CONFIG=Object.freeze({')||!html.includes('projectId:"ak-onlin-sales"')) throw new Error('Embedded Firebase config is missing from APK bundle');
           if(!html.includes("async function apkProvisionShopOwner(email,expiresOn,shopName,industryType)")||!html.includes("async function claimShopOwnerAccess(signedUser)")||!html.includes("async function claimStaffInvite(signedUser,code)")||!html.includes('providerId==="google.com"')) throw new Error("Google-only Owner/Shop Owner/Staff invitation flow is missing");
           if(/signInWithEmailAndPassword|createUserWithEmailAndPassword|sendPasswordResetEmail|id="password"|newPassword/.test(html)) throw new Error("Legacy Email/Password login controls remain");
           if(!html.includes('async function claimShopOwnerAccess(signedUser)')||!html.includes('db.collection("pendingOwnerInvites").doc(email)')||!html.includes("APK-only AK dark monochrome high-contrast theme")) throw new Error("APK-only Spark-compatible verified Gmail provisioning or theme patch is missing");
           if(!html.includes('await window.printSaleReceipt(saleRef.id)')||!html.includes('id="adBrand"')||!html.includes("ctx.fillText(brand.slice(0,32),540,105)")||!html.includes('activeShopName||"ဆိုင်အမည်"')) throw new Error("APK receipt auto-print or editable shop advertising brand patch is missing");
           if(!html.includes('["profile","products","sales","purchases","people","reports","ads","backup"]')||html.includes('data-tab="expenses"')||html.includes('data-tab="printer"')||!html.includes('id="printerInline"')||!html.includes('id="reportSheet"')||!html.includes('window.verifyExpense')) throw new Error('Unified report sheet, expense verification or inline printer layout is missing');
-          if(!html.includes('boot().catch(e=>{ $("customerGoogleBtn").disabled=false;$("ownerGoogleBtn").disabled=false;')) throw new Error('Google Login buttons must remain responsive when startup fails');
+          if(!html.includes('boot().catch(e=>{ $("customerGoogleBtn").disabled=true;$("ownerGoogleBtn").disabled=true;')) throw new Error('Google Login must fail closed when Firebase initialization fails');
           if(!html.includes('id="saleProductSearch"')||!html.includes('id="buyProductSearch"')||!html.includes('function refreshTransactionProductOptions')||!html.includes('Viber / Share')) throw new Error('Fast sale/purchase search or transaction Viber sharing is missing');
           if(!html.includes('id="salesSearch"')||!html.includes('id="purchasesSearch"')||!html.includes('visibleSales')||!html.includes('visiblePurchases')||!html.includes('salesSummary')||!html.includes('purchasesSummary')) throw new Error('APK spreadsheet-style searchable sales/purchase ledgers are missing');
           if(!html.includes('Array.isArray(x.lines)&&x.lines.length?x.lines.map(v=>v.name).join(" ")')||!html.includes('line.qty??x.qty??0')) throw new Error('APK multi-item sale ledger/CSV details are missing');

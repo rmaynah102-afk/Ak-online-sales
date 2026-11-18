@@ -10,6 +10,10 @@ assert(html.includes('projectId:"ak-onlin-sales"'), 'Embedded Firebase project I
 assert(html.includes('if(typeof firebase==="undefined"||!firebase.auth||!firebase.firestore)'), 'Firebase Auth and Firestore SDK must be verified before enabling login');
 assert(html.includes('customerGoogleBtn").disabled=true;$("ownerGoogleBtn").disabled=true'), 'Google login buttons must remain disabled when Firebase initialization fails');
 assert(html.includes('for(const slot of [1,2])'), 'Each shop must support exactly two Staff slots in addition to its Shop Owner');
+assert(html.includes('db.collection("shopMembers").where("shopId","==",shopId).get()'), 'Shop Owner must list only Staff linked to the current shop from Firestore');
+assert(html.includes('batch.update(memberRef,{status:"suspended",revokedAt:firebase.firestore.FieldValue.serverTimestamp()})'), 'Shop Owner must be able to revoke Staff directly in Firestore');
+assert(html.includes('batch.delete(db.collection("shopStaffSlots").doc(slotId))'), 'Revoking Staff must release the matching shop seat');
+
 assert(html.includes('const allowed={profile:owner,products:true,sales:owner||staff,purchases:owner,people:owner||staff,expenses:owner,reports:owner,printer:owner||staff,ads:owner,backup:owner}'), 'Shop Owner and Staff UI permissions must remain distinct');
 
 assert(html.includes('nativeAuth.signInWithGoogle()'), 'Android APK must use native Google sign-in');

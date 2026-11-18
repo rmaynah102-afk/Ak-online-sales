@@ -1135,8 +1135,7 @@ $("exportCsv").onclick=()=>{
  purchases.forEach(x=>{const paid=Number(x.paid||0)+payments.filter(p=>p.kind==="purchase"&&p.purchaseId===x.id).reduce((a,p)=>a+Number(p.amount||0),0);rows.push(["Purchase",x.productName,"","",x.qty,"",x.cost,x.total,paid,Math.max(0,x.total-paid),dateText(x.createdAt),x.supplier||"",shopProfile.name||activeShopName])});
  expenses.forEach(x=>rows.push(["Expense",x.name,"","","","","",x.amount,"","","",dateText(x.createdAt),"",shopProfile.name||activeShopName]));
  people.forEach(x=>rows.push(["Person",x.name,x.type,x.phone,"","","","","","","","",shopProfile.name||activeShopName]));
- const csv="\uFEFF"+rows.map(row=>row.map(v=>'"'+String(v??"").replace(/"/g,'""')+'"').join(",")).join("\r
-"),blob=new Blob([csv],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=(String(shopProfile.name||activeShopName||"Business").replace(/[^a-z0-9-_]/gi,"-").slice(0,35)||"Business")+"-POS-Backup-"+new Date().toISOString().slice(0,10)+".csv";a.click();URL.revokeObjectURL(a.href);
+ const csv="\uFEFF"+rows.map(row=>row.map(v=>'"'+String(v??"").replace(/"/g,'""')+'"').join(",")).join("\r\n"),blob=new Blob([csv],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=(String(shopProfile.name||activeShopName||"Business").replace(/[^a-z0-9-_]/gi,"-").slice(0,35)||"Business")+"-POS-Backup-"+new Date().toISOString().slice(0,10)+".csv";a.click();URL.revokeObjectURL(a.href);
 };
 
 boot().catch(e=>{ $("customerGoogleBtn").disabled=true;$("ownerGoogleBtn").disabled=true; status("စနစ်စတင်မရပါ: "+friendlyAuthError(e)); });

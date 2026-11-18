@@ -15,6 +15,12 @@ assert(html.includes('let activeReportView="all"'), 'Report view selection state
 assert(html.includes('matchesView&&(!q||'), 'Report search must work inside the selected report view');
 assert(html.includes('.report-switch button.active'), 'Report tabs must have a clear active visual state');
 assert(html.includes('function currentReportVoucherData(){'), 'Report voucher data must follow the selected report view');
+assert(html.includes('AK  •  HARDWARE & ELECTRICAL'), 'Receipt must use the new AK branded header');
+assert(html.includes('const navy="#142b45",blue="#1e496d",gold="#c99b3b"'), 'Receipt must use the readable navy, blue and gold print-friendly design');
+assert(html.includes('navigator.share({files:[file],title,text:caption})'), 'Receipt image must use the native Android share sheet when supported');
+assert(html.includes('navigator.share({title,text:caption})'), 'Receipt sharing must fall back to text sharing if image sharing is unsupported');
+assert(html.includes('AK-Voucher-'), 'Receipt image download must use the AK branded filename');
+
 assert(html.includes('const r=currentReportVoucherData();await shareVoucher(r.title,r.id,r.date,r.rows,r.total,r.paid,r.due)'), 'Online report voucher must share only the selected report type');
 assert(html.includes('const r=currentReportVoucherData();await openVoucherPrint(r.title,r.id,r.date,r.rows,r.total,r.paid,r.due)'), 'Printed report voucher must print only the selected report type');
 

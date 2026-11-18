@@ -182,6 +182,13 @@ tr:hover td{background:#151a20!important}
 details>summary{cursor:pointer;color:#edf0f3;font-weight:700;padding:8px 0}
 @media(max-width:599px){main{padding:7px}.card{padding:9px}.grid{gap:7px}.stats{gap:5px}.stat{padding:8px}.tabs button{flex:0 0 auto;font-size:12px;padding:7px 9px}.row{gap:6px}}
 
+.report-switch{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 18px}
+.report-switch button{flex:1 1 145px;min-height:44px}
+.report-switch button.active{background:var(--accent,#b78a35);color:#111827;border-color:transparent;font-weight:700}
+#tab-reports>h2{margin-bottom:6px}
+#reportSheet th{white-space:nowrap}
+#reportSearch{min-width:180px;flex:1}
+@media(max-width:560px){.report-switch{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.report-switch button{min-width:0;padding:10px 6px;font-size:13px}}
 </style>
 <!-- APK build check: report/expense verification and inline printer layout -->
 </head>
@@ -227,7 +234,13 @@ details>summary{cursor:pointer;color:#edf0f3;font-weight:700;padding:8px 0}
 <section id="tab-people" class="card hidden"><h2>ဖောက်သည် / ပေးသွင်းသူ</h2><div class="grid"><div><label>အမည်</label><input id="personName"></div><div><label>ဖုန်း</label><input id="personPhone"></div><div><label>အမျိုးအစား</label><select id="personType"><option value="customer">ဖောက်သည်</option><option value="supplier">ပေးသွင်းသူ</option></select></div></div><button id="savePerson" style="margin-top:10px">သိမ်းမည်</button><div id="peopleRows"></div></section>
 
 <section id="tab-reports" class="card hidden">
-<h2>စာရင်းချုပ် · Excel စာရင်းတစ်ခုတည်း</h2>
+<h2>အစီရင်ခံစာများ</h2>
+<div class="report-switch no-print" role="group" aria-label="အစီရင်ခံစာအမျိုးအစား">
+ <button type="button" class="secondary active" data-report-view="all">အားလုံး</button>
+ <button type="button" class="secondary" data-report-view="sales">အရောင်းအစီရင်ခံစာ</button>
+ <button type="button" class="secondary" data-report-view="purchases">အဝယ်အစီရင်ခံစာ</button>
+ <button type="button" class="secondary" data-report-view="expenses">အသုံးစရိတ်အစီရင်ခံစာ</button>
+</div>
 <section id="tradeTrendCard" class="card">
  <div class="row" style="justify-content:space-between"><div><h2 style="margin-bottom:3px">အရောင်းအဝယ် အတက်အကျဇယား</h2><span class="muted">ဤဆိုင်၏ သိမ်းဆည်းထားသော အရောင်း/အဝယ်မှတ်တမ်းများကို အခြေခံထားသည်</span></div><div class="row no-print" style="flex:0 1 auto"><button type="button" class="secondary trade-range active" data-range="7">၇ ရက်</button><button type="button" class="secondary trade-range" data-range="30">၃၀ ရက်</button><button type="button" class="secondary trade-range" data-range="12m">၁၂ လ</button></div></div>
  <div class="stats" style="margin:12px 0"><div class="stat">ကာလအတွင်း အရောင်း<b id="trendSalesTotal">0 ကျပ်</b></div><div class="stat">ကာလအတွင်း အဝယ်<b id="trendPurchasesTotal">0 ကျပ်</b></div><div class="stat">အရောင်း − အဝယ်<b id="trendDifference">0 ကျပ်</b></div></div>
@@ -235,7 +248,7 @@ details>summary{cursor:pointer;color:#edf0f3;font-weight:700;padding:8px 0}
  <div class="row" style="justify-content:center;margin-top:8px"><span class="muted"><span style="display:inline-block;width:18px;height:3px;background:#d7dce2;vertical-align:middle"></span> အရောင်း</span><span class="muted"><span style="display:inline-block;width:18px;height:3px;background:#aeb6bf;vertical-align:middle"></span> အဝယ်</span></div>
  <p id="trendChartNote" class="muted" style="margin-bottom:0">ဒေတာဖတ်နေသည်...</p>
 </section>
-<div class="notice">အရောင်း၊ အဝယ်၊ အသုံးစရိတ်နှင့် အကြွေးစာရင်းများကို ဇယားတစ်ခုတည်းတွင် ကြည့်နိုင်သည်။ အသုံးစရိတ်အသစ်ကို Verify မလုပ်မချင်း အမြတ်ထဲ မထည့်ပါ။</div>
+<div class="notice">အရောင်း၊ အဝယ်နှင့် အသုံးစရိတ်အစီရင်ခံစာများကို သီးခြားကြည့်ရှု၊ ရှာဖွေ၊ မျှဝေ၊ ပုံနှိပ်နိုင်သည်။ အသုံးစရိတ်အသစ်ကို Verify မလုပ်မချင်း အမြတ်ထဲ မထည့်ပါ။</div>
 <div class="grid no-print"><div><label>အသုံးစရိတ်အကြောင်းအရာ</label><input id="expenseName" placeholder="ဥပမာ - မီးဖိုး၊ သယ်ယူခ"></div><div><label>ငွေပမာဏ (ကျပ်)</label><input id="expenseAmount" type="number" min="1" step="1"></div></div>
 <div class="row no-print"><button id="saveExpense">အသုံးစရိတ်တင်မည် · Verify စောင့်</button><input id="reportSearch" type="search" placeholder="စာရင်းရှာရန်"></div>
 <p id="reportTotals" class="muted"></p>
@@ -710,13 +723,22 @@ function refreshTransactionProductOptions(){
  if([...buy.options].some(o=>o.value===buyValue))buy.value=buyValue;
  if(!buyPaidManuallyEdited&&buy.value){const p=products.find(x=>x.id===buy.value);if(p){$("buyCost").value=Number(p.cost||0);$("buyPaid").value=(Number($("buyQty").value)||1)*Number(p.cost||0)}}
 }
+let activeReportView="all";
+document.querySelectorAll("[data-report-view]").forEach(button=>button.addEventListener("click",()=>{
+ activeReportView=button.dataset.reportView;
+ document.querySelectorAll("[data-report-view]").forEach(x=>x.classList.toggle("active",x===button));
+ renderReportSheet();
+}));
 function renderReportSheet(){
  const q=String($("reportSearch")?.value||"").trim().toLowerCase();
  const items=[];
  sales.forEach(x=>items.push({id:x.id,date:x.createdAt,type:"အရောင်း",name:x.productName||(x.lines||[]).map(y=>y.name).join(", ")||"အရောင်း",income:Number(x.total||0),out:0,status:"မှတ်တမ်း",action:"sale"}));
  purchases.forEach(x=>items.push({id:x.id,date:x.createdAt,type:"အဝယ်",name:x.productName||"အဝယ်",income:0,out:Number(x.total||0),status:"မှတ်တမ်း",action:"purchase"}));
  expenses.forEach(x=>items.push({id:x.id,date:x.createdAt,type:"အသုံးစရိတ်",name:x.name||"အသုံးစရိတ်",income:0,out:Number(x.amount||0),status:x.verified===false?"Verify စောင့်":"အတည်ပြုပြီး",action:x.verified===false?"verify":"expense"}));
- const rows=items.filter(x=>!q||[x.type,x.name,dateText(x.date),x.status].some(v=>String(v||"").toLowerCase().includes(q)));
+ const rows=items.filter(x=>{
+ const matchesView=activeReportView==="all"||(activeReportView==="sales"&&x.action==="sale")||(activeReportView==="purchases"&&x.action==="purchase")||(activeReportView==="expenses"&&(x.action==="expense"||x.action==="verify"));
+ return matchesView&&(!q||[x.type,x.name,dateText(x.date),x.status].some(v=>String(v||"").toLowerCase().includes(q)));
+});
  rows.sort((a,b)=>{const da=a.date?.toDate?a.date.toDate():new Date(a.date||0),db=b.date?.toDate?b.date.toDate():new Date(b.date||0);return db-da});
  $("reportRows").innerHTML=rows.map(x=>'<tr><td>'+dateText(x.date)+'</td><td>'+x.type+'</td><td>'+esc(x.name)+'</td><td>'+(x.income?money(x.income):"—")+'</td><td>'+(x.out?money(x.out):"—")+'</td><td>'+esc(x.status)+'</td><td class="no-print"><button class="secondary" data-report-action="'+x.action+'" data-report-id="'+x.id+'">'+(x.action==="verify"?"Verify":"ဘောင်ချာ")+'</button></td></tr>').join("")||'<tr><td colspan="7">မှတ်တမ်းမရှိပါ</td></tr>';
  $("reportRows").querySelectorAll("[data-report-action]").forEach(b=>b.onclick=()=>{const id=b.dataset.reportId;switch(b.dataset.reportAction){case "verify":verifyExpense(id);break;case "expense":shareExpenseVoucher(id);break;case "sale":shareSaleReceipt(id);break;case "purchase":sharePurchaseVoucher(id);break;}});

@@ -9,6 +9,20 @@ import android.content.Context;
 import android.content.ClipData;
 import android.content.Intent;
 import android.net.Uri;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Rect;
+import android.graphics.pdf.PdfDocument;
+import android.os.Bundle;
+import android.os.CancellationSignal;
+import android.os.ParcelFileDescriptor;
+import android.print.PageRange;
+import android.print.PrintAttributes;
+import android.print.PrintDocumentAdapter;
+import android.print.PrintDocumentInfo;
+import android.print.PrintManager;
+import android.print.pdf.PrintedPdfDocument;
 import android.os.Build;
 import android.util.Base64;
 
@@ -276,6 +290,90 @@ public class AkPrinterPlugin extends Plugin {
         } catch (Exception e) {
             call.reject("ဘောင်ချာပုံ ပြင်ဆင်မရပါ: " + e.getMessage());
         }
+    }
+
+
+    @PluginMethod
+    public void shareCsv(PluginCall call) {
+        String encoded = call.getString("data", "");
+        String requestedName = call.getString("fileName", "AK-Sale-Export.csv");
+        if (encoded.isEmpty()) { call.reject("CSV Data မရှိပါ။"); return; }
+        final byte[] bytes;
+        try { bytes = Base64.decode(encoded, Base64.DEFAULT); }
+        catch (IllegalArgumentException e) { call.reject("CSV Base64 မမှန်ပါ။"); return; }
+        if (bytes.length == 0 || bytes.length > 10 * 1024 * 1024) { call.reject("CSV ဖိုင်အရွယ်အစား မမှန်ပါ။"); return; }
+        String safeName = requestedName.replaceAll("[^A-Za-z0-9._-]", "_");
+        if (!safeName.toLowerCase().endsWith(".csv")) safeName += ".csv";
+        final String finalName = safeName;
+        try {
+            File directory = new File(getContext().getCacheDir(), "ak-csv-share");
+            if (!directory.exists() && !directory.mkdirs()) throw new IOException("CSV folder ဖန်တီးမရပါ။");
+            File file = new File(directory, finalName);
+            try (FileOutputStream output = new FileOutputStream(file)) { output.write(bytes); output.flush(); }
+            Uri uri = FileProvider.getUriForFile(getContext(), getContext().getPackageName() + ".fileprovider", file);
+            Intent send = new Intent(Intent.ACTION_SEND);
+            send.setType("text/csv");
+            send.putExtra(Intent.EXTRA_STREAM, uri);
+            send.putExtra(Intent.EXTRA_SUBJECT, call.getString("title", "AK Sale POS CSV"));
+            send.setClipData(ClipData.newUri(getContext().getContentResolver(), finalName, uri));
+            send.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            getActivity().runOnUiThread(() -> {
+                try {
+                    Intent chooser = Intent.createChooser(send, "CSV ဖိုင်ကို သိမ်းရန် သို့မဟုတ် မျှဝေရန်");
+                    chooser.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    getActivity().startActivity(chooser);
+                    JSObject result = new JSObject(); result.put("ok", true); result.put("fileName", finalName); call.resolve(result);
+                } catch (Exception e) { call.reject("CSV Share Menu ဖွင့်မရပါ: " + e.getMessage()); }
+            });
+        } catch (Exception e) { call.reject("CSV ဖိုင်ပြင်ဆင်မရပါ: " + e.getMessage()); }
+    }
+
+    @PluginMethod
+    public void printReceiptImage(PluginCall call) {
+        String encoded = call.getString("data", "");
+        if (encoded.isEmpty()) { call.reject("ပုံ Data မရှိပါ။"); return; }
+        final Bitmap bitmap;
+        try {
+            byte[] bytes = Base64.decode(encoded, Base64.DEFAULT);
+            if (bytes.length == 0 || bytes.length > 8 * 1024 * 1024) { call.reject("ပုံဖိုင်အရွယ်အစား မမှန်ပါ။"); return; }
+            bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+            if (bitmap == null) { call.reject("ဘောက်ချာပုံ ဖတ်မရပါ။"); return; }
+        } catch (Exception e) { call.reject("ဘောက်ချာပုံ ပြင်ဆင်မရပါ: " + e.getMessage()); return; }
+        getActivity().runOnUiThread(() -> {
+            try {
+                PrintManager manager = (PrintManager) getContext().getSystemService(Context.PRINT_SERVICE);
+                if (manager == null) throw new IOException("Android Print Service မရရှိပါ။");
+                String jobName = call.getString("title", "AK Sale Receipt");
+                manager.print(jobName, new PrintDocumentAdapter() {
+                    private PrintedPdfDocument document;
+                    @Override public void onLayout(PrintAttributes oldAttributes, PrintAttributes newAttributes, CancellationSignal cancellationSignal, LayoutResultCallback callback, Bundle extras) {
+                        if (cancellationSignal.isCanceled()) { callback.onLayoutCancelled(); return; }
+                        document = new PrintedPdfDocument(getContext(), newAttributes);
+                        PrintDocumentInfo info = new PrintDocumentInfo.Builder("AK-Sale-Receipt.pdf").setContentType(PrintDocumentInfo.CONTENT_TYPE_DOCUMENT).setPageCount(1).build();
+                        callback.onLayoutFinished(info, true);
+                    }
+                    @Override public void onWrite(PageRange[] pages, ParcelFileDescriptor destination, CancellationSignal cancellationSignal, WriteResultCallback callback) {
+                        try {
+                            if (cancellationSignal.isCanceled()) { callback.onWriteCancelled(); return; }
+                            PdfDocument.Page page = document.startPage(0);
+                            Canvas canvas = page.getCanvas();
+                            Rect content = new Rect(24, 24, canvas.getWidth() - 24, canvas.getHeight() - 24);
+                            float scale = Math.min((float) content.width() / bitmap.getWidth(), (float) content.height() / bitmap.getHeight());
+                            int width = Math.max(1, Math.round(bitmap.getWidth() * scale));
+                            int height = Math.max(1, Math.round(bitmap.getHeight() * scale));
+                            int left = content.left + (content.width() - width) / 2;
+                            canvas.drawBitmap(bitmap, null, new Rect(left, content.top, left + width, content.top + height), null);
+                            document.finishPage(page);
+                            try (FileOutputStream output = new FileOutputStream(destination.getFileDescriptor())) { document.writeTo(output); output.flush(); }
+                            callback.onWriteFinished(new PageRange[]{PageRange.ALL_PAGES});
+                        } catch (Exception e) { callback.onWriteFailed(e.getMessage()); }
+                        finally { if (document != null) { document.close(); document = null; } if (!bitmap.isRecycled()) bitmap.recycle(); }
+                    }
+                    @Override public void onFinish() { if (document != null) { document.close(); document = null; } if (!bitmap.isRecycled()) bitmap.recycle(); }
+                }, new PrintAttributes.Builder().setMediaSize(PrintAttributes.MediaSize.ISO_A4).setResolution(new PrintAttributes.Resolution("ak", "AK Print", 300, 300)).setMinMargins(PrintAttributes.Margins.NO_MARGINS).build());
+                JSObject result = new JSObject(); result.put("ok", true); call.resolve(result);
+            } catch (Exception e) { if (!bitmap.isRecycled()) bitmap.recycle(); call.reject("Android Print ဖွင့်မရပါ: " + e.getMessage()); }
+        });
     }
 
     private byte[] decodePayload(PluginCall call) {

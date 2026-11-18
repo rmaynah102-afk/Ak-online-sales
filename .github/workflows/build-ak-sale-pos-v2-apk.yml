@@ -79,7 +79,7 @@ jobs:
           p = Path("www/index.html")
           s = p.read_text()
           # v2/index.html already defines the current navigation. Do not re-add removed Expenses/Printer tabs.
-          required = 'boot().catch(e=>{ $("customerGoogleBtn").disabled=true;$("ownerGoogleBtn").disabled=true; status("Firebase စနစ်စတင်မရပါ: "+friendlyAuthError(e)+" · "+(e?.message||"")); });'
+          required = 'window.akFirebaseBootPromise=boot().catch(e=>{ $("customerGoogleBtn").disabled=true;$("ownerGoogleBtn").disabled=true; status("Firebase စနစ်စတင်မရပါ: "+friendlyAuthError(e)+" · "+(e?.message||"")); throw e; }); window.akFirebaseBootPromise.catch(()=>{});'
           if required not in s:
               raise SystemExit("Firebase startup must fail closed and keep Google login disabled when initialization fails")
           if 'window.AK_FIREBASE_PUBLIC_CONFIG=Object.freeze({' not in s:
@@ -120,7 +120,7 @@ jobs:
           if(!html.includes('async function claimShopOwnerAccess(signedUser)')||!html.includes('db.collection("pendingOwnerInvites").doc(email)')||!html.includes("APK-only AK dark monochrome high-contrast theme")) throw new Error("APK-only Spark-compatible verified Gmail provisioning or theme patch is missing");
           if(!html.includes('await window.printSaleReceipt(saleRef.id)')||!html.includes('id="adBrand"')||!html.includes("ctx.fillText(brand.slice(0,32),540,105)")||!html.includes('activeShopName||"ဆိုင်အမည်"')) throw new Error("APK receipt auto-print or editable shop advertising brand patch is missing");
           if(!html.includes('["profile","products","sales","purchases","people","reports","ads","backup"]')||html.includes('data-tab="expenses"')||html.includes('data-tab="printer"')||!html.includes('id="printerInline"')||!html.includes('id="reportSheet"')||!html.includes('window.verifyExpense')) throw new Error('Unified report sheet, expense verification or inline printer layout is missing');
-          if(!html.includes('boot().catch(e=>{ $("customerGoogleBtn").disabled=true;$("ownerGoogleBtn").disabled=true;')) throw new Error('Google Login must fail closed when Firebase initialization fails');
+          if(!html.includes('window.akFirebaseBootPromise=boot().catch(')||!html.includes('if(!auth&&window.akFirebaseBootPromise)')||!html.includes('$("ownerGoogleBtn").disabled=true')) throw new Error('Google Login must wait for Firebase initialization and fail closed');
           if(!html.includes('id="saleProductSearch"')||!html.includes('id="buyProductSearch"')||!html.includes('function refreshTransactionProductOptions')||!html.includes('Viber / Share')) throw new Error('Fast sale/purchase search or transaction Viber sharing is missing');
           if(!html.includes('id="salesSearch"')||!html.includes('id="purchasesSearch"')||!html.includes('visibleSales')||!html.includes('visiblePurchases')||!html.includes('salesSummary')||!html.includes('purchasesSummary')) throw new Error('APK spreadsheet-style searchable sales/purchase ledgers are missing');
           if(!html.includes('Array.isArray(x.lines)&&x.lines.length?x.lines.map(v=>v.name).join(" ")')||!html.includes('line.qty??x.qty??0')) throw new Error('APK multi-item sale ledger/CSV details are missing');

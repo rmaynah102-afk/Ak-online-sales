@@ -21,7 +21,7 @@ button.secondary{background:#e9f0fa;color:#23456e;border:1px solid #d3dfef}butto
 .hidden{display:none!important}.muted{font-size:12px;color:var(--muted)}.notice{padding:10px;border-radius:9px;background:#fff6df;color:#6a4d12;font-size:13px;margin:8px 0}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:8px}.stat{padding:12px;border:1px solid var(--line);border-radius:12px;background:#fbfdff}.stat b{display:block;font-size:20px;color:var(--blue);overflow-wrap:anywhere}
 .tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:560px}th,td{text-align:left;padding:9px;border-bottom:1px solid var(--line);font-size:13px}th{background:#edf3fb;color:#29496e}
-#status{font-size:13px;color:var(--muted);padding:5px 0;white-space:pre-wrap}.pill{display:inline-block;background:#e7f4ed;color:#176044;padding:4px 9px;border-radius:20px;font-size:12px}
+#status{font-size:13px;color:var(--muted);padding:5px 0;white-space:pre-wrap}.pill{display:inline-block;background:#e7f4ed;color:#176044;padding:4px 9px;border-radius:20px}.offline-banner{padding:10px 12px;border-radius:10px;margin:8px 0;background:#e8f4ed;color:#176044;font-size:13px}.offline-banner.offline{background:#fff2d7;color:#75520a}
 footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
 @media(max-width:520px){main{padding:8px}header h1{font-size:17px}.card{padding:12px}.row>*{flex-basis:100%}}
 @media print{header,.tabs,.no-print,button{display:none!important}body{background:white}main{padding:0}.card{box-shadow:none;border:0}}
@@ -48,7 +48,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
 <p class="muted">အကောင့်ဖန်တီးပြီးနောက် ဆိုင်ရှင်၏ Gmail သို့ Verification Link ပို့မည်။ ငွေလက်ခံခြင်းကို App အပြင်တွင်သာ ဆောင်ရွက်ပါ။</p><div id="ownerStatus" class="muted"></div><button id="verifyOwnerBtn" class="secondary">Owner Gmail Verification Link ပြန်ပို့ရန်</button></div>
 <div class="card"><h2>ဆိုင်ရှင်စာရင်း / သက်တမ်းထိန်းချုပ်မှု</h2><div class="tablewrap"><table><thead><tr><th>ဆိုင် / Gmail</th><th>Package</th><th>သက်တမ်းကုန်ရက်</th><th>အခြေအနေ</th><th>လုပ်ဆောင်ချက်</th></tr></thead><tbody id="licenseRows"></tbody></table></div></div>
 </section>
-<section id="shopPanel" class="hidden">
+<section id="shopPanel" class="hidden"><div id="offlineBanner" class="offline-banner" role="status">အင်တာနက်အခြေအနေ စစ်ဆေးနေသည်...</div>
 <div class="card"><div class="row"><div style="flex:2"><h2 id="shopTitle">ဆိုင် Dashboard</h2><span class="pill" id="licenseBadge">Active</span></div><button id="ownerControlBtn" class="secondary hidden">Owner Control Center</button><button id="logoutShop" class="secondary">Logout</button></div>
 <div class="stats"><div class="stat">ကုန်ပစ္စည်း<b id="productCount">0</b></div><div class="stat">ယနေ့အရောင်း<b id="todaySales">0 ကျပ်</b></div><div class="stat">လက်ကျန်တန်ဖိုး<b id="stockValue">0 ကျပ်</b></div><div class="stat">ကုန်နည်း<b id="lowStock">0</b></div></div></div>
 <nav class="tabs no-print" id="tabs"><button data-tab="products" class="active">ကုန်ပစ္စည်း</button><button data-tab="sales">အရောင်း</button><button data-tab="purchases">အဝယ်</button><button data-tab="people">ဖောက်သည်/ပေးသွင်းသူ</button><button data-tab="expenses">အသုံးစရိတ်</button><button data-tab="reports">စာရင်းချုပ်</button><button data-tab="printer">Printer</button><button data-tab="ads">ကြော်ငြာ</button><button data-tab="backup">Backup</button></nav>
@@ -88,6 +88,10 @@ async function boot(){
  await Promise.all(["firebase-auth-compat.js","firebase-firestore-compat.js"].map(name=>new Promise((resolve,reject)=>{const x=document.createElement("script");x.src="https://www.gstatic.com/firebasejs/10.12.2/"+name;x.onload=resolve;x.onerror=reject;document.head.appendChild(x)})));
  if(!firebase.apps.length)firebase.initializeApp(PROJECT);
  auth=firebase.auth();db=firebase.firestore();auth.languageCode="my";
+ // Enable Firestore's persistent local cache so previously loaded shop data remains readable offline.
+ try{await db.enablePersistence({synchronizeTabs:true});window.AK_OFFLINE_CACHE=true}
+ catch(e){window.AK_OFFLINE_CACHE=false;console.warn("Firestore offline cache unavailable:",e.code||e.message)}
+ updateOfflineBanner();
  await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
  $("loginBtn").disabled=false;$("ownerGoogleBtn").disabled=false;
  auth.onAuthStateChanged(async u=>{
@@ -106,7 +110,7 @@ async function boot(){
     await loadLicenses();
    }
    else if(email.endsWith("@akstaff.app")){
-    const memberSnap=await db.collection("shopMembers").doc(u.uid).get(),member=memberSnap.data()||{};
+    const memberSnap=await getDocCached(db.collection("shopMembers").doc(u.uid)),member=memberSnap.data()||{};
     if(!memberSnap.exists||member.merchantStaff!==true||member.status!=="active"||!member.shopId){await auth.signOut();show("loginPanel");status("ဝန်ထမ်းအကောင့် ပိတ်ထားခြင်း သို့မဟုတ် မမှန်ကန်ပါ။");return}
     shopId=member.shopId;staffRole=member.role||"employee";await loadShop()
    }else{shopId=u.uid;staffRole="owner";await loadShop()}
@@ -248,7 +252,11 @@ $("refreshStaffBtn").onclick=loadMerchantStaff;
 window.removeMerchantStaff=async uid=>{if(!confirm("ဤဝန်ထမ်းအကောင့်ကို ပိတ်မလား။"))return;try{await staffGateway("/staff/revoke",{memberUid:uid});await loadMerchantStaff();$("staffStatus").textContent="ဝန်ထမ်းအကောင့် ပိတ်ပြီးပါပြီ။"}catch(e){$("staffStatus").textContent="ပိတ်မရပါ: "+errText(e)}};
 
 const col=name=>db.collection("shops").doc(shopId).collection("pos").doc(name).collection("records");
-async function getRows(name){const s=await col(name).get();return s.docs.map(d=>({id:d.id,...d.data()}))}
+async function getDocCached(ref){try{return await ref.get()}catch(networkError){return await ref.get({source:"cache"})}}
+async function getRows(name){const ref=col(name);let snap;try{snap=await ref.get()}catch(networkError){snap=await ref.get({source:"cache"})}return snap.docs.map(d=>({id:d.id,...d.data()}))}
+function updateOfflineBanner(){const el=$("offlineBanner");if(!el)return;const online=navigator.onLine!==false;el.classList.toggle("offline",!online);el.textContent=online?"Online · ဒေတာများ Cloud နှင့် ချိတ်ဆက်နေသည်":"Offline · စာရင်းများကို ဖုန်းထဲတွင် ယာယီသိမ်းမည်။ အင်တာနက်ပြန်ရလျှင် Sync လုပ်မည်။"}
+window.addEventListener("online",updateOfflineBanner);window.addEventListener("offline",updateOfflineBanner);
+function queueOfflineBatch(batch,label){batch.commit().then(()=>{if(navigator.onLine!==false)status(label+" Cloud သို့ Sync ပြီးပါပြီ")}).catch(e=>{console.error("AK offline sync failed",e);status(label+" Sync မအောင်မြင်ပါ: "+errText(e))})}
 async function loadShop(){
  const platformOwner=isPlatformOwner();
  if(platformOwner){
@@ -256,7 +264,7 @@ async function loadShop(){
   $("licenseBadge").textContent="Platform Owner · ကိုယ်ပိုင်ဆိုင်";
   $("ownerControlBtn").classList.remove("hidden");
  }else{
-  const lic=await db.collection("licenses").doc(shopId).get();
+  const lic=await getDocCached(db.collection("licenses").doc(shopId));
   if(!lic.exists||lic.data().status!=="active"||!lic.data().expiresAt||lic.data().expiresAt.toDate()<=new Date())throw Error("ဆိုင်သက်တမ်းကုန်နေပါသည်။ Platform Owner ထံ သက်တမ်းတိုးရန် ဆက်သွယ်ပါ။");
   $("shopTitle").textContent=lic.data().shopName||"ဆိုင် Dashboard";
   $("licenseBadge").textContent="သက်တမ်းကုန်ရက် "+dateText(lic.data().expiresAt);
@@ -264,7 +272,7 @@ async function loadShop(){
  }
  show("shopPanel");$("userBadge").textContent=platformOwner?"Platform Owner · POS":staffRole==="owner"?"ဆိုင်ရှင်":("ဝန်ထမ်း · "+staffRole);
  printerRender();applyRoleUI();
- if(staffRole==="owner"&&!platformOwner)await loadMerchantStaff();
+ if(staffRole==="owner"&&!platformOwner)await loadMerchantStaff().catch(e=>{console.warn("Staff list unavailable offline",e);status("Offline ဖြစ်နေသဖြင့် ဝန်ထမ်းစာရင်းကို ယခုမဖတ်နိုင်ပါ")});
  await reloadAll();
 }
 async function reloadAll(){const manager=staffRole==="owner"||staffRole==="manager",cashier=staffRole==="cashier";products=await getRows("products");sales=(manager||cashier)?await getRows("sales"):[];purchases=manager?await getRows("purchases"):[];people=(manager||cashier)?await getRows("people"):[];expenses=manager?await getRows("expenses"):[];if(manager){const [costs,saleCostRows]=await Promise.all([getRows("productCosts"),getRows("saleCosts")]);const costMap=new Map(costs.map(x=>[x.id,x.cost||0])),saleCostMap=new Map(saleCostRows.map(x=>[x.id,x]));products=products.map(p=>({...p,cost:costMap.get(p.id)||0}));sales=sales.map(x=>({...x,cost:saleCostMap.get(x.id)?.cost||0,profit:saleCostMap.get(x.id)?.profit||0}))}else{products=products.map(p=>({...p,cost:0}));sales=sales.map(x=>({...x,cost:0,profit:0}))}renderAll()}
@@ -290,38 +298,25 @@ $("saveSale").onclick=async()=>{
  try{
   const selectedId=$("saleProduct").value,qty=Number($("saleQty").value),priceType=$("salePriceType").value,payType=$("salePay").value;
   if(!selectedId||!Number.isInteger(qty)||qty<1)throw Error("ပစ္စည်းနှင့် အရေအတွက် မှန်ကန်စွာရွေးပါ");
-  const saleRef=col("sales").doc(),productRef=col("products").doc(selectedId),costRef=col("productCosts").doc(selectedId),saleCostRef=col("saleCosts").doc(saleRef.id);
-  await db.runTransaction(async tx=>{
-   const productSnap=await tx.get(productRef);
-   if(!productSnap.exists)throw Error("ပစ္စည်းမတွေ့ပါ");
-   const p=productSnap.data(),stock=Number(p.stock||0);
-   if(qty>stock)throw Error("လက်ကျန်မလုံလောက်ပါ။ လက်ရှိလက်ကျန်: "+stock);
-   let cost=0;
-   if(staffRole==="owner"||staffRole==="manager"){const costSnap=await tx.get(costRef);cost=Number(costSnap.data()?.cost||0)}
-   const price=priceType==="wholesale"?Number(p.wholesale||0):Number(p.retail||0);
-   const total=price*qty;
-   const paid=payType==="cash"?total:payType==="credit"?0:Math.min(total,Math.max(0,Number($("salePaid").value)||0));
-   tx.update(productRef,{stock:stock-qty});
-   tx.set(saleRef,{productId:selectedId,productName:p.name,qty,price,total,paid,due:total-paid,customer:$("saleCustomer").value.trim(),payment:payType,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
-   if(staffRole==="owner"||staffRole==="manager")tx.set(saleCostRef,{cost:cost*qty,profit:(price-cost)*qty});
-  });
-  await reloadAll();
+  const p=products.find(x=>x.id===selectedId);if(!p)throw Error("ပစ္စည်းစာရင်းကို Offline Cache မှ မရနိုင်ပါ။ အင်တာနက်ရှိစဉ် ပစ္စည်းစာရင်းကို အရင်ဖွင့်ထားပါ");
+  const stock=Number(p.stock||0);if(qty>stock)throw Error("လက်ကျန်မလုံလောက်ပါ။ လက်ရှိဖုန်းတွင် သိမ်းထားသောလက်ကျန်: "+stock);
+  const cost=Number(p.cost||0),price=priceType==="wholesale"?Number(p.wholesale||0):Number(p.retail||0),total=price*qty;
+  const paid=payType==="cash"?total:payType==="credit"?0:Math.min(total,Math.max(0,Number($("salePaid").value)||0));
+  const batch=db.batch();batch.update(productRef,{stock:stock-qty});
+  batch.set(saleRef,{productId:selectedId,productName:p.name,qty,price,total,paid,due:total-paid,customer:$("saleCustomer").value.trim(),payment:payType,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+  if(staffRole==="owner"||staffRole==="manager")batch.set(saleCostRef,{cost:cost*qty,profit:(price-cost)*qty});
+  queueOfflineBatch(batch,"အရောင်း");await reloadAll();
  }catch(e){alert(errText(e))}
 };
 $("savePurchase").onclick=async()=>{
  try{
   const selectedId=$("buyProduct").value,qty=Number($("buyQty").value),cost=Number($("buyCost").value),supplier=$("buySupplier").value.trim();
   if(!selectedId||!Number.isInteger(qty)||qty<1||!Number.isFinite(cost)||cost<0)throw Error("အဝယ်အချက်အလက် မမှန်ပါ");
-  const purchaseRef=col("purchases").doc(),productRef=col("products").doc(selectedId),costRef=col("productCosts").doc(selectedId);
-  await db.runTransaction(async tx=>{
-   const productSnap=await tx.get(productRef);
-   if(!productSnap.exists)throw Error("ပစ္စည်းမတွေ့ပါ");
-   const p=productSnap.data();
-   tx.update(productRef,{stock:Number(p.stock||0)+qty});
-   tx.set(costRef,{cost});
-   tx.set(purchaseRef,{productId:selectedId,productName:p.name,qty,cost,total:qty*cost,supplier,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
-  });
-  await reloadAll();
+  const p=products.find(x=>x.id===selectedId);if(!p)throw Error("ပစ္စည်းစာရင်းကို Offline Cache မှ မရနိုင်ပါ။ အင်တာနက်ရှိစဉ် ပစ္စည်းစာရင်းကို အရင်ဖွင့်ထားပါ");
+  const purchaseRef=col("purchases").doc(),productRef=col("products").doc(selectedId),costRef=col("productCosts").doc(selectedId),batch=db.batch();
+  batch.update(productRef,{stock:Number(p.stock||0)+qty});batch.set(costRef,{cost});
+  batch.set(purchaseRef,{productId:selectedId,productName:p.name,qty,cost,total:qty*cost,supplier,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+  queueOfflineBatch(batch,"အဝယ်");await reloadAll();
  }catch(e){alert(errText(e))}
 };
 $("savePerson").onclick=async()=>{try{if(!$("personName").value.trim())throw Error("အမည်ဖြည့်ပါ");await col("people").add({name:$("personName").value.trim(),phone:$("personPhone").value.trim(),type:$("personType").value,createdAt:firebase.firestore.FieldValue.serverTimestamp()});await reloadAll()}catch(e){alert(errText(e))}};
@@ -497,5 +492,5 @@ $("exportCsv").onclick=()=>{
 };
 
 boot().catch(e=>{ $("loginBtn").disabled=true;$("ownerGoogleBtn").disabled=true; status("စနစ်စတင်မရပါ: "+friendlyAuthError(e)); });
-if("serviceWorker" in navigator)navigator.serviceWorker.register("./sw.js").catch(()=>{});
+if("serviceWorker" in navigator)navigator.serviceWorker.register("./sw.js").then(()=>updateOfflineBanner()).catch(e=>console.warn("Offline app shell cache unavailable",e));
 </script></body></html>

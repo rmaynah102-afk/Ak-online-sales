@@ -71,3 +71,7 @@ assert(html.includes('id="akNetworkStatus"') && html.includes('Offline · သိ
 assert(html.includes('အင်တာနက်ပြန်ရလျှင် Firestore က စောင့်ဆိုင်းနေသောပြောင်းလဲမှုများကို Sync လုပ်မည်'), 'Offline queued writes must communicate reconnect synchronization');
 
 console.log('PASS: Google-only Owner, Shop Owner and Staff authentication; exact invitations; single-use Staff code; role isolation.');
+
+assert(html.includes('$("logoutOwner").onclick=akLogout') && html.includes('$("logoutShop").onclick=akLogout'), 'Logout buttons must call Firebase signOut');
+assert(html.includes('native.shareCsv({data,fileName:filename,title:"AK Sale POS CSV"})'), 'Android CSV export must use native share sheet');
+assert(html.includes('native.printReceiptImage({data,fileName:"AK-Receipt-"'), 'Android receipt print must use native Print Framework bridge');

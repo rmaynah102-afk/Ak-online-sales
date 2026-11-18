@@ -682,6 +682,21 @@ function refreshTransactionProductOptions(){
  if([...buy.options].some(o=>o.value===buyValue))buy.value=buyValue;
  if(!buyPaidManuallyEdited&&buy.value){const p=products.find(x=>x.id===buy.value);if(p){$("buyCost").value=Number(p.cost||0);$("buyPaid").value=(Number($("buyQty").value)||1)*Number(p.cost||0)}}
 }
+function renderReportSheet(){
+ const q=String($("reportSearch")?.value||"").trim().toLowerCase();
+ const items=[];
+ sales.forEach(x=>items.push({id:x.id,date:x.createdAt,type:"အရောင်း",name:x.productName||(x.lines||[]).map(y=>y.name).join(", ")||"အရောင်း",income:Number(x.total||0),out:0,status:"မှတ်တမ်း",action:"sale"}));
+ purchases.forEach(x=>items.push({id:x.id,date:x.createdAt,type:"အဝယ်",name:x.productName||"အဝယ်",income:0,out:Number(x.total||0),status:"မှတ်တမ်း",action:"purchase"}));
+ expenses.forEach(x=>items.push({id:x.id,date:x.createdAt,type:"အသုံးစရိတ်",name:x.name||"အသုံးစရိတ်",income:0,out:Number(x.amount||0),status:x.verified===false?"Verify စောင့်":"အတည်ပြုပြီး",action:x.verified===false?"verify":"expense"}));
+ const rows=items.filter(x=>!q||[x.type,x.name,dateText(x.date),x.status].some(v=>String(v||"").toLowerCase().includes(q)));
+ rows.sort((a,b)=>{const da=a.date?.toDate?a.date.toDate():new Date(a.date||0),db=b.date?.toDate?b.date.toDate():new Date(b.date||0);return db-da});
+ $("reportRows").innerHTML=rows.map(x=>'<tr><td>'+dateText(x.date)+'</td><td>'+x.type+'</td><td>'+esc(x.name)+'</td><td>'+(x.income?money(x.income):"—")+'</td><td>'+(x.out?money(x.out):"—")+'</td><td>'+esc(x.status)+'</td><td class="no-print"><button class="secondary" data-report-action="'+x.action+'" data-report-id="'+x.id+'">'+(x.action==="verify"?"Verify":"ဘောင်ချာ")+'</button></td></tr>').join("")||'<tr><td colspan="7">မှတ်တမ်းမရှိပါ</td></tr>';
+ $("reportRows").querySelectorAll("[data-report-action]").forEach(b=>b.onclick=()=>{const id=b.dataset.reportId;switch(b.dataset.reportAction){case "verify":verifyExpense(id);break;case "expense":shareExpenseVoucher(id);break;case "sale":shareSaleReceipt(id);break;case "purchase":sharePurchaseVoucher(id);break;}});
+ const si=sales.reduce((n,x)=>n+Number(x.total||0),0),po=purchases.reduce((n,x)=>n+Number(x.total||0),0),ve=expenses.filter(x=>x.verified!==false).reduce((n,x)=>n+Number(x.amount||0),0),pe=expenses.filter(x=>x.verified===false).reduce((n,x)=>n+Number(x.amount||0),0);
+ $("reportTotals").textContent="အရောင်း "+money(si)+" · အဝယ် "+money(po)+" · အတည်ပြုပြီးအသုံးစရိတ် "+money(ve)+" · Verify စောင့် "+money(pe);
+ $("reportFoot").innerHTML='<tr><th colspan="3">စုစုပေါင်း</th><th>'+money(si)+'</th><th>'+money(po+ve)+'</th><th colspan="2">Verify စောင့် '+money(pe)+'</th></tr>';
+}
+$("reportSearch").oninput=renderReportSheet;
 function renderAll(){
  const salesQuery=String($("salesSearch")?.value||"").trim().toLowerCase();
  const purchasesQuery=String($("purchasesSearch")?.value||"").trim().toLowerCase();
@@ -713,13 +728,11 @@ function renderAll(){
  $("purchaseRows").querySelectorAll("[data-purchase-pay]").forEach(b=>b.onclick=()=>paySupplier(b.dataset.purchasePay));
  $("purchaseRows").querySelectorAll("[data-purchase-voucher]").forEach(b=>b.onclick=()=>sharePurchaseVoucher(b.dataset.purchaseVoucher));
  $("peopleRows").innerHTML=people.map(x=>'<p>'+esc(x.name)+' · '+esc(x.phone||"")+' · '+esc(x.type)+'</p>').join("");
- $("expenseRows").innerHTML=expenses.map(x=>'<p>'+esc(x.name)+' · '+money(x.amount)+' · '+dateText(x.createdAt)+' <button class="secondary" data-expense-voucher="'+x.id+'">Viber / Share</button></p>').join("");
- $("expenseRows").querySelectorAll("[data-expense-voucher]").forEach(b=>b.onclick=()=>shareExpenseVoucher(b.dataset.expenseVoucher));
- const totalSales=sales.reduce((a,x)=>a+x.total,0),totalPurch=purchases.reduce((a,x)=>a+x.total,0),totalExp=expenses.reduce((a,x)=>a+x.amount,0);
+ renderReportSheet();
+ const totalSales=sales.reduce((a,x)=>a+x.total,0),totalPurch=purchases.reduce((a,x)=>a+x.total,0),totalExp=expenses.filter(x=>x.verified!==false).reduce((a,x)=>a+x.amount,0);
  const debt=sales.reduce((a,x)=>a+Math.max(0,Number(x.total||0)-Number(x.paid||0)-payments.filter(p=>p.kind==="sale"&&p.saleId===x.id).reduce((z,p)=>z+Number(p.amount||0),0)),0);
  const payable=purchases.reduce((a,x)=>a+Math.max(0,Number(x.total||0)-Number(x.paid||0)-payments.filter(p=>p.kind==="purchase"&&p.purchaseId===x.id).reduce((z,p)=>z+Number(p.amount||0),0)),0);
  const profit=sales.reduce((a,x)=>a+(x.profit||0),0)-totalExp;
- $("reportSales").textContent=money(totalSales);$("reportPurchases").textContent=money(totalPurch);$("reportExpenses").textContent=money(totalExp);$("reportProfit").textContent=money(profit);$("reportDebt").textContent=money(debt);$("reportPayable").textContent=money(payable);
  renderTradeTrend();
 }
 async function compressProductPhoto(file){
@@ -864,7 +877,8 @@ async function paySupplier(id){
 }
 window.collectSalePayment=collectSalePayment;window.paySupplier=paySupplier;
 $("savePerson").onclick=async()=>{try{if(!$("personName").value.trim())throw Error("အမည်ဖြည့်ပါ");await col("people").add({name:$("personName").value.trim(),phone:$("personPhone").value.trim(),type:$("personType").value,createdAt:firebase.firestore.FieldValue.serverTimestamp()});await reloadAll()}catch(e){alert(errText(e))}};
-$("saveExpense").onclick=async()=>{try{if(!$("expenseName").value.trim()||+$("expenseAmount").value<=0)throw Error("အချက်အလက် ဖြည့်ပါ");await col("expenses").add({name:$("expenseName").value.trim(),amount:+$("expenseAmount").value,createdAt:firebase.firestore.FieldValue.serverTimestamp()});await reloadAll()}catch(e){alert(errText(e))}};
+$("saveExpense").onclick=async()=>{try{if(staffRole!=="owner")throw Error("ဆိုင်ရှင်သာ အသုံးစရိတ်တင်နိုင်သည်။");const name=$("expenseName").value.trim(),amount=Number($("expenseAmount").value);if(!name||!Number.isFinite(amount)||amount<=0)throw Error("အကြောင်းအရာနှင့် ငွေပမာဏ ဖြည့်ပါ");await col("expenses").add({name,amount,verified:false,createdBy:user.uid,createdAt:firebase.firestore.FieldValue.serverTimestamp()});$("expenseName").value="";$("expenseAmount").value="";await reloadAll();alert("အသုံးစရိတ်တင်ပြီးပါပြီ။ စာရင်းချုပ်ဇယားတွင် Verify လုပ်ပါ။")}catch(e){alert(errText(e))}};
+window.verifyExpense=async id=>{try{if(staffRole!=="owner")throw Error("ဆိုင်ရှင်သာ Verify လုပ်နိုင်သည်။");const x=expenses.find(v=>v.id===id);if(!x||x.verified===true)return;await col("expenses").doc(id).update({verified:true,verifiedAt:firebase.firestore.FieldValue.serverTimestamp(),verifiedBy:user.uid});await reloadAll()}catch(e){alert(errText(e))}};
 $("tabs").onclick=e=>{const b=e.target.closest("button[data-tab]");if(!b)return;document.querySelectorAll("#tabs button").forEach(x=>x.classList.toggle("active",x===b));["profile","products","sales","purchases","people","reports","ads","backup"].forEach(t=>$("tab-"+t).classList.toggle("hidden",t!==b.dataset.tab))};
 function downloadAkBackup(){
  const payload={schemaVersion:2,createdAt:new Date().toISOString(),products,sales,purchases,people,expenses,payments};

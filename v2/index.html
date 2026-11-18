@@ -487,11 +487,13 @@ $("createShopBtn").onclick=async()=>{
  finally{$("createShopBtn").disabled=false;}
 };
 async function getPlatformUserRows(){
- const [licenseSnap,inviteSnap]=await Promise.all([db.collection("licenses").get(),db.collection("pendingOwnerInvites").get()]);
+ const [licenseSnap,inviteSnap,betaSnap]=await Promise.all([db.collection("licenses").get(),db.collection("pendingOwnerInvites").get(),db.collection("freeBetaUsers").get()]);
  const registered=licenseSnap.docs.map(d=>({uid:d.id,...d.data(),isInvitation:false}));
  const emails=new Set(registered.map(x=>String(x.email||"").toLowerCase()));
+ const beta=betaSnap.docs.map(d=>({uid:"beta:"+d.id,...d.data(),isBeta:true})).filter(x=>!emails.has(String(x.email||"").toLowerCase()));
+ beta.forEach(x=>emails.add(String(x.email||"").toLowerCase()));
  const invites=inviteSnap.docs.map(d=>({uid:"invite:"+d.id,email:d.id,...d.data(),isInvitation:true})).filter(x=>["pending","suspended"].includes(x.status)&&!emails.has(String(x.email||"").toLowerCase()));
- return [...registered,...invites].filter(x=>String(x.email||"").toLowerCase()!==OWNER);
+ return [...registered,...beta,...invites].filter(x=>String(x.email||"").toLowerCase()!==OWNER);
 }
 async function loadLicenses(){
  const items=await getPlatformUserRows();licenses=items.filter(x=>!x.isInvitation).map(x=>({...x,id:x.uid}));$("shopCount").textContent=items.length;
@@ -499,7 +501,7 @@ async function loadLicenses(){
   const id=String(x.uid||""),locked=x.status==="suspended"||x.disabled;
   const expiry=x.expiresAt?.toDate?dateText(x.expiresAt):x.expiresAt?dateText(new Date(x.expiresAt)):"မသတ်မှတ်ရသေး";
   const state=x.isInvitation?(locked?"Invitation ပိတ်ထား":"Gmail ဖိတ်ကြားထား"):x.status;
-  const actions=x.isInvitation?`<button class="danger" onclick="changePlatformUserAccess('${esc(id)}','${locked?"reactivate":"suspend"}')">${locked?"ပြန်ဖွင့်":"ပိတ်"}</button>`:`<button class="secondary" onclick="renewLicense('${esc(id)}')">သက်တမ်းတိုး</button> <button class="danger" onclick="toggleLicense('${esc(id)}')">${locked?"ပြန်ဖွင့်":"ပိတ်"}</button>`;
+  const actions=(x.isInvitation||x.isBeta)?'<button class="danger" onclick="changePlatformUserAccess(\''+esc(id)+'\',\''+(locked?"reactivate":"suspend")+'\')">'+(locked?"ပြန်ဖွင့်":"ပိတ်")+'</button>':'<button class="secondary" onclick="renewLicense(\''+esc(id)+'\')">သက်တမ်းတိုး</button> <button class="danger" onclick="toggleLicense(\''+esc(id)+'\')">'+(locked?"ပြန်ဖွင့်":"ပိတ်")+'</button>';
   return `<tr><td><b>${esc(x.shopName||"ဆိုင်")}</b><br>${esc(x.email||id)}</td><td>${esc(x.plan||"-")}</td><td>${esc(expiry)}</td><td>${esc(state)}</td><td>${actions}</td></tr>`;
  }).join("")||'<tr><td colspan="5">ဆိုင်အကောင့် မရှိသေးပါ</td></tr>';
 }
@@ -536,7 +538,8 @@ window.changePlatformUserAccess=async(uid,action)=>{
  if(!confirm(promptText))return;
  try{
   $("platformUsersStatus").textContent="အကောင့်အခြေအနေ ပြောင်းနေသည်...";await assertVerifiedPlatformOwner();
-  if(String(uid).startsWith("invite:")){
+  if(String(uid).startsWith("beta:")){const betaUid=String(uid).slice(5),ref=db.collection("freeBetaUsers").doc(betaUid),snap=await ref.get();if(!snap.exists)throw Error("Free Beta အကောင့် မတွေ့ပါ။");await ref.update({status:action==="suspend"?"disabled":"active"});}
+  else if(String(uid).startsWith("invite:")){
    const email=String(uid).slice(7),ref=db.collection("pendingOwnerInvites").doc(email),snap=await ref.get();if(!snap.exists)throw Error("Invitation မတွေ့ပါ။");
    if(action==="reactivate"&&snap.data().expiresAt?.toDate()<=new Date())throw Error("Invitation သက်တမ်းကုန်နေသည်။ အသစ်ဖန်တီးပါ။");
    await ref.update({status:action==="suspend"?"suspended":"pending",updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
@@ -619,7 +622,7 @@ async function loadShop(){
  if(staffRole==="owner"&&!platformOwner)await loadMerchantStaff();
  await reloadAll();
 }
-async function reloadAll(){const owner=staffRole==="owner",staff=staffRole==="employee";products=await getRows("products");sales=(owner||staff)?await getRows("sales"):[];purchases=owner?await getRows("purchases"):[];people=(owner||staff)?await getRows("people"):[];expenses=owner?await getRows("expenses"):[];payments=(owner||staff)?await getRows("payments"):[];if(owner){const [costs,saleCostRows]=await Promise.all([getRows("productCosts"),getRows("saleCosts")]);const costMap=new Map(costs.map(x=>[x.id,x.cost||0])),saleCostMap=new Map(saleCostRows.map(x=>[x.id,x]));products=products.map(p=>({...p,cost:costMap.get(p.id)||0}));sales=sales.map(x=>({...x,cost:saleCostMap.get(x.id)?.cost||0,profit:saleCostMap.get(x.id)?.profit||0}))}else{products=products.map(p=>({...p,cost:0}));sales=sales.map(x=>({...x,cost:0,profit:0}))}renderAll()}
+async function reloadAll(){const owner=staffRole==="owner",staff=staffRole==="employee";const names=["products",...(owner||staff?["sales","people","payments"]:[]),...(owner?["purchases","expenses","productCosts","saleCosts"]:[])];const data=await Promise.all(names.map(getRows));const byName=Object.fromEntries(names.map((n,i)=>[n,data[i]]));products=byName.products||[];sales=byName.sales||[];purchases=byName.purchases||[];people=byName.people||[];expenses=byName.expenses||[];payments=byName.payments||[];if(owner){const costMap=new Map((byName.productCosts||[]).map(x=>[x.id,x.cost||0])),saleCostMap=new Map((byName.saleCosts||[]).map(x=>[x.id,x]));products=products.map(p=>({...p,cost:costMap.get(p.id)||0}));sales=sales.map(x=>({...x,cost:saleCostMap.get(x.id)?.cost||0,profit:saleCostMap.get(x.id)?.profit||0}))}else{products=products.map(p=>({...p,cost:0}));sales=sales.map(x=>({...x,cost:0,profit:0}))}renderAll()}
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 let productPage=1;
 function filteredProducts(){const q=String($("productSearch")?.value||"").trim().toLowerCase();return products.filter(p=>!q||[p.name,p.sku,p.category].some(v=>String(v||"").toLowerCase().includes(q)))}

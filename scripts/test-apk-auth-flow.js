@@ -32,7 +32,7 @@ assert(html.includes('async function claimShopOwnerAccess(signedUser)'), 'Shop O
 assert(html.includes('providerId==="google.com"'), 'Shop Owner must authenticate with Google provider');
 assert(html.includes('async function claimStaffInvite(signedUser,code)'), 'Staff must claim one-time Merchant Code after Google sign-in');
 assert(html.includes('db.collection("shopInvites").doc(code)'), 'Staff invitation must be stored in Firestore');
-assert(html.includes('^[A-F0-9]{32}$'), 'Staff Merchant Code must be 32 uppercase hexadecimal characters');
+assert(html.includes('^[0-9]{8}$'), 'Staff Merchant Code must be 8 numeric digits');
 assert(html.includes('24*60*60*1000'), 'Staff Merchant Code must expire after 24 hours');
 assert(html.includes('merchantStaff:true'), 'Staff membership must be marked for Owner control');
 assert(html.includes('staffRole="employee"'), 'All employee accounts must map to the single Staff role');
@@ -47,6 +47,6 @@ assert(rules.includes('match /pendingOwnerInvites/{emailKey}'), 'Shop Owner invi
 assert(rules.includes("request.resource.data.plan == 'owner-managed'"), 'Shop Owner claim must create owner-managed license');
 assert(rules.includes("request.resource.data.status == 'claimed'"), 'Shop Owner invitation must be single-use');
 assert(rules.includes('match /shopInvites/{code}'), 'Staff invitation rules are required');
-assert(rules.includes('request.resource.data.inviteCode.size() == 32'), 'Staff membership must require a 32-character code');
+assert(rules.includes('request.resource.data.inviteCode.size() == 8'), 'Staff membership must require a 8-digit numeric code');
 assert(rules.includes("request.resource.data.role == 'employee'"), 'Staff role must be the only employee role');
 console.log('PASS: Google-only Owner, Shop Owner and Staff authentication; exact invitations; single-use Staff code; role isolation.');

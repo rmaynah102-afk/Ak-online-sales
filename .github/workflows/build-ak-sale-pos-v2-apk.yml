@@ -89,6 +89,8 @@ jobs:
           if(config.appId!=='com.ak.hardware.sales'||config.plugins?.FirebaseAuthentication?.providers?.includes('google.com')!==true) throw new Error('Capacitor Android package or Google provider config is invalid');
           console.log('Validated',scripts.length,'inline script block(s), Owner Google login and Owner POS contract');
           NODE
+      - name: Validate offline service worker JavaScript
+        run: node --check v2/sw.js
       - name: Validate native printer installer
         run: node --check scripts/install-native-printer.js
       - name: Generate Android project

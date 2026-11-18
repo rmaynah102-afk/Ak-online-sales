@@ -1085,29 +1085,51 @@ async function loadShopProfile(){try{const snap=await shopProfileRef().get();sho
 $("saveShopProfile").onclick=async()=>{try{const name=$("profileName").value.trim();if(!name)throw Error("လုပ်ငန်းအမည် ဖြည့်ပါ");shopProfile={name,type:$("profileType").value.trim(),phone:$("profilePhone").value.trim(),address:$("profileAddress").value.trim(),theme:$("profileTheme").value,footer:$("profileFooter").value.trim()};await shopProfileRef().set({...shopProfile,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});activeShopName=name;$("shopTitle").textContent=name;$("profileStatus").textContent="ဆိုင်အချက်အလက် သိမ်းပြီးပါပြီ။"}catch(e){$("profileStatus").textContent="မသိမ်းနိုင်ပါ: "+errText(e)}};
 function voucherPalette(){return ({blue:["#102c55","#2563a6","#e8c56a"],green:["#123b2a","#1e6045","#e8c56a"],purple:["#45205f","#8b4bb0","#f0a6ca"],red:["#70231e","#c44a32","#ffc078"],teal:["#07545a","#16858a","#b9eee5"]})[shopProfile.theme||"blue"]}
 function voucherCanvas(title,number,date,rows,total,paid,due){
- const c=document.createElement("canvas");c.width=900;c.height=Math.max(760,590+rows.length*66);const x=c.getContext("2d");
- const gold="#d9b45b",gold2="#f2d991",ink="#090a0d",panel="#15171c",line="#5b4a28",white="#f5f1e7";
- x.fillStyle=ink;x.fillRect(0,0,c.width,c.height);
- x.strokeStyle=gold;x.lineWidth=4;x.strokeRect(18,18,864,c.height-36);
- x.fillStyle=panel;x.fillRect(32,32,836,260);
- x.textAlign="center";x.fillStyle=gold;x.font="bold 28px Arial,sans-serif";x.fillText("A K",450,78);
- x.fillStyle=gold2;x.font="bold 42px system-ui,'Noto Sans Myanmar',sans-serif";x.fillText((shopProfile.name||activeShopName||"လုပ်ငန်းအမည်").slice(0,34),450,140);
- x.fillStyle=white;x.font="22px system-ui,'Noto Sans Myanmar',sans-serif";x.fillText([shopProfile.type,shopProfile.phone].filter(Boolean).join("  |  ").slice(0,64),450,184);
- if(shopProfile.address)x.fillText(String(shopProfile.address).slice(0,70),450,220);
- x.fillStyle=gold;x.font="bold 34px system-ui,'Noto Sans Myanmar',sans-serif";x.fillText(title,450,270);
- x.textAlign="left";x.fillStyle=gold2;x.font="22px system-ui,'Noto Sans Myanmar',sans-serif";
- x.fillText("ဘောင်ချာအမှတ်",58,346);x.textAlign="right";x.fillText(String(number||"-").slice(-24),842,346);
- x.textAlign="left";x.fillText("ရက်စွဲ",58,388);x.textAlign="right";x.fillText(String(date||"-"),842,388);
- let y=446;
- x.fillStyle=gold;x.fillRect(48,y-34,804,48);x.fillStyle=ink;x.font="bold 22px system-ui,'Noto Sans Myanmar',sans-serif";x.textAlign="left";x.fillText(title==="အရောင်းဘောင်ချာ"?"ပစ္စည်း / ဖောက်သည်":title==="အဝယ်ဘောင်ချာ"?"ပစ္စည်း / ပေးသွင်းသူ":"စာရင်းအမျိုးအစား",64,y-2);x.textAlign="right";x.fillText("အရေအတွက် / ငွေ",832,y-2);y+=48;
- rows.forEach((r,i)=>{x.fillStyle=i%2?panel:"#101216";x.fillRect(48,y-30,804,54);x.fillStyle=white;x.font="22px system-ui,'Noto Sans Myanmar',sans-serif";x.textAlign="left";x.fillText(String(r[0]||"").slice(0,38),64,y+4);x.textAlign="right";x.fillStyle=gold2;x.fillText(String(r[1]||"").slice(0,34),832,y+4);y+=62});
- y+=24;x.strokeStyle=gold;x.lineWidth=2;x.beginPath();x.moveTo(48,y-14);x.lineTo(852,y-14);x.stroke();
- const summary=(label,value,color)=>{x.textAlign="left";x.fillStyle=color;x.font="bold 25px system-ui,'Noto Sans Myanmar',sans-serif";x.fillText(label,64,y+22);x.textAlign="right";x.fillText(money(value),832,y+22);y+=54};
- summary("စုစုပေါင်း",total,gold2);summary("ပေးချေပြီး",paid,white);summary("ကျန်ငွေ",due,due>0?"#ff8c82":gold2);
- x.fillStyle=gold;x.fillRect(48,c.height-112,804,2);x.fillStyle=gold2;x.textAlign="center";x.font="22px system-ui,'Noto Sans Myanmar',sans-serif";x.fillText((shopProfile.footer||"အားပေးမှုအတွက် ကျေးဇူးတင်ပါသည်").slice(0,70),450,c.height-66);
+ const c=document.createElement("canvas");c.width=900;c.height=Math.max(820,760+rows.length*66);const x=c.getContext("2d");
+ const navy="#142b45",blue="#1e496d",gold="#c99b3b",pale="#f4f7fa",line="#dce3eb",ink="#182638",muted="#64748b",white="#ffffff";
+ x.fillStyle="#eef2f6";x.fillRect(0,0,c.width,c.height);
+ x.fillStyle=white;x.fillRect(22,22,856,c.height-44);
+ x.strokeStyle=line;x.lineWidth=2;x.strokeRect(22,22,856,c.height-44);
+ x.fillStyle=navy;x.fillRect(22,22,856,218);
+ x.fillStyle=gold;x.fillRect(22,236,856,4);
+ x.textAlign="center";x.fillStyle=gold;x.font="bold 26px Arial,sans-serif";x.fillText("AK  •  HARDWARE & ELECTRICAL",450,72);
+ x.fillStyle=white;x.font="bold 42px system-ui,'Noto Sans Myanmar',sans-serif";x.fillText((shopProfile.name||activeShopName||"ဆိုင်အမည်").slice(0,32),450,132);
+ x.fillStyle="#dce7f1";x.font="21px system-ui,'Noto Sans Myanmar',sans-serif";
+ const contact=[shopProfile.type,shopProfile.phone].filter(Boolean).join("  |  ");if(contact)x.fillText(contact.slice(0,68),450,174);
+ if(shopProfile.address)x.fillText(String(shopProfile.address).slice(0,70),450,210);
+ x.textAlign="center";x.fillStyle=navy;x.font="bold 36px system-ui,'Noto Sans Myanmar',sans-serif";x.fillText(title,450,304);
+ x.fillStyle=muted;x.font="20px system-ui,'Noto Sans Myanmar',sans-serif";
+ x.textAlign="left";x.fillText("ဘောင်ချာအမှတ်",62,365);x.fillText("ရက်စွဲ",62,410);
+ x.textAlign="right";x.fillStyle=ink;x.fillText(String(number||"-").slice(-28),838,365);x.fillText(String(date||"-"),838,410);
+ let y=476;
+ x.fillStyle=blue;x.fillRect(54,y-34,792,50);
+ x.fillStyle=white;x.font="bold 21px system-ui,'Noto Sans Myanmar',sans-serif";x.textAlign="left";x.fillText(title==="အရောင်းဘောင်ချာ"?"ပစ္စည်း / ဖောက်သည်":title==="အဝယ်ဘောင်ချာ"?"ပစ္စည်း / ပေးသွင်းသူ":"စာရင်းအမျိုးအစား",72,y-1);x.textAlign="right";x.fillText("အရေအတွက် / ငွေ",828,y-1);y+=56;
+ rows.forEach((r,i)=>{x.fillStyle=i%2===0?pale:white;x.fillRect(54,y-30,792,58);x.strokeStyle=line;x.lineWidth=1;x.beginPath();x.moveTo(54,y+28);x.lineTo(846,y+28);x.stroke();x.fillStyle=ink;x.font="21px system-ui,'Noto Sans Myanmar',sans-serif";x.textAlign="left";x.fillText(String(r[0]||"").slice(0,42),72,y+5);x.textAlign="right";x.fillStyle=blue;x.fillText(String(r[1]||"").slice(0,34),828,y+5);y+=66});
+ y+=24;x.strokeStyle=gold;x.lineWidth=3;x.beginPath();x.moveTo(54,y-12);x.lineTo(846,y-12);x.stroke();
+ const summary=(label,value,color)=>{x.textAlign="left";x.fillStyle=muted;x.font="bold 22px system-ui,'Noto Sans Myanmar',sans-serif";x.fillText(label,72,y+22);x.textAlign="right";x.fillStyle=color;x.font="bold 25px system-ui,'Noto Sans Myanmar',sans-serif";x.fillText(money(value),828,y+22);y+=55};
+ summary("စုစုပေါင်း",total,navy);summary("ပေးချေပြီး",paid,blue);summary("ကျန်ငွေ",due,due>0?"#b42318":"#18734b");
+ x.fillStyle="#e8edf2";x.fillRect(54,c.height-112,792,2);x.fillStyle=navy;x.textAlign="center";x.font="bold 21px system-ui,'Noto Sans Myanmar',sans-serif";x.fillText((shopProfile.footer||"အားပေးမှုအတွက် ကျေးဇူးတင်ပါသည်").slice(0,70),450,c.height-68);
+ x.fillStyle=muted;x.font="14px Arial,sans-serif";x.fillText("AK SALE POS",450,c.height-42);
  return c
 }
-async function shareVoucher(title,id,date,rows,total,paid,due){const canvas=voucherCanvas(title,id,date,rows,total,paid,due),blob=await new Promise(resolve=>canvas.toBlob(resolve,"image/png"));if(!blob)throw Error("ဘောင်ချာပုံ မဖန်တီးနိုင်ပါ");const file=new File([blob],"Voucher-"+String(id||"copy").slice(-10)+".png",{type:"image/png"}),caption=[shopProfile.name||activeShopName,title,"ဘောင်ချာ: "+id,"စုစုပေါင်း: "+money(total),"ပေးချေပြီး: "+money(paid),"ကျန်ငွေ: "+money(due)].join("\n");const native=window.Capacitor?.isNativePlatform?.()&&window.Capacitor?.Plugins?.AkPrinter;if(native?.shareReceiptImage){const data=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result).split(",")[1]);r.onerror=reject;r.readAsDataURL(blob)});await native.shareReceiptImage({data,fileName:file.name,text:caption,title});return}if(navigator.canShare?.({files:[file]})){await navigator.share({files:[file],title,text:caption});return}const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=file.name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500);status("ဘောင်ချာပုံ ဒေါင်းလုဒ်လုပ်ပြီးပါပြီ။ Viber မှ ပုံကိုရွေးပို့နိုင်သည်။")}
+async function shareVoucher(title,id,date,rows,total,paid,due){
+ const canvas=voucherCanvas(title,id,date,rows,total,paid,due),blob=await new Promise(resolve=>canvas.toBlob(resolve,"image/png"));
+ if(!blob)throw Error("ဘောင်ချာပုံ မဖန်တီးနိုင်ပါ");
+ const file=new File([blob],"AK-Voucher-"+String(id||"copy").slice(-10)+".png",{type:"image/png"});
+ const caption=[shopProfile.name||activeShopName,title,"ဘောင်ချာ: "+id,"စုစုပေါင်း: "+money(total),"ပေးချေပြီး: "+money(paid),"ကျန်ငွေ: "+money(due)].join("\n");
+ const native=window.Capacitor?.isNativePlatform?.()&&window.Capacitor?.Plugins?.AkPrinter;
+ if(native?.shareReceiptImage){
+  try{const data=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result).split(",")[1]);r.onerror=reject;r.readAsDataURL(blob)});await native.shareReceiptImage({data,fileName:file.name,text:caption,title});return}
+  catch(e){console.warn("Native share bridge unavailable; trying Android share sheet",e)}
+ }
+ if(navigator.share){
+  try{if(!navigator.canShare||navigator.canShare({files:[file]})){await navigator.share({files:[file],title,text:caption});return}}
+  catch(e){if(e?.name==="AbortError")return;console.warn("Image share unavailable; falling back to text share",e)}
+  try{await navigator.share({title,text:caption});status("စာသားကို Share Menu မှ မျှဝေနိုင်ပါသည်။");return}
+  catch(e){if(e?.name==="AbortError")return;console.warn("Text share unavailable",e)}
+ }
+ const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=file.name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500);status("ဘောင်ချာပုံကို ဒေါင်းလုဒ်လုပ်ပြီးပါပြီ။ Viber၊ TikTok သို့မဟုတ် အခြား App မှ ပုံကိုရွေးပြီး မျှဝေနိုင်ပါသည်။")
+}
 window.shareExpenseVoucher=async id=>{const v=expenses.find(x=>x.id===id);if(!v)return;await shareVoucher("အသုံးစရိတ်ဘောင်ချာ",id,dateText(v.createdAt),[["အသုံးစရိတ်အကြောင်း",v.name],["ငွေပမာဏ",money(v.amount)]],v.amount,v.amount,0)};
 window.sharePurchaseVoucher=async id=>{const v=purchases.find(x=>x.id===id);if(!v)return;const extra=payments.filter(p=>p.kind==="purchase"&&p.purchaseId===id).reduce((a,p)=>a+Number(p.amount||0),0),paid=Number(v.paid||0)+extra,due=Math.max(0,Number(v.total||0)-paid);await shareVoucher("အဝယ်ဘောင်ချာ",id,dateText(v.createdAt),[["ပစ္စည်း",v.productName],["အရေအတွက်",v.qty],["တစ်ခုဝယ်ဈေး",money(v.cost)],["ပေးသွင်းသူ",v.supplier||""]],v.total,paid,due)};
 window.shareSaleReceipt=async id=>{const v=sales.find(x=>x.id===id);if(!v)return;const b=saleBalance(v),rows=(v.lines?.length?v.lines.map(l=>[l.name,String(l.qty)+" × "+money(l.price)]):[[v.productName||"ပစ္စည်း",String(v.qty)+" × "+money(v.price)]]);rows.push(["ဖောက်သည်",v.customer||"လက်ငင်း"]);await shareVoucher("အရောင်းဘောင်ချာ",id,dateText(v.createdAt),rows,v.total,b.paid,b.due)};

@@ -590,10 +590,10 @@ async function staffGateway(path,data={}){
 let merchantStaffCount=0;
 async function loadMerchantStaff(){
  try{
-  const r=await staffGateway("/staff/list");
-  const members=(Array.isArray(r.members)?r.members:[]).filter(m=>m.status==="active");
+  const snap=await db.collection("shopMembers").where("shopId","==",shopId).get();
+  const members=snap.docs.map(d=>({uid:d.id,...d.data()})).filter(m=>m.merchantStaff===true&&m.status==="active"&&m.role==="employee");
   merchantStaffCount=members.length;
-  $("staffRows").innerHTML=members.map(m=>'<tr><td>'+esc(m.name)+'</td><td>'+esc(m.role)+'</td><td>'+esc(m.status)+'</td><td><button class="danger" data-remove-staff="'+esc(m.uid)+'">ဖယ်ရှား</button></td></tr>').join("")||'<tr><td colspan="4">ဝန်ထမ်း မရှိသေးပါ</td></tr>';
+  $("staffRows").innerHTML=members.map(m=>'<tr><td>'+esc(m.name)+'</td><td>Staff</td><td>'+esc(m.status)+'</td><td><button class="danger" data-remove-staff="'+esc(m.uid)+'">ဖယ်ရှား</button></td></tr>').join("")||'<tr><td colspan="4">ဝန်ထမ်း မရှိသေးပါ</td></tr>';
   $("staffRows").querySelectorAll("[data-remove-staff]").forEach(button=>button.onclick=()=>removeMerchantStaff(button.dataset.removeStaff));
   $("staffStatus").textContent="ဝန်ထမ်း "+merchantStaffCount+" / 2 ဦး · Owner အပါအဝင် စုစုပေါင်း အကောင့် "+(merchantStaffCount+1)+" / 3 ခု";
  }catch(e){$("staffStatus").textContent="ဝန်ထမ်းစာရင်း ဖတ်မရပါ: "+errText(e)}
@@ -611,7 +611,7 @@ $("createStaffBtn").onclick=async()=>{try{
 }catch(e){$("staffStatus").textContent="Code ဖန်တီးမရပါ: "+errText(e)}
 finally{$("createStaffBtn").disabled=false}};
 $("refreshStaffBtn").onclick=loadMerchantStaff;
-window.removeMerchantStaff=async uid=>{if(!confirm("ဤဝန်ထမ်းအကောင့်ကို ပိတ်မလား။"))return;try{await staffGateway("/staff/revoke",{memberUid:uid});await loadMerchantStaff();$("staffStatus").textContent="ဝန်ထမ်းအကောင့် ပိတ်ပြီးပါပြီ။"}catch(e){$("staffStatus").textContent="ပိတ်မရပါ: "+errText(e)}};
+window.removeMerchantStaff=async uid=>{if(!confirm("ဤဝန်ထမ်းအကောင့်ကို ပိတ်မလား။"))return;try{const memberRef=db.collection("shopMembers").doc(uid),snap=await memberRef.get();if(!snap.exists||snap.data().shopId!==shopId||snap.data().merchantStaff!==true)throw Error("ဤဆိုင်၏ ဝန်ထမ်းအကောင့် မဟုတ်ပါ။");const slotId=snap.data().slotId,batch=db.batch();batch.update(memberRef,{status:"suspended",revokedAt:firebase.firestore.FieldValue.serverTimestamp()});if(slotId)batch.delete(db.collection("shopStaffSlots").doc(slotId));await batch.commit();await loadMerchantStaff();$("staffStatus").textContent="ဝန်ထမ်းအကောင့် ပိတ်ပြီးပါပြီ။"}catch(e){$("staffStatus").textContent="ဝန်ထမ်းပိတ်မရပါ: "+errText(e)}};
 
 const col=name=>db.collection("shops").doc(shopId).collection("pos").doc(name).collection("records");
 async function getRows(name){const s=await col(name).get();return s.docs.map(d=>({id:d.id,...d.data()}))}

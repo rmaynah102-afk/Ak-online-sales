@@ -5,6 +5,13 @@ const html = fs.readFileSync('www/index.html', 'utf8');
 const rules = fs.readFileSync('firestore.rules', 'utf8');
 
 assert(html.includes('async function signInWithGoogleAccount()'), 'Google sign-in helper is required');
+assert(html.includes('window.akFirebaseBootPromise=boot().catch('), 'Google login must await Firebase initialization before sign-in');
+assert((html.match(/\$\("ownerGoogleBtn"\)\.disabled=true/g)||[]).length>=1, 'Platform Owner login must be disabled until Firebase initializes');
+assert(html.includes('if(!auth&&window.akFirebaseBootPromise)'), 'Login action must wait for Firebase boot promise');
+assert(html.includes('window.AK_FIREBASE_PUBLIC_CONFIG=Object.freeze({'), 'APK must embed Firebase public config');
+assert(html.includes('for(const slot of [1,2])'), 'Each shop must support up to two staff Merchant Code slots');
+assert(html.includes('const allowed={profile:owner,products:true,sales:owner||staff,purchases:owner,people:owner||staff,expenses:owner,reports:owner,printer:owner||staff,ads:owner,backup:owner}'), 'Shop Owner and Staff UI permissions must differ');
+
 assert(html.includes('window.AK_FIREBASE_PUBLIC_CONFIG=Object.freeze({'), 'APK must carry embedded Firebase public config independent of relative asset paths');
 assert(html.includes('projectId:"ak-onlin-sales"'), 'Embedded Firebase project ID must match the deployed AK Firebase project');
 assert(html.includes('if(typeof firebase==="undefined"||!firebase.auth||!firebase.firestore)'), 'Firebase Auth and Firestore SDK must be verified before enabling login');

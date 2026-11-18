@@ -10,6 +10,11 @@ assert((html.match(/\$\("ownerGoogleBtn"\)\.disabled=true/g)||[]).length>=1, 'Pl
 assert(html.includes('if(!auth&&window.akFirebaseBootPromise)'), 'Login action must wait for Firebase boot promise');
 assert(html.includes('window.AK_FIREBASE_PUBLIC_CONFIG=Object.freeze({'), 'APK must embed Firebase public config');
 assert(html.includes('for(const slot of [1,2])'), 'Each shop must support up to two staff Merchant Code slots');
+assert(html.includes('data-report-view="sales"') && html.includes('data-report-view="purchases"') && html.includes('data-report-view="expenses"'), 'Sales, purchase and expense reports must have separate views');
+assert(html.includes('let activeReportView="all"'), 'Report view selection state is required');
+assert(html.includes('matchesView&&(!q||'), 'Report search must work inside the selected report view');
+assert(html.includes('.report-switch button.active'), 'Report tabs must have a clear active visual state');
+
 assert(html.includes('const allowed={profile:owner,products:true,sales:owner||staff,purchases:owner,people:owner||staff,expenses:owner,reports:owner,printer:owner||staff,ads:owner,backup:owner}'), 'Shop Owner and Staff UI permissions must differ');
 
 assert(html.includes('window.AK_FIREBASE_PUBLIC_CONFIG=Object.freeze({'), 'APK must carry embedded Firebase public config independent of relative asset paths');

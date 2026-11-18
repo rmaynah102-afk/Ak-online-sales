@@ -1112,8 +1112,33 @@ window.shareExpenseVoucher=async id=>{const v=expenses.find(x=>x.id===id);if(!v)
 window.sharePurchaseVoucher=async id=>{const v=purchases.find(x=>x.id===id);if(!v)return;const extra=payments.filter(p=>p.kind==="purchase"&&p.purchaseId===id).reduce((a,p)=>a+Number(p.amount||0),0),paid=Number(v.paid||0)+extra,due=Math.max(0,Number(v.total||0)-paid);await shareVoucher("အဝယ်ဘောင်ချာ",id,dateText(v.createdAt),[["ပစ္စည်း",v.productName],["အရေအတွက်",v.qty],["တစ်ခုဝယ်ဈေး",money(v.cost)],["ပေးသွင်းသူ",v.supplier||""]],v.total,paid,due)};
 window.shareSaleReceipt=async id=>{const v=sales.find(x=>x.id===id);if(!v)return;const b=saleBalance(v),rows=(v.lines?.length?v.lines.map(l=>[l.name,String(l.qty)+" × "+money(l.price)]):[[v.productName||"ပစ္စည်း",String(v.qty)+" × "+money(v.price)]]);rows.push(["ဖောက်သည်",v.customer||"လက်ငင်း"]);await shareVoucher("အရောင်းဘောင်ချာ",id,dateText(v.createdAt),rows,v.total,b.paid,b.due)};
 $("previewVoucher").onclick=()=>shareVoucher("ဘောင်ချာနမူနာ","PREVIEW",new Date().toLocaleDateString(),[["ပစ္စည်း / ဝန်ဆောင်မှု","နမူနာ"],["အရေအတွက်","1"]],10000,10000,0);
-$("reportPrintVoucher").onclick=printReportVoucher;
-$("reportVoucher").onclick=async()=>{const a=sales.reduce((n,x)=>n+Number(x.total||0),0),b=purchases.reduce((n,x)=>n+Number(x.total||0),0),e=expenses.filter(x=>x.verified!==false).reduce((n,x)=>n+Number(x.amount||0),0),pending=expenses.filter(x=>x.verified===false).reduce((n,x)=>n+Number(x.amount||0),0),p=sales.reduce((n,x)=>n+Number(x.profit||0),0)-e,d=sales.reduce((n,x)=>n+saleBalance(x).due,0),q=purchases.reduce((n,x)=>n+Math.max(0,Number(x.total||0)-Number(x.paid||0)-payments.filter(z=>z.kind==="purchase"&&z.purchaseId===x.id).reduce((t,z)=>t+Number(z.amount||0),0)),0);await shareVoucher("လုပ်ငန်းအစီရင်ခံစာ",new Date().toISOString().slice(0,10),new Date().toLocaleDateString(),[["စုစုပေါင်းအရောင်း",money(a)],["စုစုပေါင်းအဝယ်",money(b)],["အတည်ပြုပြီးအသုံးစရိတ်",money(e)],["Verify စောင့်အသုံးစရိတ်",money(pending)],["အမြတ်ခန့်မှန်း",money(p)],["ရရန်အကြွေး",money(d)],["ပေးရန်အကြွေး",money(q)]],a,0,d)};
+function currentReportVoucherData(){
+ const stamp=new Date().toISOString().slice(0,10),date=new Date().toLocaleDateString();
+ const view=activeReportView, title=view==="sales"?"အရောင်းအစီရင်ခံစာ":view==="purchases"?"အဝယ်အစီရင်ခံစာ":view==="expenses"?"အသုံးစရိတ်အစီရင်ခံစာ":"လုပ်ငန်းအစီရင်ခံစာ";
+ const rows=[];let total=0,paid=0,due=0;
+ if(view==="all"||view==="sales"){
+  const amount=sales.reduce((n,x)=>n+Number(x.total||0),0),received=sales.reduce((n,x)=>n+saleBalance(x).paid,0),balance=sales.reduce((n,x)=>n+saleBalance(x).due,0);
+  rows.push(["စုစုပေါင်းအရောင်း",money(amount)],["အရောင်းရငွေလက်ခံပြီး",money(received)],["အရောင်းရရန်ကျန်",money(balance)]);
+  total+=amount;paid+=received;due+=balance;
+ }
+ if(view==="all"||view==="purchases"){
+  const amount=purchases.reduce((n,x)=>n+Number(x.total||0),0),settled=purchases.reduce((n,x)=>n+Number(x.paid||0)+payments.filter(z=>z.kind==="purchase"&&z.purchaseId===x.id).reduce((t,z)=>t+Number(z.amount||0),0),0),balance=purchases.reduce((n,x)=>n+Math.max(0,Number(x.total||0)-Number(x.paid||0)-payments.filter(z=>z.kind==="purchase"&&z.purchaseId===x.id).reduce((t,z)=>t+Number(z.amount||0),0)),0);
+  rows.push(["စုစုပေါင်းအဝယ်",money(amount)],["အဝယ်ပေးချေပြီး",money(settled)],["အဝယ်ပေးရန်ကျန်",money(balance)]);
+  total+=amount;paid+=settled;due+=balance;
+ }
+ if(view==="all"||view==="expenses"){
+  const verified=expenses.filter(x=>x.verified!==false).reduce((n,x)=>n+Number(x.amount||0),0),pending=expenses.filter(x=>x.verified===false).reduce((n,x)=>n+Number(x.amount||0),0);
+  rows.push(["အတည်ပြုပြီးအသုံးစရိတ်",money(verified)],["Verify စောင့်အသုံးစရိတ်",money(pending)]);
+  total+=verified+pending;paid+=verified;due+=pending;
+ }
+ if(view==="all"){
+  const profit=sales.reduce((n,x)=>n+Number(x.profit||0),0)-expenses.filter(x=>x.verified!==false).reduce((n,x)=>n+Number(x.amount||0),0);
+  rows.push(["အမြတ်ခန့်မှန်း",money(profit)]);
+ }
+ return {title,id:stamp,date,rows,total,paid,due};
+}
+$("reportPrintVoucher").onclick=()=>window.printReportVoucher();
+$("reportVoucher").onclick=async()=>{const r=currentReportVoucherData();await shareVoucher(r.title,r.id,r.date,r.rows,r.total,r.paid,r.due)};
 async function openVoucherPrint(title,id,date,rows,total,paid,due){
  const canvas=voucherCanvas(title,id,date,rows,total,paid,due),img=canvas.toDataURL("image/png"),paper=String($("printerPaper")?.value||"80mm");
  const native=window.Capacitor?.isNativePlatform?.()&&window.Capacitor?.Plugins?.AkPrinter;
@@ -1128,7 +1153,7 @@ async function openVoucherPrint(title,id,date,rows,total,paid,due){
 }
 window.printSaleReceipt=async id=>{const sale=sales.find(x=>x.id===id);if(!sale)return;const b=saleBalance(sale),rows=(sale.lines?.length?sale.lines.map(line=>[line.name,String(line.qty)+" × "+money(line.price)]):[[sale.productName||"ပစ္စည်း",String(sale.qty)+" × "+money(sale.price)]]);rows.push(["ဖောက်သည်",sale.customer||"လက်ငင်း"]);await openVoucherPrint("အရောင်းဘောင်ချာ",id,dateText(sale.createdAt),rows,sale.total,b.paid,b.due)};
 window.printPurchaseVoucher=async id=>{const v=purchases.find(x=>x.id===id);if(!v)return;const extra=payments.filter(p=>p.kind==="purchase"&&p.purchaseId===id).reduce((a,p)=>a+Number(p.amount||0),0),paid=Number(v.paid||0)+extra,due=Math.max(0,Number(v.total||0)-paid);await openVoucherPrint("အဝယ်ဘောင်ချာ",id,dateText(v.createdAt),[["ပစ္စည်း",v.productName],["အရေအတွက်",v.qty],["တစ်ခုဝယ်ဈေး",money(v.cost)],["ပေးသွင်းသူ",v.supplier||""]],v.total,paid,due)};
-window.printReportVoucher=async()=>{const a=sales.reduce((n,x)=>n+Number(x.total||0),0),b=purchases.reduce((n,x)=>n+Number(x.total||0),0),e=expenses.filter(x=>x.verified!==false).reduce((n,x)=>n+Number(x.amount||0),0),pending=expenses.filter(x=>x.verified===false).reduce((n,x)=>n+Number(x.amount||0),0),d=sales.reduce((n,x)=>n+saleBalance(x).due,0),q=purchases.reduce((n,x)=>n+Math.max(0,Number(x.total||0)-Number(x.paid||0)-payments.filter(z=>z.kind==="purchase"&&z.purchaseId===x.id).reduce((t,z)=>t+Number(z.amount||0),0)),0);await openVoucherPrint("အစီရင်ခံစာဘောင်ချာ",new Date().toISOString().slice(0,10),new Date().toLocaleDateString(),[["စုစုပေါင်းအရောင်း",money(a)],["စုစုပေါင်းအဝယ်",money(b)],["အတည်ပြုပြီးအသုံးစရိတ်",money(e)],["Verify စောင့်အသုံးစရိတ်",money(pending)],["ရရန်အကြွေး",money(d)],["ပေးရန်အကြွေး",money(q)]],a,0,d)};
+window.printReportVoucher=async()=>{const r=currentReportVoucherData();await openVoucherPrint(r.title,r.id,r.date,r.rows,r.total,r.paid,r.due)}
 $("testPrinter").onclick=async()=>{
  const p=printerRead().find(x=>x.default)||printerRead()[0];if(!p){status("Printer အရင်သိမ်းပါ။","printerStatus");return}
  if(["bluetooth","wifi"].includes(p.type)&&window.Capacitor?.isNativePlatform?.()){

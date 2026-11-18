@@ -133,6 +133,13 @@ jobs:
           NODE
       - name: Test APK shop-owner account creation and recovery
         run: node scripts/test-apk-auth-flow.js
+      - name: Run Firestore multi-tenant security rules emulator tests
+        working-directory: tests/firestore
+        run: |
+          set -euo pipefail
+          npm install --no-audit --no-fund
+          printf '%s\n' '{"emulators":{"firestore":{"port":8080}}}' > firebase.json
+          npx firebase emulators:exec --only firestore --project demo-ak-sale-rules "npm test"
       - name: Validate native printer installer
         run: node --check scripts/install-native-printer.js
       - name: Generate Android project

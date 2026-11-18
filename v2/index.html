@@ -193,7 +193,7 @@ details>summary{cursor:pointer;color:#edf0f3;font-weight:700;padding:8px 0}
 <!-- APK build check: report/expense verification and inline printer layout -->
 </head>
 <body>
-<header><div class="brand"><img src="./icon.svg" alt="AK Hardware & Electrical Logo"><div><h1>AK Sale POS 2.1</h1><small>Hardware & Electrical Shop Management</small></div></div><div id="userBadge" class="muted" style="color:#fff"></div></header>
+<div id="akNetworkStatus" class="muted" style="padding:6px 12px;text-align:center;background:#171c22;color:#e8ebee;font-weight:700" role="status">Network status စစ်ဆေးနေသည်...</div>\n<header><div class="brand"><img src="./icon.svg" alt="AK Hardware & Electrical Logo"><div><h1>AK Sale POS 2.1</h1><small>Hardware & Electrical Shop Management</small></div></div><div id="userBadge" class="muted" style="color:#fff"></div></header>
 <main>
 <section id="loginPanel" class="card">
 <h2>Google ဖြင့် အကောင့်ဝင်ရန်</h2>
@@ -277,6 +277,14 @@ async function boot(){
  if(typeof firebase==="undefined"||!firebase.auth||!firebase.firestore)throw Error("Firebase Auth / Firestore SDK မပြည့်စုံပါ။ အင်တာနက်ချိတ်ဆက်မှုကို စစ်ပါ။");
  if(!firebase.apps.length)firebase.initializeApp(PROJECT);
  auth=firebase.auth();db=firebase.firestore();auth.languageCode="my";
+ // Firestore IndexedDB persistence: after a successful online sign-in/sync,
+ // cached reads remain available offline and writes are queued for reconnect.
+ window.akOfflinePersistenceReady=false;
+ try{await db.enablePersistence({synchronizeTabs:false});window.akOfflinePersistenceReady=true}
+ catch(e){if(e?.code!=="failed-precondition"&&e?.code!=="unimplemented")console.warn("AK offline persistence unavailable",e)}
+ window.akGetDoc=async ref=>{try{return await ref.get()}catch(e){if(!navigator.onLine||e?.code==="unavailable"){try{return await ref.get({source:"cache"})}catch(cacheError){throw Error("အင်တာနက်မရှိပါ၊ ယခင်သိမ်းထားသော အကောင့်/ဆိုင်အချက်အလက်လည်း မရှိသေးပါ။ အင်တာနက်ချိတ်ပြီး ပြန်ဝင်ပါ။")}}throw e}};
+ window.akUpdateNetworkStatus=()=>{const el=document.getElementById("akNetworkStatus");if(!el)return;const online=navigator.onLine;el.textContent=online?"Online · Cloud Sync":"Offline · သိမ်းထားသောဒေတာဖြင့် အသုံးပြုနေသည်";el.dataset.mode=online?"online":"offline";el.title=online?"Cloud ချိတ်ဆက်ထားသည်":"အင်တာနက်ပြန်ရလျှင် Firestore က စောင့်ဆိုင်းနေသောပြောင်းလဲမှုများကို Sync လုပ်မည်";};
+ window.addEventListener("online",window.akUpdateNetworkStatus);window.addEventListener("offline",window.akUpdateNetworkStatus);
  await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
  $("customerGoogleBtn").disabled=false;$("ownerGoogleBtn").disabled=false;
  auth.onAuthStateChanged(async u=>{
@@ -315,7 +323,7 @@ async function boot(){
     }
    }
    else{
-    const memberSnap=await db.collection("shopMembers").doc(u.uid).get(),member=memberSnap.data()||{};
+    const memberSnap=await window.akGetDoc(db.collection("shopMembers").doc(u.uid)),member=memberSnap.data()||{};
     if(memberSnap.exists){
      if(member.merchantStaff!==true||member.status!=="active"||!member.shopId||String(member.email||"").toLowerCase()!==email||member.role!=="employee")throw Error("ဝန်ထမ်းအကောင့် ပိတ်ထားခြင်း သို့မဟုတ် မမှန်ကန်ပါ။");
      shopId=member.shopId;staffRole="employee";await loadShop();
@@ -637,7 +645,7 @@ $("refreshStaffBtn").onclick=loadMerchantStaff;
 window.removeMerchantStaff=async uid=>{if(!confirm("ဤဝန်ထမ်းအကောင့်ကို ပိတ်မလား။"))return;try{const memberRef=db.collection("shopMembers").doc(uid),snap=await memberRef.get();if(!snap.exists||snap.data().shopId!==shopId||snap.data().merchantStaff!==true)throw Error("ဤဆိုင်၏ ဝန်ထမ်းအကောင့် မဟုတ်ပါ။");const slotId=snap.data().slotId,batch=db.batch();batch.update(memberRef,{status:"suspended",revokedAt:firebase.firestore.FieldValue.serverTimestamp()});if(slotId)batch.delete(db.collection("shopStaffSlots").doc(slotId));await batch.commit();await loadMerchantStaff();$("staffStatus").textContent="ဝန်ထမ်းအကောင့် ပိတ်ပြီးပါပြီ။"}catch(e){$("staffStatus").textContent="ဝန်ထမ်းပိတ်မရပါ: "+errText(e)}};
 
 const col=name=>db.collection("shops").doc(shopId).collection("pos").doc(name).collection("records");
-async function getRows(name){const s=await col(name).get();return s.docs.map(d=>({id:d.id,...d.data()}))}
+async function getRows(name){let s;try{s=await col(name).get()}catch(e){if(!navigator.onLine||e?.code==="unavailable"){try{s=await col(name).get({source:"cache"})}catch(cacheError){throw Error("Offline ဒေတာမရှိသေးပါ။ အင်တာနက်ချိတ်ပြီး ဒီစာရင်းကို အရင် Sync လုပ်ပါ။ ("+name+")")}}else throw e}return s.docs.map(d=>({id:d.id,...d.data()}))}
 async function loadShop(){
  const platformOwner=isPlatformOwner();
  if(platformOwner){
@@ -646,7 +654,7 @@ async function loadShop(){
   $("licenseBadge").textContent="Platform Owner · ကိုယ်ပိုင်ဆိုင်";
   $("ownerControlBtn").classList.remove("hidden");
  }else{
-   const [lic,beta]=await Promise.all([db.collection("licenses").doc(shopId).get(),db.collection("freeBetaUsers").doc(shopId).get()]);
+   const [lic,beta]=await Promise.all([window.akGetDoc(db.collection("licenses").doc(shopId)),window.akGetDoc(db.collection("freeBetaUsers").doc(shopId))]);
    const free=beta.exists&&beta.data().status==="active";
    if(free){activeShopName=String(beta.data().shopName||"ဆိုင်အမည်");$("shopTitle").textContent=beta.data().shopName||"ဆိုင် Dashboard";$("licenseBadge").textContent="Free Beta · အခမဲ့";}
    else{if(!lic.exists||lic.data().status!=="active"||!lic.data().expiresAt||lic.data().expiresAt.toDate()<=new Date())throw Error("ဆိုင်သက်တမ်းကုန်နေပါသည်။ Platform Owner ထံ သက်တမ်းတိုးရန် ဆက်သွယ်ပါ။");activeShopName=String(lic.data().shopName||"ဆိုင်အမည်");$("shopTitle").textContent=lic.data().shopName||"ဆိုင် Dashboard";$("licenseBadge").textContent="သက်တမ်းကုန်ရက် "+dateText(lic.data().expiresAt);}
@@ -1230,5 +1238,5 @@ $("exportCsv").onclick=()=>{
 };
 
 window.akFirebaseBootPromise=boot().catch(e=>{ $("customerGoogleBtn").disabled=true;$("ownerGoogleBtn").disabled=true; status("Firebase စနစ်စတင်မရပါ: "+friendlyAuthError(e)+" · "+(e?.message||"")); throw e; }); window.akFirebaseBootPromise.catch(()=>{});
-if("serviceWorker" in navigator)navigator.serviceWorker.register("./sw.js").catch(()=>{});
+if("serviceWorker" in navigator)navigator.serviceWorker.register("./sw.js").catch(()=>{});\nif(window.akUpdateNetworkStatus)window.akUpdateNetworkStatus();
 </script></body></html>

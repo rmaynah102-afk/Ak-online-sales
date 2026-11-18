@@ -5,7 +5,18 @@
 <meta name="theme-color" content="#102c55"><meta name="description" content="AK Sale POS 2.1 — Multi-business shop management">
 <link rel="manifest" href="./manifest.webmanifest"><title>AK Sale POS 2.1</title>
 <!-- AK POS menu layout: unified Excel report, expense verification and printer inside sales. -->
-<script src="./firebase-config.js" onerror='this.onerror=null;this.src=location.pathname.indexOf("/v2/")>=0?"../firebase-config.js":"./firebase-config.js"'></script>
+<script>
+/* Embedded public Firebase config: keeps Android APK startup independent of relative asset paths. */
+window.AK_FIREBASE_PUBLIC_CONFIG=Object.freeze({
+ apiKey:"AIzaSyDz7_oxLjumHVBus8eiVWM6kqXYjChK2z8",
+ authDomain:"ak-onlin-sales.firebaseapp.com",
+ projectId:"ak-onlin-sales",
+ storageBucket:"ak-onlin-sales.firebasestorage.app",
+ messagingSenderId:"1046694954841",
+ appId:"1:1046694954841:web:6ce468cba9dd884833ae48",
+ measurementId:"G-TR2R1454Y0"
+});
+</script>
 <style>
 :root{--navy:#123b2a;--blue:#1e6045;--gold:#e8c56a;--bg:#f1f5f2;--line:#d8e2db;--ink:#172820;--muted:#66766c;--green:#1e6045;--red:#b42318}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px system-ui,"Noto Sans Myanmar",sans-serif}
@@ -248,7 +259,8 @@ async function boot(){
  $("customerGoogleBtn").disabled=true;
  if(!PROJECT?.apiKey)throw Error("Firebase config မတွေ့ပါ");
  await new Promise((resolve,reject)=>{const x=document.createElement("script");x.src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js";x.onload=resolve;x.onerror=reject;document.head.appendChild(x)});
- await Promise.all(["firebase-auth-compat.js","firebase-firestore-compat.js","firebase-functions-compat.js"].map(name=>new Promise((resolve,reject)=>{const x=document.createElement("script");x.src="https://www.gstatic.com/firebasejs/10.12.2/"+name;x.onload=resolve;x.onerror=reject;document.head.appendChild(x)})));
+ await Promise.all(["firebase-auth-compat.js","firebase-firestore-compat.js","firebase-functions-compat.js"].map(name=>new Promise((resolve,reject)=>{const x=document.createElement("script");x.src="https://www.gstatic.com/firebasejs/10.12.2/"+name;x.onload=resolve;x.onerror=()=>reject(Error("Firebase SDK ဖိုင် မတင်နိုင်ပါ: "+name));const timer=setTimeout(()=>reject(Error("Firebase SDK တင်ရန် အချိန်ကျော်ပါသည်: "+name)),15000);x.onload=()=>{clearTimeout(timer);resolve()};document.head.appendChild(x)})));
+ if(typeof firebase==="undefined"||!firebase.auth||!firebase.firestore)throw Error("Firebase Auth / Firestore SDK မပြည့်စုံပါ။ အင်တာနက်ချိတ်ဆက်မှုကို စစ်ပါ။");
  if(!firebase.apps.length)firebase.initializeApp(PROJECT);
  auth=firebase.auth();db=firebase.firestore();auth.languageCode="my";
  await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
@@ -1138,6 +1150,6 @@ $("exportCsv").onclick=()=>{
  const csv="\uFEFF"+rows.map(row=>row.map(v=>'"'+String(v??"").replace(/"/g,'""')+'"').join(",")).join("\r\n"),blob=new Blob([csv],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=(String(shopProfile.name||activeShopName||"Business").replace(/[^a-z0-9-_]/gi,"-").slice(0,35)||"Business")+"-POS-Backup-"+new Date().toISOString().slice(0,10)+".csv";a.click();URL.revokeObjectURL(a.href);
 };
 
-boot().catch(e=>{ $("customerGoogleBtn").disabled=true;$("ownerGoogleBtn").disabled=true; status("စနစ်စတင်မရပါ: "+friendlyAuthError(e)); });
+boot().catch(e=>{ $("customerGoogleBtn").disabled=true;$("ownerGoogleBtn").disabled=true; status("Firebase စနစ်စတင်မရပါ: "+friendlyAuthError(e)+" · "+(e?.message||"")); });
 if("serviceWorker" in navigator)navigator.serviceWorker.register("./sw.js").catch(()=>{});
 </script></body></html>

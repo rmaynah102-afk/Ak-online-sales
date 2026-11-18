@@ -1239,5 +1239,6 @@ $("exportCsv").onclick=()=>{
 };
 
 window.akFirebaseBootPromise=boot().catch(e=>{ $("customerGoogleBtn").disabled=true;$("ownerGoogleBtn").disabled=true; status("Firebase စနစ်စတင်မရပါ: "+friendlyAuthError(e)+" · "+(e?.message||"")); throw e; }); window.akFirebaseBootPromise.catch(()=>{});
-if("serviceWorker" in navigator)navigator.serviceWorker.register("./sw.js").catch(()=>{});\nif(window.akUpdateNetworkStatus)window.akUpdateNetworkStatus();
+if("serviceWorker" in navigator)navigator.serviceWorker.register("./sw.js").catch(()=>{});
+if(window.akUpdateNetworkStatus)window.akUpdateNetworkStatus();
 </script></body></html>

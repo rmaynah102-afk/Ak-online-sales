@@ -5,6 +5,13 @@ const html = fs.readFileSync('www/index.html', 'utf8');
 const rules = fs.readFileSync('firestore.rules', 'utf8');
 
 assert(html.includes('async function signInWithGoogleAccount()'), 'Google sign-in helper is required');
+assert(html.includes('window.AK_FIREBASE_PUBLIC_CONFIG=Object.freeze({'), 'APK must carry embedded Firebase public config independent of relative asset paths');
+assert(html.includes('projectId:"ak-onlin-sales"'), 'Embedded Firebase project ID must match the deployed AK Firebase project');
+assert(html.includes('if(typeof firebase==="undefined"||!firebase.auth||!firebase.firestore)'), 'Firebase Auth and Firestore SDK must be verified before enabling login');
+assert(html.includes('customerGoogleBtn").disabled=true;$("ownerGoogleBtn").disabled=true'), 'Google login buttons must remain disabled when Firebase initialization fails');
+assert(html.includes('for(const slot of [1,2])'), 'Each shop must support exactly two Staff slots in addition to its Shop Owner');
+assert(html.includes('const allowed={profile:owner,products:true,sales:owner||staff,purchases:owner,people:owner||staff,expenses:owner,reports:owner,printer:owner||staff,ads:owner,backup:owner}'), 'Shop Owner and Staff UI permissions must remain distinct');
+
 assert(html.includes('nativeAuth.signInWithGoogle()'), 'Android APK must use native Google sign-in');
 assert(html.includes('GoogleAuthProvider.credential(idToken)'), 'Google ID token must be exchanged for Firebase credentials');
 assert(html.includes('async function assertVerifiedPlatformOwner()'), 'Platform Owner identity must be verified');

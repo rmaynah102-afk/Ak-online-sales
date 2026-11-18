@@ -14,6 +14,9 @@ assert(html.includes('data-report-view="sales"') && html.includes('data-report-v
 assert(html.includes('let activeReportView="all"'), 'Report view selection state is required');
 assert(html.includes('matchesView&&(!q||'), 'Report search must work inside the selected report view');
 assert(html.includes('.report-switch button.active'), 'Report tabs must have a clear active visual state');
+assert(html.includes('function currentReportVoucherData(){'), 'Report voucher data must follow the selected report view');
+assert(html.includes('const r=currentReportVoucherData();await shareVoucher(r.title,r.id,r.date,r.rows,r.total,r.paid,r.due)'), 'Online report voucher must share only the selected report type');
+assert(html.includes('const r=currentReportVoucherData();await openVoucherPrint(r.title,r.id,r.date,r.rows,r.total,r.paid,r.due)'), 'Printed report voucher must print only the selected report type');
 
 assert(html.includes('const allowed={profile:owner,products:true,sales:owner||staff,purchases:owner,people:owner||staff,expenses:owner,reports:owner,printer:owner||staff,ads:owner,backup:owner}'), 'Shop Owner and Staff UI permissions must differ');
 

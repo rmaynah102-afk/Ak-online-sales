@@ -644,7 +644,7 @@ const col=name=>db.collection("shops").doc(shopId).collection("pos").doc(name).c
 async function getDocCached(ref){try{return await ref.get()}catch(networkError){return await ref.get({source:"cache"})}}
 async function getSnapshotCached(ref){try{return await ref.get()}catch(networkError){return await ref.get({source:"cache"})}}
 async function getRows(name){const ref=col(name);let snap;try{snap=await ref.get()}catch(networkError){snap=await ref.get({source:"cache"})}return snap.docs.map(d=>({id:d.id,...d.data()}))}
-function updateOfflineBanner(){const el=$("offlineBanner");if(!el)return;const online=navigator.onLine!==false;el.classList.toggle("offline",!online);el.textContent=online?"Online · Cloud ချိတ်ဆက်ထားသည်":"Offline · ဖုန်းထဲတွင် ယာယီသိမ်းထားမည်။ Internet ပြန်ရလျှင် Sync လုပ်မည်။"}
+function updateOfflineBanner(){const el=$("offlineBanner");if(!el)return;const online=navigator.onLine!==false,cacheReady=window.AK_OFFLINE_CACHE===true;el.classList.toggle("offline",!online||!cacheReady);if(!cacheReady){el.textContent="Offline Cache မဖွင့်နိုင်သေးပါ။ အင်တာနက်ရှိစဉ် App ကို ပြန်ဖွင့်ပြီး စာရင်းများ Sync လုပ်ပါ။";return}el.textContent=online?"Online · Cloud ချိတ်ဆက်ထားသည်":"Offline · ဖုန်းထဲတွင် ယာယီသိမ်းထားမည်။ Internet ပြန်ရလျှင် Sync လုပ်မည်။"}
 window.addEventListener("online",updateOfflineBanner);window.addEventListener("offline",updateOfflineBanner);
 function queueOfflineBatch(batch,label){batch.commit().then(()=>{if(navigator.onLine!==false)status(label+" Cloud သို့ Sync ပြီးပါပြီ")}).catch(e=>{console.error("AK offline sync failed",e);status(label+" Sync မအောင်မြင်ပါ: "+errText(e))})}
 async function loadShop(){

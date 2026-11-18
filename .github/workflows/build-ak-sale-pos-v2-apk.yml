@@ -2,7 +2,7 @@ name: Build AK Sale POS 2.0 Android APK
 
 on:
   push:
-    branches: [ak-sale-pos-v2-main, main, ak-pos-rebuild-1.0.5-restore, ak-pos-international-v2, ak-pos-receipts-owner-audit]
+    branches: [ak-sale-pos-v2-main, main, ak-pos-rebuild-1.0.5-restore, ak-pos-international-v2, ak-pos-receipts-owner-audit, ak-pos-offline-support]
     paths:
       - "v2/**"
       - "scripts/patch-ak-apk-runtime.py"
@@ -148,6 +148,7 @@ jobs:
           if(!html.includes('Array.isArray(x.lines)&&x.lines.length?x.lines.map(v=>v.name).join(" ")')||!html.includes('line.qty??x.qty??0')) throw new Error('APK multi-item sale ledger/CSV details are missing');
           if(!html.includes('function isPlatformOwner')||!html.includes('AK Hardware & Electrical · Owner POS')||!html.includes('ownerControlBtn')) throw new Error('Separate Owner POS and Control Center routing is missing');
           if(!html.includes('async function akStartBarcodeScanner')||!html.includes('window.akPrintRawToDefault')||!html.includes('shareReceiptImage')||!html.includes('id="adCanvas"')||!html.includes('id="exportCsv"')) throw new Error('Barcode, native printer, social advertising or CSV/PDF modules are missing');
+          if(!html.includes('enablePersistence({synchronizeTabs:true})')||!html.includes('queueOfflineBatch')||!html.includes('getDocCached')||!html.includes('Offline · ဖုန်းထဲတွင် ယာယီသိမ်းထားမည်')) throw new Error('Offline Firestore persistence, cached reads or queued POS writes are missing');
           const config=JSON.parse(fs.readFileSync('capacitor.config.json','utf8'));
           if(config.appId!=='com.ak.hardware.sales'||config.plugins?.FirebaseAuthentication?.providers?.includes('google.com')!==true) throw new Error('Capacitor Android package or Google provider config is invalid');
           if(!/if\(email===OWNER\)[\s\S]*?await loadLicenses\(\)/.test(html)) throw new Error('Platform Owner auth route does not load the Control Center licenses');
@@ -162,6 +163,8 @@ jobs:
           npm install --no-audit --no-fund
           printf '%s\n' '{"emulators":{"firestore":{"port":8080}}}' > firebase.json
           npx firebase emulators:exec --only firestore --project demo-ak-sale-rules "npm test"
+      - name: Validate offline service worker JavaScript
+        run: node --check v2/sw.js
       - name: Validate native printer installer
         run: node --check scripts/install-native-printer.js
       - name: Generate Android project

@@ -878,14 +878,23 @@ $("saveSale").onclick=async()=>{
   const lines=saleCart.map(x=>({...x})),total=lines.reduce((a,x)=>a+x.qty*x.price,0),payType=$("salePay").value;
   const paid=payType==="cash"?total:payType==="credit"?0:Math.min(total,Math.max(0,Number($("salePaid").value)||0));
   const customer=$("saleCustomer").value.trim(),saleRef=col("sales").doc(),costRef=col("saleCosts").doc(saleRef.id);
-  const snapshots=lines.map(line=>{const p=products.find(x=>x.id===line.productId);if(!p)throw Error("ပစ္စည်းကို Offline Cache မှ မရနိုင်ပါ: "+line.name);return {line,data:p,ref:col("products").doc(line.productId)}});
-  let costTotal=0;
-  snapshots.forEach(({line,data})=>{const stock=Number(data.stock||0);if(line.qty>stock)throw Error("လက်ကျန်မလုံလောက်ပါ: "+line.name+" · "+stock);costTotal+=Number(data.cost||0)*line.qty});
-  const qty=lines.reduce((a,x)=>a+x.qty,0),batch=db.batch();
-  snapshots.forEach(({line,data,ref})=>batch.update(ref,{stock:Number(data.stock||0)-line.qty}));
-  batch.set(saleRef,{lines,productId:lines.length===1?lines[0].productId:"multi",productName:lines.map(x=>x.name).join(", "),qty,price:total/Math.max(1,qty),total,paid,due:total-paid,customer,payment:payType,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
-  if(staffRole==="owner")batch.set(costRef,{cost:costTotal,profit:total-costTotal});
-  queueOfflineBatch(batch,"အရောင်း");
+  const qty=lines.reduce((a,x)=>a+x.qty,0);
+  if(navigator.onLine===false){
+   const snapshots=lines.map(line=>{const p=products.find(x=>x.id===line.productId);if(!p)throw Error("ပစ္စည်းကို Offline Cache မှ မရနိုင်ပါ: "+line.name);return {line,data:p,ref:col("products").doc(line.productId)}});
+   let costTotal=0;snapshots.forEach(({line,data})=>{const stock=Number(data.stock||0);if(line.qty>stock)throw Error("လက်ကျန်မလုံလောက်ပါ: "+line.name+" · "+stock);costTotal+=Number(data.cost||0)*line.qty});
+   const batch=db.batch();snapshots.forEach(({line,ref})=>batch.update(ref,{stock:firebase.firestore.FieldValue.increment(-line.qty)}));
+   batch.set(saleRef,{lines,productId:lines.length===1?lines[0].productId:"multi",productName:lines.map(x=>x.name).join(", "),qty,price:total/Math.max(1,qty),total,paid,due:total-paid,customer,payment:payType,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+   if(staffRole==="owner")batch.set(costRef,{cost:costTotal,profit:total-costTotal});
+   queueOfflineBatch(batch,"အရောင်း");
+  }else{
+   await db.runTransaction(async tx=>{
+    const snapshots=[];for(const line of lines){const ref=col("products").doc(line.productId),snap=await tx.get(ref);if(!snap.exists)throw Error("ပစ္စည်းမတွေ့ပါ: "+line.name);snapshots.push({line,ref,data:snap.data()})}
+    let costTotal=0;if(staffRole==="owner"){for(const item of snapshots){const cs=await tx.get(col("productCosts").doc(item.line.productId));costTotal+=Number(cs.data()?.cost||0)*item.line.qty}}
+    snapshots.forEach(({line,ref,data})=>{const stock=Number(data.stock||0);if(line.qty>stock)throw Error("လက်ကျန်မလုံလောက်ပါ: "+line.name+" · "+stock);tx.update(ref,{stock:stock-line.qty})});
+    tx.set(saleRef,{lines,productId:lines.length===1?lines[0].productId:"multi",productName:lines.map(x=>x.name).join(", "),qty,price:total/Math.max(1,qty),total,paid,due:total-paid,customer,payment:payType,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+    if(staffRole==="owner")tx.set(costRef,{cost:costTotal,profit:total-costTotal});
+   });
+  }
   saleCart=[];$("salePaid").value="0";$("saleCustomer").value="";renderSaleCart();await reloadAll();
   const readyPrinter=printerRead().find(x=>x.default)||printerRead()[0];
   if(readyPrinter){try{await window.printSaleReceipt(saleRef.id)}catch(printError){status("အရောင်းသိမ်းပြီးပါပြီ၊ ဘောင်ချာပုံနှိပ်မှု မအောင်မြင်ပါ: "+errText(printError),"printerStatus")}}
@@ -896,12 +905,21 @@ $("savePurchase").onclick=async()=>{
   const selectedId=$("buyProduct").value,qty=Number($("buyQty").value),cost=Number($("buyCost").value),supplier=$("buySupplier").value.trim(),paid=Number($("buyPaid").value)||0;
   if(!selectedId||!Number.isFinite(qty)||qty<=0||!Number.isFinite(cost)||cost<0)throw Error("အဝယ်အချက်အလက် မှန်ကန်စွာဖြည့်ပါ");
   const total=qty*cost;if(paid<0||paid>total)throw Error("ပေးချေငွေသည် စုစုပေါင်းထက် မများရပါ");
-  const p=products.find(x=>x.id===selectedId);if(!p)throw Error("ပစ္စည်းကို Offline Cache မှ မရနိုင်ပါ။ အင်တာနက်ရှိစဉ် ပစ္စည်းစာရင်းကို အရင်ဖွင့်ထားပါ");
-  const purchaseRef=col("purchases").doc(),productRef=col("products").doc(selectedId),costRef=col("productCosts").doc(selectedId),paymentRef=col("payments").doc(),batch=db.batch();
-  batch.update(productRef,{stock:Number(p.stock||0)+qty});batch.set(costRef,{cost});
-  batch.set(purchaseRef,{productId:selectedId,productName:p.name,qty,cost,total,paid,due:total-paid,supplier:supplier||"မသတ်မှတ်ရသေး",createdAt:firebase.firestore.FieldValue.serverTimestamp()});
-  if(paid>0)batch.set(paymentRef,{kind:"purchase",purchaseId:purchaseRef.id,amount:paid,supplier,createdAt:firebase.firestore.FieldValue.serverTimestamp(),note:"အဝယ်တွင် ပထမပေးချေမှု"});
-  queueOfflineBatch(batch,"အဝယ်");
+  const purchaseRef=col("purchases").doc(selectedId+"_"+db.collection("_ids").doc().id),productRef=col("products").doc(selectedId),costRef=col("productCosts").doc(selectedId),paymentRef=col("payments").doc();
+  if(navigator.onLine===false){
+   const p=products.find(x=>x.id===selectedId);if(!p)throw Error("ပစ္စည်းကို Offline Cache မှ မရနိုင်ပါ။ အင်တာနက်ရှိစဉ် ပစ္စည်းစာရင်းကို အရင်ဖွင့်ထားပါ");
+   const batch=db.batch();batch.update(productRef,{stock:firebase.firestore.FieldValue.increment(qty)});batch.set(costRef,{cost});
+   batch.set(purchaseRef,{productId:selectedId,productName:p.name,qty,cost,total,paid,due:total-paid,supplier:supplier||"မသတ်မှတ်ရသေး",createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+   if(paid>0)batch.set(paymentRef,{kind:"purchase",purchaseId:purchaseRef.id,amount:paid,supplier,createdAt:firebase.firestore.FieldValue.serverTimestamp(),note:"အဝယ်တွင် ပထမပေးချေမှု"});
+   queueOfflineBatch(batch,"အဝယ်");
+  }else{
+   await db.runTransaction(async tx=>{
+    const productSnap=await tx.get(productRef);if(!productSnap.exists)throw Error("ပစ္စည်းမတွေ့ပါ");const p=productSnap.data();
+    tx.update(productRef,{stock:Number(p.stock||0)+qty});tx.set(costRef,{cost});
+    tx.set(purchaseRef,{productId:selectedId,productName:p.name,qty,cost,total,paid,due:total-paid,supplier:supplier||"မသတ်မှတ်ရသေး",createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+    if(paid>0)tx.set(paymentRef,{kind:"purchase",purchaseId:purchaseRef.id,amount:paid,supplier,createdAt:firebase.firestore.FieldValue.serverTimestamp(),note:"အဝယ်တွင် ပထမပေးချေမှု"});
+   });
+  }
   $("buyPaid").value="0";buyPaidManuallyEdited=false;await reloadAll();
  }catch(e){alert(errText(e))}
 };
@@ -909,22 +927,40 @@ $("savePurchase").onclick=async()=>{
 async function collectSalePayment(id){
  try{
   const amount=Number(prompt("အကြွေးပြန်ကောက်ရရှိငွေ (MMK)"));if(!Number.isFinite(amount)||amount<=0)return;
-  const sale=sales.find(x=>x.id===id);if(!sale)throw Error("အရောင်းမှတ်တမ်းကို Offline Cache မှ မတွေ့ပါ");
-  const balance=saleBalance(sale);if(amount>balance.due+.0001)throw Error("ကျန်အကြွေး "+money(balance.due)+" ထက် မပိုရပါ");
-  const paymentRef=col("payments").doc(),batch=db.batch();
-  batch.set(paymentRef,{kind:"sale",saleId:id,amount,customer:sale.customer||"",createdAt:firebase.firestore.FieldValue.serverTimestamp(),note:"အကြွေးပြန်ကောက်"});
-  queueOfflineBatch(batch,"အကြွေးပြန်ကောက်");await reloadAll();
+  const paymentRef=col("payments").doc();
+  if(navigator.onLine===false){
+   const sale=sales.find(x=>x.id===id);if(!sale)throw Error("အရောင်းမှတ်တမ်းကို Offline Cache မှ မတွေ့ပါ");
+   const balance=saleBalance(sale);if(amount>balance.due+.0001)throw Error("ကျန်အကြွေး "+money(balance.due)+" ထက် မပိုရပါ");
+   const batch=db.batch();batch.set(paymentRef,{kind:"sale",saleId:id,amount,customer:sale.customer||"",createdAt:firebase.firestore.FieldValue.serverTimestamp(),note:"အကြွေးပြန်ကောက်"});queueOfflineBatch(batch,"အကြွေးပြန်ကောက်");
+  }else{
+   await db.runTransaction(async tx=>{
+    const saleRef=col("sales").doc(id),saleSnap=await tx.get(saleRef);if(!saleSnap.exists)throw Error("အရောင်းမှတ်တမ်း မတွေ့ပါ");
+    const existing=await tx.get(col("payments").where("saleId","==",id)),sale=saleSnap.data(),received=existing.docs.reduce((a,d)=>a+Number(d.data().amount||0),0),due=Number(sale.total||0)-Number(sale.paid||0)-received;
+    if(amount>due+.0001)throw Error("ကျန်အကြွေး "+money(due)+" ထက် မပိုရပါ");
+    tx.set(paymentRef,{kind:"sale",saleId:id,amount,customer:sale.customer||"",createdAt:firebase.firestore.FieldValue.serverTimestamp(),note:"အကြွေးပြန်ကောက်"});
+   });
+  }
+  await reloadAll();
  }catch(e){alert(errText(e))}
 }
 async function paySupplier(id){
  try{
   const amount=Number(prompt("ပေးသွင်းသူထံ ယခုပေးချေငွေ (MMK)"));if(!Number.isFinite(amount)||amount<=0)return;
-  const x=purchases.find(v=>v.id===id);if(!x)throw Error("အဝယ်မှတ်တမ်းကို Offline Cache မှ မတွေ့ပါ");
-  const paid=Number(x.paid||0)+payments.filter(p=>p.kind==="purchase"&&p.purchaseId===id).reduce((a,p)=>a+Number(p.amount||0),0),due=Number(x.total||0)-paid;
-  if(amount>due+.0001)throw Error("ပေးရန်ကျန်ငွေ "+money(due)+" ထက် မပိုရပါ");
-  const paymentRef=col("payments").doc(),batch=db.batch();
-  batch.set(paymentRef,{kind:"purchase",purchaseId:id,amount,supplier:x.supplier||"",createdAt:firebase.firestore.FieldValue.serverTimestamp(),note:"ပေးသွင်းသူထံ ပေးချေ"});
-  queueOfflineBatch(batch,"ပေးသွင်းသူထံ ပေးချေ");await reloadAll();
+  const paymentRef=col("payments").doc();
+  if(navigator.onLine===false){
+   const x=purchases.find(v=>v.id===id);if(!x)throw Error("အဝယ်မှတ်တမ်းကို Offline Cache မှ မတွေ့ပါ");
+   const paid=Number(x.paid||0)+payments.filter(p=>p.kind==="purchase"&&p.purchaseId===id).reduce((a,p)=>a+Number(p.amount||0),0),due=Number(x.total||0)-paid;
+   if(amount>due+.0001)throw Error("ပေးရန်ကျန်ငွေ "+money(due)+" ထက် မပိုရပါ");
+   const batch=db.batch();batch.set(paymentRef,{kind:"purchase",purchaseId:id,amount,supplier:x.supplier||"",createdAt:firebase.firestore.FieldValue.serverTimestamp(),note:"ပေးသွင်းသူထံ ပေးချေ"});queueOfflineBatch(batch,"ပေးသွင်းသူထံ ပေးချေ");
+  }else{
+   await db.runTransaction(async tx=>{
+    const purchaseRef=col("purchases").doc(id),snap=await tx.get(purchaseRef);if(!snap.exists)throw Error("အဝယ်မှတ်တမ်း မတွေ့ပါ");
+    const existing=await tx.get(col("payments").where("purchaseId","==",id)),x=snap.data(),paid=Number(x.paid||0)+existing.docs.reduce((a,d)=>a+Number(d.data().amount||0),0),due=Number(x.total||0)-paid;
+    if(amount>due+.0001)throw Error("ပေးရန်ကျန်ငွေ "+money(due)+" ထက် မပိုရပါ");
+    tx.set(paymentRef,{kind:"purchase",purchaseId:id,amount,supplier:x.supplier||"",createdAt:firebase.firestore.FieldValue.serverTimestamp(),note:"ပေးသွင်းသူထံ ပေးချေ"});
+   });
+  }
+  await reloadAll();
  }catch(e){alert(errText(e))}
 }
 window.collectSalePayment=collectSalePayment;window.paySupplier=paySupplier;

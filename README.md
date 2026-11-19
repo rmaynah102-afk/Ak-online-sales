@@ -30,7 +30,7 @@ Myanmar-first shop POS and public product market for hardware, electrical and ge
 - Platform Owner sets each shop's expiry date. Subscription reference price is **30,000 MMK/month**. Payment is handled outside the app; the Platform Owner verifies receipt independently and manually sets or extends the expiry date.
 - No in-app KPay/WavePay checkout, transaction-reference submission, or payment-screenshot upload is included in the intended account model.
 - Shop owners can issue one-time 8-digit Merchant Codes to up to 2 staff accounts per shop. Codes expire after 24 hours.
-- Staff access is limited to product viewing/stock operations, sales, customer/contact records and permitted printer functions. Purchasing, expenses, profit reports, backup and shop administration are Owner-only.
+- Staff access is limited to product viewing/stock operations, sales, customer records only and permitted printer functions. Purchasing, expenses, profit reports, backup and shop administration are Owner-only.
 - The APK is signed and publicly downloadable, but it is not a Play Store release and no Play Store AAB is published by the current workflow.
 
 ## Web + Android

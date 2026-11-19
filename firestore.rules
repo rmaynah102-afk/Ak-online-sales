@@ -91,13 +91,13 @@ service cloud.firestore {
 
     function canReadPosCollection(shopId, collection) {
       return isVerifiedOwner() || isPosShopOwner(shopId)
-        || (collection in ['products','sales','people']
+        || (collection in ['products','sales']
           && hasShopMemberRole(shopId, ['employee']));
     }
 
     function canCreatePosCollection(shopId, collection) {
       return isVerifiedOwner() || isPosShopOwner(shopId)
-        || (collection in ['sales','people']
+        || (collection in ['sales']
           && hasShopMemberRole(shopId, ['employee']));
     }
 
@@ -116,6 +116,18 @@ service cloud.firestore {
 
     function canWriteShopWorkspaceMeta(shopId) {
       return isVerifiedOwner() || isPosShopOwner(shopId);
+    }
+
+    // Staff may access customer contacts only; supplier records remain Owner-only.
+    match /shops/{shopId}/pos/people/records/{documentId} {
+      allow read: if isVerifiedOwner() || isPosShopOwner(shopId)
+        || (hasShopMemberRole(shopId, ['employee']) && resource.data.type == 'customer');
+      allow create: if isVerifiedOwner() || isPosShopOwner(shopId)
+        || (hasShopMemberRole(shopId, ['employee'])
+          && request.resource.data.type == 'customer'
+          && request.resource.data.name is string
+          && request.resource.data.name.size() >= 1);
+      allow update, delete: if isVerifiedOwner() || isPosShopOwner(shopId);
     }
 
     // Staff can read and create only sales-related payment records.

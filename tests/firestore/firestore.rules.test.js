@@ -291,4 +291,60 @@ describe('AK Sale POS role and tenant security',function(){
    createdAt:serverTimestamp(),expiresAt:futureTimestamp(24),createdBy:'shop-a'
   }));
  });
+ it('blocks self-service Free Beta enrollment and trial-claim creation',async()=>{
+  const user=googleContext('self-signup',{email:'self@example.com',email_verified:true}).firestore();
+  await assertFails(setDoc(doc(user,'freeBetaUsers','self-signup'),{
+   uid:'self-signup',email:'self@example.com',status:'active',
+   createdAt:serverTimestamp(),lastLoginAt:serverTimestamp()
+  }));
+  await assertFails(setDoc(doc(user,'freeTrialClaims','self@example.com'),{
+   uid:'self-signup',email:'self@example.com',createdAt:serverTimestamp()
+  }));
+  await assertFails(setDoc(doc(user,'freeBetaCapacity','slots'),{
+   count:1,updatedAt:serverTimestamp()
+  }));
+ });
+
+ it('limits Staff payment access and writes to sale-related records only',async()=>{
+  await seedLicense('shop-a');
+  const code='12121212';
+  await seedInvite('shop-a',code);
+  const db=await claimInvite('staff-a','staff-a@example.com','shop-a',code);
+  await testEnv.withSecurityRulesDisabled(async ctx=>{
+   const adminDb=ctx.firestore(),payments=collection(adminDb,'shops','shop-a','pos','payments','records');
+   await setDoc(doc(payments,'sale-payment'),{kind:'sale',saleId:'sale-1',amount:100});
+   await setDoc(doc(payments,'purchase-payment'),{kind:'purchase',purchaseId:'purchase-1',amount:200});
+  });
+  const payments=collection(db,'shops','shop-a','pos','payments','records');
+  const saleRows=await assertSucceeds(getDocs(query(payments,where('kind','==','sale'))));
+  assert.equal(saleRows.size,1);
+  await assertFails(getDocs(payments),'Staff must not list all payment records');
+  await assertFails(getDoc(doc(payments,'purchase-payment')));
+  await assertSucceeds(setDoc(doc(payments,'new-sale-payment'),{
+   kind:'sale',saleId:'sale-2',amount:50
+  }));
+  await assertFails(setDoc(doc(payments,'new-purchase-payment'),{
+   kind:'purchase',purchaseId:'purchase-2',amount:50
+  }));
+ });
+
+ it('limits Staff contact access to customer records, not supplier records',async()=>{
+  await seedLicense('shop-a');
+  const code='13131313';
+  await seedInvite('shop-a',code);
+  const db=await claimInvite('staff-a','staff-a@example.com','shop-a',code);
+  await testEnv.withSecurityRulesDisabled(async ctx=>{
+   const adminDb=ctx.firestore(),people=collection(adminDb,'shops','shop-a','pos','people','records');
+   await setDoc(doc(people,'customer-1'),{name:'Customer One',type:'customer'});
+   await setDoc(doc(people,'supplier-1'),{name:'Supplier One',type:'supplier'});
+  });
+  const people=collection(db,'shops','shop-a','pos','people','records');
+  const customers=await assertSucceeds(getDocs(query(people,where('type','==','customer'))));
+  assert.equal(customers.size,1);
+  await assertFails(getDocs(people),'Staff must not list customer and supplier records together');
+  await assertFails(getDoc(doc(people,'supplier-1')));
+  await assertSucceeds(setDoc(doc(people,'customer-2'),{name:'Customer Two',type:'customer'}));
+  await assertFails(setDoc(doc(people,'supplier-2'),{name:'Supplier Two',type:'supplier'}));
+ });
+
 });

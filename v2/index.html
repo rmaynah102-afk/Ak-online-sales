@@ -606,6 +606,7 @@ $("morePlatformUsers").onclick=()=>loadPlatformUsers(false);
 
 function applyRoleUI(){
  const owner=staffRole==="owner",staff=staffRole==="employee";
+ const supplierOption=$("personType")?.querySelector('option[value="supplier"]');if(supplierOption){supplierOption.hidden=staff;supplierOption.disabled=staff;}if(staff&&$("personType"))$("personType").value="customer";
  $("staffManagement").classList.toggle("hidden",!owner||isPlatformOwner());
  $("productForm").classList.toggle("hidden",!owner);
  $("productSheetWrap").classList.toggle("hidden",!owner);
@@ -656,7 +657,7 @@ $("refreshStaffBtn").onclick=loadMerchantStaff;
 window.removeMerchantStaff=async uid=>{if(!confirm("ဤဝန်ထမ်းအကောင့်ကို ပိတ်မလား။"))return;try{const memberRef=db.collection("shopMembers").doc(uid),snap=await memberRef.get();if(!snap.exists||snap.data().shopId!==shopId||snap.data().merchantStaff!==true)throw Error("ဤဆိုင်၏ ဝန်ထမ်းအကောင့် မဟုတ်ပါ။");const slotId=snap.data().slotId,batch=db.batch();batch.update(memberRef,{status:"suspended",revokedAt:firebase.firestore.FieldValue.serverTimestamp()});if(slotId)batch.delete(db.collection("shopStaffSlots").doc(slotId));await batch.commit();await loadMerchantStaff();$("staffStatus").textContent="ဝန်ထမ်းအကောင့် ပိတ်ပြီးပါပြီ။"}catch(e){$("staffStatus").textContent="ဝန်ထမ်းပိတ်မရပါ: "+errText(e)}};
 
 const col=name=>db.collection("shops").doc(shopId).collection("pos").doc(name).collection("records");
-async function getRows(name){const base=col(name),query=name==="payments"&&staffRole==="employee"?base.where("kind","==","sale"):base;let s;try{s=await query.get()}catch(e){if(!navigator.onLine||e?.code==="unavailable"){try{s=await query.get({source:"cache"});if(!s.docs.length)throw Error("cache-empty")}catch(cacheError){throw Error("Offline ဒေတာမရှိသေးပါ။ အင်တာနက်ချိတ်ပြီး ဒီစာရင်းကို အရင် Sync လုပ်ပါ။ ("+name+")")}}else throw e}if(!navigator.onLine&&s.metadata?.fromCache&&!s.docs.length)throw Error("Offline မှတ်တမ်းမရှိသေးပါ။ အင်တာနက်ချိတ်ပြီး "+name+" ကို Sync လုပ်ပါ။");return s.docs.map(d=>({id:d.id,...d.data()}))}
+async function getRows(name){const base=col(name),query=staffRole==="employee"&&name==="payments"?base.where("kind","==","sale"):staffRole==="employee"&&name==="people"?base.where("type","==","customer"):base;let s;try{s=await query.get()}catch(e){if(!navigator.onLine||e?.code==="unavailable"){try{s=await query.get({source:"cache"});if(!s.docs.length)throw Error("cache-empty")}catch(cacheError){throw Error("Offline ဒေတာမရှိသေးပါ။ အင်တာနက်ချိတ်ပြီး ဒီစာရင်းကို အရင် Sync လုပ်ပါ။ ("+name+")")}}else throw e}if(!navigator.onLine&&s.metadata?.fromCache&&!s.docs.length)throw Error("Offline မှတ်တမ်းမရှိသေးပါ။ အင်တာနက်ချိတ်ပြီး "+name+" ကို Sync လုပ်ပါ။");return s.docs.map(d=>({id:d.id,...d.data()}))}
 async function loadShop(){
  const platformOwner=isPlatformOwner();
  if(platformOwner){
@@ -946,7 +947,7 @@ async function paySupplier(id){
  }catch(e){alert(errText(e))}
 }
 window.collectSalePayment=collectSalePayment;window.paySupplier=paySupplier;
-$("savePerson").onclick=async()=>{try{if(!$("personName").value.trim())throw Error("အမည်ဖြည့်ပါ");await col("people").add({name:$("personName").value.trim(),phone:$("personPhone").value.trim(),type:$("personType").value,createdAt:firebase.firestore.FieldValue.serverTimestamp()});await reloadAll()}catch(e){alert(errText(e))}};
+$("savePerson").onclick=async()=>{try{if(!$("personName").value.trim())throw Error("အမည်ဖြည့်ပါ");const personType=staffRole==="employee"?"customer":$("personType").value;await col("people").add({name:$("personName").value.trim(),phone:$("personPhone").value.trim(),type:personType,createdAt:firebase.firestore.FieldValue.serverTimestamp()});await reloadAll()}catch(e){alert(errText(e))}};
 $("saveExpense").onclick=async()=>{try{if(staffRole!=="owner")throw Error("ဆိုင်ရှင်သာ အသုံးစရိတ်တင်နိုင်သည်။");const name=$("expenseName").value.trim(),amount=Number($("expenseAmount").value);if(!name||!Number.isFinite(amount)||amount<=0)throw Error("အကြောင်းအရာနှင့် ငွေပမာဏ ဖြည့်ပါ");await col("expenses").add({name,amount,verified:false,createdBy:user.uid,createdAt:firebase.firestore.FieldValue.serverTimestamp()});$("expenseName").value="";$("expenseAmount").value="";await reloadAll();alert("အသုံးစရိတ်တင်ပြီးပါပြီ။ စာရင်းချုပ်ဇယားတွင် Verify လုပ်ပါ။")}catch(e){alert(errText(e))}};
 window.verifyExpense=async id=>{try{if(staffRole!=="owner")throw Error("ဆိုင်ရှင်သာ Verify လုပ်နိုင်သည်။");const x=expenses.find(v=>v.id===id);if(!x||x.verified===true)return;await col("expenses").doc(id).update({verified:true,verifiedAt:firebase.firestore.FieldValue.serverTimestamp(),verifiedBy:user.uid});await reloadAll()}catch(e){alert(errText(e))}};
 $("tabs").onclick=e=>{const b=e.target.closest("button[data-tab]");if(!b)return;document.querySelectorAll("#tabs button").forEach(x=>x.classList.toggle("active",x===b));["profile","products","sales","purchases","people","reports","ads","backup"].forEach(t=>$("tab-"+t).classList.toggle("hidden",t!==b.dataset.tab))};

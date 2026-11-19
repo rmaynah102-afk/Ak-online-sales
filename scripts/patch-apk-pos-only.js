@@ -21,6 +21,11 @@ replaceExactly('const publicViews=["backup","market","account","payment","staffJ
 replaceExactly('  id="market";\n }\n // Public Marketplace listings are open to everyone; POS/shop-owner tools remain gated.', '  id="account";\n }\n // Public Marketplace listings are open to everyone; POS/shop-owner tools remain gated.');
 replaceExactly('const publicMode=params.get("market")==="1" && params.get("app")!=="1";', 'const publicMode=false; /* APK: never move login or Merchant Code into Market. */');
 replaceExactly('if(new URLSearchParams(location.search).get("market")==="1")document.documentElement.classList.add("ak-public-market");','/* APK POS-only: public Market URL mode disabled. */');
+replaceExactly('<link rel="manifest" href="./manifest.webmanifest">','');
+replaceExactly(
+  ' if(!new URLSearchParams(location.search).has("market") && "serviceWorker" in navigator && /^https?:$/.test(location.protocol)){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(e=>console.warn("Offline cache unavailable",e)))}',
+  ' /* APK POS-only: Website service worker disabled; Capacitor owns the native app shell. */'
+);
 replaceExactly('s.src="https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js";s.async=true;','s.src="./vendor/zxing.min.js";s.async=true;');
 // Keep the real Marketplace section ID unchanged. Rewriting it to "backup" created duplicate IDs and exposed Market inside the APK login/backup view.
 replaceExactly('name:"Ak shopping markets"','name:"AK Hardware & Electrical"');

@@ -91,13 +91,13 @@ service cloud.firestore {
 
     function canReadPosCollection(shopId, collection) {
       return isVerifiedOwner() || isPosShopOwner(shopId)
-        || (collection in ['products','sales','people','payments']
+        || (collection in ['products','sales','people']
           && hasShopMemberRole(shopId, ['employee']));
     }
 
     function canCreatePosCollection(shopId, collection) {
       return isVerifiedOwner() || isPosShopOwner(shopId)
-        || (collection in ['sales','people','payments']
+        || (collection in ['sales','people']
           && hasShopMemberRole(shopId, ['employee']));
     }
 
@@ -116,6 +116,20 @@ service cloud.firestore {
 
     function canWriteShopWorkspaceMeta(shopId) {
       return isVerifiedOwner() || isPosShopOwner(shopId);
+    }
+
+    // Staff can read and create only sales-related payment records.
+    // Supplier/purchase payments remain Owner-only.
+    match /shops/{shopId}/pos/payments/records/{documentId} {
+      allow read: if isVerifiedOwner() || isPosShopOwner(shopId)
+        || (hasShopMemberRole(shopId, ['employee']) && resource.data.kind == 'sale');
+      allow create: if isVerifiedOwner() || isPosShopOwner(shopId)
+        || (hasShopMemberRole(shopId, ['employee'])
+          && request.resource.data.kind == 'sale'
+          && request.resource.data.saleId is string
+          && request.resource.data.amount is number
+          && request.resource.data.amount > 0);
+      allow update, delete: if isVerifiedOwner() || isPosShopOwner(shopId);
     }
 
     // Tenant-scoped POS data: collection-level rules enforce role permissions.

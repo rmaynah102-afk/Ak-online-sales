@@ -1,5 +1,14 @@
 # AK Sale Software · AK Shopping Markets
 
+## AK Sale POS Android — Public Download
+
+- **Latest APK (stable direct link):** https://github.com/rmaynah102-afk/Ak-online-sales/releases/latest/download/app-release.apk
+- **Latest release and version notes:** https://github.com/rmaynah102-afk/Ak-online-sales/releases/latest
+- Current release: **AK Sale POS 2.1.317** (v2.1.317).
+- Send the direct APK link to other Android users. They can download the APK and install it after allowing installation from their browser or file manager.
+- APK package: com.ak.hardware.sales. This is a signed Android APK; it is not a Play Store release.
+- **Important:** A successful CI build is not a substitute for testing on real phones, Firebase accounts, and the actual printer model. Do not use customer data or sell subscriptions until account, permissions, backup, and printer workflows have been verified.
+
 Myanmar-first shop POS and public product market for hardware, electrical and general retail/wholesale shops.
 
 ## အသုံးပြုနည်းလမ်းညွှန်
@@ -15,11 +24,12 @@ Myanmar-first shop POS and public product market for hardware, electrical and ge
 ## AK Sale POS 2.0 (new rebuild)
 
 - **New POS web app:** https://rmaynah102-afk.github.io/Ak-online-sales/v2/
-- **Android test APK builds:** [GitHub Actions](https://github.com/rmaynah102-afk/Ak-online-sales/actions/workflows/build-ak-sale-pos-v2-apk.yml)
-- Platform Owner creates shop-owner accounts; shop owners sign in with Gmail and password.
-- Shop owners create up to 3 staff accounts using Merchant Code and password.
-- Subscription periods and manual renewals are controlled by Platform Owner. No in-app payment checkout is included.
-- This is the new POS 2.0 line; The APK now includes a native Bluetooth/Wi-Fi ESC/POS bridge; the actual printer model and paper width still need a physical test.
+- **Public signed APK:** [Download latest APK](https://github.com/rmaynah102-afk/Ak-online-sales/releases/latest/download/app-release.apk)
+- **Build history:** [GitHub Actions](https://github.com/rmaynah102-afk/Ak-online-sales/actions/workflows/build-ak-sale-pos-v2-apk.yml)
+- Platform Owner authorizes shop-owner Gmail accounts; self-registration is disabled. Shop Owner and Staff sign in with Google, with Staff requiring an 8-digit Merchant Code.
+- Maximum 2 staff accounts per shop. Staff access is restricted to products and sales; owner-only financial and purchasing data is not exposed to staff.
+- Subscription is 30,000 MMK/month; Platform Owner manually sets or extends expiry. No in-app KPay/WavePay checkout is included.
+- The APK includes native printer integration, but Bluetooth/Wi-Fi operation still requires testing with the actual printer model and paper width.
 
 ## Web + Android
 
@@ -29,7 +39,7 @@ Myanmar-first shop POS and public product market for hardware, electrical and ge
 - **Shop Web App:** https://rmaynah102-afk.github.io/Ak-online-sales/?app=1
 - **Source:** https://github.com/rmaynah102-afk/Ak-online-sales
 - **Android package:** `com.ak.hardware.sales`
-- **APK/AAB:** Android workflow builds both signed release APK and Play Store AAB when the private release-signing secrets are configured. Current signed build artifacts are available in GitHub Actions run [42149325580](https://github.com/rmaynah102-afk/Ak-online-sales/actions/runs/42149325580). A public GitHub Release is only created after `AK_PUBLIC_APK_RELEASE_APPROVED=true` is explicitly set.
+- **APK:** The signed APK is distributed through the public GitHub Release link above. The current Android workflow does not publish a Play Store AAB.
 - The Android app bundles the same `index.html` as the web app using Capacitor. Local shop data works on-device; Firebase login, cloud sync, public listings and remote features require internet access.
 - The PWA app shell is cached for offline opening. Offline cache is not a substitute for a cloud backup.
 
@@ -60,7 +70,7 @@ Myanmar-first shop POS and public product market for hardware, electrical and ge
 
 ## Known limits — do not treat as production-ready
 
-- Separate manager/cashier/employee accounts, Merchant Code invitations, custom role claims and shared staff access are disabled in the free-only build. Cloud Functions are not deployed; do not share the shop owner's password with staff.
+- Staff access and Merchant Code invitation flows are included in the current APK build, but must be verified with separate real Google accounts before commercial rollout. Never share the shop owner's Google account with staff.
 - Cloud backup callables, server-side device management and AI callable features are unavailable. Use local JSON Backup/Restore.
 - The Android APK includes a native Bluetooth Classic SPP ESC/POS and Wi-Fi RAW TCP 9100 bridge. It requires a compatible printer and has not been verified on real printer hardware. BLE-only printers, vendor-specific protocols and unsupported paper widths may not work. Website printing continues to use Android/System Print.
 - Social media auto-posting is not included; Android Share / manual posting is used.

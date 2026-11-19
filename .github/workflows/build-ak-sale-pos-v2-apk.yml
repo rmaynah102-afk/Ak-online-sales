@@ -206,7 +206,7 @@ jobs:
           node - <<'NODE'
           const fs=require('fs');
           const run=Number(process.env.GITHUB_RUN_NUMBER||1);
-          const versionCode=1000000+run;
+          const legacyVersionCodeFloor=1000693;\nconst versionCode=2000000+run;\nif(versionCode<=legacyVersionCodeFloor) throw new Error('V2 APK versionCode must exceed legacy APK versionCode '+legacyVersionCodeFloor);
           const versionName='2.1.'+run;
           const p='android/app/build.gradle';
           let g=fs.readFileSync(p,'utf8');

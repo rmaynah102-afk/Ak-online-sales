@@ -329,7 +329,7 @@ jobs:
           if-no-files-found: error
           retention-days: 30
       - name: Create permanent public GitHub Release
-        if: steps.signing.outputs.ready == 'true' && github.event_name == 'workflow_dispatch' && inputs.publish_release == true
+        if: steps.signing.outputs.ready == 'true' && ((github.event_name == 'workflow_dispatch' && inputs.publish_release == true) || (github.event_name == 'push' && github.ref == 'refs/heads/ak-pos-offline-first' && contains(github.event.head_commit.message, '[publish-release]')))
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |

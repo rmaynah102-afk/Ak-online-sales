@@ -91,13 +91,13 @@ service cloud.firestore {
 
     function canReadPosCollection(shopId, collection) {
       return isVerifiedOwner() || isPosShopOwner(shopId)
-        || (collection in ['products','sales','people','payments']
+        || (collection in ['products','sales']
           && hasShopMemberRole(shopId, ['employee']));
     }
 
     function canCreatePosCollection(shopId, collection) {
       return isVerifiedOwner() || isPosShopOwner(shopId)
-        || (collection in ['sales','people','payments']
+        || (collection in ['sales']
           && hasShopMemberRole(shopId, ['employee']));
     }
 
@@ -116,6 +116,32 @@ service cloud.firestore {
 
     function canWriteShopWorkspaceMeta(shopId) {
       return isVerifiedOwner() || isPosShopOwner(shopId);
+    }
+
+    // Staff may access customer contacts only; supplier records remain Owner-only.
+    match /shops/{shopId}/pos/people/records/{documentId} {
+      allow read: if isVerifiedOwner() || isPosShopOwner(shopId)
+        || (hasShopMemberRole(shopId, ['employee']) && resource.data.type == 'customer');
+      allow create: if isVerifiedOwner() || isPosShopOwner(shopId)
+        || (hasShopMemberRole(shopId, ['employee'])
+          && request.resource.data.type == 'customer'
+          && request.resource.data.name is string
+          && request.resource.data.name.size() >= 1);
+      allow update, delete: if isVerifiedOwner() || isPosShopOwner(shopId);
+    }
+
+    // Staff can read and create only sales-related payment records.
+    // Supplier/purchase payments remain Owner-only.
+    match /shops/{shopId}/pos/payments/records/{documentId} {
+      allow read: if isVerifiedOwner() || isPosShopOwner(shopId)
+        || (hasShopMemberRole(shopId, ['employee']) && resource.data.kind == 'sale');
+      allow create: if isVerifiedOwner() || isPosShopOwner(shopId)
+        || (hasShopMemberRole(shopId, ['employee'])
+          && request.resource.data.kind == 'sale'
+          && request.resource.data.saleId is string
+          && request.resource.data.amount is number
+          && request.resource.data.amount > 0);
+      allow update, delete: if isVerifiedOwner() || isPosShopOwner(shopId);
     }
 
     // Tenant-scoped POS data: collection-level rules enforce role permissions.
@@ -286,32 +312,12 @@ service cloud.firestore {
       allow read, write: if isVerifiedOwner();
     }
 
-    // The first 100 verified shop-owner accounts receive permanent Free Beta access.
-    // Owner can suspend an account; each Gmail address can claim only once.
+    // Legacy Free Beta records are retained for existing accounts. New records are Platform-Owner-only;
+    // self-service enrollment is disabled to enforce the Owner-approved shop account model.
     match /freeBetaUsers/{userId} {
       allow read: if isVerifiedOwner()
         || (isVerifiedGoogleUser() && request.auth.uid == userId);
       allow create: if (
-          request.auth != null
-          && request.auth.uid == userId
-          && isVerifiedGoogleUser()
-          && request.resource.data.uid == userId
-          && request.resource.data.email == request.auth.token.email
-          && request.resource.data.status == 'active'
-          && request.resource.data.createdAt == request.time
-          && request.resource.data.lastLoginAt == request.time
-          && request.resource.data.keys().hasOnly(['uid','email','status','createdAt','lastLoginAt'])
-          && !exists(/databases/$(database)/documents/freeBetaUsers/$(userId))
-          && !exists(freeTrialClaimPath(request.auth.token.email))
-          && existsAfter(freeTrialClaimPath(request.auth.token.email))
-          && existsAfter(/databases/$(database)/documents/freeBetaCapacity/slots)
-          && getAfter(/databases/$(database)/documents/freeBetaCapacity/slots).data.count is int
-          && getAfter(/databases/$(database)/documents/freeBetaCapacity/slots).data.count <= 100
-          && getAfter(/databases/$(database)/documents/freeBetaCapacity/slots).data.updatedAt == request.time
-          && getAfter(freeTrialClaimPath(request.auth.token.email)).data.uid == userId
-          && getAfter(freeTrialClaimPath(request.auth.token.email)).data.email == request.auth.token.email
-          && getAfter(freeTrialClaimPath(request.auth.token.email)).data.createdAt == request.time
-        ) || (
           isVerifiedOwner()
           && request.resource.data.uid == userId
           && request.resource.data.email is string
@@ -331,8 +337,7 @@ service cloud.firestore {
           && getAfter(/databases/$(database)/documents/freeBetaCapacity/slots).data.count is int
           && getAfter(/databases/$(database)/documents/freeBetaCapacity/slots).data.count <= 100
           && getAfter(freeTrialClaimPath(request.resource.data.email)).data.uid == userId
-          && getAfter(freeTrialClaimPath(request.resource.data.email)).data.email == request.resource.data.email
-        );
+          && getAfter(freeTrialClaimPath(request.resource.data.email)).data.email == request.resource.data.email);
       allow update: if (isVerifiedOwner()
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
           && request.resource.data.status in ['active','disabled'])
@@ -347,19 +352,8 @@ service cloud.firestore {
     }
 
     match /freeBetaCapacity/{documentId} {
-      allow read: if isVerifiedOwner()
-        || (request.auth != null && isVerifiedGoogleUser());
-      allow create: if (request.auth != null
-          && isVerifiedGoogleUser()
-          && documentId == 'slots'
-          && request.resource.data.keys().hasOnly(['count','updatedAt'])
-          && request.resource.data.count == 1
-          && request.resource.data.updatedAt == request.time
-          && existsAfter(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid))
-          && existsAfter(freeTrialClaimPath(request.auth.token.email))
-          && getAfter(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid)).data.status == 'active'
-          && getAfter(freeTrialClaimPath(request.auth.token.email)).data.uid == request.auth.uid)
-        || (isVerifiedOwner()
+      allow read: if isVerifiedOwner();
+      allow create: if (isVerifiedOwner()
           && documentId == 'slots'
           && request.resource.data.keys().hasOnly(['count','updatedAt','lastIssuedUid'])
           && request.resource.data.count is int
@@ -372,21 +366,7 @@ service cloud.firestore {
           && getAfter(/databases/$(database)/documents/freeBetaUsers/$(request.resource.data.lastIssuedUid)).data.plan == 'free-beta'
           && existsAfter(freeTrialClaimPath(getAfter(/databases/$(database)/documents/freeBetaUsers/$(request.resource.data.lastIssuedUid)).data.email))
           && getAfter(freeTrialClaimPath(getAfter(/databases/$(database)/documents/freeBetaUsers/$(request.resource.data.lastIssuedUid)).data.email)).data.uid == request.resource.data.lastIssuedUid);
-      allow update: if (request.auth != null
-          && isVerifiedGoogleUser()
-          && documentId == 'slots'
-          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['count','updatedAt'])
-          && resource.data.count is int
-          && request.resource.data.count == resource.data.count + 1
-          && request.resource.data.count <= 100
-          && request.resource.data.updatedAt == request.time
-          && !exists(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid))
-          && existsAfter(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid))
-          && !exists(freeTrialClaimPath(request.auth.token.email))
-          && existsAfter(freeTrialClaimPath(request.auth.token.email))
-          && getAfter(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid)).data.status == 'active'
-          && getAfter(freeTrialClaimPath(request.auth.token.email)).data.uid == request.auth.uid)
-        || (isVerifiedOwner()
+      allow update: if (isVerifiedOwner()
           && documentId == 'slots'
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['count','updatedAt','lastIssuedUid'])
           && resource.data.count is int
@@ -407,25 +387,6 @@ service cloud.firestore {
       allow read: if isVerifiedOwner()
         || (isVerifiedGoogleUser() && request.auth.token.email == email);
       allow create: if (
-          request.auth != null
-          && isVerifiedGoogleUser()
-          && request.auth.token.email == email
-          && request.resource.data.uid == request.auth.uid
-          && request.resource.data.email == email
-          && request.resource.data.createdAt is timestamp
-          && request.resource.data.keys().hasOnly(['uid','email','createdAt'])
-          && !exists(freeTrialClaimPath(email))
-          && (
-            (existsAfter(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid))
-              && !exists(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid))
-              && getAfter(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid)).data.createdAt == request.time
-              && request.resource.data.createdAt == request.time)
-            || (exists(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid))
-              && get(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid)).data.uid == request.auth.uid
-              && get(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid)).data.email == email
-              && get(/databases/$(database)/documents/freeBetaUsers/$(request.auth.uid)).data.createdAt == request.resource.data.createdAt)
-          )
-        ) || (
           isVerifiedOwner()
           && request.resource.data.uid is string
           && request.resource.data.email == email
@@ -433,8 +394,7 @@ service cloud.firestore {
           && request.resource.data.keys().hasOnly(['uid','email','createdAt'])
           && existsAfter(/databases/$(database)/documents/freeBetaUsers/$(request.resource.data.uid))
           && getAfter(/databases/$(database)/documents/freeBetaUsers/$(request.resource.data.uid)).data.email == email
-          && !exists(freeTrialClaimPath(email))
-        );
+          && !exists(freeTrialClaimPath(email)));
       allow update, delete: if false;
     }
 

@@ -7,7 +7,7 @@ on:
       - "tests/firestore/**"
       - ".github/workflows/test-deploy-pos-v2-rules.yml"
   pull_request:
-    branches: [main]
+    branches: [main, ak-pos-offline-first]
     paths:
       - "firestore.rules"
       - "tests/firestore/**"

@@ -8,7 +8,7 @@ const checks=[
  ['Label size, columns, copies and alignment controls exist',['akV2LabelSize','akV2LabelColumns','akV2LabelCopies','akV2LabelAlign'].every(x=>html.includes('id="'+x+'"'))],
  ['Barcode label supports SKU / barcode fields',html.includes('p.sku||p.barcode||"No barcode"')&&html.includes('p.sku||p.barcode||"")')],
  ['Code 39 SVG renderer exists',html.includes('function code39Svg(value)')&&html.includes('window.akPrintV2Labels=function()')],
- ['Print output uses physical millimetre dimensions',html.includes('grid-auto-rows:'+h+'mm')&&html.includes('repeat('+columns+', '+w+'mm)')],
+ ['Print output uses physical millimetre dimensions',html.includes("grid-auto-rows:'+h+'mm")&&html.includes("repeat('+columns+', '+w+'mm")],
  ['Product list refresh is connected to V2 renderAll',/renderProductTable\(\);\s*refreshTransactionProductOptions\(\);\s*window\.akRefreshV2LabelProducts\?\.\(\);/.test(html)],
  ['Print action opens Android/browser print dialog',html.includes('window.open("","_blank")')&&html.includes('win.print()')]
 ];

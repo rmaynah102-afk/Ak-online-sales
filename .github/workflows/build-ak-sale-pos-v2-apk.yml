@@ -135,7 +135,7 @@ jobs:
           const fs=require('fs');
           const run=Number(process.env.GITHUB_RUN_NUMBER||1);
           const versionCode=1000000+run;
-          const versionName='2.0.'+run;
+          const versionName='2.1.'+run;
           const p='android/app/build.gradle';
           let g=fs.readFileSync(p,'utf8');
           if(!/versionCode\s+\d+/.test(g)||!/versionName\s+"[^"]+"/.test(g)) throw new Error('Android version fields not found');

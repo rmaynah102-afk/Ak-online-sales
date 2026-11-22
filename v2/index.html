@@ -286,7 +286,7 @@ details>summary{cursor:pointer;color:#edf0f3;font-weight:700;padding:8px 0}
 </main><footer id="appFooter">POS Management System · MMK</footer>
 <script>
 const OWNER="painglin102@gmail.com", GATEWAY="https://ak-sale-backend.painglin102.workers.dev", PROJECT=window.AK_FIREBASE_PUBLIC_CONFIG;
-let auth,db,user,shopId="",staffRole="owner",products=[],sales=[],purchases=[],people=[],expenses=[],payments=[],editingProduct=null,licenses=[],saleCart=[],activeShopName="ဆိုင်အမည်",activeIndustryType="general",staffPermissions={},staffCanPrint=false;
+let auth,db,user,shopId="",staffRole="owner",products=[],sales=[],purchases=[],people=[],expenses=[],payments=[],editingProduct=null,licenses=[],saleCart=[],activeShopName="ဆိုင်အမည်",activeIndustryType="general",staffPermissions={},staffCanPrint=false,staffMemberUnsubscribe=null;
 const $=id=>document.getElementById(id), money=n=>(Number(n)||0).toLocaleString("en-US")+" ကျပ်", dateText=d=>{const x=d?.toDate?d.toDate():new Date(d||Date.now());return isNaN(x)? "-":x.toLocaleDateString("en-GB")};
 const DEFAULT_STAFF_PERMISSIONS=Object.freeze({viewProducts:true,viewSales:true,createSales:true,viewCustomers:true,manageCustomers:true,receivePayments:true,adjustStock:true});
 const STAFF_PERMISSION_LABELS=[["viewProducts","ကုန်ပစ္စည်းကြည့်ရန်"],["viewSales","အရောင်းစာရင်းကြည့်ရန်"],["createSales","အရောင်းလုပ်ရန်"],["viewCustomers","ဖောက်သည်စာရင်းကြည့်ရန်"],["manageCustomers","ဖောက်သည်အသစ်ထည့်ရန်"],["receivePayments","အကြွေးကောက်ခံရန်"],["adjustStock","လက်ကျန်ပြင်ရန်"]];
@@ -538,6 +538,7 @@ $("ownerGoogleBtn").onclick=async()=>{
 
 $("ownerPOSBtn").onclick=async()=>{try{shopId=user.uid;staffRole="owner";await loadShop()}catch(e){status("Owner POS မဖွင့်နိုင်ပါ: "+errText(e),"ownerStatus")}};
 async function akLogout(){
+ if(staffMemberUnsubscribe){staffMemberUnsubscribe();staffMemberUnsubscribe=null;}
  const ownerButton=$("logoutOwner"),shopButton=$("logoutShop");
  if(ownerButton)ownerButton.disabled=true;if(shopButton)shopButton.disabled=true;
  try{await auth.signOut();user=null;shopId="";staffRole="";staffPermissions={};staffCanPrint=false;activeShopName="";shopProfile={};products=[];sales=[];purchases=[];people=[];expenses=[];payments=[];$("userBadge").textContent="";show("loginPanel");status("အကောင့်မှ ထွက်ပြီးပါပြီ။");}
@@ -727,6 +728,14 @@ const col=name=>db.collection("shops").doc(shopId).collection("pos").doc(name).c
 async function getRows(name){let s;try{s=await col(name).get()}catch(e){if(!navigator.onLine||e?.code==="unavailable"){try{s=await col(name).get({source:"cache"});if(!s.docs.length)throw Error("cache-empty")}catch(cacheError){throw Error("Offline ဒေတာမရှိသေးပါ။ အင်တာနက်ချိတ်ပြီး ဒီစာရင်းကို အရင် Sync လုပ်ပါ။ ("+name+")")}}else throw e}if(!navigator.onLine&&s.metadata?.fromCache&&!s.docs.length)throw Error("Offline မှတ်တမ်းမရှိသေးပါ။ အင်တာနက်ချိတ်ပြီး "+name+" ကို Sync လုပ်ပါ။");return s.docs.map(d=>({id:d.id,...d.data()}))}
 async function loadShop(){
  const platformOwner=isPlatformOwner();
+ if(staffMemberUnsubscribe){staffMemberUnsubscribe();staffMemberUnsubscribe=null;}
+ if(!platformOwner&&staffRole==="employee"&&user?.uid){
+  staffMemberUnsubscribe=db.collection("shopMembers").doc(user.uid).onSnapshot(snap=>{
+   if(!snap.exists||snap.data()?.status!=="active"){$("staffStatus").textContent="ဝန်ထမ်းအကောင့် ပိတ်ထားပါသည်။";auth.signOut().then(()=>{user=null;staffRole="";show("loginPanel");status("ဝန်ထမ်းအကောင့်ကို ဆိုင်ရှင်က ပိတ်ထားပါသည်။")});return;}
+   const member=snap.data()||{};staffPermissions=member.permissions?{...DEFAULT_STAFF_PERMISSIONS,...member.permissions}:{...DEFAULT_STAFF_PERMISSIONS};staffCanPrint=member.canPrint===true;
+   applyRoleUI();reloadAll().then(()=>renderAll()).catch(e=>status("ဝန်ထမ်းခွင့်ပြုချက်အရ ဒေတာပြန်ဖတ်မရပါ: "+errText(e)));
+  },error=>{if(error?.code==="permission-denied"){auth.signOut().then(()=>{user=null;staffRole="";show("loginPanel");status("ဝန်ထမ်းအကောင့် သို့မဟုတ် ဆိုင်ခွင့်ပြုချက် မရှိတော့ပါ။")})}});
+ }
  if(platformOwner){
   activeShopName="AK Hardware & Electrical";activeIndustryType="hardware";
   $("shopTitle").textContent="AK Hardware & Electrical · Owner POS";

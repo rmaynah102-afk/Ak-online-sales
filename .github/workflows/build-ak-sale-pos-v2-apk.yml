@@ -20,7 +20,7 @@ on:
       - ".github/workflows/build-ak-sale-pos-v2-apk.yml"
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -247,6 +247,22 @@ jobs:
           path: android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 30
+      - name: Publish signed APK as GitHub Release
+        if: steps.signing.outputs.ready == 'true' && github.ref == 'refs/heads/release/2.1.318-receipt-printer-staff'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v2.1.${{ github.run_number }}
+          name: AK Sale POS v2.1.${{ github.run_number }}
+          body: |
+            AK Sale POS signed Android APK release.
+
+            - Package: com.ak.hardware.sales
+            - Android version: 2.1.${{ github.run_number }}
+            - Signed with the registered AK Sale release certificate.
+            - Build and regression checks completed in GitHub Actions.
+          files: android/app/build/outputs/apk/release/app-release.apk
+          draft: false
+          prerelease: false
       - name: Build temporary debug APK when release key is unavailable
         if: steps.signing.outputs.ready != 'true'
         working-directory: android

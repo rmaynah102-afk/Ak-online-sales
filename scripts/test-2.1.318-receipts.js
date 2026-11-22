@@ -14,7 +14,7 @@ const checks=[
  ["sale discount input",'id="saleDiscount"'],
  ["system print shows discount","money(sale.discount||0)"],
  ["discount persisted on sale","subtotal,discount,total,paid"],
- ["discount deducted from profit","profit:total-cost*qty"],
+ ["discount deducted from profit","profit:total-costTotal"],
  ["employee cashier permission",'staffRole==="cashier"||staffRole==="employee"'],
  ["employee sales and people data loading",'cashier=staffRole==="cashier"||staffRole==="employee"'],
  ["separate receipt settings save button",'id="saveReceiptSettings"'],

@@ -10,7 +10,7 @@ const checks=[
  ['New product records store normalized search keys and business type',html.includes('nameLower:name.toLowerCase(),sku,skuLower:sku.toLowerCase(),category,categoryLower:category.toLowerCase(),industryType:activeIndustryType')],
  ['Bulk product import stores normalized search keys and business type',html.includes('nameLower:x.name.toLowerCase(),sku:x.sku,skuLower:x.sku.toLowerCase(),category:x.category,categoryLower:x.category.toLowerCase(),industryType:activeIndustryType')&&html.includes('defaultCategory=(PRODUCT_CATEGORY_PRESETS[activeIndustryType]||PRODUCT_CATEGORY_PRESETS.general)[0]')],
  ['Sale cart checks quantity against available stock before checkout',html.includes('if(qty+already>Number(p.stock||0))')],
- ['Sale checkout re-reads product documents and checks stock inside transaction',html.includes('await db.runTransaction(async tx=>{\n  const snapshots=[];for(const line of lines)')&&html.includes('if(line.qty>stock)throw Error("လက်ကျန်မလုံလောက်ပါ: "+line.name')],
+ ['Sale checkout re-reads product documents and checks stock inside transaction',html.includes('await db.runTransaction(async tx=>{')&&html.includes('const snapshots=[];for(const line of lines)')&&html.includes('if(line.qty>stock)throw Error("လက်ကျန်မလုံလောက်ပါ: "+line.name')],
  ['Sale checkout records payment type, paid amount and outstanding balance',html.includes('payment:payType,createdAt:firebase.firestore.FieldValue.serverTimestamp()')&&html.includes('due:total-paid')],
  ['Successful sale refreshes inventory and attempts receipt printing',html.includes('saleCart=[];$("salePaid").value="0"')&&html.includes('await window.printSaleReceipt(saleRef.id)')]
 ];

@@ -2,13 +2,14 @@ name: Build AK Sale POS 2.0 Android APK
 
 on:
   push:
-    branches: [ak-sale-pos-v2-main, main, ak-pos-rebuild-1.0.5-restore, ak-pos-international-v2, ak-pos-receipts-owner-audit, ak-pos-offline-first, "apk/fix-release-tag-target-20261119", "feature/ak-sale-v2-barcode-labels-20261121", "feature/ak-catalog-sales-workflow-20261122"]
+    branches: [ak-sale-pos-v2-main, main, ak-pos-rebuild-1.0.5-restore, ak-pos-international-v2, ak-pos-receipts-owner-audit, ak-pos-offline-first, "apk/fix-release-tag-target-20261119", "feature/ak-sale-v2-barcode-labels-20261121", "feature/ak-catalog-sales-workflow-20261122", "feature/ak-staff-permissions-20261122"]
     paths:
       - "v2/**"
       - "scripts/patch-ak-apk-runtime.py"
       - "scripts/test-apk-auth-flow.js"
       - "scripts/test-v2-barcode-labels.js"
       - "scripts/test-v2-catalog-sales.js"
+      - "scripts/test-v2-staff-permissions.js"
       - "native/android/**"
       - "firebase-config.js"
       - "google-services.json"
@@ -133,6 +134,8 @@ jobs:
         run: node scripts/copy-zxing.js
       - name: Test business-specific catalog and sale workflow
         run: node scripts/test-v2-catalog-sales.js
+      - name: Test granular staff permissions
+        run: node scripts/test-v2-staff-permissions.js
       - name: Validate app JavaScript
         run: |
           node - <<'NODE'

@@ -91,6 +91,11 @@ jobs:
           NODE
       - name: Test receipt, discount, printer and employee workflows
         run: node scripts/test-2.1.318-receipts.js
+      - name: Test Firestore security rules for employee staff
+        working-directory: tests/firestore
+        run: |
+          npm install
+          npx firebase --config ../../firebase.json emulators:exec --only firestore --project demo-ak-sale-rules "npm test"
       - name: Validate native printer installer
         run: node --check scripts/install-native-printer.js
       - name: Generate Android project

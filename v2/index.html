@@ -442,7 +442,11 @@ const receiptSettingsKey=()=> "ak_pos_receipt_settings_"+(shopId||user?.uid||"lo
 function receiptSettingsRead(){try{return JSON.parse(localStorage.getItem(receiptSettingsKey())||"{}")||{}}catch(_){return{}}}
 function receiptHistoryRead(){try{return JSON.parse(localStorage.getItem(receiptSettingsKey()+"_history")||"[]")}catch(_){return[]}}
 function receiptHistoryAdd(sale,method,state){const rows=receiptHistoryRead();rows.unshift({id:sale.id,at:new Date().toISOString(),method,state});localStorage.setItem(receiptSettingsKey()+"_history",JSON.stringify(rows.slice(0,50)));receiptHistoryRender()}
-function receiptHistoryRender(){const el=$("receiptHistory");if(!el)return;const rows=receiptHistoryRead();el.innerHTML=rows.length?'<table><thead><tr><th>ဘောင်ချာ</th><th>ရက်စွဲ</th><th>နည်းလမ်း</th><th>အခြေအနေ</th><th></th></tr></thead><tbody>'+rows.map(x=>'<tr><td>'+esc(String(x.id).slice(-10))+'</td><td>'+esc(new Date(x.at).toLocaleString())+'</td><td>'+esc(x.method)+'</td><td>'+esc(x.state)+'</td><td><button class="secondary" onclick="printSaleReceipt(\\''+esc(x.id)+'\\')">ပြန်ထုတ်</button></td></tr>').join("")+'</tbody></table>':"Print မှတ်တမ်း မရှိသေးပါ။"}
+function receiptHistoryRender(){
+ const el=$("receiptHistory");if(!el)return;const rows=receiptHistoryRead();
+ el.innerHTML=rows.length?'<table><thead><tr><th>ဘောင်ချာ</th><th>ရက်စွဲ</th><th>နည်းလမ်း</th><th>အခြေအနေ</th><th></th></tr></thead><tbody>'+rows.map(x=>'<tr><td>'+esc(String(x.id).slice(-10))+'</td><td>'+esc(new Date(x.at).toLocaleString())+'</td><td>'+esc(x.method)+'</td><td>'+esc(x.state)+'</td><td><button class="secondary" data-reprint-id="'+esc(x.id)+'">ပြန်ထုတ်</button></td></tr>').join("")+'</tbody></table>':"Print မှတ်တမ်း မရှိသေးပါ။";
+ el.querySelectorAll("[data-reprint-id]").forEach(btn=>btn.addEventListener("click",()=>window.printSaleReceipt(btn.dataset.reprintId)));
+}
 window.printSaleReceipt=async id=>{
  const sale=sales.find(x=>x.id===id);if(!sale)return;
  const pref=receiptSettingsRead(),paper=pref.paper||"80mm",copies=Math.max(1,Math.min(3,Number(pref.copies)||1)),printer=printerRead().find(x=>x.default)||printerRead()[0];

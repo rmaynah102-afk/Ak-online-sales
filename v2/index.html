@@ -650,15 +650,19 @@ $("morePlatformUsers").onclick=()=>loadPlatformUsers(false);
 
 
 function applyRoleUI(){
- const owner=staffRole==="owner",staff=staffRole==="employee";
+ const owner=staffRole==="owner",staff=staffRole==="employee",p=staffPermissions||{};
+ const can=key=>owner||(!staff?false:p[key]===true);
  $("staffManagement").classList.toggle("hidden",!owner||isPlatformOwner());
  $("productForm").classList.toggle("hidden",!owner);
  $("productSheetWrap").classList.toggle("hidden",!owner);
- const allowed={profile:owner,products:true,sales:owner||staff,purchases:owner,people:owner||staff,expenses:owner,reports:owner,printer:owner||staff,ads:owner,backup:owner};
+ const allowed={profile:owner,products:can("viewProducts"),sales:can("viewSales"),purchases:owner,people:can("viewCustomers"),expenses:owner,reports:owner,printer:owner||(staff&&staffCanPrint),ads:owner,backup:owner};
  for(const [tab,ok] of Object.entries(allowed)){const b=document.querySelector('#tabs button[data-tab="'+tab+'"]');if(b)b.classList.toggle("hidden",!ok);const panel=$("tab-"+tab);if(panel)panel.classList.toggle("hidden",!ok||tab!=="products")}
  document.querySelectorAll("#tabs button").forEach(b=>{if(!b.classList.contains("hidden"))b.classList.toggle("active",b.dataset.tab==="products")});
- ["saveSale","savePerson"].forEach(id=>{const el=$(id);if(el)el.disabled=!(owner||staff)});
+ const saleAllowed=can("createSales"),customerAllowed=can("manageCustomers");
+ ["saveSale","addSaleCart"].forEach(id=>{const el=$(id);if(el)el.disabled=!saleAllowed});
+ $("savePerson").disabled=!customerAllowed;
  ["savePurchase","saveExpense"].forEach(id=>{const el=$(id);if(el)el.disabled=!owner});
+ $("printerInline").classList.toggle("hidden",staff&&!staffCanPrint);
 }
 async function staffGateway(path,data={}){
  const token=await user.getIdToken(true);

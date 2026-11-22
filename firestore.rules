@@ -78,17 +78,19 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/shopMembers/$(request.auth.uid)).data.role in roles;
     }
 
-    function staffHasPermission(shopId, permission) {
-      let member = get(/databases/$(database)/documents/shopMembers/$(request.auth.uid)).data;
-      return isActiveShopMember(shopId)
-        && member.role == 'employee'
-        && (!('permissions' in member.keys())
-          || member.permissions.get(permission, false) == true);
+    function activeStaffMemberData(shopId, member) {
+      return request.auth != null
+        && isVerifiedGoogleUser()
+        && activeShopLicense(shopId)
+        && member != null
+        && member.shopId == shopId
+        && member.status == 'active'
+        && member.role == 'employee';
     }
 
-    function validStaffPermissions(permissions) {
-      return permissions is map
-        && permissions.keys().hasOnly(['viewProducts','viewSales','createSales','viewCustomers','manageCustomers','receivePayments','adjustStock']);
+    function staffHasPermission(member, permission) {
+      return !('permissions' in member.keys())
+        || (member.permissions is map && member.permissions.get(permission, false) == true);
     }
 
     function posRecordHasNoCostFields(data) {
@@ -103,29 +105,36 @@ service cloud.firestore {
     }
 
     function canReadPosCollection(shopId, collection) {
+      let member = get(/databases/$(database)/documents/shopMembers/$(request.auth.uid)).data;
       return isVerifiedOwner() || isPosShopOwner(shopId)
-        || (collection == 'products' && staffHasPermission(shopId, 'viewProducts'))
-        || (collection == 'sales' && staffHasPermission(shopId, 'viewSales'))
-        || (collection == 'people' && staffHasPermission(shopId, 'viewCustomers'))
-        || (collection == 'payments' && staffHasPermission(shopId, 'viewSales'));
+        || (collection == 'products' && activeStaffMemberData(shopId, member) && staffHasPermission(member, 'viewProducts'))
+        || (collection == 'sales' && activeStaffMemberData(shopId, member) && staffHasPermission(member, 'viewSales'))
+        || (collection == 'people' && activeStaffMemberData(shopId, member) && staffHasPermission(member, 'viewCustomers'))
+        || (collection == 'payments' && activeStaffMemberData(shopId, member) && staffHasPermission(member, 'viewSales'));
     }
 
     function canCreatePosCollection(shopId, collection) {
+      let member = get(/databases/$(database)/documents/shopMembers/$(request.auth.uid)).data;
       return isVerifiedOwner() || isPosShopOwner(shopId)
-        || (collection == 'sales' && staffHasPermission(shopId, 'createSales')
-          && staffHasPermission(shopId, 'viewSales')
-          && staffHasPermission(shopId, 'viewProducts')
-          && staffHasPermission(shopId, 'adjustStock'))
-        || (collection == 'people' && staffHasPermission(shopId, 'manageCustomers')
-          && staffHasPermission(shopId, 'viewCustomers'))
-        || (collection == 'payments' && staffHasPermission(shopId, 'receivePayments')
-          && staffHasPermission(shopId, 'viewSales'));
+        || (collection == 'sales' && activeStaffMemberData(shopId, member)
+          && staffHasPermission(member, 'createSales')
+          && staffHasPermission(member, 'viewSales')
+          && staffHasPermission(member, 'viewProducts')
+          && staffHasPermission(member, 'adjustStock'))
+        || (collection == 'people' && activeStaffMemberData(shopId, member)
+          && staffHasPermission(member, 'manageCustomers')
+          && staffHasPermission(member, 'viewCustomers'))
+        || (collection == 'payments' && activeStaffMemberData(shopId, member)
+          && staffHasPermission(member, 'receivePayments')
+          && staffHasPermission(member, 'viewSales'));
     }
 
     function canUpdatePosCollection(shopId, collection) {
+      let member = get(/databases/$(database)/documents/shopMembers/$(request.auth.uid)).data;
       return isVerifiedOwner() || isPosShopOwner(shopId)
-        || (collection == 'products' && staffHasPermission(shopId, 'adjustStock')
-          && staffHasPermission(shopId, 'viewProducts'));
+        || (collection == 'products' && activeStaffMemberData(shopId, member)
+          && staffHasPermission(member, 'adjustStock')
+          && staffHasPermission(member, 'viewProducts'));
     }
 
     function canDeletePosCollection(shopId, collection) {

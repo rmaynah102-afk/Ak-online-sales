@@ -65,7 +65,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
 <section id="tab-printer" class="card hidden">
 <h2>Printer ချိတ်ဆက်မှု</h2><p class="muted">APK တွင် Bluetooth Classic ESC/POS နှင့် Wi-Fi RAW TCP 9100 ကို တိုက်ရိုက်အသုံးပြုနိုင်သည်။ Website တွင် Android/System Print သို့မဟုတ် Browser Print ကို အသုံးပြုပါ။</p>
 <div class="grid"><div><label>Printer အမည်</label><input id="printerName" placeholder="ဥပမာ Xprinter 58mm"></div><div><label>Printer အမျိုးအစား</label><select id="printerType"><option value="system">Android / System Print</option><option value="bluetooth">Bluetooth ESC/POS</option><option value="wifi">Wi-Fi RAW TCP</option></select></div><div id="printerBluetoothBox" class="hidden"><label>Pair လုပ်ထားသော Printer</label><select id="printerBluetoothDevice"><option value="">Printer ရှာရန်နှိပ်ပါ</option></select><button type="button" class="secondary" id="findBluetoothPrinters">Bluetooth Printer ရှာရန်</button></div><div id="printerWifiBox" class="hidden"><label>Printer IP Address</label><input id="printerHost" placeholder="192.168.1.100"><label>Port</label><input id="printerPort" type="number" value="9100"></div></div>
-<div class="row"><button id="savePrinter">Printer သိမ်းမည်</button><button id="testPrinter" class="secondary">စမ်းသပ် Print</button><button id="systemPrint" class="secondary">System Print / PDF</button></div><div id="printerStatus" class="muted"></div><div id="printerRows"></div>
+<div class="grid"><div><label>ဘောင်ချာစာရွက်</label><select id="receiptPaper"><option value="58mm">58mm</option><option value="80mm" selected>80mm</option></select></div><div><label>မိတ္တူအရေအတွက်</label><select id="receiptCopies"><option value="1">၁ စောင်</option><option value="2">၂ စောင်</option><option value="3">၃ စောင်</option></select></div><div><label>ဘောင်ချာဆိုင်အမည်</label><input id="receiptShopName" placeholder="AK Hardware & Electrical"></div><div><label>အောက်ဆုံးစာသား</label><input id="receiptFooter" placeholder="ကျေးဇူးတင်ပါသည်"></div></div><div class="row"><button id="savePrinter">Printer သိမ်းမည်</button><button id="testPrinter" class="secondary">စမ်းသပ် Print</button><button id="systemPrint" class="secondary">System Print / PDF</button></div><div id="printerStatus" class="muted"></div><div id="printerRows"></div><h3>ဘောင်ချာမှတ်တမ်း / ပြန်ထုတ်ရန်</h3><div id="receiptHistory" class="tablewrap muted">Print မှတ်တမ်း မရှိသေးပါ။</div>
 </section>
 <section id="tab-ads" class="card hidden">
 <h2>Social Media ကြော်ငြာဖန်တီးရန်</h2><p class="muted">ကုန်ပစ္စည်းအမည်၊ ဈေးနှုန်း၊ ဆက်သွယ်ရန်နှင့် ဓာတ်ပုံဖြင့် 1080×1080 ကြော်ငြာပုံဖန်တီးပြီး Android Share Menu မှ Viber၊ TikTok၊ Facebook စသည်သို့ မျှဝေနိုင်သည်။</p>
@@ -436,14 +436,23 @@ function buildReceiptEscPos(s,paper="80mm"){
  for(let yy=0;yy<height;yy++)for(let xx=0;xx<width;xx++){const k=(yy*width+xx)*4,g=(img.data[k]*299+img.data[k+1]*587+img.data[k+2]*114)/1000;if(g<175)raster[yy*bpr+(xx>>3)]|=0x80>>(xx&7)}
  const head=Uint8Array.from([27,64,29,118,48,0,bpr&255,(bpr>>8)&255,height&255,(height>>8)&255]),tail=Uint8Array.from([10,10,10,29,86,0]),out=new Uint8Array(head.length+raster.length+tail.length);out.set(head);out.set(raster,head.length);out.set(tail,head.length+raster.length);return out;
 }
+const receiptSettingsKey=()=> "ak_pos_receipt_settings_"+(shopId||user?.uid||"local");
+function receiptSettingsRead(){try{return JSON.parse(localStorage.getItem(receiptSettingsKey())||"{}")||{}}catch(_){return{}}}
+function receiptHistoryRead(){try{return JSON.parse(localStorage.getItem(receiptSettingsKey()+"_history")||"[]")}catch(_){return[]}}
+function receiptHistoryAdd(sale,method,state){const rows=receiptHistoryRead();rows.unshift({id:sale.id,at:new Date().toISOString(),method,state});localStorage.setItem(receiptSettingsKey()+"_history",JSON.stringify(rows.slice(0,50)));receiptHistoryRender()}
+function receiptHistoryRender(){const el=$("receiptHistory");if(!el)return;const rows=receiptHistoryRead();el.innerHTML=rows.length?'<table><thead><tr><th>ဘောင်ချာ</th><th>ရက်စွဲ</th><th>နည်းလမ်း</th><th>အခြေအနေ</th><th></th></tr></thead><tbody>'+rows.map(x=>'<tr><td>'+esc(String(x.id).slice(-10))+'</td><td>'+esc(new Date(x.at).toLocaleString())+'</td><td>'+esc(x.method)+'</td><td>'+esc(x.state)+'</td><td><button class="secondary" onclick="printSaleReceipt(\\''+esc(x.id)+'\\')">ပြန်ထုတ်</button></td></tr>').join("")+'</tbody></table>':"Print မှတ်တမ်း မရှိသေးပါ။"}
 window.printSaleReceipt=async id=>{
  const sale=sales.find(x=>x.id===id);if(!sale)return;
- const p=printerRead().find(x=>x.default)||printerRead()[0];
- if(p&&["bluetooth","wifi"].includes(p.type)&&window.Capacitor?.isNativePlatform?.()){
-  try{await window.akPrintRawToDefault(buildReceiptEscPos({...sale,id}));status("ဘောင်ချာကို "+p.name+" သို့ ပို့ပြီးပါပြီ။ Printer မှ စာရွက်ထွက်လာကြောင်း စစ်ပါ။","printerStatus")}catch(e){alert("Direct Print မအောင်မြင်ပါ: "+errText(e))}return;
+ const pref=receiptSettingsRead(),paper=pref.paper||"80mm",copies=Math.max(1,Math.min(3,Number(pref.copies)||1)),printer=printerRead().find(x=>x.default)||printerRead()[0];
+ if(printer&&["bluetooth","wifi"].includes(printer.type)&&window.Capacitor?.isNativePlatform?.()){
+  try{const bytes=buildReceiptEscPos({...sale,id},paper);for(let i=0;i<copies;i++)await window.akPrintRawToDefault(bytes);receiptHistoryAdd(sale,printer.name,"ပို့ပြီး");status("ဘောင်ချာ "+copies+" စောင် ပို့ပြီးပါပြီ။","printerStatus")}catch(e){receiptHistoryAdd(sale,printer.name,"မအောင်မြင်");alert("Print မအောင်မြင်: "+errText(e))}return;
  }
  const w=window.open("","_blank");if(!w){alert("Print Window ဖွင့်မရပါ။ Pop-up ခွင့်ပြုပါ။");return}
- w.document.write('<!doctype html><html lang="my"><meta charset="utf-8"><title>AK Sale Receipt</title><style>body{font-family:Arial,sans-serif;padding:12px}h2{text-align:center}.line{border-top:1px dashed #555;margin:10px 0}button{padding:10px}</style><h2>AK Hardware & Electrical</h2><p>ဘောင်ချာ: '+esc(id.slice(-10))+'</p><p>ရက်စွဲ: '+dateText(sale.createdAt)+'</p><p>ပစ္စည်း: '+esc(sale.productName)+'</p><p>အရေအတွက်: '+sale.qty+'</p><p>စုစုပေါင်း: '+money(sale.total)+'</p><p>ပေးချေပြီး: '+money(sale.paid)+'</p><p>ကျန်ငွေ: '+money(sale.due)+'</p><button onclick="window.print()">Print / PDF သိမ်းရန်</button><script>window.onload=()=>setTimeout(()=>window.print(),250)<\/script></html>');w.document.close();
+ const width=paper==="58mm"?"52mm":"74mm",shop=esc(pref.shopName||"AK Hardware & Electrical"),footer=esc(pref.footer||"ကျေးဇူးတင်ပါသည်");
+ const css='<style>@page{size:'+paper+' auto;margin:3mm}body{font-family:Arial,sans-serif;width:'+width+';padding:3mm}h2{text-align:center}.copy{page-break-after:always}@media print{button{display:none}}</style>';
+ const item='<h2>'+shop+'</h2><p>ဘောင်ချာ: '+esc(id.slice(-10))+'</p><p>ရက်စွဲ: '+dateText(sale.createdAt)+'</p><p>ပစ္စည်း: '+esc(sale.productName)+'</p><p>အရေအတွက်: '+sale.qty+'</p><p>စုစုပေါင်း: '+money(sale.total)+'</p><p>ပေးချေပြီး: '+money(sale.paid)+'</p><p>ကျန်ငွေ: '+money(sale.due)+'</p><p>'+footer+'</p>';
+ w.document.write('<!doctype html><html lang="my"><meta charset="utf-8"><title>AK Sale Receipt</title>'+css+Array.from({length:copies},()=>'<article class="copy">'+item+'</article>').join("")+'<button onclick="window.print()">Print / PDF သိမ်းရန်</button><script>window.onload=()=>setTimeout(()=>window.print(),250)<\\/script></html>');
+ w.document.close();receiptHistoryAdd(sale,"System Print / PDF","Print Window ဖွင့်ပြီး");
 };
 $("testPrinter").onclick=async()=>{
  const p=printerRead().find(x=>x.default)||printerRead()[0];if(!p){status("Printer အရင်သိမ်းပါ။","printerStatus");return}
@@ -452,7 +461,7 @@ $("testPrinter").onclick=async()=>{
  }else{const w=window.open("","_blank");if(w){w.document.write("<h2>AK Sale Printer Test</h2><p>Android Print Service မှ Printer ရွေးပါ။</p><script>window.onload=()=>window.print()<\/script>");w.document.close()}}
 };
 $("systemPrint").onclick=()=>window.print();
-printerTypeChanged();printerRender();
+const rPrefs=receiptSettingsRead();$("receiptPaper").value=rPrefs.paper||"80mm";$("receiptCopies").value=String(rPrefs.copies||1);$("receiptShopName").value=rPrefs.shopName||"";$("receiptFooter").value=rPrefs.footer||"";$("savePrinter").addEventListener("click",()=>{localStorage.setItem(receiptSettingsKey(),JSON.stringify({paper:$("receiptPaper").value,copies:Number($("receiptCopies").value),shopName:$("receiptShopName").value.trim(),footer:$("receiptFooter").value.trim()}));receiptHistoryRender()});printerTypeChanged();printerRender();receiptHistoryRender();
 
 // Social advert image creator and native share-sheet handoff (no automatic posting).
 let adImage=null,adReady=false;

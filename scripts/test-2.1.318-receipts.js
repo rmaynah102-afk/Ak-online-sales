@@ -16,6 +16,9 @@ const checks=[
  ["discount persisted on sale","subtotal,discount,total,paid"],
  ["discount deducted from profit","profit:total-cost*qty"],
  ["employee cashier permission",'staffRole==="cashier"||staffRole==="employee"'],
+ ["employee sales and people data loading",'cashier=staffRole==="cashier"||staffRole==="employee"'],
+ ["separate receipt settings save button",'id="saveReceiptSettings"'],
+ ["system print uses latest receipt",'window.printSaleReceipt(latest.id)'],
  ["ESC/POS auto cut bytes","29,86,0"]
 ];
 for(const [label,marker] of checks){if(!(html.includes(marker)||native.includes(marker)))throw new Error("Missing: "+label)}

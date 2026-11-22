@@ -10,6 +10,7 @@ const checks=[
  ["copy selector",'id="receiptCopies"'],
  ["receipt print history",'id="receiptHistory"'],
  ["receipt reprint handler","window.printSaleReceipt=async id=>"],
+ ["sale row reprint uses safe data handler","data-sale-receipt"],
  ["sale discount input",'id="saleDiscount"'],
  ["system print shows discount","money(sale.discount||0)"],
  ["discount persisted on sale","subtotal,discount,total,paid"],

@@ -96,7 +96,11 @@ service cloud.firestore {
         && permissions.viewCustomers is bool
         && permissions.manageCustomers is bool
         && permissions.receivePayments is bool
-        && permissions.adjustStock is bool;
+        && permissions.adjustStock is bool
+        && (!permissions.createSales || (permissions.viewSales && permissions.viewProducts && permissions.adjustStock))
+        && (!permissions.manageCustomers || permissions.viewCustomers)
+        && (!permissions.receivePayments || permissions.viewSales)
+        && (!permissions.adjustStock || permissions.viewProducts);
     }
 
     function posRecordHasNoCostFields(data) {

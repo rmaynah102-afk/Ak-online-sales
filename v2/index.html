@@ -678,7 +678,7 @@ async function saveMerchantStaffPermissions(uid,row){
  try{
   const permissions={};row.querySelectorAll("[data-staff-perm]").forEach(input=>permissions[input.dataset.staffPerm]=input.checked);
   const canPrint=!!row.querySelector("[data-staff-can-print]")?.checked;
-  if(permissions.createSales&&(!permissions.viewSales||!permissions.viewProducts))throw Error("အရောင်းလုပ်ခွင့်ပေးလျှင် အရောင်းစာရင်းနှင့် ကုန်ပစ္စည်းကြည့်ခွင့်ပါ ဖွင့်ထားရမည်။");
+  if(permissions.createSales&&(!permissions.viewSales||!permissions.viewProducts||!permissions.adjustStock))throw Error("အရောင်းလုပ်ခွင့်ပေးလျှင် အရောင်းစာရင်း၊ ကုန်ပစ္စည်းကြည့်ခွင့်နှင့် လက်ကျန်ပြင်ခွင့်ပါ ဖွင့်ထားရမည်။");
   if(permissions.manageCustomers&&!permissions.viewCustomers)throw Error("ဖောက်သည်အသစ်ထည့်ခွင့်ပေးလျှင် ဖောက်သည်စာရင်းကြည့်ခွင့်ပါ ဖွင့်ထားရမည်။");
   if(permissions.receivePayments&&!permissions.viewSales)throw Error("အကြွေးကောက်ခွင့်ပေးလျှင် အရောင်းစာရင်းကြည့်ခွင့်ပါ ဖွင့်ထားရမည်။");
   if(permissions.adjustStock&&!permissions.viewProducts)throw Error("လက်ကျန်ပြင်ခွင့်ပေးလျှင် ကုန်ပစ္စည်းကြည့်ခွင့်ပါ ဖွင့်ထားရမည်။");

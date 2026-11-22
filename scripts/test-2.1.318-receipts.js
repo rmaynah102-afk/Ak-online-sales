@@ -23,6 +23,11 @@ const checks=[
  ["SKU based bulk price updates",'existing.get(key)'],
  ["large CSV chunk commits",'i+=200'],
  ["CSV handles newline and quoted fields",'function parseProductCsv(text)'],
+ ["multi-item sales cart",'id="saleCartRows"'],
+ ["cart adds selected products",'$("addSaleItem").onclick'],
+ ["transaction persists itemized sale lines",'items:receiptItems'],
+ ["ESC/POS itemized receipt",'for(const item of receiptItems)'],
+ ["system receipt itemized lines",'const receiptLines='],
  ["ESC/POS auto cut bytes","29,86,0"]
 ];
 for(const [label,marker] of checks){if(!(html.includes(marker)||native.includes(marker)))throw new Error("Missing: "+label)}

@@ -19,6 +19,10 @@ const checks=[
  ["employee sales and people data loading",'cashier=staffRole==="cashier"||staffRole==="employee"'],
  ["separate receipt settings save button",'id="saveReceiptSettings"'],
  ["system print uses latest receipt",'window.printSaleReceipt(latest.id)'],
+ ["bulk CSV product import",'id="importProductsCsv"'],
+ ["SKU based bulk price updates",'existing.get(key)'],
+ ["large CSV chunk commits",'i+=200'],
+ ["CSV handles newline and quoted fields",'function parseProductCsv(text)'],
  ["ESC/POS auto cut bytes","29,86,0"]
 ];
 for(const [label,marker] of checks){if(!(html.includes(marker)||native.includes(marker)))throw new Error("Missing: "+label)}

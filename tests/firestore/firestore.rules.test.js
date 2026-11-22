@@ -266,12 +266,15 @@ describe('AK Sale POS role and tenant security',function(){
   await assertFails(setDoc(doc(staffDb,'shops','shop-a','pos','people','records','c2'),{name:'Customer Two'}));
   await assertFails(updateDoc(doc(staffDb,'shops','shop-a','pos','products','records','p1'),{stock:4}));
   await assertFails(updateDoc(doc(staffDb,'shopMembers','staff-a'),{permissions:{...restricted,unknownPermission:true}}));
-  const seller={viewProducts:true,viewSales:true,createSales:true,viewCustomers:false,manageCustomers:false,receivePayments:false,adjustStock:false};
+  const seller={viewProducts:true,viewSales:true,createSales:true,viewCustomers:false,manageCustomers:false,receivePayments:false,adjustStock:true};
   await assertSucceeds(updateDoc(doc(ownerDb,'shopMembers','staff-a'),{permissions:seller}));
   await assertSucceeds(getDoc(doc(staffDb,'shops','shop-a','pos','products','records','p1')));
   await assertSucceeds(setDoc(doc(staffDb,'shops','shop-a','pos','sales','records','s2'),{total:5000,paid:5000,due:0,productName:'Hammer',qty:1}));
   await assertFails(getDoc(doc(staffDb,'shops','shop-a','pos','people','records','c1')));
-  await assertFails(setDoc(doc(staffDb,'shops','shop-a','pos','products','records','p1'),{stock:4},{merge:true}));
+  await assertSucceeds(updateDoc(doc(staffDb,'shops','shop-a','pos','products','records','p1'),{stock:4}));
+  await assertFails(setDoc(doc(staffDb,'shops','shop-a','pos','payments','records','pay1'),{kind:'sale',saleId:'s2',amount:100}));
+  const invalidSeller={...seller,adjustStock:false};
+  await assertFails(updateDoc(doc(ownerDb,'shopMembers','staff-a'),{permissions:invalidSeller}));
  });
  it('prevents cross-tenant access and blocks Staff when the Shop Owner subscription expires',async()=>{
   await seedLicense('shop-a');

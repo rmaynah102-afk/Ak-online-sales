@@ -24,7 +24,7 @@ assert(html.includes('AK-Voucher-'), 'Receipt image download must use the AK bra
 assert(html.includes('const r=currentReportVoucherData();await shareVoucher(r.title,r.id,r.date,r.rows,r.total,r.paid,r.due)'), 'Online report voucher must share only the selected report type');
 assert(html.includes('const r=currentReportVoucherData();await openVoucherPrint(r.title,r.id,r.date,r.rows,r.total,r.paid,r.due)'), 'Printed report voucher must print only the selected report type');
 
-assert(html.includes('const allowed={profile:owner,products:true,sales:owner||staff,purchases:owner,people:owner||staff,expenses:owner,reports:owner,printer:owner||staff,ads:owner,backup:owner}'), 'Shop Owner and Staff UI permissions must differ');
+assert(html.includes('const allowed={profile:owner,products:can("viewProducts"),sales:can("viewSales"),purchases:owner,people:can("viewCustomers"),expenses:owner,reports:owner,printer:owner||(staff&&staffCanPrint),ads:owner,backup:owner}'), 'Shop Owner and Staff UI permissions must differ');
 
 assert(html.includes('window.AK_FIREBASE_PUBLIC_CONFIG=Object.freeze({'), 'APK must carry embedded Firebase public config independent of relative asset paths');
 assert(html.includes('projectId:"ak-onlin-sales"'), 'Embedded Firebase project ID must match the deployed AK Firebase project');
@@ -35,7 +35,7 @@ assert(html.includes('db.collection("shopMembers").where("shopId","==",shopId).g
 assert(html.includes('batch.update(memberRef,{status:"suspended",revokedAt:firebase.firestore.FieldValue.serverTimestamp()})'), 'Shop Owner must be able to revoke Staff directly in Firestore');
 assert(html.includes('batch.delete(db.collection("shopStaffSlots").doc(slotId))'), 'Revoking Staff must release the matching shop seat');
 
-assert(html.includes('const allowed={profile:owner,products:true,sales:owner||staff,purchases:owner,people:owner||staff,expenses:owner,reports:owner,printer:owner||staff,ads:owner,backup:owner}'), 'Shop Owner and Staff UI permissions must remain distinct');
+assert(html.includes('const allowed={profile:owner,products:can("viewProducts"),sales:can("viewSales"),purchases:owner,people:can("viewCustomers"),expenses:owner,reports:owner,printer:owner||(staff&&staffCanPrint),ads:owner,backup:owner}'), 'Shop Owner and Staff UI permissions must remain distinct');
 
 assert(html.includes('nativeAuth.signInWithGoogle()'), 'Android APK must use native Google sign-in');
 assert(html.includes('GoogleAuthProvider.credential(idToken)'), 'Google ID token must be exchanged for Firebase credentials');
@@ -53,7 +53,10 @@ assert(html.includes('staffRole="employee"'), 'All employee accounts must map to
 assert(html.includes('<option value="employee" selected>ဝန်ထမ်း (Staff)</option>'), 'Manager/Cashier roles must not be offered');
 assert(!/signInWithEmailAndPassword|createUserWithEmailAndPassword|sendPasswordResetEmail|id="password"|newPassword|staffRegisterBtn|forgotPasswordBtn/.test(html), 'Email/Password login or registration controls must not remain');
 assert(html.includes('function applyRoleUI(){'), 'Role-based interface permissions are required');
-assert(html.includes('async function reloadAll(){const owner=staffRole==="owner",staff=staffRole==="employee"'), 'Staff must not load purchase/expense/profit cost data');
+assert(html.includes("function saveMerchantStaffPermissions(uid,row)") && html.includes("await ref.update({permissions,canPrint})"), "Shop Owner must save granular Staff permissions");
+assert(html.includes("staffMemberUnsubscribe=db.collection(\"shopMembers\").doc(user.uid).onSnapshot"), "Staff permission changes and suspensions must sync to active sessions");
+assert(rules.includes("function staffHasPermission(shopId, permission)") && rules.includes("function validStaffPermissions(permissions)"), "Firestore must enforce granular Staff permissions");
+assert(html.includes('async function reloadAll(){const owner=staffRole==="owner";const names=[...(owner||staffPermissions.viewProducts?["products"]:[]),...(owner||staffPermissions.viewSales?["sales"]:[]),...(owner||staffPermissions.viewCustomers?["people"]:[]),...(owner||staffPermissions.viewSales?["payments"]:[])'), 'Staff must not load purchase/expense/profit cost data');
 for (const name of ['claimOwnerProvisioning','createShopOwnerAccount','listPlatformUsers','grantSubscription','setPlatformUserAccess']) assert(!html.includes('httpsCallable("' + name + '")'), 'POS auth/subscription must not depend on undeployed callable ' + name);
 assert(rules.includes('function isVerifiedGoogleUser()'), 'Firestore must enforce verified Google-only identity');
 assert(rules.includes("request.auth.token.firebase.sign_in_provider == 'google.com'"), 'Google provider claim must be checked in Firestore rules');

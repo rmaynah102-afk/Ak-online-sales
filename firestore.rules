@@ -89,7 +89,7 @@ service cloud.firestore {
     function validStaffPermissions(permissions) {
       return permissions is map
         && permissions.keys().hasOnly(['viewProducts','viewSales','createSales','viewCustomers','manageCustomers','receivePayments','adjustStock'])
-        && permissions.keys().hasAll(['viewProducts','viewSales','createSales','viewCustomers','manageCustomers','receivePayments','adjustStock'])
+        && permissions.keys().size() == 7
         && permissions.viewProducts is bool
         && permissions.viewSales is bool
         && permissions.createSales is bool

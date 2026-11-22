@@ -5,6 +5,7 @@ on:
     branches: [ak-sale-pos-v2-main, main, release/2.1.318-receipt-printer-staff]
     paths:
       - "v2/**"
+      - "scripts/test-2.1.318-receipts.js"
       - "firebase-config.js"
       - "google-services.json"
       - "firestore.rules"
@@ -88,6 +89,8 @@ jobs:
           if(config.appId!=='com.ak.hardware.sales'||config.plugins?.FirebaseAuthentication?.providers?.includes('google.com')!==true) throw new Error('Capacitor Android package or Google provider config is invalid');
           console.log('Validated',scripts.length,'inline script block(s), Owner Google login and Owner POS contract');
           NODE
+      - name: Test receipt, discount, printer and employee workflows
+        run: node scripts/test-2.1.318-receipts.js
       - name: Validate native printer installer
         run: node --check scripts/install-native-printer.js
       - name: Generate Android project

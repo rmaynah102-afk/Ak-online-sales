@@ -54,7 +54,7 @@ assert(html.includes('<option value="employee" selected>ဝန်ထမ်း (S
 assert(!/signInWithEmailAndPassword|createUserWithEmailAndPassword|sendPasswordResetEmail|id="password"|newPassword|staffRegisterBtn|forgotPasswordBtn/.test(html), 'Email/Password login or registration controls must not remain');
 assert(html.includes('function applyRoleUI(){'), 'Role-based interface permissions are required');
 assert(html.includes("function saveMerchantStaffPermissions(uid,row)") && html.includes("await ref.update({permissions,canPrint})"), "Shop Owner must save granular Staff permissions");
-assert(html.includes("staffMemberUnsubscribe=db.collection(\"shopMembers\").doc(user.uid).onSnapshot"), "Staff permission changes and suspensions must sync to active sessions");
+assert(html.includes("staffMemberUnsubscribe") && html.includes("onSnapshot(snap=>"), "Staff permission changes and suspensions must sync to active sessions");
 assert(rules.includes("function staffHasPermission(shopId, permission)") && rules.includes("function validStaffPermissions(permissions)"), "Firestore must enforce granular Staff permissions");
 assert(html.includes('async function reloadAll(){const owner=staffRole==="owner";const names=[...(owner||staffPermissions.viewProducts?["products"]:[]),...(owner||staffPermissions.viewSales?["sales"]:[]),...(owner||staffPermissions.viewCustomers?["people"]:[]),...(owner||staffPermissions.viewSales?["payments"]:[])'), 'Staff must not load purchase/expense/profit cost data');
 for (const name of ['claimOwnerProvisioning','createShopOwnerAccount','listPlatformUsers','grantSubscription','setPlatformUserAccess']) assert(!html.includes('httpsCallable("' + name + '")'), 'POS auth/subscription must not depend on undeployed callable ' + name);

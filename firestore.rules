@@ -115,7 +115,7 @@ service cloud.firestore {
         || (collection == 'products' && staffHasPermission(shopId, 'viewProducts'))
         || (collection == 'sales' && staffHasPermission(shopId, 'viewSales'))
         || (collection == 'people' && staffHasPermission(shopId, 'viewCustomers'))
-        || (collection == 'payments' && staffHasPermission(shopId, 'receivePayments'));
+        || (collection == 'payments' && staffHasPermission(shopId, 'viewSales'));
     }
 
     function canCreatePosCollection(shopId, collection) {

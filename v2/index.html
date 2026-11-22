@@ -673,6 +673,20 @@ async function staffGateway(path,data={}){
 }
 
 let merchantStaffCount=0;
+async function saveMerchantStaffPermissions(uid,row){
+ try{
+  const permissions={};row.querySelectorAll("[data-staff-perm]").forEach(input=>permissions[input.dataset.staffPerm]=input.checked);
+  const canPrint=!!row.querySelector("[data-staff-can-print]")?.checked;
+  if(permissions.createSales&&(!permissions.viewSales||!permissions.viewProducts))throw Error("အရောင်းလုပ်ခွင့်ပေးလျှင် အရောင်းစာရင်းနှင့် ကုန်ပစ္စည်းကြည့်ခွင့်ပါ ဖွင့်ထားရမည်။");
+  if(permissions.manageCustomers&&!permissions.viewCustomers)throw Error("ဖောက်သည်အသစ်ထည့်ခွင့်ပေးလျှင် ဖောက်သည်စာရင်းကြည့်ခွင့်ပါ ဖွင့်ထားရမည်။");
+  if(permissions.receivePayments&&!permissions.viewSales)throw Error("အကြွေးကောက်ခွင့်ပေးလျှင် အရောင်းစာရင်းကြည့်ခွင့်ပါ ဖွင့်ထားရမည်။");
+  if(permissions.adjustStock&&!permissions.viewProducts)throw Error("လက်ကျန်ပြင်ခွင့်ပေးလျှင် ကုန်ပစ္စည်းကြည့်ခွင့်ပါ ဖွင့်ထားရမည်။");
+  const ref=db.collection("shopMembers").doc(uid),snap=await ref.get();
+  if(!snap.exists||snap.data().shopId!==shopId||snap.data().merchantStaff!==true)throw Error("ဤဝန်ထမ်းသည် လက်ရှိဆိုင်နှင့် မချိတ်ဆက်ထားပါ။");
+  await ref.update({permissions,canPrint});
+  $("staffStatus").textContent="ဝန်ထမ်း "+String(snap.data().name||"")+" ၏ ခွင့်ပြုချက်များ သိမ်းပြီးပါပြီ။";
+ }catch(e){$("staffStatus").textContent="ခွင့်ပြုချက် မသိမ်းနိုင်ပါ: "+errText(e)}
+}
 async function loadMerchantStaff(){
  try{
   const snap=await db.collection("shopMembers").where("shopId","==",shopId).get();

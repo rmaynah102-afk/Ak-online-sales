@@ -27,4 +27,13 @@ const checks=[
 ];
 for(const [label,marker] of checks){if(!(html.includes(marker)||native.includes(marker)))throw new Error("Missing: "+label)}
 if(!html.includes('const width=paper==="58mm"?384:576'))throw new Error("ESC/POS paper width selection is missing");
+
+const parserMatch=html.match(/function parseProductCsv\(text\)\{[\s\S]*?\n\}/);
+if(!parserMatch)throw new Error("CSV parser is missing");
+const csvContext={};vm.runInNewContext(parserMatch[0]+"\nglobalThis.__parse=parseProductCsv",csvContext);
+const quoted=csvContext.__parse('name,sku\r\n"bolt, large",A-1\r\n');
+if(quoted.length!==2||quoted[1][0]!=="bolt, large")throw new Error("CSV quoted field parsing failed");
+const many="name,sku\n"+Array.from({length:1200},(_,i)=>"Product "+i+",SKU-"+i).join("\n");
+if(csvContext.__parse(many).length!==1201)throw new Error("CSV parser did not retain 1,200 product rows");
+
 console.log("AK Sale 2.1.318 receipt, discount, printer and staff checks passed; inline JS parsed:",scripts.length);

@@ -374,7 +374,7 @@ async function boot(){
      if(member.merchantStaff!==true||member.status!=="active"||!member.shopId||String(member.email||"").toLowerCase()!==email||member.role!=="employee")throw Error("ဝန်ထမ်းအကောင့် ပိတ်ထားခြင်း သို့မဟုတ် မမှန်ကန်ပါ။");
      shopId=member.shopId;staffRole="employee";staffPermissions=member.permissions?{...member.permissions}:{...DEFAULT_STAFF_PERMISSIONS};staffCanPrint=member.canPrint===true;await loadShop();
     }else if($("loginType").value==="staff"){
-     shopId=await claimStaffInvite(u,$("merchantCode").value.trim().toUpperCase());staffRole="employee";await loadShop();
+     shopId=await claimStaffInvite(u,$("merchantCode").value.trim().toUpperCase());staffRole="employee";staffPermissions={...DEFAULT_STAFF_PERMISSIONS};staffCanPrint=false;await loadShop();
     }else{
      await claimShopOwnerAccess(u);shopId=u.uid;staffRole="owner";staffPermissions={...DEFAULT_STAFF_PERMISSIONS};staffCanPrint=true;await loadShop();
     }

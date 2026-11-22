@@ -414,6 +414,43 @@ describe('AK Sale Firestore security baseline', function () {
     await assertFails(setDoc(doc(db, 'shops', 'shop-a', 'pos', 'settings', 'records', 'main'), { currency: 'MMK' }));
   });
 
+  it('allows employee role to run cashier sales and update stock while denying manager-only records', async () => {
+    await seedLicense('shop-a');
+    await seedMember('employee-a', 'shop-a', 'employee');
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      const adminDb = context.firestore();
+      await setDoc(doc(adminDb, 'shops', 'shop-a', 'pos', 'products', 'records', 'p1'), {
+        name: 'Hammer', retail: 5000, stock: 8,
+      });
+    });
+    const db = testEnv.authenticatedContext('employee-a', {
+      email: 'staff.0123456789ab@akstaff.app', email_verified: true,
+    }).firestore();
+    await assertSucceeds(getDoc(doc(db, 'shops', 'shop-a', 'pos', 'products', 'records', 'p1')));
+    await assertSucceeds(setDoc(doc(db, 'shops', 'shop-a', 'pos', 'sales', 'records', 'sale-1'), {
+      productId: 'p1', qty: 1, total: 5000,
+    }));
+    await assertSucceeds(setDoc(doc(db, 'shops', 'shop-a', 'pos', 'people', 'records', 'customer-1'), {
+      name: 'Customer One', type: 'customer',
+    }));
+    await assertSucceeds(setDoc(doc(db, 'shops', 'shop-a', 'pos', 'payments', 'records', 'payment-1'), {
+      amount: 5000,
+    }));
+    await assertSucceeds(setDoc(doc(db, 'shops', 'shop-a', 'pos', 'products', 'records', 'p1'), {
+      stock: 7,
+    }, { merge: true }));
+    await assertFails(setDoc(doc(db, 'shops', 'shop-a', 'pos', 'products', 'records', 'p1'), {
+      retail: 4000,
+    }, { merge: true }));
+    await assertFails(setDoc(doc(db, 'shops', 'shop-a', 'pos', 'purchases', 'records', 'buy-1'), {
+      total: 5000,
+    }));
+    await assertFails(setDoc(doc(db, 'shops', 'shop-a', 'pos', 'expenses', 'records', 'expense-1'), {
+      amount: 500,
+    }));
+    await assertFails(getDoc(doc(db, 'shops', 'shop-a', 'pos', 'productCosts', 'records', 'p1')));
+  });
+
   it('keeps product and sale costs in manager-only collections while allowing cashier list queries', async () => {
     await seedLicense('shop-a');
     await seedMember('cashier-a', 'shop-a', 'cashier');

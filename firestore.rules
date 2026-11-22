@@ -78,6 +78,10 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/shopMembers/$(request.auth.uid)).data.role in roles;
     }
 
+    function validStaffPermissions(permissions) {
+      return permissions is map
+        && permissions.keys().hasOnly(['viewProducts','viewSales','createSales','viewCustomers','manageCustomers','receivePayments','adjustStock']);
+    }
     function activeStaffMemberData(shopId, member) {
       return request.auth != null
         && isVerifiedGoogleUser()

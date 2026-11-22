@@ -274,9 +274,7 @@ describe('AK Sale POS role and tenant security',function(){
   await assertSucceeds(updateDoc(doc(staffDb,'shops','shop-a','pos','products','records','p1'),{stock:4}));
   await assertFails(setDoc(doc(staffDb,'shops','shop-a','pos','payments','records','pay1'),{kind:'sale',saleId:'s2',amount:100}));
   const invalidSeller={...seller,adjustStock:false};
-  await assertSucceeds(updateDoc(doc(ownerDb,'shopMembers','staff-a'),{permissions:invalidSeller}));
-  await assertFails(setDoc(doc(staffDb,'shops','shop-a','pos','sales','records','s3'),{total:5000,paid:5000,due:0,productName:'Hammer',qty:1}));
-  await assertSucceeds(updateDoc(doc(ownerDb,'shopMembers','staff-a'),{permissions:seller}));
+  await assertFails(updateDoc(doc(ownerDb,'shopMembers','staff-a'),{permissions:invalidSeller}));
  });
  it('prevents cross-tenant access and blocks Staff when the Shop Owner subscription expires',async()=>{
   await seedLicense('shop-a');

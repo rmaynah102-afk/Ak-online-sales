@@ -308,7 +308,7 @@ const PRODUCT_CATEGORY_PRESETS={
  online:["အဝတ်အထည်","အလှကုန်","အိမ်သုံးပစ္စည်း","အီလက်ထရွန်းနစ်","အစားအသောက်","အခြား"],
  general:["အထွေထွေ","အိမ်သုံးပစ္စည်း","စားသောက်ကုန်","အသုံးအဆောင်","အခြား"]
 };
-function renderProductCategoryOptions(){const values=PRODUCT_CATEGORY_PRESETS[activeIndustryType]||PRODUCT_CATEGORY_PRESETS.general,dl=$("shopCategoryOptions"),filter=$("productCategoryFilter");if(dl){const keep=$("pCategory").value;dl.innerHTML=values.map(v=>'<option value="'+esc(v)+'">').join("");if(keep)$("pCategory").value=keep;}if(filter){const keep=filter.value;filter.innerHTML='<option value="">အမျိုးအစားအားလုံး</option>'+values.map(v=>'<option value="'+esc(v)+'">'+esc(v)+'</option>').join("");if(keep&&values.includes(keep))filter.value=keep;}}
+function renderProductCategoryOptions(){const values=PRODUCT_CATEGORY_PRESETS[activeIndustryType]||PRODUCT_CATEGORY_PRESETS.general,categories=[...new Set([...values,...products.map(p=>String(p.category||"").trim()).filter(Boolean)])],dl=$("shopCategoryOptions"),filter=$("productCategoryFilter");if(dl){const keep=$("pCategory").value;dl.innerHTML=categories.map(v=>'<option value="'+esc(v)+'">').join("");if(keep)$("pCategory").value=keep;}if(filter){const keep=filter.value;filter.innerHTML='<option value="">အမျိုးအစားအားလုံး</option>'+categories.map(v=>'<option value="'+esc(v)+'">'+esc(v)+'</option>').join("");if(keep&&categories.includes(keep))filter.value=keep;}}
 
 function status(msg,where="status"){ $(where).textContent=msg; }
 function show(id){$("loginPanel").classList.toggle("hidden",id!=="loginPanel");$("ownerPanel").classList.toggle("hidden",id!=="ownerPanel");$("shopPanel").classList.toggle("hidden",id!=="shopPanel");}
@@ -873,10 +873,10 @@ window.editProductPrice=id=>{editProduct(id);$("pRetail").focus();$("pRetail").s
 $("clearProduct").onclick=()=>{editingProduct=null;["pName","pSku","pCategory","pUnit","pCost","pRetail","pWholesale","pStock","pPhoto"].forEach(k=>$(k).value="");$("pPhotoPreview").classList.add("hidden");$("saveProduct").textContent="ပစ္စည်းသိမ်းမည်"};
 
 function addProductSheetRows(count=5){
- const body=$("productSheetRows"),start=body.children.length;
+ const body=$("productSheetRows"),start=body.children.length,defaultCategory=(PRODUCT_CATEGORY_PRESETS[activeIndustryType]||PRODUCT_CATEGORY_PRESETS.general)[0]||"အထွေထွေ";
  for(let i=0;i<count;i++){
   const tr=document.createElement("tr"),n=start+i;
-  tr.innerHTML='<td>'+(n+1)+'</td><td><input class="sheet-name" data-k="name" aria-label="ပစ္စည်းအမည်"></td><td><input class="sheet-sku" data-k="sku" aria-label="SKU"></td><td><input data-k="category" aria-label="အမျိုးအစား" value="ကုန်မာ"></td><td><input data-k="unit" aria-label="ယူနစ်" value="ခု"></td><td><input class="sheet-num" data-k="cost" type="number" min="0" step="any" value="0"></td><td><input class="sheet-num" data-k="retail" type="number" min="0" step="any" value="0"></td><td><input class="sheet-num" data-k="wholesale" type="number" min="0" step="any" value="0"></td><td><input class="sheet-num" data-k="stock" type="number" min="0" step="any" value="0"></td><td><input class="sheet-num" data-k="alert" type="number" min="0" step="any" value="5"></td>';
+  tr.innerHTML='<td>'+(n+1)+'</td><td><input class="sheet-name" data-k="name" aria-label="ပစ္စည်းအမည်"></td><td><input class="sheet-sku" data-k="sku" aria-label="SKU"></td><td><input data-k="category" aria-label="အမျိုးအစား" value="'+esc(defaultCategory)+'"></td><td><input data-k="unit" aria-label="ယူနစ်" value="ခု"></td><td><input class="sheet-num" data-k="cost" type="number" min="0" step="any" value="0"></td><td><input class="sheet-num" data-k="retail" type="number" min="0" step="any" value="0"></td><td><input class="sheet-num" data-k="wholesale" type="number" min="0" step="any" value="0"></td><td><input class="sheet-num" data-k="stock" type="number" min="0" step="any" value="0"></td><td><input class="sheet-num" data-k="alert" type="number" min="0" step="any" value="5"></td>';
   body.appendChild(tr);
  }
 }

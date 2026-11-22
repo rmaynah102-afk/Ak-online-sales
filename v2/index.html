@@ -678,8 +678,13 @@ async function loadMerchantStaff(){
   const snap=await db.collection("shopMembers").where("shopId","==",shopId).get();
   const members=snap.docs.map(d=>({uid:d.id,...d.data()})).filter(m=>m.merchantStaff===true&&m.status==="active"&&m.role==="employee");
   merchantStaffCount=members.length;
-  $("staffRows").innerHTML=members.map(m=>'<tr><td>'+esc(m.name)+'</td><td>Staff</td><td>'+esc(m.status)+'</td><td><button class="danger" data-remove-staff="'+esc(m.uid)+'">ဖယ်ရှား</button></td></tr>').join("")||'<tr><td colspan="4">ဝန်ထမ်း မရှိသေးပါ</td></tr>';
+  $("staffRows").innerHTML=members.map(m=>{
+   const p={...DEFAULT_STAFF_PERMISSIONS,...(m.permissions||{})};
+   const controls=STAFF_PERMISSION_LABELS.map(([key,label])=>'<label><input type="checkbox" data-staff-perm="'+key+'" '+(p[key]?'checked':'')+' style="width:auto;min-height:auto"> '+label+'</label>').join("");
+   return '<tr><td>'+esc(m.name)+'</td><td>Staff</td><td>'+esc(m.status)+'</td><td><details><summary>ခွင့်ပြုချက်</summary><div class="grid">'+controls+'</div><label><input type="checkbox" data-staff-can-print '+(m.canPrint===true?'checked':'')+' style="width:auto;min-height:auto"> ဘောင်ချာပုံနှိပ်ခွင့်</label><button type="button" class="secondary" data-save-staff-permissions="'+esc(m.uid)+'">ခွင့်ပြုချက် သိမ်းမည်</button></details></td><td><button class="danger" data-remove-staff="'+esc(m.uid)+'">ဖယ်ရှား</button></td></tr>';
+  }).join("")||'<tr><td colspan="5">ဝန်ထမ်း မရှိသေးပါ</td></tr>';
   $("staffRows").querySelectorAll("[data-remove-staff]").forEach(button=>button.onclick=()=>removeMerchantStaff(button.dataset.removeStaff));
+  $("staffRows").querySelectorAll("[data-save-staff-permissions]").forEach(button=>button.onclick=()=>saveMerchantStaffPermissions(button.dataset.saveStaffPermissions,button.closest("tr")));
   $("staffStatus").textContent="ဝန်ထမ်း "+merchantStaffCount+" / 2 ဦး · Owner အပါအဝင် စုစုပေါင်း အကောင့် "+(merchantStaffCount+1)+" / 3 ခု";
  }catch(e){$("staffStatus").textContent="ဝန်ထမ်းစာရင်း ဖတ်မရပါ: "+errText(e)}
 }

@@ -1,5 +1,9 @@
 name: Build AK Sale POS 2.0 Android APK
 
+concurrency:
+  group: ak-sale-v2-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches: [ak-sale-pos-v2-main, main, release/2.1.318-receipt-printer-staff]

@@ -3,7 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const assert = require('node:assert/strict');
 const {initializeTestEnvironment,assertSucceeds,assertFails} = require('@firebase/rules-unit-testing');
-const {doc,getDoc,setDoc,deleteDoc,writeBatch,Timestamp,serverTimestamp,collection,getDocs,query,where} = require('firebase/firestore');
+const {doc,getDoc,setDoc,updateDoc,deleteDoc,writeBatch,Timestamp,serverTimestamp,collection,getDocs,query,where} = require('firebase/firestore');
 
 const PROJECT_ID='demo-ak-sale-rules';
 let testEnv;
@@ -247,6 +247,32 @@ describe('AK Sale POS role and tenant security',function(){
   await assertSucceeds(setDoc(doc(db,'shops','shop-a','pos','products','records','p1'),{stock:4},{merge:true}));
  });
 
+ it('enforces owner-configured per-staff permissions at the Firestore data layer',async()=>{
+  await seedLicense('shop-a');
+  const code='13572468';await seedInvite('shop-a',code);
+  const staffDb=await claimInvite('staff-a','staff-a@example.com','shop-a',code);
+  const ownerDb=googleContext('shop-a',{email:'shop-a@example.com',email_verified:true}).firestore();
+  await testEnv.withSecurityRulesDisabled(async ctx=>{
+   const adminDb=ctx.firestore();
+   await setDoc(doc(adminDb,'shops','shop-a','pos','products','records','p1'),{name:'Hammer',retail:5000,stock:5});
+   await setDoc(doc(adminDb,'shops','shop-a','pos','people','records','c1'),{name:'Customer One'});
+  });
+  const restricted={viewProducts:false,viewSales:false,createSales:false,viewCustomers:true,manageCustomers:false,receivePayments:false,adjustStock:false};
+  await assertSucceeds(updateDoc(doc(ownerDb,'shopMembers','staff-a'),{permissions:restricted,canPrint:false}));
+  await assertFails(getDoc(doc(staffDb,'shops','shop-a','pos','products','records','p1')));
+  await assertFails(getDoc(doc(staffDb,'shops','shop-a','pos','sales','records','s1')));
+  await assertSucceeds(getDoc(doc(staffDb,'shops','shop-a','pos','people','records','c1')));
+  await assertFails(setDoc(doc(staffDb,'shops','shop-a','pos','sales','records','s1'),{total:100,paid:100,due:0}));
+  await assertFails(setDoc(doc(staffDb,'shops','shop-a','pos','people','records','c2'),{name:'Customer Two'}));
+  await assertFails(updateDoc(doc(staffDb,'shops','shop-a','pos','products','records','p1'),{stock:4}));
+  await assertFails(updateDoc(doc(staffDb,'shopMembers','staff-a'),{permissions:{...restricted,unknownPermission:true}}));
+  const seller={viewProducts:true,viewSales:true,createSales:true,viewCustomers:false,manageCustomers:false,receivePayments:false,adjustStock:false};
+  await assertSucceeds(updateDoc(doc(ownerDb,'shopMembers','staff-a'),{permissions:seller}));
+  await assertSucceeds(getDoc(doc(staffDb,'shops','shop-a','pos','products','records','p1')));
+  await assertSucceeds(setDoc(doc(staffDb,'shops','shop-a','pos','sales','records','s2'),{total:5000,paid:5000,due:0,productName:'Hammer',qty:1}));
+  await assertFails(getDoc(doc(staffDb,'shops','shop-a','pos','people','records','c1')));
+  await assertFails(setDoc(doc(staffDb,'shops','shop-a','pos','products','records','p1'),{stock:4},{merge:true}));
+ });
  it('prevents cross-tenant access and blocks Staff when the Shop Owner subscription expires',async()=>{
   await seedLicense('shop-a');
   await seedLicense('shop-b');

@@ -221,7 +221,7 @@ window.renewLicense=async id=>{try{const p=prompt("သက်တမ်းတိ�
 window.toggleLicense=async id=>{try{const x=licenses.find(a=>a.id===id),statusNext=x.status==="suspended"?"active":"suspended";await db.collection("licenses").doc(id).update({status:statusNext});await loadLicenses()}catch(e){alert(errText(e))}};
 
 function applyRoleUI(){
- const manager=staffRole==="owner"||staffRole==="manager",cashier=staffRole==="cashier";
+ const manager=staffRole==="owner"||staffRole==="manager",cashier=staffRole==="cashier"||staffRole==="employee";
  $("staffManagement").classList.toggle("hidden",staffRole!=="owner"||isPlatformOwner());
  $("productForm").classList.toggle("hidden",!manager);
  const allowed={products:true,sales:manager||cashier,purchases:manager,people:manager||cashier,expenses:manager,reports:manager,printer:manager||cashier,ads:manager,backup:staffRole==="owner"};

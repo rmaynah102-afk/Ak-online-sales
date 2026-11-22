@@ -865,7 +865,7 @@ function renderAll(){
  $("saleRows").innerHTML=visibleSales.slice().sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0)).map(x=>{
   const extra=payments.filter(p=>p.kind==="sale"&&p.saleId===x.id).reduce((a,p)=>a+Number(p.amount||0),0);
   const paid=Number(x.paid||0)+extra,due=Math.max(0,Number(x.total||0)-paid);
-  return '<tr><td>'+dateText(x.createdAt)+'</td><td>'+esc(x.productName||"ပစ္စည်းများ")+'</td><td>'+x.qty+'</td><td>'+money(x.total)+'</td><td>'+money(paid)+'</td><td>'+money(due)+'</td><td>'+(due>0?'<button class="secondary" data-sale-pay="'+x.id+'">အကြွေးကောက်</button> ':"")+'<button class="secondary" data-receipt-print="'+x.id+'">ဘောင်ချာ ပုံနှိပ်ရန်</button> <button class="secondary" data-receipt-share="'+x.id+'">Viber / Share</button></td></tr>';
+  return '<tr><td>'+dateText(x.createdAt)+'</td><td>'+esc(x.productName||"ပစ္စည်းများ")+'</td><td>'+x.qty+'</td><td>'+money(x.total)+'</td><td>'+money(paid)+'</td><td>'+money(due)+'</td><td>'+(due>0&&(staffRole==="owner"||staffPermissions.receivePayments===true)?'<button class="secondary" data-sale-pay="'+x.id+'">အကြွေးကောက်</button> ':"")+'<button class="secondary" data-receipt-print="'+x.id+'">ဘောင်ချာ ပုံနှိပ်ရန်</button> <button class="secondary" data-receipt-share="'+x.id+'">Viber / Share</button></td></tr>';
  }).join("");
  $("saleRows").querySelectorAll("[data-sale-pay]").forEach(b=>b.onclick=()=>collectSalePayment(b.dataset.salePay));
  $("saleRows").querySelectorAll("[data-receipt-print]").forEach(b=>b.onclick=()=>printSaleReceipt(b.dataset.receiptPrint));

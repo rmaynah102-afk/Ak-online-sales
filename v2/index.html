@@ -290,18 +290,18 @@ $("clearProduct").onclick=()=>{editingProduct=null;["pName","pSku","pCost","pRet
 
 function parseProductCsv(text){
  const rows=[];let row=[],field="",quoted=false;
- for(let i=0;i<text.length;i++){const c=text[i];if(quoted){if(c==='"'&&text[i+1]==='"'){field+='"';i++}else if(c==='"')quoted=false;else field+=c}else if(c==='"')quoted=true;else if(c===","){row.push(field);field=""}else if(c==="\\n"){row.push(field.replace(/\\r$/,""));rows.push(row);row=[];field=""}else field+=c}
- if(quoted)throw Error("CSV quotation mark မမှန်ပါ");if(field.length||row.length){row.push(field.replace(/\\r$/,""));rows.push(row)}return rows.filter(r=>r.some(v=>String(v).trim()!==""));
+ for(let i=0;i<text.length;i++){const c=text[i];if(quoted){if(c==='"'&&text[i+1]==='"'){field+='"';i++}else if(c==='"')quoted=false;else field+=c}else if(c==='"')quoted=true;else if(c===","){row.push(field);field=""}else if(c==="\n"){row.push(field.replace(/\r$/,""));rows.push(row);row=[];field=""}else field+=c}
+ if(quoted)throw Error("CSV quotation mark မမှန်ပါ");if(field.length||row.length){row.push(field.replace(/\r$/,""));rows.push(row)}return rows.filter(r=>r.some(v=>String(v).trim()!==""));
 }
 $("downloadProductCsvTemplate").onclick=()=>{
- const sample="name,sku,category,cost,retail,wholesale,stock,alert\\nပစ္စည်းနမူနာ,AK-0001,ကုန်မာ,1000,1500,1300,50,5\\n";
- const blob=new Blob(["\\uFEFF",sample],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="AK-Sale-Products-Template.csv";a.click();URL.revokeObjectURL(a.href);
+ const sample="name,sku,category,cost,retail,wholesale,stock,alert\nပစ္စည်းနမူနာ,AK-0001,ကုန်မာ,1000,1500,1300,50,5\n";
+ const blob=new Blob(["\uFEFF",sample],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="AK-Sale-Products-Template.csv";a.click();URL.revokeObjectURL(a.href);
 };
 $("importProductsCsv").onclick=async()=>{
  const button=$("importProductsCsv");try{
   const file=$("productCsvFile").files[0];if(!file)throw Error("CSV ဖိုင်ရွေးပါ");
   button.disabled=true;$("productImportStatus").textContent="CSV စာရင်းဖတ်နေသည်...";
-  const rows=parseProductCsv((await file.text()).replace(/^\\uFEFF/,""));if(rows.length<2)throw Error("ခေါင်းစဉ်နှင့် ပစ္စည်းစာရင်း ပါသော CSV ဖိုင်လိုအပ်သည်");
+  const rows=parseProductCsv((await file.text()).replace(/^\uFEFF/,""));if(rows.length<2)throw Error("ခေါင်းစဉ်နှင့် ပစ္စည်းစာရင်း ပါသော CSV ဖိုင်လိုအပ်သည်");
   const headers=rows[0].map(x=>String(x).trim().toLowerCase()),idx=Object.fromEntries(headers.map((x,i)=>[x,i]));
   if(idx.name===undefined)throw Error("CSV တွင် name ခေါင်းစဉ်လိုအပ်သည်။ နမူနာဖိုင်ကို အသုံးပြုပါ");
   const existing=new Map(products.filter(p=>p.sku).map(p=>[String(p.sku).trim().toLowerCase(),p]));

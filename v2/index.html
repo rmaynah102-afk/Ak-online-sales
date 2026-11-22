@@ -753,13 +753,14 @@ let productPage=1;
 function filteredProducts(){const q=String($("productSearch")?.value||"").trim().toLowerCase(),category=String($("productCategoryFilter")?.value||""),lowOnly=!!$("productLowStockOnly")?.checked;return products.filter(p=>{const matchesText=!q||[p.name,p.nameLower,p.sku,p.skuLower,p.barcode,p.category,p.categoryLower,p.unit].some(v=>String(v||"").toLowerCase().includes(q));const matchesCategory=!category||String(p.category||"")===category;const matchesStock=!lowOnly||Number(p.stock||0)<=Number(p.alert||0);return matchesText&&matchesCategory&&matchesStock})}
 function renderProductTable(){
  const rows=filteredProducts(),size=Number($("productPageSize")?.value||50),pages=Math.max(1,Math.ceil(rows.length/size));
- productPage=Math.min(Math.max(1,productPage),pages);const start=(productPage-1)*size,visible=rows.slice(start,start+size),owner=staffRole==="owner";
+ productPage=Math.min(Math.max(1,productPage),pages);const start=(productPage-1)*size,visible=rows.slice(start,start+size),owner=staffRole==="owner",staffStock=staffRole==="employee"&&staffPermissions.adjustStock===true,canEdit=owner||staffStock;
  const tables=document.querySelectorAll("#tab-products .tablewrap table"),inventory=tables[tables.length-1];
- if(inventory){inventory.querySelector("thead th:nth-child(7)")?.classList.toggle("hidden",!owner);inventory.querySelector("thead th:nth-child(8)")?.classList.toggle("hidden",!owner);}
- $("productRows").innerHTML=visible.map(p=>'<tr><td>'+(p.photoData?'<img src="'+esc(p.photoData)+'" alt="" style="width:40px;height:40px;object-fit:cover;border-radius:6px;vertical-align:middle"> ':"")+esc(p.name)+'<br><small>'+esc(p.sku||"")+'</small></td><td>'+esc(p.category)+'</td><td>'+p.stock+'</td><td>'+esc(p.unit||"ခု")+'</td><td>'+money(p.retail)+'</td><td>'+money(p.wholesale)+'</td>'+(owner?'<td>'+money(p.cost)+'</td><td><button class="secondary" onclick="editProductPrice(\''+p.id+'\')">ဈေးပြင်</button> <button class="secondary" onclick="editProduct(\''+p.id+'\')">အသေးစိတ်</button></td>':'')+'</tr>').join("")||'<tr><td colspan="'+(owner?8:6)+'">ရှာဖွေမှုနှင့် ကိုက်ညီသော ပစ္စည်းမရှိပါ</td></tr>';
+ if(inventory){inventory.querySelector("thead th:nth-child(7)")?.classList.toggle("hidden",!owner);inventory.querySelector("thead th:nth-child(8)")?.classList.toggle("hidden",!canEdit);}
+ $("productRows").innerHTML=visible.map(p=>'<tr><td>'+(p.photoData?'<img src="'+esc(p.photoData)+'" alt="" style="width:40px;height:40px;object-fit:cover;border-radius:6px;vertical-align:middle"> ':"")+esc(p.name)+'<br><small>'+esc(p.sku||"")+'</small></td><td>'+esc(p.category)+'</td><td>'+p.stock+'</td><td>'+esc(p.unit||"ခု")+'</td><td>'+money(p.retail)+'</td><td>'+money(p.wholesale)+'</td>'+(owner?'<td>'+money(p.cost)+'</td>':'')+(canEdit?'<td>'+(owner?'<button class="secondary" onclick="editProductPrice(\''+p.id+'\')">ဈေးပြင်</button> <button class="secondary" onclick="editProduct(\''+p.id+'\')">အသေးစိတ်</button>':'<button class="secondary" onclick="adjustProductStock(\''+p.id+'\')">လက်ကျန်ပြင်</button>')+'</td>':'')+'</tr>').join("")||'<tr><td colspan="'+(owner?8:canEdit?7:6)+'">ရှာဖွေမှုနှင့် ကိုက်ညီသော ပစ္စည်းမရှိပါ</td></tr>';
  $("productPageInfo").textContent="စုစုပေါင်း "+rows.length+" မျိုး · "+(rows.length?start+1:0)+"–"+Math.min(start+size,rows.length)+" · စာမျက်နှာ "+productPage+"/"+pages;
  $("productPrev").disabled=productPage<=1;$("productNext").disabled=productPage>=pages;
 }
+
 $("productSearch").oninput=()=>{productPage=1;renderProductTable()};$("productCategoryFilter").onchange=()=>{productPage=1;renderProductTable()};$("productLowStockOnly").onchange=()=>{productPage=1;renderProductTable()};
 $("salesSearch").addEventListener("input",renderAll);
 $("purchasesSearch").addEventListener("input",renderAll);
@@ -894,6 +895,15 @@ $("saveProduct").onclick=async()=>{try{
  const batch=db.batch();batch.set(col("products").doc(id),data);batch.set(col("productCosts").doc(id),{cost:+$("pCost").value||0});await batch.commit();
  editingProduct=null;["pName","pSku","pCategory","pUnit","pCost","pRetail","pWholesale","pStock","pPhoto"].forEach(k=>$(k).value="");$("pPhotoPreview").classList.add("hidden");await reloadAll();
  }catch(e){alert(errText(e))}};
+window.adjustProductStock=async id=>{
+ try{
+  if(staffRole!=="owner"&&staffPermissions.adjustStock!==true)throw Error("ကုန်လက်ကျန်ပြင်ခွင့် မရှိပါ။");
+  const p=products.find(x=>x.id===id);if(!p)throw Error("ပစ္စည်းမတွေ့ပါ။");
+  const raw=prompt("လက်ကျန်အသစ် ထည့်ပါ · "+p.name,String(p.stock??0));if(raw===null)return;
+  const stock=Number(raw);if(!Number.isFinite(stock)||stock<0)throw Error("လက်ကျန်ကို သုညနှင့်အထက် ဂဏန်းဖြည့်ပါ။");
+  await col("products").doc(id).update({stock});await reloadAll();
+ }catch(e){alert(errText(e))}
+};
 window.editProduct=id=>{const p=products.find(x=>x.id===id);if(!p)return;editingProduct=id;$("pName").value=p.name;$("pSku").value=p.sku||"";$("pCategory").value=p.category||"အထွေထွေ";$("pUnit").value=p.unit||"ခု";$("pRetail").value=p.retail;$("pWholesale").value=p.wholesale;$("pStock").value=p.stock;$("pAlert").value=p.alert;$("pPhoto").value="";if(p.photoData){$("pPhotoPreview").src=p.photoData;$("pPhotoPreview").classList.remove("hidden")}else $("pPhotoPreview").classList.add("hidden");$("productForm").open=true;$("saveProduct").textContent="ပြင်ဆင်ချက် သိမ်းမည်";col("productCosts").doc(id).get().then(s=>$("pCost").value=s.data()?.cost||0);$("productForm").scrollIntoView({behavior:"smooth",block:"start"})};
 window.editProductPrice=id=>{editProduct(id);$("pRetail").focus();$("pRetail").select();};
 $("clearProduct").onclick=()=>{editingProduct=null;["pName","pSku","pCategory","pUnit","pCost","pRetail","pWholesale","pStock","pPhoto"].forEach(k=>$(k).value="");$("pPhotoPreview").classList.add("hidden");$("saveProduct").textContent="ပစ္စည်းသိမ်းမည်"};

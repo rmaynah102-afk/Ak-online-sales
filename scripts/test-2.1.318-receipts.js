@@ -11,6 +11,7 @@ const checks=[
  ["receipt print history",'id="receiptHistory"'],
  ["receipt reprint handler","window.printSaleReceipt=async id=>"],
  ["sale discount input",'id="saleDiscount"'],
+ ["system print shows discount","money(sale.discount||0)"],
  ["discount persisted on sale","subtotal,discount,total,paid"],
  ["discount deducted from profit","profit:total-cost*qty"],
  ["employee cashier permission",'staffRole==="cashier"||staffRole==="employee"'],

@@ -979,7 +979,7 @@ $("saveSale").onclick=async()=>{
   });
   saleCart=[];$("salePaid").value="0";$("saleCustomer").value="";renderSaleCart();await reloadAll();
   const readyPrinter=printerRead().find(x=>x.default)||printerRead()[0];
-  if(readyPrinter){try{await window.printSaleReceipt(saleRef.id)}catch(printError){status("အရောင်းသိမ်းပြီးပါပြီ၊ ဘောင်ချာပုံနှိပ်မှု မအောင်မြင်ပါ: "+errText(printError),"printerStatus")}}
+  if(readyPrinter&&(staffRole==="owner"||staffCanPrint)){try{await window.printSaleReceipt(saleRef.id)}catch(printError){status("အရောင်းသိမ်းပြီးပါပြီ၊ ဘောင်ချာပုံနှိပ်မှု မအောင်မြင်ပါ: "+errText(printError),"printerStatus")}}
  }catch(e){alert(errText(e))}
 };
 $("savePurchase").onclick=async()=>{
@@ -1276,7 +1276,7 @@ async function openVoucherPrint(title,id,date,rows,total,paid,due){
  w.document.write('<!doctype html><html lang="my"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+title+'</title><style>@page{size:'+width+' auto;margin:3mm}*{box-sizing:border-box}body{margin:0;background:#fff;font-family:system-ui,Arial,sans-serif}.receipt{width:100%;max-width:'+width+';margin:0 auto}img{width:100%;height:auto;display:block}.actions{padding:10px;text-align:center}.actions button{border:0;border-radius:8px;padding:12px 22px;background:#111;color:#e7c56b;font-weight:700;margin:4px}@media print{.actions{display:none}img{-webkit-print-color-adjust:exact;print-color-adjust:exact}}</style><div class="receipt"><img src="'+img+'" alt="Voucher"></div><div class="actions"><button onclick="window.print()">ပုံနှိပ်ရန်</button><button onclick="window.close()">ပိတ်ရန်</button></div></html>');
  w.document.close();
 }
-window.printSaleReceipt=async id=>{const sale=sales.find(x=>x.id===id);if(!sale)return;const b=saleBalance(sale),rows=(sale.lines?.length?sale.lines.map(line=>[line.name,String(line.qty)+" × "+money(line.price)]):[[sale.productName||"ပစ္စည်း",String(sale.qty)+" × "+money(sale.price)]]);rows.push(["ဖောက်သည်",sale.customer||"လက်ငင်း"]);await openVoucherPrint("အရောင်းဘောင်ချာ",id,dateText(sale.createdAt),rows,sale.total,b.paid,b.due)};
+window.printSaleReceipt=async id=>{if(staffRole==="employee"&&!staffCanPrint)throw Error("ဘောင်ချာပုံနှိပ်ခွင့် မရှိပါ။ ဆိုင်ရှင်ထံ ခွင့်ပြုချက်တောင်းပါ။");const sale=sales.find(x=>x.id===id);if(!sale)return;const b=saleBalance(sale),rows=(sale.lines?.length?sale.lines.map(line=>[line.name,String(line.qty)+" × "+money(line.price)]):[[sale.productName||"ပစ္စည်း",String(sale.qty)+" × "+money(sale.price)]]);rows.push(["ဖောက်သည်",sale.customer||"လက်ငင်း"]);await openVoucherPrint("အရောင်းဘောင်ချာ",id,dateText(sale.createdAt),rows,sale.total,b.paid,b.due)};
 window.printPurchaseVoucher=async id=>{const v=purchases.find(x=>x.id===id);if(!v)return;const extra=payments.filter(p=>p.kind==="purchase"&&p.purchaseId===id).reduce((a,p)=>a+Number(p.amount||0),0),paid=Number(v.paid||0)+extra,due=Math.max(0,Number(v.total||0)-paid);await openVoucherPrint("အဝယ်ဘောင်ချာ",id,dateText(v.createdAt),[["ပစ္စည်း",v.productName],["အရေအတွက်",v.qty],["တစ်ခုဝယ်ဈေး",money(v.cost)],["ပေးသွင်းသူ",v.supplier||""]],v.total,paid,due)};
 window.printReportVoucher=async()=>{const r=currentReportVoucherData();await openVoucherPrint(r.title,r.id,r.date,r.rows,r.total,r.paid,r.due)}
 $("testPrinter").onclick=async()=>{

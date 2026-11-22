@@ -78,6 +78,27 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/shopMembers/$(request.auth.uid)).data.role in roles;
     }
 
+    function staffHasPermission(shopId, permission) {
+      let member = get(/databases/$(database)/documents/shopMembers/$(request.auth.uid)).data;
+      return isActiveShopMember(shopId)
+        && member.role == 'employee'
+        && (!('permissions' in member.keys())
+          || member.permissions.get(permission, false) == true);
+    }
+
+    function validStaffPermissions(permissions) {
+      return permissions is map
+        && permissions.keys().hasOnly(['viewProducts','viewSales','createSales','viewCustomers','manageCustomers','receivePayments','adjustStock'])
+        && permissions.keys().hasAll(['viewProducts','viewSales','createSales','viewCustomers','manageCustomers','receivePayments','adjustStock'])
+        && permissions.viewProducts is bool
+        && permissions.viewSales is bool
+        && permissions.createSales is bool
+        && permissions.viewCustomers is bool
+        && permissions.manageCustomers is bool
+        && permissions.receivePayments is bool
+        && permissions.adjustStock is bool;
+    }
+
     function posRecordHasNoCostFields(data) {
       return data != null
         && !('cost' in data.keys())
@@ -91,19 +112,22 @@ service cloud.firestore {
 
     function canReadPosCollection(shopId, collection) {
       return isVerifiedOwner() || isPosShopOwner(shopId)
-        || (collection in ['products','sales','people','payments']
-          && hasShopMemberRole(shopId, ['employee']));
+        || (collection == 'products' && staffHasPermission(shopId, 'viewProducts'))
+        || (collection == 'sales' && staffHasPermission(shopId, 'viewSales'))
+        || (collection == 'people' && staffHasPermission(shopId, 'viewCustomers'))
+        || (collection == 'payments' && staffHasPermission(shopId, 'receivePayments'));
     }
 
     function canCreatePosCollection(shopId, collection) {
       return isVerifiedOwner() || isPosShopOwner(shopId)
-        || (collection in ['sales','people','payments']
-          && hasShopMemberRole(shopId, ['employee']));
+        || (collection == 'sales' && staffHasPermission(shopId, 'createSales'))
+        || (collection == 'people' && staffHasPermission(shopId, 'manageCustomers'))
+        || (collection == 'payments' && staffHasPermission(shopId, 'receivePayments'));
     }
 
     function canUpdatePosCollection(shopId, collection) {
       return isVerifiedOwner() || isPosShopOwner(shopId)
-        || (collection == 'products' && hasShopMemberRole(shopId, ['employee']));
+        || (collection == 'products' && staffHasPermission(shopId, 'adjustStock'));
     }
 
     function canDeletePosCollection(shopId, collection) {
@@ -166,7 +190,8 @@ service cloud.firestore {
       allow create: if request.auth != null
         && request.auth.uid == memberUid
         && isVerifiedGoogleUser()
-        && request.resource.data.keys().hasOnly(['shopId','role','status','email','createdAt','createdBy','inviteCode','slotId','canPrint','merchantStaff','name'])
+        && request.resource.data.keys().hasOnly(['shopId','role','status','email','createdAt','createdBy','inviteCode','slotId','canPrint','merchantStaff','name','permissions'])
+        && (!('permissions' in request.resource.data.keys()) || validStaffPermissions(request.resource.data.permissions))
         && request.resource.data.shopId is string
         && request.resource.data.role == 'employee'
         && request.resource.data.status == 'active'
@@ -195,9 +220,14 @@ service cloud.firestore {
       allow update: if isVerifiedGoogleUser()
         && request.auth.uid == resource.data.shopId
         && activeShopLicense(resource.data.shopId)
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['canPrint','status','revokedAt'])
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['canPrint','status','revokedAt','permissions'])
         && ((request.resource.data.diff(resource.data).affectedKeys().hasOnly(['canPrint'])
               && request.resource.data.canPrint is bool)
+          || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['permissions'])
+              && validStaffPermissions(request.resource.data.permissions))
+          || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['canPrint','permissions'])
+              && request.resource.data.canPrint is bool
+              && validStaffPermissions(request.resource.data.permissions))
           || (resource.data.merchantStaff == true
               && request.resource.data.status == 'suspended'
               && request.resource.data.revokedAt is timestamp));

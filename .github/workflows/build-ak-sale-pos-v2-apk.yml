@@ -26,6 +26,7 @@ on:
       - "scripts/patch-ak-apk-runtime.py"
       - "scripts/test-apk-auth-flow.js"
       - "scripts/test-v2-barcode-labels.js"
+      - "scripts/test-v2-catalog-sales.js"
       - "firebase-config.js"
       - "google-services.json"
       - "firestore.rules"

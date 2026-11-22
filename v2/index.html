@@ -28,7 +28,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
 </style>
 </head>
 <body>
-<header><div class="brand"><img src="./icon.svg" alt="AK Hardware & Electrical Logo"><div><h1>AK Sale POS 2.0</h1><small>Hardware & Electrical Shop Management</small></div></div><div id="userBadge" class="muted" style="color:#fff"></div></header>
+<header><div class="brand"><img src="./icon.svg" alt="AK POS Logo"><div><h1>AK POS</h1><small>Point of Sale & Shop Management</small></div></div><div id="userBadge" class="muted" style="color:#fff"></div></header>
 <main>
 <section id="loginPanel" class="card">
 <h2>အကောင့်ဝင်ရန်</h2>
@@ -66,7 +66,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
 <section id="tab-printer" class="card hidden">
 <h2>Printer ချိတ်ဆက်မှု</h2><p class="muted">APK တွင် Bluetooth Classic ESC/POS နှင့် Wi-Fi RAW TCP 9100 ကို တိုက်ရိုက်အသုံးပြုနိုင်သည်။ Website တွင် Android/System Print သို့မဟုတ် Browser Print ကို အသုံးပြုပါ။</p>
 <div class="grid"><div><label>Printer အမည်</label><input id="printerName" placeholder="ဥပမာ Xprinter 58mm"></div><div><label>Printer အမျိုးအစား</label><select id="printerType"><option value="system">Android / System Print</option><option value="bluetooth">Bluetooth ESC/POS</option><option value="wifi">Wi-Fi RAW TCP</option></select></div><div id="printerBluetoothBox" class="hidden"><label>Pair လုပ်ထားသော Printer</label><select id="printerBluetoothDevice"><option value="">Printer ရှာရန်နှိပ်ပါ</option></select><button type="button" class="secondary" id="findBluetoothPrinters">Bluetooth Printer ရှာရန်</button></div><div id="printerWifiBox" class="hidden"><label>Printer IP Address</label><input id="printerHost" placeholder="192.168.1.100"><label>Port</label><input id="printerPort" type="number" value="9100"></div></div>
-<div class="grid"><div><label>ဘောင်ချာစာရွက်</label><select id="receiptPaper"><option value="58mm">58mm</option><option value="80mm" selected>80mm</option></select></div><div><label>မိတ္တူအရေအတွက်</label><select id="receiptCopies"><option value="1">၁ စောင်</option><option value="2">၂ စောင်</option><option value="3">၃ စောင်</option></select></div><div><label>ဘောင်ချာဆိုင်အမည်</label><input id="receiptShopName" placeholder="AK Hardware & Electrical"></div><div><label>အောက်ဆုံးစာသား</label><input id="receiptFooter" placeholder="ကျေးဇူးတင်ပါသည်"></div></div><div class="row"><button id="savePrinter">Printer Profile သိမ်းမည်</button><button id="saveReceiptSettings" class="secondary">ဘောင်ချာပုံစံ သိမ်းမည်</button><button id="testPrinter" class="secondary">စမ်းသပ် Print</button><button id="systemPrint" class="secondary">နောက်ဆုံးဘောင်ချာ Print / PDF</button></div><div id="printerStatus" class="muted"></div><div id="printerRows"></div><h3>ဘောင်ချာမှတ်တမ်း / ပြန်ထုတ်ရန်</h3><div id="receiptHistory" class="tablewrap muted">Print မှတ်တမ်း မရှိသေးပါ။</div>
+<div class="grid"><div><label>ဘောင်ချာစာရွက်</label><select id="receiptPaper"><option value="58mm">58mm</option><option value="80mm" selected>80mm</option></select></div><div><label>မိတ္တူအရေအတွက်</label><select id="receiptCopies"><option value="1">၁ စောင်</option><option value="2">၂ စောင်</option><option value="3">၃ စောင်</option></select></div><div><label>ဘောင်ချာဆိုင်အမည်</label><input id="receiptShopName" placeholder="ဆိုင်အမည်"></div><div><label>အောက်ဆုံးစာသား</label><input id="receiptFooter" placeholder="ကျေးဇူးတင်ပါသည်"></div></div><div class="row"><button id="savePrinter">Printer Profile သိမ်းမည်</button><button id="saveReceiptSettings" class="secondary">ဘောင်ချာပုံစံ သိမ်းမည်</button><button id="testPrinter" class="secondary">စမ်းသပ် Print</button><button id="systemPrint" class="secondary">နောက်ဆုံးဘောင်ချာ Print / PDF</button></div><div id="printerStatus" class="muted"></div><div id="printerRows"></div><h3>ဘောင်ချာမှတ်တမ်း / ပြန်ထုတ်ရန်</h3><div id="receiptHistory" class="tablewrap muted">Print မှတ်တမ်း မရှိသေးပါ။</div>
 </section>
 <section id="tab-ads" class="card hidden">
 <h2>Social Media ကြော်ငြာဖန်တီးရန်</h2><p class="muted">ကုန်ပစ္စည်းအမည်၊ ဈေးနှုန်း၊ ဆက်သွယ်ရန်နှင့် ဓာတ်ပုံဖြင့် 1080×1080 ကြော်ငြာပုံဖန်တီးပြီး Android Share Menu မှ Viber၊ TikTok၊ Facebook စသည်သို့ မျှဝေနိုင်သည်။</p>
@@ -75,7 +75,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
 </section>
 <section id="tab-backup" class="card hidden"><h2>Backup / Restore</h2><p class="muted">ဆိုင်ဒေတာကို JSON ဖိုင်အဖြစ် သိမ်းနိုင်သည်။ Restore လုပ်ရာတွင် လက်ရှိဒေတာကို အစားထိုးမည်။</p><div class="row"><button id="exportData">Backup ဒေါင်းလုဒ်</button><input id="importFile" type="file" accept="application/json"></div><button id="restoreData" class="danger">Backup ပြန်သွင်းမည်</button></section>
 </section>
-</main><footer>AK Sale POS 2.0 · Hardware & Electrical · MMK</footer>
+</main><footer>AK POS · MMK</footer>
 <script>
 const OWNER="painglin102@gmail.com", GATEWAY="https://ak-sale-backend.painglin102.workers.dev", PROJECT=window.AK_FIREBASE_PUBLIC_CONFIG;
 let auth,db,user,shopId="",staffRole="owner",products=[],sales=[],purchases=[],people=[],expenses=[],editingProduct=null,licenses=[];
@@ -253,7 +253,7 @@ async function getRows(name){const s=await col(name).get();return s.docs.map(d=>
 async function loadShop(){
  const platformOwner=isPlatformOwner();
  if(platformOwner){
-  $("shopTitle").textContent="AK Hardware & Electrical · Owner POS";
+  $("shopTitle").textContent="AK POS · Owner POS";
   $("licenseBadge").textContent="Platform Owner · ကိုယ်ပိုင်ဆိုင်";
   $("ownerControlBtn").classList.remove("hidden");
  }else{
@@ -367,7 +367,7 @@ $("savePurchase").onclick=async()=>{
 };
 $("savePerson").onclick=async()=>{try{if(!$("personName").value.trim())throw Error("အမည်ဖြည့်ပါ");await col("people").add({name:$("personName").value.trim(),phone:$("personPhone").value.trim(),type:$("personType").value,createdAt:firebase.firestore.FieldValue.serverTimestamp()});await reloadAll()}catch(e){alert(errText(e))}};
 $("saveExpense").onclick=async()=>{try{if(!$("expenseName").value.trim()||+$("expenseAmount").value<=0)throw Error("အချက်အလက် ဖြည့်ပါ");await col("expenses").add({name:$("expenseName").value.trim(),amount:+$("expenseAmount").value,createdAt:firebase.firestore.FieldValue.serverTimestamp()});await reloadAll()}catch(e){alert(errText(e))}};
-$("tabs").onclick=e=>{const b=e.target.closest("button[data-tab]");if(!b)return;document.querySelectorAll("#tabs button").forEach(x=>x.classList.toggle("active",x===b));["products","sales","purchases","people","expenses","reports","backup"].forEach(t=>$("tab-"+t).classList.toggle("hidden",t!==b.dataset.tab))};
+$("tabs").onclick=e=>{const b=e.target.closest("button[data-tab]");if(!b)return;document.querySelectorAll("#tabs button").forEach(x=>x.classList.toggle("active",x===b));["products","sales","purchases","people","expenses","reports","printer","ads","backup"].forEach(t=>$("tab-"+t).classList.toggle("hidden",t!==b.dataset.tab))};
 $("exportData").onclick=()=>{const blob=new Blob([JSON.stringify({products,sales,purchases,people,expenses},null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="ak-sale-backup-"+new Date().toISOString().slice(0,10)+".json";a.click();URL.revokeObjectURL(a.href)};
 $("restoreData").onclick=async()=>{try{const f=$("importFile").files[0];if(!f)throw Error("Backup ဖိုင်ရွေးပါ");if(!confirm("လက်ရှိစာရင်းကို Backup ဒေတာဖြင့် အစားထိုးမည်။ ဆက်လုပ်မလား?"))return;const d=JSON.parse(await f.text()),batch=db.batch();for(const [key,arr] of Object.entries({products:d.products||[],sales:d.sales||[],purchases:d.purchases||[],people:d.people||[],expenses:d.expenses||[]})){for(const raw of arr){const x={...raw},id=x.id||db.collection("_ids").doc().id;delete x.id;if(key==="products"){const cost=Number(x.cost||0);delete x.cost;batch.set(col("products").doc(id),x);batch.set(col("productCosts").doc(id),{cost})}else if(key==="sales"){const cost=Number(x.cost||0),profit=Number(x.profit||0);delete x.cost;delete x.profit;batch.set(col("sales").doc(id),x);batch.set(col("saleCosts").doc(id),{cost,profit})}else{batch.set(col(key).doc(id),x)}}}await batch.commit();await reloadAll();alert("Restore ပြီးပါပြီ")}catch(e){alert(errText(e))}};
 
@@ -467,7 +467,7 @@ function buildReceiptEscPos(s,paper="80mm"){
  const push=(text,size=20,bold=false,align="left")=>lines.push({text:String(text??""),size,bold,align});
  const wrap=(text,size,bold=false)=>{ctx.font=(bold?"bold ":"")+size+"px 'Noto Sans Myanmar',Arial,sans-serif";const parts=typeof Intl.Segmenter==="function"?Array.from(new Intl.Segmenter("my",{granularity:"grapheme"}).segment(String(text??"")),x=>x.segment):Array.from(String(text??""));let line="";for(const p of parts){if(line&&ctx.measureText(line+p).width>contentWidth){push(line,size,bold);line=p}else line+=p}if(line)push(line,size,bold)};
  const date=s.createdAt?.toDate?s.createdAt.toDate():new Date(s.createdAt||Date.now());
- const receiptPrefs=receiptSettingsRead();push(receiptPrefs.shopName||"AK Hardware & Electrical",27,true,"center");push("AK Sale POS",16,false,"center");push("--------------------------------",17,false,"center");
+ const receiptPrefs=receiptSettingsRead();push(receiptPrefs.shopName||"ဆိုင်အမည်",27,true,"center");push("AK Sale POS",16,false,"center");push("--------------------------------",17,false,"center");
  wrap("ဘောင်ချာ: "+String(s.id||"").slice(-10),18,true);wrap("ရက်စွဲ: "+date.toLocaleString(),16);wrap("ဖောက်သည်: "+(s.customer||"လက်ငင်း"),16);
  push("--------------------------------",17,false,"center");wrap(s.productName||"ပစ္စည်း",18,true);wrap(Number(s.qty||0)+" × "+money(s.price)+" = "+money(s.subtotal??(Number(s.qty||0)*Number(s.price||0))),17);if(Number(s.discount||0)>0)wrap("လျှော့ဈေး: -"+money(s.discount),18,true);
  push("--------------------------------",17,false,"center");wrap("စုစုပေါင်း: "+money(s.total),20,true);wrap("ပေးချေပြီး: "+money(s.paid),18);wrap("ကျန်ငွေ: "+money(s.due),18,true);push(receiptPrefs.footer||"ကျေးဇူးတင်ပါသည်",18,true,"center");
@@ -493,7 +493,7 @@ window.printSaleReceipt=async id=>{
   try{const bytes=buildReceiptEscPos({...sale,id},paper);for(let i=0;i<copies;i++)await window.akPrintRawToDefault(bytes);receiptHistoryAdd(sale,printer.name,"ပို့ပြီး");status("ဘောင်ချာ "+copies+" စောင် ပို့ပြီးပါပြီ။","printerStatus")}catch(e){receiptHistoryAdd(sale,printer.name,"မအောင်မြင်");alert("Print မအောင်မြင်: "+errText(e))}return;
  }
  const w=window.open("","_blank");if(!w){alert("Print Window ဖွင့်မရပါ။ Pop-up ခွင့်ပြုပါ။");return}
- const width=paper==="58mm"?"52mm":"74mm",shop=esc(pref.shopName||"AK Hardware & Electrical"),footer=esc(pref.footer||"ကျေးဇူးတင်ပါသည်");
+ const width=paper==="58mm"?"52mm":"74mm",shop=esc(pref.shopName||"ဆိုင်အမည်"),footer=esc(pref.footer||"ကျေးဇူးတင်ပါသည်");
  const css='<style>@page{size:'+paper+' auto;margin:3mm}body{font-family:Arial,sans-serif;width:'+width+';padding:3mm}h2{text-align:center}.copy{page-break-after:always}@media print{button{display:none}}</style>';
  const item='<h2>'+shop+'</h2><p>ဘောင်ချာ: '+esc(id.slice(-10))+'</p><p>ရက်စွဲ: '+dateText(sale.createdAt)+'</p><p>ပစ္စည်း: '+esc(sale.productName)+'</p><p>အရေအတွက်: '+sale.qty+'</p><p>မူလစုစုပေါင်း: '+money(sale.subtotal??sale.total)+'</p><p>လျှော့ဈေး: '+money(sale.discount||0)+'</p><p><b>ပေးရန်: '+money(sale.total)+'</b></p><p>ပေးချေပြီး: '+money(sale.paid)+'</p><p>ကျန်ငွေ: '+money(sale.due)+'</p><p>'+footer+'</p>';
  w.document.write('<!doctype html><html lang="my"><meta charset="utf-8"><title>AK Sale Receipt</title>'+css+Array.from({length:copies},()=>'<article class="copy">'+item+'</article>').join("")+'<button onclick="window.print()">Print / PDF သိမ်းရန်</button><script>window.onload=()=>setTimeout(()=>window.print(),250)<\\/script></html>');

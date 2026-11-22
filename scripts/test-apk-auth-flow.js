@@ -55,7 +55,7 @@ assert(!/signInWithEmailAndPassword|createUserWithEmailAndPassword|sendPasswordR
 assert(html.includes('function applyRoleUI(){'), 'Role-based interface permissions are required');
 assert(html.includes("function saveMerchantStaffPermissions(uid,row)") && html.includes("await ref.update({permissions,canPrint})"), "Shop Owner must save granular Staff permissions");
 assert(html.includes("staffMemberUnsubscribe") && html.includes("onSnapshot(snap=>"), "Staff permission changes and suspensions must sync to active sessions");
-assert(rules.includes("function staffHasPermission(shopId, permission)") && rules.includes("function validStaffPermissions(permissions)"), "Firestore must enforce granular Staff permissions");
+assert(rules.includes("function staffHasPermission(member, permission)") && rules.includes("function validStaffPermissions(permissions)"), "Firestore must enforce granular Staff permissions");
 assert(html.includes('async function reloadAll(){const owner=staffRole==="owner";const names=[...(owner||staffPermissions.viewProducts?["products"]:[]),...(owner||staffPermissions.viewSales?["sales"]:[]),...(owner||staffPermissions.viewCustomers?["people"]:[]),...(owner||staffPermissions.viewSales?["payments"]:[])'), 'Staff must not load purchase/expense/profit cost data');
 for (const name of ['claimOwnerProvisioning','createShopOwnerAccount','listPlatformUsers','grantSubscription','setPlatformUserAccess']) assert(!html.includes('httpsCallable("' + name + '")'), 'POS auth/subscription must not depend on undeployed callable ' + name);
 assert(rules.includes('function isVerifiedGoogleUser()'), 'Firestore must enforce verified Google-only identity');

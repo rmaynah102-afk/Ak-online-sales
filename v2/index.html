@@ -456,7 +456,7 @@ window.printSaleReceipt=async id=>{
  const w=window.open("","_blank");if(!w){alert("Print Window ဖွင့်မရပါ။ Pop-up ခွင့်ပြုပါ။");return}
  const width=paper==="58mm"?"52mm":"74mm",shop=esc(pref.shopName||"AK Hardware & Electrical"),footer=esc(pref.footer||"ကျေးဇူးတင်ပါသည်");
  const css='<style>@page{size:'+paper+' auto;margin:3mm}body{font-family:Arial,sans-serif;width:'+width+';padding:3mm}h2{text-align:center}.copy{page-break-after:always}@media print{button{display:none}}</style>';
- const item='<h2>'+shop+'</h2><p>ဘောင်ချာ: '+esc(id.slice(-10))+'</p><p>ရက်စွဲ: '+dateText(sale.createdAt)+'</p><p>ပစ္စည်း: '+esc(sale.productName)+'</p><p>အရေအတွက်: '+sale.qty+'</p><p>စုစုပေါင်း: '+money(sale.total)+'</p><p>ပေးချေပြီး: '+money(sale.paid)+'</p><p>ကျန်ငွေ: '+money(sale.due)+'</p><p>'+footer+'</p>';
+ const item='<h2>'+shop+'</h2><p>ဘောင်ချာ: '+esc(id.slice(-10))+'</p><p>ရက်စွဲ: '+dateText(sale.createdAt)+'</p><p>ပစ္စည်း: '+esc(sale.productName)+'</p><p>အရေအတွက်: '+sale.qty+'</p><p>မူလစုစုပေါင်း: '+money(sale.subtotal??sale.total)+'</p><p>လျှော့ဈေး: '+money(sale.discount||0)+'</p><p><b>ပေးရန်: '+money(sale.total)+'</b></p><p>ပေးချေပြီး: '+money(sale.paid)+'</p><p>ကျန်ငွေ: '+money(sale.due)+'</p><p>'+footer+'</p>';
  w.document.write('<!doctype html><html lang="my"><meta charset="utf-8"><title>AK Sale Receipt</title>'+css+Array.from({length:copies},()=>'<article class="copy">'+item+'</article>').join("")+'<button onclick="window.print()">Print / PDF သိမ်းရန်</button><script>window.onload=()=>setTimeout(()=>window.print(),250)<\\/script></html>');
  w.document.close();receiptHistoryAdd(sale,"System Print / PDF","Print Window ဖွင့်ပြီး");
 };

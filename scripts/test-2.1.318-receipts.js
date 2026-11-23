@@ -28,7 +28,14 @@ const checks=[
  ["transaction persists itemized sale lines",'items:receiptItems'],
  ["ESC/POS itemized receipt",'for(const item of receiptItems)'],
  ["system receipt itemized lines",'const receiptLines='],
- ["ESC/POS auto cut bytes","29,86,0"]
+ ["ESC/POS auto cut bytes","29,86,0"],
+ ["stock adjustment UI",'id="tab-stockAdjustments"'],
+ ["stock adjustment product selector",'id="adjustProduct"'],
+ ["stock adjustment reason field",'id="adjustReason"'],
+ ["stock adjustment manager role",'stockAdjustments:manager'],
+ ["stock adjustment audit collection",'col("stockAdjustments").doc()'],
+ ["stock adjustment records previous and new quantity",'before,after,delta,reason,note,createdBy'],
+ ["stock adjustment backup",'stockAdjustments},null,2)']
 ];
 for(const [label,marker] of checks){if(!(html.includes(marker)||native.includes(marker)))throw new Error("Missing: "+label)}
 if(!html.includes('const width=paper==="58mm"?384:576'))throw new Error("ESC/POS paper width selection is missing");

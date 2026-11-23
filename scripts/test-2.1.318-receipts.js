@@ -34,7 +34,7 @@ const checks=[
  ["stock adjustment reason field",'id="adjustReason"'],
  ["stock adjustment manager role",'stockAdjustments:manager'],
  ["stock adjustment audit collection",'col("stockAdjustments").doc()'],
- ["stock adjustment records previous and new quantity",'before,after,delta,reason,note,createdBy'],
+ ["stock adjustment records previous and new quantity",'before,after,delta:after-before,reason,note,createdBy'],
  ["stock adjustment backup",'stockAdjustments},null,2)']
 ];
 for(const [label,marker] of checks){if(!(html.includes(marker)||native.includes(marker)))throw new Error("Missing: "+label)}

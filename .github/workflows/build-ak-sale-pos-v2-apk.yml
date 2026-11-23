@@ -2,7 +2,7 @@ name: Build AK POS Android APK
 
 on:
   push:
-    branches: [ak-sale-pos-v2-main, main, release/2.1.318-receipt-printer-staff, upgrade/ak-pos-371]
+    branches: [ak-sale-pos-v2-main, main, release/2.1.318-receipt-printer-staff, upgrade/ak-pos-371, safety/owner-gated-apk-release-20261123]
     paths:
       - "v2/**"
       - "scripts/test-2.1.318-receipts.js"
@@ -15,6 +15,12 @@ on:
       - "package-lock.json"
       - ".github/workflows/build-ak-sale-pos-v2-apk.yml"
   workflow_dispatch:
+    inputs:
+      publish_release:
+        description: 'Publish a public APK release (owner-only explicit approval)'
+        required: true
+        type: boolean
+        default: false
 permissions:
   contents: write
 jobs:
@@ -256,7 +262,7 @@ jobs:
           if-no-files-found: error
           retention-days: 30
       - name: Publish public signed APK release
-        if: steps.signing.outputs.ready == 'true'
+        if: ${{ steps.signing.outputs.ready == 'true' && github.event_name == 'workflow_dispatch' && inputs.publish_release == true && github.actor == 'rmaynah102-afk' }}
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v2.1.${{ github.run_number }}

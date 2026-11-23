@@ -399,7 +399,61 @@ $("savePurchase").onclick=async()=>{
   await reloadAll();
  }catch(e){alert(errText(e))}
 };
-function returnSelectedSale(){return sales.find(x=>x.id===$("returnSale").value)}\nfunction renderReturnPanel(){const sale=$("returnSale"),item=$("returnItem");if(!sale||!item)return;const prior=sale.value,priorItem=item.value;sale.innerHTML=sales.slice().sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0)).map(x=>"<option value=\\\""+esc(x.id)+"\\\">"+esc(String(x.id).slice(-10))+" · "+esc(x.customer||"လက်ငင်း")+" · "+money(x.total)+" ကျပ်</option>").join("");if(sales.some(x=>x.id===prior))sale.value=prior;const selected=returnSelectedSale(),items=selected?.items||[];item.innerHTML=items.map((x,i)=>{const returned=saleReturns.filter(r=>r.saleId===selected.id&&r.itemIndex===i).reduce((a,r)=>a+Number(r.qty||0),0);return "<option value=\\\""+i+"\\\">"+esc(x.productName)+" · ရောင်း "+x.qty+" · ပြန်အပ် "+returned+" · ကျန် "+Math.max(0,x.qty-returned)+"</option>"}).join("");if(items.some((x,i)=>String(i)===priorItem))item.value=priorItem;updateReturnEstimate();$("returnRows").innerHTML=saleReturns.slice().sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0)).map(x=>"<tr><td>"+dateText(x.createdAt)+"</td><td>"+esc(String(x.saleId).slice(-10))+"</td><td>"+esc(x.productName)+"</td><td>"+x.qty+" "+esc(x.unit||"ခု")+"</td><td>"+money(x.refundAmount)+"</td><td>"+esc(x.reason)+" · "+esc(x.note||"")+"</td></tr>").join("")||"<tr><td colspan=\\\"6\\\">မှတ်တမ်းမရှိသေးပါ</td></tr>"}\nfunction updateReturnEstimate(){const s=returnSelectedSale(),i=Number($("returnItem").value),line=s?.items?.[i],q=Number($("returnQty").value)||0;if(!line){$("returnEstimate").textContent="ပြန်အမ်းငွေ ခန့်မှန်း: 0 ကျပ်";return}const subtotal=Number(s.subtotal||s.total||0),discount=Number(s.discount||0),ratio=subtotal>0?Math.max(0,(subtotal-discount)/subtotal):1;$("returnEstimate").textContent="ပြန်အမ်းငွေ ခန့်မှန်း: "+money(q*Number(line.price||0)*ratio)+" ကျပ်"}\n$("returnSale").onchange=renderReturnPanel;$("returnItem").onchange=updateReturnEstimate;$("returnQty").oninput=updateReturnEstimate;\n$("saveReturn").onclick=async()=>{const b=$("saveReturn");try{if(!(staffRole==="owner"||staffRole==="manager"))throw Error("Manager ခွင့်ပြုချက်လိုအပ်သည်");const saleId=$("returnSale").value,itemIndex=Number($("returnItem").value),qty=Number($("returnQty").value),reason=$("returnReason").value,note=$("returnNote").value.trim(),sale=sales.find(x=>x.id===saleId),line=sale?.items?.[itemIndex];if(!sale||!line||!Number.isFinite(qty)||qty<=0||!validUnitQuantity(line.unit||"ခု",qty))throw Error("ပြန်အပ်အချက်အလက် မမှန်ပါ");b.disabled=true;const productRef=col("products").doc(line.productId),balanceRef=col("saleReturnBalances").doc(saleId+"_"+itemIndex),recordRef=col("saleReturns").doc();let refundAmount=0;await db.runTransaction(async tx=>{const [pSnap,bSnap]=await Promise.all([tx.get(productRef),tx.get(balanceRef)]);if(!pSnap.exists)throw Error("မူလပစ္စည်းမတွေ့ပါ");const returned=Number(bSnap.data()?.qty||0),remaining=Number(line.qty||0)-returned;if(qty>remaining+1e-9)throw Error("ပြန်အပ်နိုင်သည့် အများဆုံးအရေအတွက်မှာ "+remaining+" ဖြစ်သည်");const p=pSnap.data(),unit=p.unit||line.unit||"ခု";if(unit!==String(line.unit||"ခု"))throw Error("ပစ္စည်းယူနစ် ပြောင်းထားသည်။ Owner စစ်ဆေးပါ");const subtotal=Number(sale.subtotal||sale.total||0),ratio=subtotal>0?Math.max(0,(subtotal-Number(sale.discount||0))/subtotal):1;refundAmount=qty*Number(line.price||0)*ratio;tx.update(productRef,{stock:Number(p.stock||0)+qty});tx.set(balanceRef,{saleId,itemIndex,qty:returned+qty,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});tx.set(recordRef,{saleId,itemIndex,productId:line.productId,productName:line.productName,unit,qty,refundAmount,reason,note,createdBy:user.uid,createdAt:firebase.firestore.FieldValue.serverTimestamp()})});$("returnQty").value="1";$("returnNote").value="";$("returnStatus").textContent="ပြန်အပ်မှုသိမ်းပြီး Stock ပြန်ပေါင်းပြီးပါပြီ။ ပြန်အမ်းငွေ: "+money(refundAmount);await reloadAll()}catch(e){$("returnStatus").textContent="မအောင်မြင်: "+errText(e)}finally{b.disabled=false}};\n$("saveAdjustment").onclick=async()=>{const b=$("saveAdjustment");try{if(!(staffRole==="owner"||staffRole==="manager"))throw Error("Manager ခွင့်ပြုချက်လိုအပ်သည်");const id=$("adjustProduct").value,type=$("adjustType").value,qty=Number($("adjustQty").value),reason=$("adjustReason").value,note=$("adjustNote").value.trim();if(!id||!Number.isFinite(qty)||(type==="set"?qty<0:qty<=0))throw Error("ပစ္စည်းနှင့် အရေအတွက် မှန်ကန်စွာရွေးပါ");b.disabled=true;await db.runTransaction(async tx=>{const productRef=col("products").doc(id),snap=await tx.get(productRef);if(!snap.exists)throw Error("ပစ္စည်းမတွေ့ပါ");const p=snap.data(),unit=p.unit||"ခု";if(type==="set"?!validStockQuantity(unit,qty):!validUnitQuantity(unit,qty))throw Error("ယူနစ် "+unit+" အတွက် အရေအတွက် မမှန်ပါ");const before=Number(p.stock||0),after=type==="add"?before+qty:type==="remove"?before-qty:qty;if(after<0)throw Error("လက်ကျန်သည် သုညအောက် မဖြစ်ရပါ");if(!validStockQuantity(unit,after))throw Error("လက်ကျန်အရေအတွက် မမှန်ပါ");const logRef=col("stockAdjustments").doc();tx.update(productRef,{stock:after});tx.set(logRef,{productId:id,productName:p.name,unit,type,quantity:qty,before,after,delta:after-before,reason,note,createdBy:user.uid,createdAt:firebase.firestore.FieldValue.serverTimestamp()})});$("adjustQty").value="1";$("adjustNote").value="";$("adjustStatus").textContent="Stock ပြင်ဆင်ပြီး မှတ်တမ်းသိမ်းပြီးပါပြီ။";await reloadAll()}catch(e){$("adjustStatus").textContent="မအောင်မြင်: "+errText(e)}finally{b.disabled=false}};
+
+function returnSelectedSale(){return sales.find(x=>x.id===$("returnSale").value)}
+function renderReturnPanel(){
+ const saleSelect=$("returnSale"),itemSelect=$("returnItem");if(!saleSelect||!itemSelect)return;
+ const prior=saleSelect.value,priorItem=itemSelect.value;
+ saleSelect.innerHTML=sales.slice().sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0)).map(x=>'<option value="'+esc(x.id)+'">'+esc(String(x.id).slice(-10))+' · '+esc(x.customer||"လက်ငင်း")+' · '+money(x.total)+' ကျပ်</option>').join("");
+ if(sales.some(x=>x.id===prior))saleSelect.value=prior;
+ const selected=returnSelectedSale(),items=selected?.items||[];
+ itemSelect.innerHTML=items.map((x,i)=>{
+  const returned=saleReturns.filter(r=>r.saleId===selected.id&&r.itemIndex===i).reduce((a,r)=>a+Number(r.qty||0),0);
+  return '<option value="'+i+'">'+esc(x.productName)+' · ရောင်း '+x.qty+' · ပြန်အပ် '+returned+' · ကျန် '+Math.max(0,x.qty-returned)+'</option>';
+ }).join("");
+ if(items.some((x,i)=>String(i)===priorItem))itemSelect.value=priorItem;
+ updateReturnEstimate();
+ $("returnRows").innerHTML=saleReturns.slice().sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0)).map(x=>'<tr><td>'+dateText(x.createdAt)+'</td><td>'+esc(String(x.saleId).slice(-10))+'</td><td>'+esc(x.productName)+'</td><td>'+x.qty+' '+esc(x.unit||"ခု")+'</td><td>'+money(x.refundAmount)+'</td><td>'+esc(x.reason)+' · '+esc(x.note||"")+'</td></tr>').join("")||'<tr><td colspan="6">မှတ်တမ်းမရှိသေးပါ</td></tr>';
+}
+function updateReturnEstimate(){
+ const sale=returnSelectedSale(),index=Number($("returnItem").value),line=sale?.items?.[index],qty=Number($("returnQty").value)||0;
+ if(!line){$("returnEstimate").textContent="ပြန်အမ်းငွေ ခန့်မှန်း: 0 ကျပ်";return}
+ const subtotal=Number(sale.subtotal||sale.total||0),ratio=subtotal>0?Math.max(0,(subtotal-Number(sale.discount||0))/subtotal):1;
+ $("returnEstimate").textContent="ပြန်အမ်းငွေ ခန့်မှန်း: "+money(qty*Number(line.price||0)*ratio)+" ကျပ်";
+}
+$("returnSale").onchange=renderReturnPanel;
+$("returnItem").onchange=updateReturnEstimate;
+$("returnQty").oninput=updateReturnEstimate;
+$("saveReturn").onclick=async()=>{
+ const button=$("saveReturn");
+ try{
+  if(!(staffRole==="owner"||staffRole==="manager"))throw Error("Manager ခွင့်ပြုချက်လိုအပ်သည်");
+  const saleId=$("returnSale").value,itemIndex=Number($("returnItem").value),qty=Number($("returnQty").value),reason=$("returnReason").value,note=$("returnNote").value.trim();
+  const sale=sales.find(x=>x.id===saleId),line=sale?.items?.[itemIndex];
+  if(!sale||!line||!Number.isFinite(qty)||qty<=0||!validUnitQuantity(line.unit||"ခု",qty))throw Error("ပြန်အပ်အချက်အလက် မမှန်ပါ");
+  button.disabled=true;
+  const productRef=col("products").doc(line.productId),balanceRef=col("saleReturnBalances").doc(saleId+"_"+itemIndex),recordRef=col("saleReturns").doc();
+  let refundAmount=0;
+  await db.runTransaction(async tx=>{
+   const [productSnap,balanceSnap]=await Promise.all([tx.get(productRef),tx.get(balanceRef)]);
+   if(!productSnap.exists)throw Error("မူလပစ္စည်းမတွေ့ပါ");
+   const alreadyReturned=Number(balanceSnap.data()?.qty||0),remaining=Number(line.qty||0)-alreadyReturned;
+   if(qty>remaining+1e-9)throw Error("ပြန်အပ်နိုင်သည့် အများဆုံးအရေအတွက်မှာ "+remaining+" ဖြစ်သည်");
+   const product=productSnap.data(),unit=product.unit||line.unit||"ခု";
+   if(unit!==String(line.unit||"ခု"))throw Error("ပစ္စည်းယူနစ် ပြောင်းထားသည်။ Owner စစ်ဆေးပါ");
+   const subtotal=Number(sale.subtotal||sale.total||0),ratio=subtotal>0?Math.max(0,(subtotal-Number(sale.discount||0))/subtotal):1;
+   refundAmount=qty*Number(line.price||0)*ratio;
+   tx.update(productRef,{stock:Number(product.stock||0)+qty});
+   tx.set(balanceRef,{saleId,itemIndex,qty:alreadyReturned+qty,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+   tx.set(recordRef,{saleId,itemIndex,productId:line.productId,productName:line.productName,unit,qty,refundAmount,reason,note,createdBy:user.uid,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+  });
+  $("returnQty").value="1";$("returnNote").value="";
+  $("returnStatus").textContent="ပြန်အပ်မှုသိမ်းပြီး Stock ပြန်ပေါင်းပြီးပါပြီ။ ပြန်အမ်းငွေ: "+money(refundAmount);
+  await reloadAll();
+ }catch(e){$("returnStatus").textContent="မအောင်မြင်: "+errText(e)}
+ finally{button.disabled=false}
+};
+$("saveAdjustment").onclick=async()=>{const b=$("saveAdjustment");try{if(!(staffRole==="owner"||staffRole==="manager"))throw Error("Manager ခွင့်ပြုချက်လိုအပ်သည်");const id=$("adjustProduct").value,type=$("adjustType").value,qty=Number($("adjustQty").value),reason=$("adjustReason").value,note=$("adjustNote").value.trim();if(!id||!Number.isFinite(qty)||(type==="set"?qty<0:qty<=0))throw Error("ပစ္စည်းနှင့် အရေအတွက် မှန်ကန်စွာရွေးပါ");b.disabled=true;await db.runTransaction(async tx=>{const productRef=col("products").doc(id),snap=await tx.get(productRef);if(!snap.exists)throw Error("ပစ္စည်းမတွေ့ပါ");const p=snap.data(),unit=p.unit||"ခု";if(type==="set"?!validStockQuantity(unit,qty):!validUnitQuantity(unit,qty))throw Error("ယူနစ် "+unit+" အတွက် အရေအတွက် မမှန်ပါ");const before=Number(p.stock||0),after=type==="add"?before+qty:type==="remove"?before-qty:qty;if(after<0)throw Error("လက်ကျန်သည် သုညအောက် မဖြစ်ရပါ");if(!validStockQuantity(unit,after))throw Error("လက်ကျန်အရေအတွက် မမှန်ပါ");const logRef=col("stockAdjustments").doc();tx.update(productRef,{stock:after});tx.set(logRef,{productId:id,productName:p.name,unit,type,quantity:qty,before,after,delta:after-before,reason,note,createdBy:user.uid,createdAt:firebase.firestore.FieldValue.serverTimestamp()})});$("adjustQty").value="1";$("adjustNote").value="";$("adjustStatus").textContent="Stock ပြင်ဆင်ပြီး မှတ်တမ်းသိမ်းပြီးပါပြီ။";await reloadAll()}catch(e){$("adjustStatus").textContent="မအောင်မြင်: "+errText(e)}finally{b.disabled=false}};
 $("savePerson").onclick=async()=>{try{if(!$("personName").value.trim())throw Error("အမည်ဖြည့်ပါ");await col("people").add({name:$("personName").value.trim(),phone:$("personPhone").value.trim(),type:$("personType").value,createdAt:firebase.firestore.FieldValue.serverTimestamp()});await reloadAll()}catch(e){alert(errText(e))}};
 $("saveExpense").onclick=async()=>{try{if(!$("expenseName").value.trim()||+$("expenseAmount").value<=0)throw Error("အချက်အလက် ဖြည့်ပါ");await col("expenses").add({name:$("expenseName").value.trim(),amount:+$("expenseAmount").value,createdAt:firebase.firestore.FieldValue.serverTimestamp()});await reloadAll()}catch(e){alert(errText(e))}};
 $("tabs").onclick=e=>{const b=e.target.closest("button[data-tab]");if(!b)return;document.querySelectorAll("#tabs button").forEach(x=>x.classList.toggle("active",x===b));["products","stockAdjustments","sales","salesReturns","purchases","people","expenses","reports","backup"].forEach(t=>$("tab-"+t).classList.toggle("hidden",t!==b.dataset.tab))};

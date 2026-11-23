@@ -42,14 +42,14 @@ const many="name,sku\n"+Array.from({length:1200},(_,i)=>"Product "+i+",SKU-"+i).
 if(csvContext.__parse(many).length!==1201)throw new Error("CSV parser did not retain 1,200 product rows");
 
 
-const unitChecks=html.match(/function unitAllowsFraction\\(unit\\)\\{[\\s\\S]*?\\}\\nfunction validUnitQuantity\\(unit,value\\)\\{[\\s\\S]*?\\}\\nfunction validStockQuantity\\(unit,value\\)\\{[\\s\\S]*?\\}/);
+const unitChecks=html.match(/function unitAllowsFraction\(unit\)\{[\s\S]*?\}\nfunction validUnitQuantity\(unit,value\)\{[\s\S]*?\}\nfunction validStockQuantity\(unit,value\)\{[\s\S]*?\}/);
 if(!unitChecks)throw new Error("Fractional unit validation helpers are missing");
-const unitContext={};vm.runInNewContext(unitChecks[0]+"\\nglobalThis.__valid=validUnitQuantity;globalThis.__stock=validStockQuantity",unitContext);
+const unitContext={};vm.runInNewContext(unitChecks[0]+"\nglobalThis.__valid=validUnitQuantity;globalThis.__stock=validStockQuantity",unitContext);
 if(!unitContext.__valid("kg",0.25)||!unitContext.__valid("ပေ",1.5)||unitContext.__valid("ခု",1.5)||!unitContext.__stock("kg",0.125)||unitContext.__stock("ဘူး",1.5))throw new Error("Unit quantity validation failed");
 for(const [label,marker] of [
  ["product unit input",'id="pUnit"'],
  ["sale and purchase decimal input",'step="any"'],
- ["CSV unit import and export",'unit:numeric'],
+ ["CSV unit import and export",'const unit=cell(r,"unit")'],
  ["sale transaction stores units",'unit,qty:line.qty'],
  ["purchase transaction stores units",'unit,qty,cost'],
  ["receipt binds licensed shop name",'receiptPref.shopName=String(licenseData.shopName||"")'],

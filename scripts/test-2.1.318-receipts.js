@@ -35,7 +35,16 @@ const checks=[
  ["stock adjustment manager role",'stockAdjustments:manager'],
  ["stock adjustment audit collection",'col("stockAdjustments").doc()'],
  ["stock adjustment records previous and new quantity",'before,after,delta:after-before,reason,note,createdBy'],
- ["stock adjustment backup",'stockAdjustments},null,2)']
+ ["stock adjustment backup",'stockAdjustments},null,2)'],
+ ["sales return UI",'id="tab-salesReturns"'],
+ ["sales return original receipt selector",'id="returnSale"'],
+ ["sales return quantity limit transaction",'remaining=Number(line.qty||0)-alreadyReturned'],
+ ["sales return restores inventory",'stock:Number(product.stock||0)+qty'],
+ ["sales return audit ledger",'col("saleReturns").doc()'],
+ ["sales return manager-only permission",'salesReturns:manager'],
+ ["sales return report total",'id="reportReturns"'],
+ ["sales return net sales",'id="reportNetSales"'],
+ ["sales return backup records",'saleReturns,saleReturnBalances:returnBalances']
 ];
 for(const [label,marker] of checks){if(!(html.includes(marker)||native.includes(marker)))throw new Error("Missing: "+label)}
 if(!html.includes('const width=paper==="58mm"?384:576'))throw new Error("ESC/POS paper width selection is missing");

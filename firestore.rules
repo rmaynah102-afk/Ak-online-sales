@@ -87,6 +87,7 @@ service cloud.firestore {
         || (collection == 'people' && hasShopMemberRole(shopId, ['manager','cashier','employee']))
         || (collection == 'payments' && hasShopMemberRole(shopId, ['manager','cashier','employee']))
         || (collection == 'expenses' && hasShopMemberRole(shopId, ['manager']))
+        || (collection == 'stockAdjustments' && hasShopMemberRole(shopId, ['manager']))
         || (collection in ['productCosts','saleCosts'] && hasShopMemberRole(shopId, ['manager']));
     }
 
@@ -98,6 +99,7 @@ service cloud.firestore {
         || (collection == 'people' && hasShopMemberRole(shopId, ['manager','cashier','employee']))
         || (collection == 'payments' && hasShopMemberRole(shopId, ['manager','cashier','employee']))
         || (collection == 'expenses' && hasShopMemberRole(shopId, ['manager']))
+        || (collection == 'stockAdjustments' && hasShopMemberRole(shopId, ['manager']))
         || (collection in ['productCosts','saleCosts'] && hasShopMemberRole(shopId, ['manager']));
     }
 
@@ -133,14 +135,14 @@ service cloud.firestore {
       allow create: if canCreatePosCollection(shopId, collection)
         && ((collection != 'products' && collection != 'sales')
           || posRecordHasNoCostFields(request.resource.data));
-      allow update: if canUpdatePosCollection(shopId, collection)
+      allow update: if collection != 'stockAdjustments' && canUpdatePosCollection(shopId, collection)
         && ((collection != 'products' && collection != 'sales')
           || posRecordHasNoCostFields(request.resource.data))
         && (collection != 'products' || isPosShopOwner(shopId)
           || hasShopMemberRole(shopId, ['manager'])
           || (hasShopMemberRole(shopId, ['cashier','employee'])
             && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stock'])));
-      allow delete: if canDeletePosCollection(shopId, collection);
+      allow delete: if collection != 'stockAdjustments' && canDeletePosCollection(shopId, collection);
     }
 
     // Client can subscribe to revision metadata only. All workspace records are read/written

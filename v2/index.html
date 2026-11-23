@@ -66,6 +66,26 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
 <h2>Printer ချိတ်ဆက်မှု</h2><p class="muted">APK တွင် Bluetooth Classic ESC/POS နှင့် Wi-Fi RAW TCP 9100 ကို တိုက်ရိုက်အသုံးပြုနိုင်သည်။ Website တွင် Android/System Print သို့မဟုတ် Browser Print ကို အသုံးပြုပါ။</p>
 <div class="grid"><div><label>Printer အမည်</label><input id="printerName" placeholder="ဥပမာ Xprinter 58mm"></div><div><label>Printer အမျိုးအစား</label><select id="printerType"><option value="system">Android / System Print</option><option value="bluetooth">Bluetooth ESC/POS</option><option value="wifi">Wi-Fi RAW TCP</option></select></div><div id="printerBluetoothBox" class="hidden"><label>Pair လုပ်ထားသော Printer</label><select id="printerBluetoothDevice"><option value="">Printer ရှာရန်နှိပ်ပါ</option></select><button type="button" class="secondary" id="findBluetoothPrinters">Bluetooth Printer ရှာရန်</button></div><div id="printerWifiBox" class="hidden"><label>Printer IP Address</label><input id="printerHost" placeholder="192.168.1.100"><label>Port</label><input id="printerPort" type="number" value="9100"></div></div>
 <div class="row"><button id="savePrinter">Printer သိမ်းမည်</button><button id="testPrinter" class="secondary">စမ်းသပ် Print</button><button id="systemPrint" class="secondary">System Print / PDF</button></div><div id="printerStatus" class="muted"></div><div id="printerRows"></div>
+<div class="card" id="receiptSettings">
+<h3>ဘောင်ချာပုံစံနှင့် စာရွက်အရွယ်အစား</h3>
+<div class="grid">
+<div><label>ဘောင်ချာအရွယ်အစား</label><select id="receiptPaper"><option value="58mm">58 mm အပူခံစက္ကူ</option><option value="80mm" selected>80 mm အပူခံစက္ကူ</option><option value="A5">A5 စာရွက်</option><option value="A4">A4 စာရွက်</option><option value="custom">စိတ်ကြိုက်အရွယ်အစား</option></select></div>
+<div><label>အကျယ် (mm)</label><input id="receiptWidth" type="number" min="30" max="300" value="80"></div>
+<div><label>အမြင့် (mm၊ 0 = အလိုအလျောက်)</label><input id="receiptHeight" type="number" min="0" max="1000" value="0"></div>
+<div><label>ဘောင်အနားလွတ် (mm)</label><input id="receiptMargin" type="number" min="0" max="30" value="3"></div>
+<div><label>စာလုံးအရွယ်အစား</label><select id="receiptFont"><option value="small">အသေး</option><option value="normal" selected>ပုံမှန်</option><option value="large">အကြီး</option></select></div>
+<div><label>စာရွက်အနေအထား</label><select id="receiptOrientation"><option value="portrait" selected>ဒေါင်လိုက်</option><option value="landscape">အလျားလိုက်</option></select></div>
+<div><label>မိတ္တူအရေအတွက်</label><input id="receiptCopies" type="number" min="1" max="5" value="1"></div>
+<div><label>ဆိုင်အမည်</label><input id="receiptShopName" placeholder="AK Hardware & Electrical"></div>
+<div><label>ဆိုင်လိပ်စာ</label><input id="receiptAddress" placeholder="ဆိုင်လိပ်စာ"></div>
+<div><label>ဖုန်းနံပါတ်</label><input id="receiptPhone" placeholder="09xxxxxxxxx"></div>
+<div><label>ဆိုင် Logo</label><input id="receiptLogo" type="file" accept="image/*"></div>
+<div><label>ဘောင်ချာ QR Code</label><select id="receiptQr"><option value="yes" selected>ထည့်မည်</option><option value="no">မထည့်ပါ</option></select></div>
+</div>
+<div class="row" style="margin-top:10px"><button id="saveReceiptSettings">ဘောင်ချာပုံစံ သိမ်းမည်</button><button id="previewReceipt" class="secondary">နမူနာကြည့်ရန်</button></div>
+<p class="muted">58/80 mm အပူခံစက္ကူနှင့် A5/A4 စာရွက်အတွက် စာသားအကျယ်ကို အလိုအလျောက်ညှိပေးမည်။ စက်၏ဖြတ်တောက်စနစ်ရှိမှသာ အလိုအလျောက်ဖြတ်တောက်မှု အလုပ်လုပ်မည်။</p>
+<div id="receiptSettingsStatus" class="muted"></div>
+</div>
 </section>
 <section id="tab-ads" class="card hidden">
 <h2>Social Media ကြော်ငြာဖန်တီးရန်</h2><p class="muted">ကုန်ပစ္စည်းအမည်၊ ဈေးနှုန်း၊ ဆက်သွယ်ရန်နှင့် ဓာတ်ပုံဖြင့် 1080×1080 ကြော်ငြာပုံဖန်တီးပြီး Android Share Menu မှ Viber၊ TikTok၊ Facebook စသည်သို့ မျှဝေနိုင်သည်။</p>

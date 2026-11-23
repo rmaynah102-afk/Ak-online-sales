@@ -586,6 +586,37 @@ describe('AK Sale Firestore security baseline', function () {
     await assertSucceeds(revoke.commit());
     await assertFails(getDoc(doc(staffDb, 'shopMembers', 'staff-uid-001')));
   });
+  it('allows managers to create and read immutable stock adjustment audit records only in their own shop', async () => {
+    await seedLicense('shop-a');
+    await seedLicense('shop-b');
+    await seedMember('manager-a', 'shop-a', 'manager');
+    await seedMember('cashier-a', 'shop-a', 'cashier');
+    const manager = testEnv.authenticatedContext('manager-a', {
+      email: 'manager-a@example.com', email_verified: true,
+    }).firestore();
+    const cashier = testEnv.authenticatedContext('cashier-a', {
+      email: 'cashier-a@example.com', email_verified: true,
+    }).firestore();
+    const record = doc(manager, 'shops', 'shop-a', 'pos', 'stockAdjustments', 'records', 'adjust-1');
+    await assertSucceeds(setDoc(record, {
+      productId: 'p1', before: 10, after: 8, delta: -2, reason: 'damage',
+    }));
+    await assertSucceeds(getDoc(record));
+    await assertFails(setDoc(doc(cashier, 'shops', 'shop-a', 'pos', 'stockAdjustments', 'records', 'adjust-2'), {
+      productId: 'p1', before: 8, after: 7, delta: -1,
+    }));
+    await assertFails(getDoc(doc(manager, 'shops', 'shop-b', 'pos', 'stockAdjustments', 'records', 'adjust-1')));
+    await assertFails(setDoc(record, { after: 9 }, { merge: true }));
+    await assertFails(deleteDoc(record));
+    const owner = testEnv.authenticatedContext('shop-a', {
+      email: 'shop-a@example.com', email_verified: true,
+    }).firestore();
+    const ownerRecord = doc(owner, 'shops', 'shop-a', 'pos', 'stockAdjustments', 'records', 'adjust-owner');
+    await assertSucceeds(setDoc(ownerRecord, { productId: 'p1', before: 10, after: 11, delta: 1 }));
+    await assertFails(setDoc(ownerRecord, { after: 12 }, { merge: true }));
+    await assertFails(deleteDoc(ownerRecord));
+  });
+
 
 
 });

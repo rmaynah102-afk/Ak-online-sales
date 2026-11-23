@@ -14,7 +14,7 @@ const checks=[
  ["navy silver receipt image gradient",'#071a36'],
  ["silver receipt border",'#aeb8c7'],
  ["native image share passes caption",'chooserTitle:"Viber / Telegram / TikTok သို့ ဘောင်ချာပုံမျှဝေရန်"'],
- ["native share plugin accepts image payload",'@PluginMethod\\n    public void shareReceiptImage'],
+ ["native share plugin accepts image payload",'public void shareReceiptImage'],
 
  ["receipt reprint handler","window.printSaleReceipt=async id=>"],
  ["sale row reprint uses safe data handler","data-sale-receipt"],

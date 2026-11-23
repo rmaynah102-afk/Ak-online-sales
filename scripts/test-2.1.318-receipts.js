@@ -9,6 +9,13 @@ const checks=[
  ["58mm / 80mm support",'value="58mm"'],
  ["copy selector",'id="receiptCopies"'],
  ["receipt print history",'id="receiptHistory"'],
+ ["receipt image share action",'data-share-receipt'],
+ ["receipt image share handler","window.shareSaleReceipt=async id=>"],
+ ["navy silver receipt image gradient",'#071a36'],
+ ["silver receipt border",'#aeb8c7'],
+ ["native image share passes caption",'chooserTitle:"Viber / Telegram / TikTok သို့ ဘောင်ချာပုံမျှဝေရန်"'],
+ ["native share plugin accepts image payload",'@PluginMethod\\n    public void shareReceiptImage'],
+
  ["receipt reprint handler","window.printSaleReceipt=async id=>"],
  ["sale row reprint uses safe data handler","data-sale-receipt"],
  ["sale discount input",'id="saleDiscount"'],

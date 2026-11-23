@@ -42,7 +42,7 @@ const checks=[
  ["stock adjustment manager role",'stockAdjustments:manager'],
  ["stock adjustment audit collection",'col("stockAdjustments").doc()'],
  ["stock adjustment records previous and new quantity",'before,after,delta:after-before,reason,note,createdBy'],
- ["stock adjustment backup",'stockAdjustments},null,2)'],
+ ["stock adjustment backup",'JSON.stringify({products,sales,purchases,people,expenses,stockAdjustments'],
  ["sales return UI",'id="tab-salesReturns"'],
  ["sales return original receipt selector",'id="returnSale"'],
  ["sales return quantity limit transaction",'remaining=Number(line.qty||0)-alreadyReturned'],

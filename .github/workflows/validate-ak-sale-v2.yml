@@ -47,5 +47,9 @@ jobs:
           for (const id of ['loginPanel','ownerPanel','shopPanel','licenseRows','productRows','saleRows','purchaseRows','reportProfit','exportData']) {
             if (!h.includes('id="' + id + '"')) throw new Error('Missing required app element: ' + id);
           }
-          console.log('PWA manifest and core screens verified.');
+          for (const token of ['id="receiptSettings"','id="receiptPaper"','id="receiptWidth"','id="receiptHeight"','id="receiptCopies"','function receiptMarkup','window.printSaleReceipt','window.shareSaleReceipt','data-share-receipt','makeReceiptShareCanvas']) {
+            if (!h.includes(token)) throw new Error('Missing receipt feature: ' + token);
+          }
+          if (!h.includes('58mm') || !h.includes('80mm') || !h.includes('A5') || !h.includes('A4')) throw new Error('Receipt paper presets are incomplete');
+          console.log('PWA manifest, core screens and receipt settings/share/print checks verified.');
           NODE

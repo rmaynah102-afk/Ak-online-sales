@@ -64,9 +64,12 @@ exports.createShopOwnerAccount = functions.https.onCall(async (data, context) =>
   const industryType = String(data.industryType || "general").trim().toLowerCase();
   const allowedIndustryTypes = new Set(["general","grocery","hardware","electronics","mobile","gold","restaurant","cosmetics","fashion","auto_parts","pharmacy","construction","wholesale","beauty","hotel","laundry","stationery","online","other"]);
   const expiryDateText = String(data.expiresOn || "").trim();
+  const plan = String(data.plan || "").trim();
+  const allowedPlans = new Set(["5-days","30-days","90-days","180-days","365-days"]);
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email === OWNER_EMAIL) throw new functions.https.HttpsError("invalid-argument", "ဆိုင်ရှင် Gmail လိပ်စာ မမှန်ပါ။");
   if (shopName.length < 2) throw new functions.https.HttpsError("invalid-argument", "ဆိုင်အမည် အနည်းဆုံး ၂ လုံးထည့်ပါ။");
   if (!allowedIndustryTypes.has(industryType)) throw new functions.https.HttpsError("invalid-argument", "ဆိုင်အမျိုးအစား မမှန်ပါ။");
+  if (!allowedPlans.has(plan)) throw new functions.https.HttpsError("invalid-argument", "Subscription Package မမှန်ပါ။");
   if (!/^\d{4}-\d{2}-\d{2}$/.test(expiryDateText)) throw new functions.https.HttpsError("invalid-argument", "သက်တမ်းကုန်မည့်ရက်ကို ရွေးပါ။");
   const expiryDate = new Date(expiryDateText + "T23:59:59.999+06:30");
   if (!Number.isFinite(expiryDate.getTime()) || expiryDate.getTime() <= Date.now()) throw new functions.https.HttpsError("invalid-argument", "သက်တမ်းကုန်မည့်ရက်သည် ယနေ့ထက် နောက်ကျရမည်။");
@@ -85,7 +88,7 @@ exports.createShopOwnerAccount = functions.https.onCall(async (data, context) =>
   const emailKey = crypto.createHash("sha256").update(email).digest("hex");
   const inviteRef = db.collection("pendingOwnerInvites").doc(emailKey);
   const invite = {
-    email, shopName, industryType, status: "pending",
+    email, shopName, industryType, plan, status: "pending",
     expiresAt: admin.firestore.Timestamp.fromDate(expiryDate),
     invitedBy: actor, updatedAt: admin.firestore.FieldValue.serverTimestamp()
   };
@@ -94,7 +97,7 @@ exports.createShopOwnerAccount = functions.https.onCall(async (data, context) =>
     action: "shop_owner_email_invited", targetEmail: email, shopName, industryType,
     expiresAt: invite.expiresAt, actor, createdAt: admin.firestore.FieldValue.serverTimestamp()
   });
-  return { ok: true, email, shopName, industryType, expiresAt: expiryDate.toISOString(), invitationPending: true };
+  return { ok: true, email, shopName, industryType, plan, expiresAt: expiryDate.toISOString(), invitationPending: true };
 });
 
 // Called only after Firebase Email Link sign-in has verified the exact invited Gmail.
@@ -134,7 +137,7 @@ exports.claimOwnerProvisioning = functions.https.onCall(async (data, context) =>
       }
       tx.set(licenseRef, {
         uid: context.auth.uid, email, shopName: currentInvite.shopName, industryType: currentInvite.industryType,
-        status: "active", plan: "owner-managed", expiresAt: currentInvite.expiresAt,
+        status: "active", plan: currentInvite.plan || "30-days", expiresAt: currentInvite.expiresAt,
         provisionedBy: currentInvite.invitedBy, provisionedAt: admin.firestore.FieldValue.serverTimestamp(),
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
       }, { merge: true });

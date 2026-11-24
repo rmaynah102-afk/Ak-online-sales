@@ -85,6 +85,16 @@ Build one all-inclusive AK Sale Professional product for Android phones/tablets 
 - A regression test verifies that a fourth staff account is rejected before Firebase Auth account creation.
 - A dedicated GitHub Actions workflow now runs Cloudflare Worker syntax and tests on this review branch. Run 45444322741 completed successfully after correcting the test fixture to require a verified Platform Owner.
 
+## UI and shop-branded POS work added on the review branch
+
+- Reworked the v2 workspace toward a desktop-first computer POS layout with a vertical navigation rail on wide screens and a responsive horizontal menu on phones/tablets.
+- Added an owner-only Shop Profile panel for each tenant's shop name, address, and phone. The profile is stored in that shop's Firestore `pos/settings/records/profile` document; staff can read the shop identity for receipts but cannot update it.
+- Receipt heading and social-ad heading now use the current shop profile rather than a fixed AK Hardware name. The receipt configuration is saved to the shop profile for cross-device sync when the shop owner saves it. Logo uploads are capped at 450 KB to stay within Firestore document limits.
+- Product catalog now has category filtering, search, sorting by name/stock/retail price, page sizing, sticky spreadsheet-style headers, and inline cell editing.
+- Existing multi-sheet Excel-compatible `.xls` export is now branded with the shop identity and formatted title/header rows. It exports shop profile, products, sales, purchases, expenses, customers/suppliers, and summary data.
+- Added a Firestore Rules regression case for owner-only shop profile changes and manager denial. The Firestore rules test file is syntax-checked in CI; the emulator-based rules suite has not yet been executed in this workflow.
+- Added a CI workflow that checks the embedded v2 JavaScript, Worker syntax, Firebase Functions syntax, Firestore test syntax, and all 9 Cloudflare Worker tests. The latest run for this branch passed.
+
 ## Explicitly not certified yet
 
 No claim is made that the full app, Owner account lifecycle, Firebase deployment, cross-device sync, physical printers, sensors, or Version 3.5.0 APK are complete. Those require the remaining source changes, automated test results, deployment verification, and device testing.

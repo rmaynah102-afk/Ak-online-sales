@@ -41,88 +41,6 @@ const ALLOWED_FUNCTIONS = new Set([
 
 
 const ALLOWED_ORIGINS = new Set(["https://rmaynah102-afk.github.io","capacitor://localhost","https://localhost","http://localhost","http://localhost:8100"]);
-async function provisionShopOwner(request, env, origin) {
-  const auth = (request.headers.get("Authorization") || "").match(/^Bearer\s+(\S+)$/i);
-  if (!auth) return json({ ok: false, error: "unauthenticated" }, 401, origin);
-  let body;
-  try { body = await request.json(); } catch { return json({ ok: false, error: "invalid_json" }, 400, origin); }
-  const email = String(body.email || "").trim().toLowerCase();
-  const password = String(body.password || "");
-  const apiKey = String(body.apiKey || "");
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email === "painglin102@gmail.com") return json({ ok: false, error: "invalid_shop_owner_email" }, 400, origin);
-  if (password.length < 8 || password.length > 128) return json({ ok: false, error: "password_must_be_8_to_128_characters" }, 400, origin);
-  if (!apiKey || apiKey.length > 200) return json({ ok: false, error: "firebase_api_key_required" }, 400, origin);
-
-  // Verify the caller against Firebase Auth; never trust client-supplied role fields.
-  const callerResponse = await fetch("https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=" + encodeURIComponent(apiKey), {
-    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ idToken: auth[1] })
-  });
-  const callerData = await callerResponse.json().catch(() => ({}));
-  const caller = callerData.users && callerData.users[0];
-  if (!callerResponse.ok || !caller || caller.emailVerified !== true || String(caller.email || "").toLowerCase() !== "painglin102@gmail.com") {
-    return json({ ok: false, error: "platform_owner_verification_failed" }, 403, origin);
-  }
-
-  let uid = "", shopToken = "", emailVerified = false, accountReused = false;
-  const createResponse = await fetch("https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=" + encodeURIComponent(apiKey), {
-    method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password, returnSecureToken: true })
-  });
-  const created = await createResponse.json().catch(() => ({}));
-
-  if (createResponse.ok && created.localId && created.idToken) {
-    uid = created.localId;
-    shopToken = created.idToken;
-  } else {
-    const reason = String(created.error && created.error.message || "");
-    if (reason !== "EMAIL_EXISTS") {
-      return json({ ok: false, error: reason.slice(0, 120) || "shop_owner_create_failed" }, 400, origin);
-    }
-
-    // Earlier versions may already have created this Firebase account before the
-    // license write failed. Reuse it only when the supplied password authenticates.
-    const loginResponse = await fetch("https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=" + encodeURIComponent(apiKey), {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password, returnSecureToken: true })
-    });
-    const login = await loginResponse.json().catch(() => ({}));
-    if (!loginResponse.ok || !login.localId || !login.idToken) {
-      // Do not silently send Firebase password-reset links: the platform owner
-      // must use the password they explicitly assigned, or choose another email.
-      return json({ ok: false, error: "shop_owner_email_exists_password_mismatch" }, 409, origin);
-    }
-    const existingLookup = await fetch("https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=" + encodeURIComponent(apiKey), {
-      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ idToken: login.idToken })
-    });
-    const existingData = await existingLookup.json().catch(() => ({}));
-    const existingUser = existingData.users && existingData.users[0];
-    if (!existingLookup.ok || !existingUser || String(existingUser.email || "").toLowerCase() !== email) {
-      return json({ ok: false, error: "existing_shop_owner_account_verification_failed" }, 409, origin);
-    }
-    uid = login.localId;
-    shopToken = login.idToken;
-    emailVerified = existingUser.emailVerified === true;
-    accountReused = true;
-  }
-
-  let verificationEmailSent = false, verificationError;
-  if (!emailVerified) {
-    const verifyResponse = await fetch("https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=" + encodeURIComponent(apiKey), {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ requestType: "VERIFY_EMAIL", idToken: shopToken })
-    });
-    const verification = await verifyResponse.json().catch(() => ({}));
-    verificationEmailSent = verifyResponse.ok;
-    if (!verifyResponse.ok) verificationError = String(verification.error && verification.error.message || "verification_email_send_failed").slice(0, 100);
-  }
-  return json({
-    ok: true, uid, email, emailVerified,
-    verificationEmailSent, verificationError,
-    accountReused,
-    credentialManagedBy: "platform-owner"
-  }, 200, origin);
-}
-
 const STAFF_EMAIL_DOMAIN = "akstaff.app";
 
 function bearerToken(request) {
@@ -323,7 +241,6 @@ export default {
       return new Response(null, { status: 204, headers: corsHeaders(origin) });
     }
 
-    if (url.pathname === "/owner/provision" && request.method === "POST") return provisionShopOwner(request, env, origin);
     if (url.pathname === "/staff/provision" && request.method === "POST") return staffProvision(request, origin);
     if (url.pathname === "/staff/list" && request.method === "POST") return staffList(request, origin);
     if (url.pathname === "/staff/revoke" && request.method === "POST") return staffRevoke(request, origin);

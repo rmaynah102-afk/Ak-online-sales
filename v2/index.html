@@ -340,7 +340,7 @@ async function getRows(name){const s=await col(name).get();return s.docs.map(d=>
 async function loadShop(){
  const platformOwner=isPlatformOwner();
  if(platformOwner){
-  $("shopTitle").textContent="AK Hardware & Electrical · Owner POS";
+  $("shopTitle").textContent=(shopProfile.shopName||"AK POS")+" · Owner POS";
   $("licenseBadge").textContent="Platform Owner · ကိုယ်ပိုင်ဆိုင်";
   $("ownerControlBtn").classList.remove("hidden");
  }else{
@@ -599,7 +599,7 @@ function buildReceiptEscPos(s,paper="80mm"){
  const push=(text,size=20,bold=false,align="left")=>lines.push({text:String(text??""),size:Math.round(size*scale),bold,align});
  const wrap=(text,size,bold=false)=>{ctx.font=(bold?"bold ":"")+Math.round(size*scale)+"px 'Noto Sans Myanmar',Arial,sans-serif";const parts=typeof Intl.Segmenter==="function"?Array.from(new Intl.Segmenter("my",{granularity:"grapheme"}).segment(String(text??"")),x=>x.segment):Array.from(String(text??""));let line="";for(const p of parts){if(line&&ctx.measureText(line+p).width>contentWidth){push(line,size,bold);line=p}else line+=p}if(line)push(line,size,bold)};
  const date=s.createdAt?.toDate?s.createdAt.toDate():new Date(s.createdAt||Date.now()),items=receiptItems(s);
- wrap(cfg.shopName||"AK Hardware & Electrical",27,true);if(cfg.address)wrap(cfg.address,16);if(cfg.phone)wrap("ဖုန်း: "+cfg.phone,16);push("--------------------------------",17,false,"center");
+ wrap(cfg.shopName||shopProfile.shopName||"AK POS Shop",27,true);if(cfg.address)wrap(cfg.address,16);if(cfg.phone)wrap("ဖုန်း: "+cfg.phone,16);push("--------------------------------",17,false,"center");
  wrap("ဘောင်ချာ: "+String(s.id||"").slice(-10),18,true);wrap("ရက်စွဲ: "+date.toLocaleString(),16);wrap("ဖောက်သည်: "+(s.customer||"လက်ငင်း"),16);
  push("--------------------------------",17,false,"center");items.forEach(it=>{wrap(it.name||it.productName||"ပစ္စည်း",18,true);wrap(Number(it.qty||0)+" × "+money(it.price||0)+" = "+money(it.total??(Number(it.qty||0)*Number(it.price||0))),17)});
  push("--------------------------------",17,false,"center");wrap("စုစုပေါင်း: "+money(s.subtotal??s.total),18);if(s.discount)wrap("လျှော့ဈေး: "+money(s.discount),17);wrap("ကျသင့်ငွေ: "+money(s.total),20,true);wrap("ပေးချေပြီး: "+money(s.paid),18);wrap("ကျန်ငွေ: "+money(s.due),18,true);push("ကျေးဇူးတင်ပါသည်",18,true,"center");
@@ -615,7 +615,7 @@ function receiptReadForm(){
  if(width<30||width>300||height<0||height>1000||margin>30)throw Error("စာရွက်အရွယ်အစားနှင့် အနားလွတ်ကို မှန်ကန်စွာ ဖြည့်ပါ။");
  return {paper,width,height,margin,font:$("receiptFont").value,orientation:$("receiptOrientation").value,copies,shopName:$("receiptShopName").value.trim()||shopProfile.shopName||"AK POS Shop",address:$("receiptAddress").value.trim()||shopProfile.address||"",phone:$("receiptPhone").value.trim()||shopProfile.phone||"",logo:receiptConfig().logo||"",qr:$("receiptQr").value};
 }
-function receiptLoadForm(){const c=receiptConfig();$("receiptPaper").value=c.paper||"80mm";$("receiptWidth").value=c.width||80;$("receiptHeight").value=c.height||0;$("receiptMargin").value=c.margin??3;$("receiptFont").value=c.font||"normal";$("receiptOrientation").value=c.orientation||"portrait";$("receiptCopies").value=c.copies||1;$("receiptShopName").value=c.shopName||shopProfile.shopName||"";$("receiptAddress").value=c.address||shopProfile.address||"";$("receiptPhone").value=c.phone||shopProfile.phone||"";$("receiptQr").value=c.qr||"yes"}
+function receiptLoadForm(){const c=receiptConfig();$("receiptPaper").value=c.paper||"80mm";$("receiptWidth").value=c.width||80;$("receiptHeight").value=c.height||0;$("receiptMargin").value=c.margin??3;$("receiptFont").value=c.font||"normal";$("receiptOrientation").value=c.orientation||"portrait";$("receiptCopies").value=c.copies||1;$("receiptShopName").value=shopProfile.shopName||c.shopName||"";$("receiptAddress").value=shopProfile.address||c.address||"";$("receiptPhone").value=shopProfile.phone||c.phone||"";$("receiptQr").value=c.qr||"yes"}
 $("receiptPaper").onchange=()=>{const v=$("receiptPaper").value;if(v==="58mm")$("receiptWidth").value=58;else if(v==="80mm")$("receiptWidth").value=80;else if(v==="A5"){$("receiptWidth").value=148;$("receiptHeight").value=210}else if(v==="A4"){$("receiptWidth").value=210;$("receiptHeight").value=297}};
 $("saveReceiptSettings").onclick=async()=>{try{const c=receiptReadForm(),file=$("receiptLogo").files[0];if(file){if(file.size>1200000)throw Error("Logo ဖိုင် 1.2 MB ထက် မကြီးရပါ။");c.logo=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result));r.onerror=reject;r.readAsDataURL(file)})}localStorage.setItem("ak_pos_receipt_settings_"+(shopId||user?.uid||"local"),JSON.stringify(c));if(staffRole==="owner"){await shopProfileRef().set({shopName:c.shopName,address:c.address,phone:c.phone,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});shopProfile={...shopProfile,shopName:c.shopName,address:c.address,phone:c.phone};$("brandShopName").textContent=c.shopName}$("receiptSettingsStatus").textContent="ဘောင်ချာပုံစံ သိမ်းပြီးပါပြီ။"}catch(e){$("receiptSettingsStatus").textContent=errText(e)}};
 function receiptItems(s){if(Array.isArray(s.items)&&s.items.length)return s.items;if(Array.isArray(s.lines)&&s.lines.length)return s.lines;return [{name:s.productName||"ပစ္စည်း",qty:Number(s.qty||0),price:Number(s.price||0),total:Number(s.total||0)}]}
@@ -632,7 +632,7 @@ window.printSaleReceipt=async id=>{const sale=sales.find(x=>x.id===id);if(!sale)
 function makeReceiptShareCanvas(sale){
  const canvas=document.createElement("canvas"),width=1080,pad=72,items=receiptItems(sale),c=receiptConfig(),date=sale.createdAt?.toDate?sale.createdAt.toDate():new Date(sale.createdAt||Date.now()),lines=[];
  const add=(t,size,bold)=>lines.push({t:String(t),size,bold:!!bold});
- add(c.shopName||"AK Hardware & Electrical",52,true);if(c.address)add(c.address,27,false);if(c.phone)add("ဖုန်း: "+c.phone,27,false);add("အရောင်းဘောင်ချာ",34,true);add("ဘောင်ချာ: "+String(sale.id||"").slice(-12),26,false);add(date.toLocaleString("en-GB"),25,false);add("ဖောက်သည်: "+(sale.customer||"လက်ငင်းဝယ်သူ"),27,false);add("━━━━━━━━━━━━━━━━━━━━━━━━",28,false);
+ add(c.shopName||shopProfile.shopName||"AK POS Shop",52,true);if(c.address)add(c.address,27,false);if(c.phone)add("ဖုန်း: "+c.phone,27,false);add("အရောင်းဘောင်ချာ",34,true);add("ဘောင်ချာ: "+String(sale.id||"").slice(-12),26,false);add(date.toLocaleString("en-GB"),25,false);add("ဖောက်သည်: "+(sale.customer||"လက်ငင်းဝယ်သူ"),27,false);add("━━━━━━━━━━━━━━━━━━━━━━━━",28,false);
  items.forEach(it=>{add(it.name||it.productName||"ပစ္စည်း",30,true);add(Number(it.qty||0)+" × "+money(it.price||0)+" = "+money(it.total??(Number(it.qty||0)*Number(it.price||0))),27,false)});
  add("━━━━━━━━━━━━━━━━━━━━━━━━",28,false);add("စုစုပေါင်း: "+money(sale.subtotal??sale.total),30,false);if(sale.discount)add("လျှော့ဈေး: "+money(sale.discount),28,false);add("ကျသင့်ငွေ: "+money(sale.total),42,true);add("ပေးချေပြီး: "+money(sale.paid),30,false);add("ကျန်ငွေ: "+money(sale.due),34,true);add("ဝယ်ယူအားပေးမှုအတွက် ကျေးဇူးတင်ပါသည်။",30,true);add("AK POS",25,true);
  canvas.width=width;canvas.height=pad*2+lines.reduce((n,l)=>n+l.size+24,0);const x=canvas.getContext("2d"),g=x.createLinearGradient(0,0,width,canvas.height);g.addColorStop(0,"#071a35");g.addColorStop(1,"#173b66");x.fillStyle=g;x.fillRect(0,0,width,canvas.height);x.strokeStyle="#c4ccd6";x.lineWidth=5;x.strokeRect(24,24,width-48,canvas.height-48);let y=pad+24;for(const l of lines){x.font=(l.bold?"700 ":"400 ")+l.size+'px "Noto Sans Myanmar",system-ui,sans-serif';x.fillStyle="#e0e5ec";x.textAlign="center";x.fillText(l.t,width/2,y);y+=l.size+24}return canvas;
@@ -658,12 +658,12 @@ async function makeSocialAd(){
  if(!name)throw Error("ပစ္စည်းအမည် ဖြည့်ပါ။");
  const gradient=ctx.createLinearGradient(0,0,1080,1080);gradient.addColorStop(0,"#071b42");gradient.addColorStop(.55,"#1454a5");gradient.addColorStop(1,"#07122f");ctx.fillStyle=gradient;ctx.fillRect(0,0,1080,1080);
  ctx.strokeStyle="#e9b84e";ctx.lineWidth=18;ctx.strokeRect(22,22,1036,1036);
- ctx.fillStyle="#fff";ctx.textAlign="center";ctx.font="bold 48px system-ui";ctx.fillText("AK HARDWARE & ELECTRICAL",540,105);
+ ctx.fillStyle="#fff";ctx.textAlign="center";ctx.font="bold 48px system-ui";ctx.fillText((shopProfile.shopName||"AK POS").slice(0,32),540,105);
  ctx.fillStyle="#f4c65e";ctx.font="bold 70px system-ui";ctx.fillText("အထူးရောင်းချမှု",540,205);
  if(file){adImage=await new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(Error("ဓာတ်ပုံဖွင့်မရပါ"));im.src=URL.createObjectURL(file)});const maxW=820,maxH=480,scale=Math.min(maxW/adImage.width,maxH/adImage.height),w=adImage.width*scale,h=adImage.height*scale;ctx.fillStyle="#fff";ctx.fillRect(130,250,820,500);ctx.drawImage(adImage,(1080-w)/2,260+(480-h)/2,w,h)}else{ctx.fillStyle="#fff";ctx.fillRect(130,250,820,500);ctx.fillStyle="#102c55";ctx.font="bold 96px system-ui";ctx.fillText("AK",540,540);ctx.font="bold 38px system-ui";ctx.fillText("Hardware & Electrical",540,610)}
  ctx.fillStyle="#fff";ctx.font="bold 58px system-ui";ctx.fillText(name.slice(0,32),540,830);
  if(price){ctx.fillStyle="#f4c65e";ctx.font="bold 58px system-ui";ctx.fillText(Number(price).toLocaleString()+" MMK",540,915)}
- ctx.fillStyle="#fff";ctx.font="32px system-ui";ctx.fillText(contact||"ဆက်သွယ်ရန် · AK Hardware & Electrical",540,985);
+ ctx.fillStyle="#fff";ctx.font="32px system-ui";ctx.fillText(contact||("ဆက်သွယ်ရန် · "+(shopProfile.shopName||"AK POS")),540,985);
  adReady=true;status("1080×1080 ကြော်ငြာပုံ ဖန်တီးပြီးပါပြီ။","adStatus");return canvas;
 }
 $("makeAd").onclick=async()=>{try{await makeSocialAd()}catch(e){status(errText(e),"adStatus")}};
@@ -672,7 +672,7 @@ $("shareAd").onclick=async()=>{
  try{
   if(!adReady)await makeSocialAd();
   const canvas=$("adCanvas"),blob=await new Promise(resolve=>canvas.toBlob(resolve,"image/png"));if(!blob)throw Error("ကြော်ငြာပုံ မရပါ");
-  const name=$("adName").value.trim(),caption=name+" · "+($("adPrice").value?$("adPrice").value+" MMK · ":"")+($("adContact").value||"AK Hardware & Electrical");
+  const name=$("adName").value.trim(),caption=name+" · "+($("adPrice").value?$("adPrice").value+" MMK · ":"")+($("adContact").value||shopProfile.shopName||"AK POS");
   const api=window.Capacitor?.isNativePlatform?.()&&window.Capacitor?.Plugins?.AkPrinter;
   if(api?.shareReceiptImage){const data=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result).split(",")[1]);r.onerror=reject;r.readAsDataURL(blob)});await api.shareReceiptImage({data,fileName:"AK-Hardware-Ad.png",text:caption,title:name});return}
   const file=new File([blob],"AK-Hardware-Ad.png",{type:"image/png"});

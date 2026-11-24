@@ -8,6 +8,7 @@ on:
       - "v2/index.html"
       - "firestore.rules"
       - "scripts/check-v3-ui.mjs"
+      - "tests/firestore/**"
       - ".github/workflows/ak-sale-v3.5-backend-verification.yml"
   pull_request:
     branches: [ak-sale-v3-review]
@@ -33,3 +34,13 @@ jobs:
         run: node scripts/check-v3-ui.mjs
       - name: Run Worker authorization and provisioning tests
         run: node --test cloudflare/worker.test.mjs
+      - name: Set up Java for Firestore Emulator
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - name: Install Firestore rules test dependencies
+        working-directory: tests/firestore
+        run: npm install
+      - name: Run Firestore security rules tests
+        run: npx --yes firebase-tools emulators:exec --only firestore --project demo-ak-sale-rules --config firebase.json "npm --prefix tests/firestore test"

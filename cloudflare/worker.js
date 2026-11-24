@@ -205,7 +205,7 @@ async function staffProvision(request,origin) {
   const owner=await verifyShopOwner(request,body,origin);if(owner.response)return owner.response;
   const name=String(body.name||"").trim().slice(0,80),role=String(body.role||"cashier").toLowerCase(),password=String(body.password||"");
   if(name.length<2)return json({ok:false,error:"staff_name_required"},400,origin);
-  if(!["manager","cashier","employee"].includes(role))return json({ok:false,error:"invalid_staff_role"},400,origin);
+  if(!["manager","cashier"].includes(role))return json({ok:false,error:"invalid_staff_role"},400,origin);
   if(password.length<8||password.length>128)return json({ok:false,error:"password_must_be_8_to_128_characters"},400,origin);
   if(!await verifyActiveShopLicense(owner.shopId,owner.idToken))return json({ok:false,error:"active_shop_license_required"},403,origin);
   const slots=await Promise.all(Array.from({length:3},(_,i)=>i+1).map(async slot=>{

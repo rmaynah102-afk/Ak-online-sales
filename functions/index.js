@@ -161,7 +161,8 @@ function requireAdmin(context) {
   }
   const callerEmail = String(context.auth.token.email || "").trim().toLowerCase();
   const emailVerified = context.auth.token.email_verified === true;
-  if (callerEmail !== OWNER_EMAIL || !emailVerified) {
+  const googleProvider = context.auth.token.firebase?.sign_in_provider === "google.com";
+  if (callerEmail !== OWNER_EMAIL || !emailVerified || !googleProvider) {
     throw new functions.https.HttpsError("permission-denied", "Admin ခွင့်ပြုချက်မရှိပါ။");
   }
   return callerEmail;

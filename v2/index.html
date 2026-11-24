@@ -189,11 +189,13 @@ $("loginType").onchange=()=>{
  $("loginBtn").classList.toggle("hidden",owner);
  $("ownerGoogleBtn").classList.toggle("hidden",!owner);
  $("resetBtn").classList.toggle("hidden",staff||owner);
+ $("passwordLoginFields").classList.toggle("hidden",owner);
  $("email").readOnly=owner;
  if(owner)$("email").value=OWNER;
  else if($("email").value.toLowerCase()===OWNER)$("email").value="";
  status(owner?"Platform Owner အတွက် "+OWNER+" Google Login သာ အသုံးပြုပါ။":staff?"Merchant Code နှင့် Password ဖြည့်ပါ။":"ဆိုင်ရှင် Gmail နှင့် Password ဖြည့်ပါ။");
 };
+$("loginType").onchange();
 $("ownerGoogleBtn").onclick=async()=>{
  const button=$("ownerGoogleBtn");
  try{

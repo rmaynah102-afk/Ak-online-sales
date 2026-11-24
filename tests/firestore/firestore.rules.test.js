@@ -543,7 +543,7 @@ describe('AK Sale Firestore security baseline', function () {
     }).firestore();
     await assertSucceeds(getDoc(doc(db, 'licenses', 'shop-a')));
     await assertFails(getDoc(doc(db, 'licenses', 'shop-b')));
-    await assertSucceeds(setDoc(doc(db, 'shops', 'shop-a', 'pos', 'products', 'records', 'p1'), {
+    await assertFails(setDoc(doc(db, 'shops', 'shop-a', 'pos', 'products', 'records', 'p1'), {
       stock: 7,
     }, { merge: true }));
     await assertFails(setDoc(doc(db, 'shops', 'shop-a', 'pos', 'products', 'records', 'p1'), {

@@ -298,7 +298,7 @@ footer{color:#b8c9bd!important}
 </main><footer><strong>AK POS 3.5</strong> · Professional Shop Management · MMK</footer>
 <script>
 const OWNER="painglin102@gmail.com", GATEWAY="https://ak-sale-backend.painglin102.workers.dev", PROJECT=window.AK_FIREBASE_PUBLIC_CONFIG;
-let auth,db,functions,user,shopId="",staffRole="owner",products=[],sales=[],purchases=[],people=[],expenses=[],editingProduct=null,licenses=[],shopProfile={},saleCart=[];
+let auth,db,functions,user,shopId="",staffRole="owner",products=[],sales=[],purchases=[],people=[],expenses=[],payments=[],editingProduct=null,licenses=[],shopProfile={},saleCart=[];
 const $=id=>document.getElementById(id), money=n=>(Number(n)||0).toLocaleString("en-US")+" ကျပ်", dateText=d=>{const x=d?.toDate?d.toDate():new Date(d||Date.now());return isNaN(x)? "-":x.toLocaleDateString("en-GB")};
 function status(msg,where="status"){ $(where).textContent=msg; }
 function show(id){$("loginPanel").classList.toggle("hidden",id!=="loginPanel");$("ownerPanel").classList.toggle("hidden",id!=="ownerPanel");$("shopPanel").classList.toggle("hidden",id!=="shopPanel");}
@@ -516,7 +516,7 @@ async function loadShop(){
  if(staffRole==="owner"&&!platformOwner)await loadMerchantStaff();
  await reloadAll();
 }
-async function reloadAll(){const manager=staffRole==="owner"||staffRole==="manager",cashier=staffRole==="cashier";products=await getRows("products");sales=(manager||cashier)?await getRows("sales"):[];purchases=manager?await getRows("purchases"):[];people=(manager||cashier)?await getRows("people"):[];expenses=manager?await getRows("expenses"):[];if(manager){const [costs,saleCostRows]=await Promise.all([getRows("productCosts"),getRows("saleCosts")]);const costMap=new Map(costs.map(x=>[x.id,x.cost||0])),saleCostMap=new Map(saleCostRows.map(x=>[x.id,x]));products=products.map(p=>({...p,cost:costMap.get(p.id)||0}));sales=sales.map(x=>({...x,cost:saleCostMap.get(x.id)?.cost||0,profit:saleCostMap.get(x.id)?.profit||0}))}else{products=products.map(p=>({...p,cost:0}));sales=sales.map(x=>({...x,cost:0,profit:0}))}renderAll();if(staffRole==="owner"&&user&&shopId)startCloudAutoBackup()}
+async function reloadAll(){const manager=staffRole==="owner"||staffRole==="manager",cashier=staffRole==="cashier";products=await getRows("products");sales=(manager||cashier)?await getRows("sales"):[];purchases=manager?await getRows("purchases"):[];people=(manager||cashier)?await getRows("people"):[];expenses=manager?await getRows("expenses"):[];payments=manager?await getRows("payments"):[];if(manager){const [costs,saleCostRows]=await Promise.all([getRows("productCosts"),getRows("saleCosts")]);const costMap=new Map(costs.map(x=>[x.id,x.cost||0])),saleCostMap=new Map(saleCostRows.map(x=>[x.id,x]));products=products.map(p=>({...p,cost:costMap.get(p.id)||0}));sales=sales.map(x=>({...x,cost:saleCostMap.get(x.id)?.cost||0,profit:saleCostMap.get(x.id)?.profit||0}))}else{products=products.map(p=>({...p,cost:0}));sales=sales.map(x=>({...x,cost:0,profit:0}))}renderAll();if(staffRole==="owner"&&user&&shopId)startCloudAutoBackup()}
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 let productPage=1;
 function filteredProducts(){const q=String($("productSearch")?.value||"").trim().toLowerCase(),category=$("productCategoryFilter")?.value||"",rows=products.filter(p=>(!category||String(p.category||"")===category)&&(!q||[p.name,p.sku,p.category].some(v=>String(v||"").toLowerCase().includes(q))));const [field,dir]=String($("productSort")?.value||"name-asc").split("-");return rows.sort((a,b)=>{const av=a[field]??"",bv=b[field]??"",cmp=typeof av==="number"||typeof bv==="number"?Number(av)-Number(bv):String(av).localeCompare(String(bv),"my");return dir==="desc"?-cmp:cmp})}
@@ -656,7 +656,7 @@ function validateBackupData(d){
  if(!d||typeof d!=="object"||Array.isArray(d))throw Error("Backup ဖိုင်ပုံစံ မမှန်ပါ။");
  if(d.format!=="AK-SALE-BACKUP"||Number(d.version)!==2)throw Error("AK Sale Backup Version 2 ဖိုင်သာ Restore လုပ်နိုင်ပါသည်။");
  if(!shopId||!d.shopId||String(d.shopId)!==String(shopId))throw Error("ဤ Backup သည် လက်ရှိဆိုင်၏ Backup မဟုတ်ပါ၊ သို့မဟုတ် ဆိုင် ID မပါသော Backup ဖြစ်နေသောကြောင့် Restore မလုပ်ပါ။");
- const keys=["products","sales","purchases","people","expenses"];
+ const keys=["products","sales","purchases","people","expenses","payments"];
  let total=0;
  for(const key of keys){
   if(d[key]!==undefined&&(!Array.isArray(d[key])||d[key].length>100000))throw Error(key+" စာရင်းပုံစံ မမှန်ပါ။");
@@ -682,7 +682,7 @@ async function runCloudAutoBackup(){
   const ref=db.collection("users").doc(shopId).collection("backups").doc(backupId);
   const existing=await ref.get();if(existing.exists){status("Cloud Auto Backup ရှိပြီး · "+now.toLocaleString(),"cloudBackupStatus");return}
   const data={format:"AK-SALE-BACKUP",version:2,exportedAt:now.toISOString(),shopId,
-   products:backupSerialize(products),sales:backupSerialize(sales),purchases:backupSerialize(purchases),people:backupSerialize(people),expenses:backupSerialize(expenses),
+   products:backupSerialize(products),sales:backupSerialize(sales),purchases:backupSerialize(purchases),people:backupSerialize(people),expenses:backupSerialize(expenses),payments:backupSerialize(payments),
    receiptSettings:receiptConfig(),printerProfiles:printerRead()};
   const json=JSON.stringify(data),sizeBytes=new Blob([json]).size;
   if(sizeBytes>700000){status("Cloud Backup မသိမ်းနိုင်ပါ။ Backup အရွယ်အစား "+Math.round(sizeBytes/1024)+" KB ဖြစ်နေ၍ 700 KB ကန့်သတ်ချက်ကျော်နေသည်။ ဖိုင် Backup ကို အသုံးပြုပါ။","cloudBackupStatus");return}

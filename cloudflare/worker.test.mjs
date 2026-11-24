@@ -5,124 +5,13 @@ import assert from "node:assert/strict";
 const source = await readFile(new URL("./worker.js", import.meta.url), "utf8");
 const { default: worker } = await import("data:text/javascript;base64," + Buffer.from(source).toString("base64"));
 
-function request(body, authorization = "Bearer owner-id-token") {
-  return new Request("https://ak-sale-backend.painglin102.workers.dev/owner/provision", {
-    method: "POST",
-    headers: {
-      "Origin": "https://rmaynah102-afk.github.io",
-      "Authorization": authorization,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(body)
-  });
-}
-
-test("rejects missing or malformed Bearer authorization before contacting Firebase", async () => {
-  const originalFetch = globalThis.fetch;
-  let calls = 0;
-  globalThis.fetch = async () => { calls++; throw new Error("Firebase must not be called"); };
-  try {
-    const response = await worker.fetch(request({ email: "shop@example.com", password: "password123", apiKey: "test" }, "owner-id-token"), {});
-    assert.equal(response.status, 401);
-    assert.equal((await response.json()).error, "unauthenticated");
-    assert.equal(calls, 0);
-  } finally { globalThis.fetch = originalFetch; }
+test("disables legacy Gmail/password shop-owner provisioning endpoint", async () => {
+  const response = await worker.fetch(new Request("https://ak-sale-backend.painglin102.workers.dev/owner/provision", {
+    method: "POST", headers: { "Origin": "https://rmaynah102-afk.github.io", "Authorization": "Bearer token", "Content-Type": "application/json" },
+    body: JSON.stringify({ email: "shop@example.com", password: "not-used" })
+  }), {});
+  assert.equal(response.status, 404);
 });
-
-test("rejects malformed shop-owner email before contacting Firebase", async () => {
-  const originalFetch = globalThis.fetch;
-  let calls = 0;
-  globalThis.fetch = async () => { calls++; throw new Error("Firebase must not be called"); };
-  try {
-    const response = await worker.fetch(request({ email: "not-an-email", password: "password123", apiKey: "test" }), {});
-    assert.equal(response.status, 400);
-    assert.equal((await response.json()).error, "invalid_shop_owner_email");
-    assert.equal(calls, 0);
-  } finally { globalThis.fetch = originalFetch; }
-});
-
-test("creates a shop owner only after verified Platform Owner lookup", async () => {
-  const originalFetch = globalThis.fetch;
-  const calls = [];
-  globalThis.fetch = async (url, options) => {
-    calls.push({ url: String(url), options });
-    if (calls.length === 1) return new Response(JSON.stringify({ users: [{ email: "painglin102@gmail.com", emailVerified: true }] }), { status: 200 });
-    if (calls.length === 2) return new Response(JSON.stringify({ localId: "shop-uid-123", idToken: "new-shop-token" }), { status: 200 });
-    if (calls.length === 3) return new Response(JSON.stringify({ email: "shop@example.com" }), { status: 200 });
-    throw new Error("Unexpected Firebase request");
-  };
-  try {
-    const response = await worker.fetch(request({ email: "shop@example.com", password: "password123", apiKey: "test-api-key" }), {});
-    const body = await response.json();
-    assert.equal(response.status, 200);
-    assert.equal(body.ok, true);
-    assert.equal(body.uid, "shop-uid-123");
-    assert.equal(body.email, "shop@example.com");
-    assert.equal(body.verificationEmailSent, true);
-    assert.equal(calls.length, 3);
-    assert.match(calls[0].url, /accounts:lookup/);
-    assert.match(calls[1].url, /accounts:signUp/);
-    assert.match(calls[2].url, /accounts:sendOobCode/);
-  } finally { globalThis.fetch = originalFetch; }
-});
-
-test("reuses an existing shop-owner account when the Owner-supplied password authenticates", async () => {
-  const originalFetch = globalThis.fetch;
-  const calls = [];
-  globalThis.fetch = async (url, options) => {
-    const u = String(url); calls.push({ url: u, options });
-    if (u.includes("accounts:lookup") && calls.length === 1) return new Response(JSON.stringify({ users: [{ email: "painglin102@gmail.com", emailVerified: true }] }), { status: 200 });
-    if (u.includes("accounts:signUp")) return new Response(JSON.stringify({ error: { message: "EMAIL_EXISTS" } }), { status: 400 });
-    if (u.includes("accounts:signInWithPassword")) return new Response(JSON.stringify({ localId: "existing-shop-uid", idToken: "existing-shop-token" }), { status: 200 });
-    if (u.includes("accounts:lookup")) return new Response(JSON.stringify({ users: [{ localId: "existing-shop-uid", email: "shop@example.com", emailVerified: true }] }), { status: 200 });
-    throw new Error("Unexpected Firebase request: " + u);
-  };
-  try {
-    const response = await worker.fetch(request({ email: "shop@example.com", password: "password123", apiKey: "test-api-key" }), {});
-    const body = await response.json();
-    assert.equal(response.status, 200);
-    assert.equal(body.ok, true);
-    assert.equal(body.uid, "existing-shop-uid");
-    assert.equal(body.accountReused, true);
-    assert.equal(body.emailVerified, true);
-    assert.equal(body.verificationEmailSent, false);
-    assert.equal(calls.length, 4);
-  } finally { globalThis.fetch = originalFetch; }
-});
-
-test("refuses an existing shop email when the platform owner supplied the wrong password without sending a reset", async () => {
-  const originalFetch = globalThis.fetch;
-  const calls = [];
-  globalThis.fetch = async (url, options) => {
-    const u = String(url); calls.push({ url: u, options });
-    if (u.includes("accounts:lookup")) return new Response(JSON.stringify({ users: [{ email: "painglin102@gmail.com", emailVerified: true }] }), { status: 200 });
-    if (u.includes("accounts:signUp")) return new Response(JSON.stringify({ error: { message: "EMAIL_EXISTS" } }), { status: 400 });
-    if (u.includes("accounts:signInWithPassword")) return new Response(JSON.stringify({ error: { message: "INVALID_LOGIN_CREDENTIALS" } }), { status: 400 });
-    throw new Error("Password reset must not be sent");
-  };
-  try {
-    const response = await worker.fetch(request({ email: "shop@example.com", password: "wrong-pass-123", apiKey: "test-api-key" }), {});
-    const body = await response.json();
-    assert.equal(response.status, 409);
-    assert.equal(body.error, "shop_owner_email_exists_password_mismatch");
-    assert.equal(calls.some(x => x.url.includes("accounts:sendOobCode")), false);
-  } finally { globalThis.fetch = originalFetch; }
-});
-test("rejects an unverified or non-Platform Owner caller", async () => {
-  const originalFetch = globalThis.fetch;
-  let calls = 0;
-  globalThis.fetch = async () => {
-    calls++;
-    return new Response(JSON.stringify({ users: [{ email: "someone@example.com", emailVerified: true }] }), { status: 200 });
-  };
-  try {
-    const response = await worker.fetch(request({ email: "shop@example.com", password: "password123", apiKey: "test-api-key" }), {});
-    assert.equal(response.status, 403);
-    assert.equal((await response.json()).error, "platform_owner_verification_failed");
-    assert.equal(calls, 1);
-  } finally { globalThis.fetch = originalFetch; }
-});
-
 
 function staffRequest(path, body, authorization = "Bearer shop-owner-id-token") {
   return new Request("https://ak-sale-backend.painglin102.workers.dev"+path, {
@@ -141,7 +30,7 @@ test("provisions a Merchant Code staff account through Firebase Auth REST and at
   const calls=[];
   globalThis.fetch=async(url,options={})=>{
     const u=String(url);calls.push({url:u,options});
-    if(u.includes("accounts:lookup"))return new Response(JSON.stringify({users:[{localId:"shop-owner-uid-123",email:"shop@example.com",emailVerified:true}]}),{status:200});
+    if(u.includes("accounts:lookup"))return new Response(JSON.stringify({users:[{localId:"shop-owner-uid-123",email:"shop@example.com",emailVerified:true,providerUserInfo:[{providerId:"google.com"}]}]}),{status:200});
     if(u.includes("/documents/licenses/"))return new Response(JSON.stringify({fields:{status:{stringValue:"active"},expiresAt:{timestampValue:"2099-01-01T00:00:00.000Z"}}}),{status:200});
     if(u.includes("/documents/shopStaffSlots/"))return new Response(JSON.stringify({error:{status:"NOT_FOUND"}}),{status:404});
     if(u.includes("accounts:signUp"))return new Response(JSON.stringify({localId:"staff-user-uid-123",idToken:"staff-created-id-token"}),{status:200});

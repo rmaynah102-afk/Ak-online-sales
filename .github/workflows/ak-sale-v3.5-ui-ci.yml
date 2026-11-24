@@ -8,6 +8,7 @@ on:
       - "cloudflare/**"
       - "functions/**"
       - "firestore.rules"
+      - "tests/firestore/**"
       - ".github/workflows/ak-sale-v3.5-ui-ci.yml"
       - ".github/scripts/check-v2-inline.mjs"
   pull_request:
@@ -42,3 +43,5 @@ jobs:
         run: node --test cloudflare/worker.test.mjs
       - name: Check Firebase Functions syntax
         run: node --check functions/index.js
+      - name: Check Firestore rules test syntax
+        run: node --check tests/firestore/firestore.rules.test.js

@@ -398,11 +398,18 @@ service cloud.firestore {
       allow read: if isVerifiedOwner();
       allow create: if isVerifiedOwner()
         && documentId == 'shopCapacity'
-        && request.resource.data.keys().hasOnly(['activeShopCount','updatedAt'])
+        && request.resource.data.keys().hasOnly(['activeShopCount','updatedAt','lastIssuedUid'])
         && request.resource.data.activeShopCount is int
         && request.resource.data.activeShopCount >= 0
         && request.resource.data.activeShopCount <= 100
-        && request.resource.data.updatedAt == request.time;
+        && request.resource.data.updatedAt == request.time
+        && ((request.resource.data.activeShopCount == 0
+              && !('lastIssuedUid' in request.resource.data.keys()))
+          || (request.resource.data.activeShopCount == 1
+              && request.resource.data.lastIssuedUid is string
+              && existsAfter(/databases/$(database)/documents/licenses/$(request.resource.data.lastIssuedUid))
+              && getAfter(/databases/$(database)/documents/licenses/$(request.resource.data.lastIssuedUid)).data.uid == request.resource.data.lastIssuedUid
+              && getAfter(/databases/$(database)/documents/licenses/$(request.resource.data.lastIssuedUid)).data.status == 'active'));
       allow update: if isVerifiedOwner()
         && documentId == 'shopCapacity'
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['activeShopCount','updatedAt','lastIssuedUid'])
@@ -435,13 +442,16 @@ service cloud.firestore {
         && request.resource.data.status == 'active'
         && request.resource.data.expiresAt is timestamp
         && request.resource.data.plan in ['5-days','30-days','90-days','180-days','365-days']
-        && exists(/databases/$(database)/documents/platformMeta/shopCapacity)
-        && get(/databases/$(database)/documents/platformMeta/shopCapacity).data.activeShopCount is int
-        && get(/databases/$(database)/documents/platformMeta/shopCapacity).data.activeShopCount < 100
         && existsAfter(/databases/$(database)/documents/platformMeta/shopCapacity)
-        && getAfter(/databases/$(database)/documents/platformMeta/shopCapacity).data.activeShopCount
-          == get(/databases/$(database)/documents/platformMeta/shopCapacity).data.activeShopCount + 1
-        && getAfter(/databases/$(database)/documents/platformMeta/shopCapacity).data.lastIssuedUid == userId;
+        && ((exists(/databases/$(database)/documents/platformMeta/shopCapacity)
+              && get(/databases/$(database)/documents/platformMeta/shopCapacity).data.activeShopCount is int
+              && get(/databases/$(database)/documents/platformMeta/shopCapacity).data.activeShopCount < 100
+              && getAfter(/databases/$(database)/documents/platformMeta/shopCapacity).data.activeShopCount
+                == get(/databases/$(database)/documents/platformMeta/shopCapacity).data.activeShopCount + 1
+              && getAfter(/databases/$(database)/documents/platformMeta/shopCapacity).data.lastIssuedUid == userId)
+          || (!exists(/databases/$(database)/documents/platformMeta/shopCapacity)
+              && getAfter(/databases/$(database)/documents/platformMeta/shopCapacity).data.activeShopCount == 1
+              && getAfter(/databases/$(database)/documents/platformMeta/shopCapacity).data.lastIssuedUid == userId));
       allow update: if isVerifiedOwner()
         && request.resource.data.uid == userId
         && request.resource.data.status in ['active','suspended']

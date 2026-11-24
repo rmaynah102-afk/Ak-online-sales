@@ -1,6 +1,6 @@
 import fs from "node:fs";
 const html=fs.readFileSync("v2/index.html","utf8");
-const start=html.indexOf("<script>\\nconst OWNER");
+const start=html.indexOf("<script>"+String.fromCharCode(10)+"const OWNER");
 const end=html.indexOf("</script></body>",start);
 if(start<0||end<0)throw new Error("Main application script boundaries not found");
 new Function(html.slice(start+8,end));

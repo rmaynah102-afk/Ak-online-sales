@@ -581,8 +581,8 @@ $("saveSale").onclick=async()=>{
   const discount=Math.min(subtotal,Math.max(0,Number($("saleDiscount").value)||0)),total=subtotal-discount;
   const payType=$("salePay").value,paid=payType==="cash"?total:payType==="credit"?0:Math.min(total,Math.max(0,Number($("salePaid").value)||0));
   const saleRef=col("sales").doc(),productRefs=items.map(x=>col("products").doc(x.productId));
-  let costTotal=0;
   await db.runTransaction(async tx=>{
+   let costTotal=0;
    const snapshots=[];
    for(const ref of productRefs)snapshots.push(await tx.get(ref));
    const costSnapshots=[];

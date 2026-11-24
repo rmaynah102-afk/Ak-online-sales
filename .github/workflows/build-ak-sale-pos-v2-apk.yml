@@ -2,7 +2,7 @@ name: Build AK Sale POS 2.0 Android APK
 
 on:
   push:
-    branches: [ak-sale-pos-v2-main, main, ak-pos-2.1.317-professional-base]
+    branches: [ak-sale-pos-v2-main, main, ak-pos-2.1.317-professional-base, "apk/fix-v2-update-version-labels-20261124"]
     paths:
       - "v2/**"
       - "firebase-config.js"
@@ -12,6 +12,9 @@ on:
       - "capacitor.config.json"
       - "package.json"
       - "package-lock.json"
+      - "apk/**"
+      - "scripts/patch-v2-apk-labels.js"
+      - "scripts/test-v2-apk-labels.js"
       - ".github/workflows/build-ak-sale-pos-v2-apk.yml"
   workflow_dispatch:
 permissions:
@@ -71,6 +74,10 @@ jobs:
             }
           }
           JSON
+      - name: Apply APK-only V2 Barcode Label / Sticker patch
+        run: node scripts/patch-v2-apk-labels.js
+      - name: Test APK-only V2 Barcode Label / Sticker
+        run: node scripts/test-v2-apk-labels.js
       - name: Bundle local ZXing barcode scanner before Capacitor sync
         run: node scripts/copy-zxing.js
       - name: Validate app JavaScript
@@ -131,8 +138,10 @@ jobs:
           node - <<'NODE'
           const fs=require('fs');
           const run=Number(process.env.GITHUB_RUN_NUMBER||1);
-          const versionCode=1000000+run;
-          const versionName='2.0.'+run;
+          const legacyVersionCodeFloor=1000693;
+          const versionCode=2000000+run;
+          if(versionCode<=legacyVersionCodeFloor) throw new Error('V2 APK versionCode must exceed legacy APK versionCode '+legacyVersionCodeFloor);
+          const versionName='2.1.'+run;
           const p='android/app/build.gradle';
           let g=fs.readFileSync(p,'utf8');
           if(!/versionCode\s+\d+/.test(g)||!/versionName\s+"[^"]+"/.test(g)) throw new Error('Android version fields not found');
@@ -140,7 +149,10 @@ jobs:
           g=g.replace(/versionName\s+"[^"]+"/,'versionName "'+versionName+'"');
           if(!g.includes('applicationId "com.ak.hardware.sales"')) throw new Error('APK package ID is not the registered AK Sale app');
           fs.writeFileSync(p,g);
-          console.log('AK Sale Android version',versionName,'code',versionCode);
+          const verified=fs.readFileSync(p,'utf8');
+          const codeMatch=verified.match(/versionCode\s+(\d+)/),nameMatch=verified.match(/versionName\s+"([^"]+)"/);
+          if(Number(codeMatch?.[1])!==versionCode||nameMatch?.[1]!==versionName) throw new Error('APK versionCode/versionName verification failed');
+          console.log('AK Sale Android version',versionName,'code',versionCode,'(verified above legacy)');
           NODE
       - name: Install AK native Bluetooth / Wi-Fi printer bridge
         run: node scripts/install-native-printer.js

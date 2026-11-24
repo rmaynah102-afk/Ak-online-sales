@@ -174,6 +174,7 @@ describe('AK Sale Firestore security baseline', function () {
     const db = testEnv.authenticatedContext('platform-owner-uid', {
       email: 'painglin102@gmail.com',
       email_verified: true,
+      firebase: { sign_in_provider: 'google.com' },
     }).firestore();
     const counter = doc(db, 'platformMeta', 'shopCapacity');
     await assertSucceeds(setDoc(counter, { activeShopCount: 0, updatedAt: serverTimestamp() }));

@@ -75,6 +75,9 @@ exports.createShopOwnerAccount = functions.https.onCall(async (data, context) =>
   if (existing && (existing.uid === context.auth.uid || existing.customClaims?.platformAdmin === true || existing.customClaims?.shopId)) {
     throw new functions.https.HttpsError("permission-denied", "ဤ Gmail ကို ဆိုင်ရှင်အကောင့်အဖြစ် မသတ်မှတ်နိုင်ပါ။");
   }
+  if (existing && !(existing.providerData || []).some(provider => provider.providerId === "google.com")) {
+    throw new functions.https.HttpsError("failed-precondition", "ဤ Gmail သည် Google Login မချိတ်ထားသော အကောင့်ဟောင်းဖြစ်သည်။ Google Provider ချိတ်ဆက်ပြီးမှ ဖိတ်ခေါ်ပါ။");
+  }
   if (existing) {
     const member = await db.collection("shopMembers").doc(existing.uid).get();
     if (member.exists) throw new functions.https.HttpsError("failed-precondition", "ဤ Gmail သည် ဝန်ထမ်းအကောင့်ဖြစ်နေသည်။");

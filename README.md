@@ -12,12 +12,13 @@ Myanmar-first shop POS and public product market for hardware, electrical and ge
 - [Firebase Deploy Secret ထည့်သွင်းနည်း](./FIREBASE-DEPLOY-SETUP-MY.md)
 - [Bluetooth / Wi-Fi Printer Setup (မြန်မာ)](./PRINTER-SETUP-MY.md)
 
-## AK Sale POS 2.0 (new rebuild)
+## AK Sale POS 3.5 Professional
 
 - **New POS web app:** https://rmaynah102-afk.github.io/Ak-online-sales/v2/
 - **Android test APK builds:** [GitHub Actions](https://github.com/rmaynah102-afk/Ak-online-sales/actions/workflows/build-ak-sale-pos-v2-apk.yml)
-- Platform Owner creates shop-owner accounts; shop owners sign in with Gmail and password.
-- Shop owners create up to 3 staff accounts using Merchant Code and password.
+- Platform Owner signs in only with the verified Google account `painglin102@gmail.com`.
+- Shop Owner signs in only with the invited, verified Google Gmail and claims the invitation after Google authentication.
+- Each shop can create up to 2 staff accounts (Manager + Salesperson) using Merchant Code only.
 - Subscription periods and manual renewals are controlled by Platform Owner. No in-app payment checkout is included.
 - This is the new POS 2.0 line; The APK now includes a native Bluetooth/Wi-Fi ESC/POS bridge; the actual printer model and paper width still need a physical test.
 
@@ -51,8 +52,8 @@ Myanmar-first shop POS and public product market for hardware, electrical and ge
 
 ## Free-tier deployment and account model
 
-- Automatic Firebase deployment is limited to **Firebase Hosting + Firestore Rules/Indexes**. The Storage deployment step is disabled. Cloud Functions are not deployed. No Firebase Blaze billing or paid API is enabled by this workflow.
-- The first **30 verified shop-owner accounts** can enroll in Free Beta. Firestore rules enforce the shared capacity counter and each account's private data path is keyed by its Firebase UID.
+- Production deployment of Firebase Functions, Firestore Rules and the Cloudflare Worker is separate from APK building and has not been performed by the review workflow. No paid Firebase billing is enabled.
+- The platform is designed for up to **100 active shop-owner accounts**; actual activation requires deployed Cloud Functions and Firestore rules. Firestore rules enforce the shared capacity counter and each account's private data path is keyed by its Firebase UID.
 - Owner data sync uses Firestore directly at `users/{uid}/private/appData`. Rules restrict each account to its own records. The Platform Owner can manage license records after manually checking payment references.
 - Product photos stay on the device and are excluded from cloud sync. Use the JSON Backup/Restore function to move photos and all local records to another device.
 - Payment requests can be submitted with a KBZPay transaction reference. Screenshot upload is disabled because Firebase Storage is not initialized. The Platform Owner must verify the transaction in KBZPay before approving a license.
@@ -60,11 +61,11 @@ Myanmar-first shop POS and public product market for hardware, electrical and ge
 
 ## Known limits — do not treat as production-ready
 
-- Separate manager/cashier/employee accounts, Merchant Code invitations, custom role claims and shared staff access are disabled in the free-only build. Cloud Functions are not deployed; do not share the shop owner's password with staff.
+- Merchant Code staff provisioning and the two-slot Manager/Salesperson model are implemented in the review source. They are not production-ready until the updated Cloudflare Worker and Firebase resources are deployed and verified.
 - Cloud backup callables, server-side device management and AI callable features are unavailable. Use local JSON Backup/Restore.
 - The Android APK includes a native Bluetooth Classic SPP ESC/POS and Wi-Fi RAW TCP 9100 bridge. It requires a compatible printer and has not been verified on real printer hardware. BLE-only printers, vendor-specific protocols and unsupported paper widths may not work. Website printing continues to use Android/System Print.
 - Social media auto-posting is not included; Android Share / manual posting is used.
-- The web Firebase SDK sign-in path is included. Native Google Sign-In still requires a registered Firebase Android app, matching signing-certificate SHA-1, and native configuration before it can be considered verified.
+- The signed APK build checks that the release certificate matches the configured Firebase Google OAuth certificate. Real-device Google sign-in still requires installation and end-to-end testing on the target Android phone.
 - Workflow success proves static validation and deployment only. It does not prove real-device installation, camera scanning, printer operation, multi-device conflict handling or production payment behavior.
 
 ## Release safety

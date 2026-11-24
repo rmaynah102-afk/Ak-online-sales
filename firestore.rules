@@ -82,6 +82,7 @@ service cloud.firestore {
 
     function canReadPosCollection(shopId, collection) {
       return isPosShopOwner(shopId)
+        || (collection == 'settings' && isActiveShopMember(shopId))
         || (collection == 'products' && hasShopMemberRole(shopId, ['manager','cashier','employee']))
         || (collection == 'sales' && hasShopMemberRole(shopId, ['manager','cashier']))
         || (collection == 'purchases' && hasShopMemberRole(shopId, ['manager']))

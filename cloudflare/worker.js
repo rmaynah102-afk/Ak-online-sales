@@ -87,17 +87,9 @@ async function provisionShopOwner(request, env, origin) {
     });
     const login = await loginResponse.json().catch(() => ({}));
     if (!loginResponse.ok || !login.localId || !login.idToken) {
-      const resetResponse = await fetch("https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=" + encodeURIComponent(apiKey), {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ requestType: "PASSWORD_RESET", email })
-      });
-      const reset = await resetResponse.json().catch(() => ({}));
-      return json({
-        ok: false,
-        error: resetResponse.ok ? "shop_owner_email_exists_password_reset_sent" : "shop_owner_email_exists_use_password_recovery",
-        passwordResetSent: resetResponse.ok,
-        recoveryError: resetResponse.ok ? undefined : String(reset.error && reset.error.message || "password_reset_failed").slice(0, 100)
-      }, 409, origin);
+      // Do not silently send Firebase password-reset links: the platform owner
+      // must use the password they explicitly assigned, or choose another email.
+      return json({ ok: false, error: "shop_owner_email_exists_password_mismatch" }, 409, origin);
     }
     const existingLookup = await fetch("https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=" + encodeURIComponent(apiKey), {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ idToken: login.idToken })

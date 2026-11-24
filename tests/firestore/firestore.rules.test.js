@@ -158,6 +158,7 @@ describe('AK Sale Firestore security baseline', function () {
   it('allows the Platform Owner to create the first license and initialize capacity atomically', async () => {
     const db = testEnv.authenticatedContext('platform-owner-uid', {
       email: 'painglin102@gmail.com', email_verified: true,
+      firebase: { sign_in_provider: 'google.com' },
     }).firestore();
     const batch = writeBatch(db);
     batch.set(doc(db, 'licenses', 'first-shop'), {
@@ -194,6 +195,7 @@ describe('AK Sale Firestore security baseline', function () {
   it('allows the Platform Owner to issue a five-day trial license with the capacity counter atomically', async () => {
     const db = testEnv.authenticatedContext('platform-owner-uid', {
       email: 'painglin102@gmail.com', email_verified: true,
+      firebase: { sign_in_provider: 'google.com' },
     }).firestore();
     const counter = doc(db, 'platformMeta', 'shopCapacity');
     await assertSucceeds(setDoc(counter, { activeShopCount: 0, updatedAt: serverTimestamp() }));
@@ -210,9 +212,14 @@ describe('AK Sale Firestore security baseline', function () {
   it('enforces the 100-shop capacity limit and rejects a counter-only increment', async () => {
     const db = testEnv.authenticatedContext('platform-owner-uid', {
       email: 'painglin102@gmail.com', email_verified: true,
+      firebase: { sign_in_provider: 'google.com' },
     }).firestore();
     const counter = doc(db, 'platformMeta', 'shopCapacity');
-    await assertSucceeds(setDoc(counter, { activeShopCount: 100, updatedAt: serverTimestamp() }));
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), 'platformMeta', 'shopCapacity'), {
+        activeShopCount: 100, updatedAt: Timestamp.now(),
+      });
+    });
     await assertFails(setDoc(counter, {
       activeShopCount: 101, lastIssuedUid: 'shop-101', updatedAt: serverTimestamp(),
     }));
@@ -307,6 +314,7 @@ describe('AK Sale Firestore security baseline', function () {
   it('allows the verified Platform Owner to create staff invites in their own workspace without a customer license', async () => {
     const ownerDb = testEnv.authenticatedContext('platform-owner', {
       email: 'painglin102@gmail.com', email_verified: true,
+      firebase: { sign_in_provider: 'google.com' },
     }).firestore();
     const inviteRef = doc(ownerDb, 'shopInvites', 'FEDCBA9876543210FEDCBA9876543210');
     await assertSucceeds(setDoc(inviteRef, {

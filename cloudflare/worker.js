@@ -214,7 +214,7 @@ async function staffProvision(request,origin) {
     return null;
   }));
   const slot=slots.find(x=>x!==null);
-  if(!slot)return json({ok:false,error:"staff_limit_3_reached"},409,origin);
+  if(!slot)return json({ok:false,error:"staff_limit_100_reached"},409,origin);
   let created;
   try {
     let lastError;

@@ -176,6 +176,25 @@ test("provisions a Merchant Code staff account through Firebase Auth REST and at
   }finally{globalThis.fetch=originalFetch}
 });
 
+
+test("rejects legacy employee role when provisioning new Merchant Code staff", async () => {
+  const originalFetch=globalThis.fetch;
+  const calls=[];
+  globalThis.fetch=async(url)=>{
+    const u=String(url);calls.push(u);
+    if(u.includes("accounts:lookup"))return new Response(JSON.stringify({users:[{localId:"shop-owner-uid-123",email:"shop@example.com",emailVerified:true}]}),{status:200});
+    throw new Error("No Firebase provisioning call should follow invalid role validation");
+  };
+  try{
+    const response=await worker.fetch(staffRequest("/staff/provision",{
+      apiKey:"test-api-key",name:"Legacy Role",role:"employee",password:"strong-pass-123"
+    }),{});
+    assert.equal(response.status,400);
+    assert.equal((await response.json()).error,"invalid_staff_role");
+    assert.equal(calls.length,1);
+  }finally{globalThis.fetch=originalFetch}
+});
+
 test("refuses Merchant Code staff creation when the shop license is inactive", async () => {
   const originalFetch=globalThis.fetch;
   const calls=[];

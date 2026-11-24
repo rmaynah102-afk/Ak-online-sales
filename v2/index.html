@@ -20,7 +20,8 @@ button.secondary{background:linear-gradient(180deg,#f8fafc,#dce5ee);color:#18365
 .tabs{display:flex;gap:6px;overflow:auto;padding:8px 0}.tabs button{white-space:nowrap;flex:0 0 auto}.tabs button.active{background:linear-gradient(180deg,#e9eef4,#b9c7d6);color:#102744;border-color:#f8fbff}
 .hidden{display:none!important}.muted{font-size:12px;color:var(--muted)}.notice{padding:10px;border-radius:9px;background:#e3eaf2;color:#263f5a;border:1px solid #b7c5d4;font-size:13px;margin:8px 0}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:8px}.stat{padding:12px;border:1px solid #b9c7d6;border-radius:12px;background:linear-gradient(145deg,#f8fafc,#dce5ee)}.stat b{display:block;font-size:20px;color:#244d78;overflow-wrap:anywhere}
-.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:560px}th,td{text-align:left;padding:9px;border-bottom:1px solid #c2cedb;font-size:13px}th{background:#cbd7e3;color:#183653}
+.tablewrap{overflow:auto;max-width:100%}table{width:100%;border-collapse:collapse;min-width:560px}.cell-edit{min-width:94px;width:112px;padding:7px 6px;min-height:36px;font-size:13px;font-weight:650;text-align:right;border-radius:7px}
+@media(max-width:520px){.tabs{display:flex;flex-wrap:wrap;overflow:visible;gap:6px}.tabs button{flex:1 1 calc(50% - 6px);min-width:0;white-space:normal;padding:9px 7px;font-size:13px}.tablewrap{overflow-x:auto}table{min-width:680px}.cell-edit{width:94px;min-width:82px}}th,td{text-align:left;padding:9px;border-bottom:1px solid #c2cedb;font-size:13px}th{background:#cbd7e3;color:#183653}
 #status{font-size:13px;color:#334c67;padding:5px 0;white-space:pre-wrap}.pill{display:inline-block;background:#d8eee3;color:#176044;padding:4px 9px;border-radius:20px;font-size:12px}
 footer{text-align:center;color:#dce5ef;font-size:12px;padding:20px}
 @media(max-width:520px){main{padding:8px}header h1{font-size:17px}.card{padding:12px}.row>*{flex-basis:100%}}
@@ -316,10 +317,26 @@ function filteredProducts(){const q=String($("productSearch")?.value||"").trim()
 function renderProductTable(){
  const rows=filteredProducts(),size=Number($("productPageSize")?.value||50),pages=Math.max(1,Math.ceil(rows.length/size));
  productPage=Math.min(Math.max(1,productPage),pages);const start=(productPage-1)*size,visible=rows.slice(start,start+size);
- $("productRows").innerHTML=visible.map(p=>'<tr><td>'+esc(p.name)+'<br><small>'+esc(p.sku||"")+'</small></td><td>'+esc(p.category)+'</td><td>'+p.stock+'</td><td>'+money(p.retail)+'</td><td>'+money(p.wholesale)+'</td><td>'+money(p.cost)+'</td><td><button class="secondary" onclick="editProduct(\''+p.id+'\')">ပြင်</button></td></tr>').join("")||'<tr><td colspan="7">ရှာဖွေမှုနှင့် ကိုက်ညီသော ပစ္စည်းမရှိပါ</td></tr>';
+ $("productRows").innerHTML=visible.map(p=>'<tr><td>'+esc(p.name)+'<br><small>'+esc(p.sku||"")+'</small></td><td>'+esc(p.category)+'</td><td><input class="cell-edit" type="number" min="0" step="1" value="'+Number(p.stock||0)+'" data-product-id="'+p.id+'" data-product-field="stock" aria-label="လက်ကျန်"></td><td><input class="cell-edit" type="number" min="0" step="1" value="'+Number(p.retail||0)+'" data-product-id="'+p.id+'" data-product-field="retail" aria-label="လက်လီဈေး"></td><td><input class="cell-edit" type="number" min="0" step="1" value="'+Number(p.wholesale||0)+'" data-product-id="'+p.id+'" data-product-field="wholesale" aria-label="လက်ကားဈေး"></td><td><input class="cell-edit" type="number" min="0" step="1" value="'+Number(p.cost||0)+'" data-product-id="'+p.id+'" data-product-field="cost" aria-label="ဝယ်ဈေး"></td><td><button class="secondary" onclick="editProduct(\\''+p.id+'\\')">အသေးစိတ်</button></td></tr>').join("")||'<tr><td colspan="7">ရှာဖွေမှုနှင့် ကိုက်ညီသော ပစ္စည်းမရှိပါ</td></tr>';
  $("productPageInfo").textContent="စုစုပေါင်း "+rows.length+" မျိုး · "+(rows.length?start+1:0)+"–"+Math.min(start+size,rows.length)+" · စာမျက်နှာ "+productPage+"/"+pages;
  $("productPrev").disabled=productPage<=1;$("productNext").disabled=productPage>=pages;
 }
+
+async function saveInlineProductField(input){
+ const id=input.dataset.productId,field=input.dataset.productField,p=products.find(x=>x.id===id),value=Number(input.value);
+ if(!p||!["stock","retail","wholesale","cost"].includes(field)||!Number.isFinite(value)||value<0){alert("တန်ဖိုးမှန်ကန်စွာထည့်ပါ။");renderProductTable();return}
+ if(Number(p[field]||0)===value)return;
+ input.disabled=true;
+ try{
+  if(field==="cost")await col("productCosts").doc(id).set({cost:value},{merge:true});
+  else await col("products").doc(id).set({[field]:value},{merge:true});
+  p[field]=value;
+  if(field==="stock")$("stockValue").textContent=money(products.reduce((a,x)=>a+x.stock*(x.cost||0),0));
+  status("ဈေးနှုန်း/လက်ကျန် ပြင်ဆင်ပြီးပါပြီ။");
+ }catch(e){alert("ပြင်ဆင်မရပါ: "+errText(e));renderProductTable()}
+ finally{input.disabled=false}
+}
+$("productRows").addEventListener("change",e=>{const input=e.target.closest("[data-product-field]");if(input)saveInlineProductField(input)});
 $("productSearch").oninput=()=>{productPage=1;renderProductTable()};
 $("productPageSize").onchange=()=>{productPage=1;renderProductTable()};
 $("productPrev").onclick=()=>{productPage--;renderProductTable()};

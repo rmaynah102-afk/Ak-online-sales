@@ -533,15 +533,21 @@ exports.setPlatformUserAccess = functions.https.onCall(async (data, context) => 
     throw new functions.https.HttpsError("permission-denied", "ဤအကောင့်ကို Customer အဖြစ် မစီမံနိုင်ပါ။");
   }
   const licenseRef = db.collection("licenses").doc(uid);
-  await db.runTransaction(async tx => {
-    const snap = await tx.get(licenseRef);
-    if (action === "suspend") {
+  if (action === "suspend") {
+    // Disable Firebase Authentication and revoke every refresh token first.
+    // Firestore license status remains the authorization backstop for existing sessions.
+    await admin.auth().updateUser(uid, { disabled: true });
+    await admin.auth().revokeRefreshTokens(uid);
+    await db.runTransaction(async tx => {
       tx.set(licenseRef, {
         uid, email: target.email || "", status: "suspended",
         suspendedAt: admin.firestore.FieldValue.serverTimestamp(),
         suspendedBy: actor, updatedAt: admin.firestore.FieldValue.serverTimestamp()
       }, { merge: true });
-    } else {
+    });
+  } else {
+    await db.runTransaction(async tx => {
+      const snap = await tx.get(licenseRef);
       const license = snap.data() || {};
       const expiry = license.expiresAt;
       if (!snap.exists || !expiry || typeof expiry.toMillis !== "function" || expiry.toMillis() <= Date.now()) {
@@ -552,8 +558,10 @@ exports.setPlatformUserAccess = functions.https.onCall(async (data, context) => 
         status: "active", reactivatedAt: admin.firestore.FieldValue.serverTimestamp(),
         reactivatedBy: actor, updatedAt: admin.firestore.FieldValue.serverTimestamp()
       });
-    }
-  });
+    });
+    // Re-enable sign-in only after the license is confirmed active.
+    await admin.auth().updateUser(uid, { disabled: false });
+  }
   await db.collection("platformAuditLogs").add({
     action: action === "suspend" ? "customer_suspended" : "customer_reactivated",
     targetUid: uid, targetEmail: target.email || "", actor,

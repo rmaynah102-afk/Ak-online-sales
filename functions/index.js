@@ -173,7 +173,7 @@ async function requireActiveShop(context) {
   const uid = context.auth.uid;
   const email = String(context.auth.token.email || "").trim().toLowerCase();
   // The sole verified Platform Owner may administer their own shop without a paid license.
-  if (email === OWNER_EMAIL && context.auth.token.email_verified === true) return uid;
+  if (email === OWNER_EMAIL && context.auth.token.email_verified === true && context.auth.token.firebase?.sign_in_provider === "google.com") return uid;
   const snap = await db.collection("licenses").doc(uid).get();
   const license = snap.data() || {};
   if (!snap.exists || license.status !== "active" || !license.expiresAt ||

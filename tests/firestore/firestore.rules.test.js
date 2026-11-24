@@ -155,6 +155,20 @@ describe('AK Sale Firestore security baseline', function () {
     }));
   });
 
+  it('allows the Platform Owner to create the first license and initialize capacity atomically', async () => {
+    const db = testEnv.authenticatedContext('platform-owner-uid', {
+      email: 'painglin102@gmail.com', email_verified: true,
+    }).firestore();
+    const batch = writeBatch(db);
+    batch.set(doc(db, 'licenses', 'first-shop'), {
+      uid: 'first-shop', status: 'active', expiresAt: futureTimestamp(30), plan: '30-days',
+    });
+    batch.set(doc(db, 'platformMeta', 'shopCapacity'), {
+      activeShopCount: 1, lastIssuedUid: 'first-shop', updatedAt: serverTimestamp(),
+    });
+    await assertSucceeds(batch.commit());
+  });
+
   it('allows the Platform Owner to issue a license with an atomic capacity increment', async () => {
     const db = testEnv.authenticatedContext('platform-owner-uid', {
       email: 'painglin102@gmail.com',

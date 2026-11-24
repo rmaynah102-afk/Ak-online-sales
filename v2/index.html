@@ -150,7 +150,7 @@ footer{letter-spacing:.5px;color:#d9e2ec}
 <div class="grid"><div><label>ပစ္စည်းရွေးရန်</label><select id="adProduct"><option value="">ကိုယ်တိုင်ဖြည့်မည်</option></select></div><div><label>ပစ္စည်းအမည်</label><input id="adName"></div><div><label>ဈေးနှုန်း (MMK)</label><input id="adPrice" type="number" min="0"></div><div><label>ဆက်သွယ်ရန်</label><input id="adContact" placeholder="ဖုန်း / Viber"></div><div><label>ပစ္စည်းဓာတ်ပုံ</label><input id="adPhoto" type="file" accept="image/*"></div></div>
 <div class="row"><button id="makeAd">ကြော်ငြာပုံဖန်တီးမည်</button><button id="shareAd" class="secondary">Viber / TikTok / Social Share</button><button id="downloadAd" class="secondary">ပုံဒေါင်းလုဒ်</button></div><canvas id="adCanvas" width="1080" height="1080" style="width:100%;max-width:560px;border-radius:12px;border:1px solid #dce4ef;background:#fff"></canvas><div id="adStatus" class="muted"></div>
 </section>
-<section id="tab-backup" class="card hidden"><h2>ဒေတာအရန်သိမ်းဆည်းခြင်း / ပြန်လည်ရယူခြင်း</h2><p class="muted">ဆိုင်ဒေတာကို JSON ဖိုင်အဖြစ် သိမ်းနိုင်သည်။ Restore လုပ်ရာတွင် Backup ထဲရှိ ID များကို Update လုပ်ပြီး မပါသောအဟောင်းဒေတာများကို မဖျက်ပါ။</p><div class="row"><button id="exportData">ဒေတာအရန်ဖိုင် သိမ်းရန်</button><input id="importFile" type="file" accept="application/json"></div><button id="restoreData" class="danger">အရန်ဖိုင်မှ ဒေတာပြန်ယူရန်</button></section>
+<section id="tab-backup" class="card hidden"><h2>ဒေတာအရန်သိမ်းဆည်းခြင်း / ပြန်လည်ရယူခြင်း</h2><p class="muted">ဆိုင်ဒေတာကို JSON ဖိုင်အဖြစ် သိမ်းနိုင်သည်။ Restore လုပ်ရာတွင် Backup ထဲရှိ ID များကို Update လုပ်ပြီး မပါသောအဟောင်းဒေတာများကို မဖျက်ပါ။</p><div id="cloudBackupStatus" class="muted">Cloud Auto Backup စနစ် စစ်ဆေးနေသည်။</div><div class="row"><button id="exportData">ဒေတာအရန်ဖိုင် သိမ်းရန်</button><button id="restoreCloudBackup" class="secondary">Cloud Backup နောက်ဆုံးအရန်မှ ပြန်ယူရန်</button></div><div class="row"><input id="importFile" type="file" accept="application/json"><button id="restoreData" class="danger">ဖိုင်မှ ဒေတာပြန်ယူရန်</button></div><p class="muted">Cloud Backup ကို ၆ နာရီခြား အလိုအလျောက် သိမ်းမည်။ နောက်ဆုံး ၂၈ ခုကို ထိန်းသိမ်းမည်။ သက်တမ်းကုန်ခြင်းကြောင့် ဆိုင်ဒေတာကို မဖျက်ပါ။</p></section>
 </section>
 </main><footer><strong>AK POS 3.5</strong> · Professional Shop Management · MMK</footer>
 <script>
@@ -373,7 +373,7 @@ async function loadShop(){
  if(staffRole==="owner"&&!platformOwner)await loadMerchantStaff();
  await reloadAll();
 }
-async function reloadAll(){const manager=staffRole==="owner"||staffRole==="manager",cashier=staffRole==="cashier";products=await getRows("products");sales=(manager||cashier)?await getRows("sales"):[];purchases=manager?await getRows("purchases"):[];people=(manager||cashier)?await getRows("people"):[];expenses=manager?await getRows("expenses"):[];if(manager){const [costs,saleCostRows]=await Promise.all([getRows("productCosts"),getRows("saleCosts")]);const costMap=new Map(costs.map(x=>[x.id,x.cost||0])),saleCostMap=new Map(saleCostRows.map(x=>[x.id,x]));products=products.map(p=>({...p,cost:costMap.get(p.id)||0}));sales=sales.map(x=>({...x,cost:saleCostMap.get(x.id)?.cost||0,profit:saleCostMap.get(x.id)?.profit||0}))}else{products=products.map(p=>({...p,cost:0}));sales=sales.map(x=>({...x,cost:0,profit:0}))}renderAll()}
+async function reloadAll(){const manager=staffRole==="owner"||staffRole==="manager",cashier=staffRole==="cashier";products=await getRows("products");sales=(manager||cashier)?await getRows("sales"):[];purchases=manager?await getRows("purchases"):[];people=(manager||cashier)?await getRows("people"):[];expenses=manager?await getRows("expenses"):[];if(manager){const [costs,saleCostRows]=await Promise.all([getRows("productCosts"),getRows("saleCosts")]);const costMap=new Map(costs.map(x=>[x.id,x.cost||0])),saleCostMap=new Map(saleCostRows.map(x=>[x.id,x]));products=products.map(p=>({...p,cost:costMap.get(p.id)||0}));sales=sales.map(x=>({...x,cost:saleCostMap.get(x.id)?.cost||0,profit:saleCostMap.get(x.id)?.profit||0}))}else{products=products.map(p=>({...p,cost:0}));sales=sales.map(x=>({...x,cost:0,profit:0}))}renderAll();if(staffRole==="owner"&&user&&shopId)startCloudAutoBackup()}
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 let productPage=1;
 function filteredProducts(){const q=String($("productSearch")?.value||"").trim().toLowerCase(),category=$("productCategoryFilter")?.value||"",rows=products.filter(p=>(!category||String(p.category||"")===category)&&(!q||[p.name,p.sku,p.category].some(v=>String(v||"").toLowerCase().includes(q))));const [field,dir]=String($("productSort")?.value||"name-asc").split("-");return rows.sort((a,b)=>{const av=a[field]??"",bv=b[field]??"",cmp=typeof av==="number"||typeof bv==="number"?Number(av)-Number(bv):String(av).localeCompare(String(bv),"my");return dir==="desc"?-cmp:cmp})}
@@ -487,6 +487,34 @@ function validateBackupData(d){
  if(d.printerProfiles!==undefined&&!Array.isArray(d.printerProfiles))throw Error("Printer profile ပုံစံ မမှန်ပါ။");
  return keys;
 }
+let akCloudBackupTimer=null,akCloudBackupBusy=false;
+async function runCloudAutoBackup(){
+ if(akCloudBackupBusy||!db||!shopId||!user||staffRole!=="owner")return;
+ akCloudBackupBusy=true;
+ try{
+  const now=new Date(),bucket=Math.floor(now.getTime()/(6*60*60*1000)),backupId="auto-"+bucket;
+  const ref=db.collection("users").doc(shopId).collection("backups").doc(backupId);
+  const existing=await ref.get();if(existing.exists){status("Cloud Auto Backup ရှိပြီး · "+now.toLocaleString(),"cloudBackupStatus");return}
+  const data={format:"AK-SALE-BACKUP",version:2,exportedAt:now.toISOString(),shopId,
+   products:backupSerialize(products),sales:backupSerialize(sales),purchases:backupSerialize(purchases),people:backupSerialize(people),expenses:backupSerialize(expenses),
+   receiptSettings:receiptConfig(),printerProfiles:printerRead()};
+  const json=JSON.stringify(data),sizeBytes=new Blob([json]).size;
+  if(sizeBytes>700000){status("Cloud Backup မသိမ်းနိုင်ပါ။ Backup အရွယ်အစား "+Math.round(sizeBytes/1024)+" KB ဖြစ်နေ၍ 700 KB ကန့်သတ်ချက်ကျော်နေသည်။ ဖိုင် Backup ကို အသုံးပြုပါ။","cloudBackupStatus");return}
+  await ref.set({createdBy:shopId,createdAt:firebase.firestore.FieldValue.serverTimestamp(),sizeBytes,data});
+  const all=await db.collection("users").doc(shopId).collection("backups").get();
+  const old=all.docs.filter(d=>d.id.startsWith("auto-")).sort((a,b)=>(b.data().createdAt?.toMillis?.()||0)-(a.data().createdAt?.toMillis?.()||0)).slice(28);
+  for(const doc of old)await doc.ref.delete();
+  status("Cloud Auto Backup သိမ်းပြီး · "+now.toLocaleString()+" · နောက်ဆုံး ၂၈ ခု ထိန်းသိမ်းထားသည်။","cloudBackupStatus");
+ }catch(e){status("Cloud Auto Backup မအောင်မြင်ပါ: "+errText(e),"cloudBackupStatus")}
+ finally{akCloudBackupBusy=false}
+}
+function startCloudAutoBackup(){
+ if(staffRole!=="owner"||!user||!shopId)return;
+ if(akCloudBackupTimer)clearInterval(akCloudBackupTimer);
+ runCloudAutoBackup();
+ akCloudBackupTimer=setInterval(runCloudAutoBackup,6*60*60*1000);
+}
+
 $("exportData").onclick=()=>{
  try{
   const data={format:"AK-SALE-BACKUP",version:2,exportedAt:new Date().toISOString(),shopId,
@@ -497,29 +525,35 @@ $("exportData").onclick=()=>{
   status("ဆိုင်ဒေတာ၊ ဘောင်ချာပုံစံနှင့် Printer Profile ပါဝင်သော Backup သိမ်းပြီးပါပြီ။");
  }catch(e){status("Backup မသိမ်းနိုင်ပါ: "+errText(e))}
 };
+async function restoreBackupPayload(d){
+ const keys=validateBackupData(d);let batch=db.batch(),ops=0,restored=0;
+ const flush=async()=>{if(ops){await batch.commit();batch=db.batch();ops=0}};
+ const put=async(ref,data)=>{batch.set(ref,data);ops++;restored++;if(ops>=400)await flush()};
+ for(const key of keys){for(const raw of (d[key]||[])){
+  const x=backupRestoreDates({...raw}),id=String(x.id||db.collection("_ids").doc().id);delete x.id;
+  if(key==="products"){const cost=Number(x.cost||0);delete x.cost;await put(col("products").doc(id),x);await put(col("productCosts").doc(id),{cost})}
+  else if(key==="sales"){const cost=Number(x.cost||0),profit=Number(x.profit||0);delete x.cost;delete x.profit;await put(col("sales").doc(id),x);await put(col("saleCosts").doc(id),{cost,profit})}
+  else await put(col(key).doc(id),x);
+ }}
+ await flush();
+ if(d.receiptSettings)localStorage.setItem("ak_pos_receipt_settings_"+shopId,JSON.stringify(d.receiptSettings));
+ if(Array.isArray(d.printerProfiles))localStorage.setItem(printerKey(),JSON.stringify(d.printerProfiles));
+ receiptLoadForm();printerRender();await reloadAll();return restored;
+}
 $("restoreData").onclick=async()=>{
+ try{const file=$("importFile").files[0];if(!file)throw Error("Backup ဖိုင်ရွေးပါ");if(file.size>20*1024*1024)throw Error("Backup ဖိုင် 20MB ထက် မကြီးရပါ။");const d=JSON.parse(await file.text());validateBackupData(d);if(!confirm("ဤဆိုင်၏ Backup ဒေတာကို လက်ရှိစာရင်းထဲသို့ ထည့်သွင်း/Update လုပ်မည်။ ရှိပြီးသား အခြားစာရင်းများကို မဖျက်ပါ။ ဆက်လုပ်မလား?"))return;const restored=await restoreBackupPayload(d);alert("Restore ပြီးပါပြီ။ "+restored+" စာရင်းများကို ထည့်သွင်း/Update လုပ်ပြီးပါပြီ။");}catch(e){alert("Restore မအောင်မြင်ပါ: "+errText(e))}
+};
+$("restoreCloudBackup").onclick=async()=>{
+ const button=$("restoreCloudBackup");button.disabled=true;
  try{
-  const file=$("importFile").files[0];if(!file)throw Error("Backup ဖိုင်ရွေးပါ");
-  if(file.size>20*1024*1024)throw Error("Backup ဖိုင် 20MB ထက် မကြီးရပါ။");
-  const d=JSON.parse(await file.text()),keys=validateBackupData(d);
-  if(!confirm("ဤဆိုင်၏ Backup ဒေတာကို လက်ရှိစာရင်းထဲသို့ ထည့်သွင်း/Update လုပ်မည်။ Backup ထဲမပါသော ရှိပြီးသားစာရင်းများကို မဖျက်ပါ။ ဆက်လုပ်မလား?"))return;
-  let batch=db.batch(),ops=0,restored=0;
-  const flush=async()=>{if(ops){await batch.commit();batch=db.batch();ops=0}};
-  const put=async(ref,data)=>{batch.set(ref,data);ops++;restored++;if(ops>=400)await flush()};
-  for(const key of keys){
-   for(const raw of (d[key]||[])){
-    const x=backupRestoreDates({...raw}),id=String(x.id||db.collection("_ids").doc().id);delete x.id;
-    if(key==="products"){const cost=Number(x.cost||0);delete x.cost;await put(col("products").doc(id),x);await put(col("productCosts").doc(id),{cost})}
-    else if(key==="sales"){const cost=Number(x.cost||0),profit=Number(x.profit||0);delete x.cost;delete x.profit;await put(col("sales").doc(id),x);await put(col("saleCosts").doc(id),{cost,profit})}
-    else await put(col(key).doc(id),x);
-   }
-  }
-  await flush();
-  if(d.receiptSettings)localStorage.setItem("ak_pos_receipt_settings_"+shopId,JSON.stringify(d.receiptSettings));
-  if(Array.isArray(d.printerProfiles))localStorage.setItem(printerKey(),JSON.stringify(d.printerProfiles));
-  receiptLoadForm();printerRender();await reloadAll();
-  alert("Restore ပြီးပါပြီ။ "+restored+" စာရင်းများကို ထည့်သွင်း/Update လုပ်ပြီးပါပြီ။ ရှိပြီးသား အခြားစာရင်းများကို မဖျက်ထားပါ။");
- }catch(e){alert("Restore မအောင်မြင်ပါ: "+errText(e))}
+  const snap=await db.collection("users").doc(shopId).collection("backups").orderBy("createdAt","desc").limit(1).get();
+  if(snap.empty)throw Error("Cloud Backup မရှိသေးပါ။ အင်တာနက်ချိတ်ပြီး Backup ပြီးသည်အထိ စောင့်ပါ။");
+  const backup=snap.docs[0].data(),d=backup.data;
+  if(!d||String(d.shopId)!==String(shopId))throw Error("Cloud Backup ဆိုင် ID မကိုက်ညီပါ။");
+  validateBackupData(d);
+  if(!confirm("Cloud Backup ("+(backup.createdAt?.toDate?backup.createdAt.toDate().toLocaleString():"ရက်စွဲမသိ")+") မှ ဒေတာကို လက်ရှိဆိုင်ထဲ ပြန်ယူမည်။ Backup ထဲမပါသော စာရင်းများကို မဖျက်ပါ။ ဆက်လုပ်မလား?"))return;
+  const restored=await restoreBackupPayload(d);status("Cloud Backup မှ "+restored+" စာရင်း ပြန်ယူပြီးပါပြီ။","cloudBackupStatus");
+ }catch(e){status("Cloud Restore မအောင်မြင်ပါ: "+errText(e),"cloudBackupStatus")}finally{button.disabled=false}
 };
 
 // Barcode / QR camera scanner. APK bundles ZXing locally; website falls back to the public library CDN.

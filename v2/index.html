@@ -381,6 +381,27 @@ function backupRestoreDates(value,key=""){
  if(typeof value==="string"&&/(At|Date|Time)$/.test(key)&&/^\\d{4}-\\d{2}-\\d{2}T/.test(value)){const d=new Date(value);if(!Number.isNaN(d.getTime()))return d}
  return value;
 }
+function validateBackupData(d){
+ if(!d||typeof d!=="object"||Array.isArray(d))throw Error("Backup ဖိုင်ပုံစံ မမှန်ပါ။");
+ if(d.format!=="AK-SALE-BACKUP"||Number(d.version)!==2)throw Error("AK Sale Backup Version 2 ဖိုင်သာ Restore လုပ်နိုင်ပါသည်။");
+ if(!shopId||!d.shopId||String(d.shopId)!==String(shopId))throw Error("ဤ Backup သည် လက်ရှိဆိုင်၏ Backup မဟုတ်ပါ၊ သို့မဟုတ် ဆိုင် ID မပါသော Backup ဖြစ်နေသောကြောင့် Restore မလုပ်ပါ။");
+ const keys=["products","sales","purchases","people","expenses"];
+ let total=0;
+ for(const key of keys){
+  if(d[key]!==undefined&&(!Array.isArray(d[key])||d[key].length>100000))throw Error(key+" စာရင်းပုံစံ မမှန်ပါ။");
+  for(const raw of (d[key]||[])){
+   if(!raw||typeof raw!=="object"||Array.isArray(raw))throw Error(key+" ထဲတွင် မမှန်ကန်သော record ရှိနေသည်။");
+   if(raw.id!==undefined&&raw.id!==null&&(String(raw.id).length>1500||String(raw.id).includes("/")))throw Error(key+" ထဲတွင် မမှန်ကန်သော ID ရှိနေသည်။");
+   if(key==="products"&&raw.cost!==undefined&&!Number.isFinite(Number(raw.cost)))throw Error("Product cost တန်ဖိုး မမှန်ပါ။");
+   if(key==="sales"&&((raw.cost!==undefined&&!Number.isFinite(Number(raw.cost)))||(raw.profit!==undefined&&!Number.isFinite(Number(raw.profit)))))throw Error("Sale cost/profit တန်ဖိုး မမှန်ပါ။");
+   total++;
+   if(total>200000)throw Error("Backup record စုစုပေါင်း 200,000 ထက် မကျော်ရပါ။");
+  }
+ }
+ if(d.receiptSettings!==undefined&&(!d.receiptSettings||typeof d.receiptSettings!=="object"||Array.isArray(d.receiptSettings)))throw Error("Receipt settings ပုံစံ မမှန်ပါ။");
+ if(d.printerProfiles!==undefined&&!Array.isArray(d.printerProfiles))throw Error("Printer profile ပုံစံ မမှန်ပါ။");
+ return keys;
+}
 $("exportData").onclick=()=>{
  try{
   const data={format:"AK-SALE-BACKUP",version:2,exportedAt:new Date().toISOString(),shopId,
@@ -395,18 +416,13 @@ $("restoreData").onclick=async()=>{
  try{
   const file=$("importFile").files[0];if(!file)throw Error("Backup ဖိုင်ရွေးပါ");
   if(file.size>20*1024*1024)throw Error("Backup ဖိုင် 20MB ထက် မကြီးရပါ။");
-  const d=JSON.parse(await file.text());
-  if(!d||typeof d!=="object"||Array.isArray(d))throw Error("Backup ဖိုင်ပုံစံ မမှန်ပါ။");
-  if(d.shopId&&String(d.shopId)!==String(shopId))throw Error("ဤ Backup သည် အခြားဆိုင်အကောင့်မှ ဖြစ်နေသောကြောင့် Restore မလုပ်ပါ။");
-  const keys=["products","sales","purchases","people","expenses"];
-  for(const key of keys)if(d[key]!==undefined&&(!Array.isArray(d[key])||d[key].length>100000))throw Error(key+" စာရင်းပုံစံ မမှန်ပါ။");
-  if(!confirm("Backup ဒေတာကို လက်ရှိဆိုင်စာရင်းထဲသို့ ထည့်သွင်း/အစားထိုးမည်။ ရှိပြီးသား ID များကို Update လုပ်မည်၊ မပါသောအဟောင်းဒေတာများကို မဖျက်ပါ။ ဆက်လုပ်မလား?"))return;
+  const d=JSON.parse(await file.text()),keys=validateBackupData(d);
+  if(!confirm("ဤဆိုင်၏ Backup ဒေတာကို လက်ရှိစာရင်းထဲသို့ ထည့်သွင်း/Update လုပ်မည်။ Backup ထဲမပါသော ရှိပြီးသားစာရင်းများကို မဖျက်ပါ။ ဆက်လုပ်မလား?"))return;
   let batch=db.batch(),ops=0,restored=0;
   const flush=async()=>{if(ops){await batch.commit();batch=db.batch();ops=0}};
   const put=async(ref,data)=>{batch.set(ref,data);ops++;restored++;if(ops>=400)await flush()};
   for(const key of keys){
    for(const raw of (d[key]||[])){
-    if(!raw||typeof raw!=="object"||Array.isArray(raw))throw Error(key+" ထဲတွင် မမှန်ကန်သော record ရှိနေသည်။");
     const x=backupRestoreDates({...raw}),id=String(x.id||db.collection("_ids").doc().id);delete x.id;
     if(key==="products"){const cost=Number(x.cost||0);delete x.cost;await put(col("products").doc(id),x);await put(col("productCosts").doc(id),{cost})}
     else if(key==="sales"){const cost=Number(x.cost||0),profit=Number(x.profit||0);delete x.cost;delete x.profit;await put(col("sales").doc(id),x);await put(col("saleCosts").doc(id),{cost,profit})}
@@ -414,13 +430,12 @@ $("restoreData").onclick=async()=>{
    }
   }
   await flush();
-  if(d.receiptSettings&&typeof d.receiptSettings==="object")localStorage.setItem("ak_pos_receipt_settings_"+(shopId||user?.uid||"local"),JSON.stringify(d.receiptSettings));
+  if(d.receiptSettings)localStorage.setItem("ak_pos_receipt_settings_"+shopId,JSON.stringify(d.receiptSettings));
   if(Array.isArray(d.printerProfiles))localStorage.setItem(printerKey(),JSON.stringify(d.printerProfiles));
   receiptLoadForm();printerRender();await reloadAll();
   alert("Restore ပြီးပါပြီ။ "+restored+" စာရင်းများကို ထည့်သွင်း/Update လုပ်ပြီးပါပြီ။ ရှိပြီးသား အခြားစာရင်းများကို မဖျက်ထားပါ။");
  }catch(e){alert("Restore မအောင်မြင်ပါ: "+errText(e))}
 };
-
 
 // Barcode / QR camera scanner. APK bundles ZXing locally; website falls back to the public library CDN.
 let akBarcodeStream=null,akBarcodeReader=null,akBarcodeActive=false,akZxingPromise=null;

@@ -441,15 +441,15 @@ window.akPrintRawToDefault=async bytes=>{
  throw Error("Direct Print အတွက် Bluetooth သို့မဟုတ် Wi-Fi Printer ရွေးပါ။");
 };
 function buildReceiptEscPos(s,paper="80mm"){
- const width=paper==="58mm"?384:576,pad=18,contentWidth=width-pad*2,canvas=document.createElement("canvas");canvas.width=width;canvas.height=100;
- let ctx=canvas.getContext("2d");if(!ctx)throw Error("Receipt Canvas မရပါ");const lines=[];
- const push=(text,size=20,bold=false,align="left")=>lines.push({text:String(text??""),size,bold,align});
- const wrap=(text,size,bold=false)=>{ctx.font=(bold?"bold ":"")+size+"px 'Noto Sans Myanmar',Arial,sans-serif";const parts=typeof Intl.Segmenter==="function"?Array.from(new Intl.Segmenter("my",{granularity:"grapheme"}).segment(String(text??"")),x=>x.segment):Array.from(String(text??""));let line="";for(const p of parts){if(line&&ctx.measureText(line+p).width>contentWidth){push(line,size,bold);line=p}else line+=p}if(line)push(line,size,bold)};
- const date=s.createdAt?.toDate?s.createdAt.toDate():new Date(s.createdAt||Date.now());
- push("AK Hardware & Electrical",27,true,"center");push("AK Sale POS",16,false,"center");push("--------------------------------",17,false,"center");
+ const cfg=receiptConfig(),width=paper==="58mm"?384:576,pad=Math.max(8,Math.round((Number(cfg.margin)||3)*4)),contentWidth=width-pad*2,canvas=document.createElement("canvas");canvas.width=width;canvas.height=100;
+ let ctx=canvas.getContext("2d");if(!ctx)throw Error("Receipt Canvas မရပါ");const lines=[],scale=cfg.font==="small"?.82:cfg.font==="large"?1.18:1;
+ const push=(text,size=20,bold=false,align="left")=>lines.push({text:String(text??""),size:Math.round(size*scale),bold,align});
+ const wrap=(text,size,bold=false)=>{ctx.font=(bold?"bold ":"")+Math.round(size*scale)+"px 'Noto Sans Myanmar',Arial,sans-serif";const parts=typeof Intl.Segmenter==="function"?Array.from(new Intl.Segmenter("my",{granularity:"grapheme"}).segment(String(text??"")),x=>x.segment):Array.from(String(text??""));let line="";for(const p of parts){if(line&&ctx.measureText(line+p).width>contentWidth){push(line,size,bold);line=p}else line+=p}if(line)push(line,size,bold)};
+ const date=s.createdAt?.toDate?s.createdAt.toDate():new Date(s.createdAt||Date.now()),items=receiptItems(s);
+ wrap(cfg.shopName||"AK Hardware & Electrical",27,true);if(cfg.address)wrap(cfg.address,16);if(cfg.phone)wrap("ဖုန်း: "+cfg.phone,16);push("--------------------------------",17,false,"center");
  wrap("ဘောင်ချာ: "+String(s.id||"").slice(-10),18,true);wrap("ရက်စွဲ: "+date.toLocaleString(),16);wrap("ဖောက်သည်: "+(s.customer||"လက်ငင်း"),16);
- push("--------------------------------",17,false,"center");wrap(s.productName||"ပစ္စည်း",18,true);wrap(Number(s.qty||0)+" × "+money(s.price)+" = "+money(s.total),17);
- push("--------------------------------",17,false,"center");wrap("စုစုပေါင်း: "+money(s.total),20,true);wrap("ပေးချေပြီး: "+money(s.paid),18);wrap("ကျန်ငွေ: "+money(s.due),18,true);push("ကျေးဇူးတင်ပါသည်",18,true,"center");
+ push("--------------------------------",17,false,"center");items.forEach(it=>{wrap(it.name||it.productName||"ပစ္စည်း",18,true);wrap(Number(it.qty||0)+" × "+money(it.price||0)+" = "+money(it.total??(Number(it.qty||0)*Number(it.price||0))),17)});
+ push("--------------------------------",17,false,"center");wrap("စုစုပေါင်း: "+money(s.subtotal??s.total),18);if(s.discount)wrap("လျှော့ဈေး: "+money(s.discount),17);wrap("ကျသင့်ငွေ: "+money(s.total),20,true);wrap("ပေးချေပြီး: "+money(s.paid),18);wrap("ကျန်ငွေ: "+money(s.due),18,true);push("ကျေးဇူးတင်ပါသည်",18,true,"center");
  let height=24;for(const l of lines){ctx.font=(l.bold?"bold ":"")+l.size+"px 'Noto Sans Myanmar',Arial,sans-serif";height+=l.size+12}height+=36;canvas.height=height;ctx=canvas.getContext("2d");ctx.fillStyle="#fff";ctx.fillRect(0,0,width,height);ctx.fillStyle="#000";let y=22;
  for(const l of lines){ctx.font=(l.bold?"bold ":"")+l.size+"px 'Noto Sans Myanmar',Arial,sans-serif";const w=ctx.measureText(l.text).width,x=l.align==="center"?Math.max(pad,(width-w)/2):pad;ctx.fillText(l.text,x,y);y+=l.size+12}
  const img=ctx.getImageData(0,0,width,height),bpr=Math.ceil(width/8),raster=new Uint8Array(bpr*height);

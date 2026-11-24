@@ -114,7 +114,7 @@ th{background:linear-gradient(180deg,#e8edf2,#cbd5df);color:#183451}
 <div class="grid"><div><label>ပစ္စည်းရွေးရန်</label><select id="adProduct"><option value="">ကိုယ်တိုင်ဖြည့်မည်</option></select></div><div><label>ပစ္စည်းအမည်</label><input id="adName"></div><div><label>ဈေးနှုန်း (MMK)</label><input id="adPrice" type="number" min="0"></div><div><label>ဆက်သွယ်ရန်</label><input id="adContact" placeholder="ဖုန်း / Viber"></div><div><label>ပစ္စည်းဓာတ်ပုံ</label><input id="adPhoto" type="file" accept="image/*"></div></div>
 <div class="row"><button id="makeAd">ကြော်ငြာပုံဖန်တီးမည်</button><button id="shareAd" class="secondary">Viber / TikTok / Social Share</button><button id="downloadAd" class="secondary">ပုံဒေါင်းလုဒ်</button></div><canvas id="adCanvas" width="1080" height="1080" style="width:100%;max-width:560px;border-radius:12px;border:1px solid #dce4ef;background:#fff"></canvas><div id="adStatus" class="muted"></div>
 </section>
-<section id="tab-backup" class="card hidden"><h2>ဒေတာအရန်သိမ်းဆည်းခြင်း / ပြန်လည်ရယူခြင်း</h2><p class="muted">ဆိုင်ဒေတာကို JSON ဖိုင်အဖြစ် သိမ်းနိုင်သည်။ Restore လုပ်ရာတွင် လက်ရှိဒေတာကို အစားထိုးမည်။</p><div class="row"><button id="exportData">ဒေတာအရန်ဖိုင် သိမ်းရန်</button><input id="importFile" type="file" accept="application/json"></div><button id="restoreData" class="danger">အရန်ဖိုင်မှ ဒေတာပြန်ယူရန်</button></section>
+<section id="tab-backup" class="card hidden"><h2>ဒေတာအရန်သိမ်းဆည်းခြင်း / ပြန်လည်ရယူခြင်း</h2><p class="muted">ဆိုင်ဒေတာကို JSON ဖိုင်အဖြစ် သိမ်းနိုင်သည်။ Restore လုပ်ရာတွင် Backup ထဲရှိ ID များကို Update လုပ်ပြီး မပါသောအဟောင်းဒေတာများကို မဖျက်ပါ။</p><div class="row"><button id="exportData">ဒေတာအရန်ဖိုင် သိမ်းရန်</button><input id="importFile" type="file" accept="application/json"></div><button id="restoreData" class="danger">အရန်ဖိုင်မှ ဒေတာပြန်ယူရန်</button></section>
 </section>
 </main><footer>AK Sale POS 2.0 · Hardware & Electrical · MMK</footer>
 <script>
@@ -369,8 +369,58 @@ $("savePurchase").onclick=async()=>{
 $("savePerson").onclick=async()=>{try{if(!$("personName").value.trim())throw Error("အမည်ဖြည့်ပါ");await col("people").add({name:$("personName").value.trim(),phone:$("personPhone").value.trim(),type:$("personType").value,createdAt:firebase.firestore.FieldValue.serverTimestamp()});await reloadAll()}catch(e){alert(errText(e))}};
 $("saveExpense").onclick=async()=>{try{if(!$("expenseName").value.trim()||+$("expenseAmount").value<=0)throw Error("အချက်အလက် ဖြည့်ပါ");await col("expenses").add({name:$("expenseName").value.trim(),amount:+$("expenseAmount").value,createdAt:firebase.firestore.FieldValue.serverTimestamp()});await reloadAll()}catch(e){alert(errText(e))}};
 $("tabs").onclick=e=>{const b=e.target.closest("button[data-tab]");if(!b)return;document.querySelectorAll("#tabs button").forEach(x=>x.classList.toggle("active",x===b));["products","sales","purchases","people","expenses","reports","backup"].forEach(t=>$("tab-"+t).classList.toggle("hidden",t!==b.dataset.tab))};
-$("exportData").onclick=()=>{const blob=new Blob([JSON.stringify({products,sales,purchases,people,expenses},null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="ak-sale-backup-"+new Date().toISOString().slice(0,10)+".json";a.click();URL.revokeObjectURL(a.href)};
-$("restoreData").onclick=async()=>{try{const f=$("importFile").files[0];if(!f)throw Error("Backup ဖိုင်ရွေးပါ");if(!confirm("လက်ရှိစာရင်းကို Backup ဒေတာဖြင့် အစားထိုးမည်။ ဆက်လုပ်မလား?"))return;const d=JSON.parse(await f.text()),batch=db.batch();for(const [key,arr] of Object.entries({products:d.products||[],sales:d.sales||[],purchases:d.purchases||[],people:d.people||[],expenses:d.expenses||[]})){for(const raw of arr){const x={...raw},id=x.id||db.collection("_ids").doc().id;delete x.id;if(key==="products"){const cost=Number(x.cost||0);delete x.cost;batch.set(col("products").doc(id),x);batch.set(col("productCosts").doc(id),{cost})}else if(key==="sales"){const cost=Number(x.cost||0),profit=Number(x.profit||0);delete x.cost;delete x.profit;batch.set(col("sales").doc(id),x);batch.set(col("saleCosts").doc(id),{cost,profit})}else{batch.set(col(key).doc(id),x)}}}await batch.commit();await reloadAll();alert("Restore ပြီးပါပြီ")}catch(e){alert(errText(e))}};
+function backupSerialize(value){
+ if(value&&typeof value.toDate==="function")return value.toDate().toISOString();
+ if(Array.isArray(value))return value.map(backupSerialize);
+ if(value&&typeof value==="object"){const out={};for(const [k,v] of Object.entries(value))out[k]=backupSerialize(v);return out}
+ return value;
+}
+function backupRestoreDates(value,key=""){
+ if(Array.isArray(value))return value.map(v=>backupRestoreDates(v,key));
+ if(value&&typeof value==="object"){const out={};for(const [k,v] of Object.entries(value))out[k]=backupRestoreDates(v,k);return out}
+ if(typeof value==="string"&&/(At|Date|Time)$/.test(key)&&/^\\d{4}-\\d{2}-\\d{2}T/.test(value)){const d=new Date(value);if(!Number.isNaN(d.getTime()))return d}
+ return value;
+}
+$("exportData").onclick=()=>{
+ try{
+  const data={format:"AK-SALE-BACKUP",version:2,exportedAt:new Date().toISOString(),shopId,
+   products:backupSerialize(products),sales:backupSerialize(sales),purchases:backupSerialize(purchases),people:backupSerialize(people),expenses:backupSerialize(expenses),
+   receiptSettings:receiptConfig(),printerProfiles:printerRead()};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");
+  a.href=url;a.download="ak-sale-backup-"+new Date().toISOString().slice(0,10)+".json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1500);
+  status("ဆိုင်ဒေတာ၊ ဘောင်ချာပုံစံနှင့် Printer Profile ပါဝင်သော Backup သိမ်းပြီးပါပြီ။");
+ }catch(e){status("Backup မသိမ်းနိုင်ပါ: "+errText(e))}
+};
+$("restoreData").onclick=async()=>{
+ try{
+  const file=$("importFile").files[0];if(!file)throw Error("Backup ဖိုင်ရွေးပါ");
+  if(file.size>20*1024*1024)throw Error("Backup ဖိုင် 20MB ထက် မကြီးရပါ။");
+  const d=JSON.parse(await file.text());
+  if(!d||typeof d!=="object"||Array.isArray(d))throw Error("Backup ဖိုင်ပုံစံ မမှန်ပါ။");
+  if(d.shopId&&String(d.shopId)!==String(shopId))throw Error("ဤ Backup သည် အခြားဆိုင်အကောင့်မှ ဖြစ်နေသောကြောင့် Restore မလုပ်ပါ။");
+  const keys=["products","sales","purchases","people","expenses"];
+  for(const key of keys)if(d[key]!==undefined&&(!Array.isArray(d[key])||d[key].length>100000))throw Error(key+" စာရင်းပုံစံ မမှန်ပါ။");
+  if(!confirm("Backup ဒေတာကို လက်ရှိဆိုင်စာရင်းထဲသို့ ထည့်သွင်း/အစားထိုးမည်။ ရှိပြီးသား ID များကို Update လုပ်မည်၊ မပါသောအဟောင်းဒေတာများကို မဖျက်ပါ။ ဆက်လုပ်မလား?"))return;
+  let batch=db.batch(),ops=0,restored=0;
+  const flush=async()=>{if(ops){await batch.commit();batch=db.batch();ops=0}};
+  const put=async(ref,data)=>{batch.set(ref,data);ops++;restored++;if(ops>=400)await flush()};
+  for(const key of keys){
+   for(const raw of (d[key]||[])){
+    if(!raw||typeof raw!=="object"||Array.isArray(raw))throw Error(key+" ထဲတွင် မမှန်ကန်သော record ရှိနေသည်။");
+    const x=backupRestoreDates({...raw}),id=String(x.id||db.collection("_ids").doc().id);delete x.id;
+    if(key==="products"){const cost=Number(x.cost||0);delete x.cost;await put(col("products").doc(id),x);await put(col("productCosts").doc(id),{cost})}
+    else if(key==="sales"){const cost=Number(x.cost||0),profit=Number(x.profit||0);delete x.cost;delete x.profit;await put(col("sales").doc(id),x);await put(col("saleCosts").doc(id),{cost,profit})}
+    else await put(col(key).doc(id),x);
+   }
+  }
+  await flush();
+  if(d.receiptSettings&&typeof d.receiptSettings==="object")localStorage.setItem("ak_pos_receipt_settings_"+(shopId||user?.uid||"local"),JSON.stringify(d.receiptSettings));
+  if(Array.isArray(d.printerProfiles))localStorage.setItem(printerKey(),JSON.stringify(d.printerProfiles));
+  receiptLoadForm();printerRender();await reloadAll();
+  alert("Restore ပြီးပါပြီ။ "+restored+" စာရင်းများကို ထည့်သွင်း/Update လုပ်ပြီးပါပြီ။ ရှိပြီးသား အခြားစာရင်းများကို မဖျက်ထားပါ။");
+ }catch(e){alert("Restore မအောင်မြင်ပါ: "+errText(e))}
+};
+
 
 // Barcode / QR camera scanner. APK bundles ZXing locally; website falls back to the public library CDN.
 let akBarcodeStream=null,akBarcodeReader=null,akBarcodeActive=false,akZxingPromise=null;

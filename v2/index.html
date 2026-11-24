@@ -90,9 +90,9 @@ footer{letter-spacing:.5px;color:#d9e2ec}
 <section id="loginPanel" class="card">
 <h2>အကောင့်ဝင်ရန်</h2>
 <div class="notice">Platform Owner သည် သတ်မှတ်ထားသော Google အကောင့် painglin102@gmail.com ဖြင့်သာ ဝင်ပါ။ ဆိုင်ရှင်သည် Owner ပေးထားသော Gmail/Password ဖြင့်ဝင်ပါ။ ဝန်ထမ်းသည် Merchant Code/Password ဖြင့်ဝင်ပါ။</div>
-<label>Login အမျိုးအစား</label><select id="loginType"><option value="shop">ဆိုင်ရှင်</option><option value="owner">Platform Owner · Google</option><option value="staff">ဝန်ထမ်း (Merchant Code)</option></select>
+<label>Login အမျိုးအစား</label><select id="loginType"><option value="shop">ဆိုင်ရှင် · Gmail / Password</option><option value="shopGoogle">ဆိုင်ရှင် · Google Login</option><option value="owner">Platform Owner · Google</option><option value="staff">ဝန်ထမ်း (Merchant Code)</option></select>
 <div class="grid"><div id="emailLoginFields"><label>Gmail</label><input id="email" type="email" autocomplete="username" placeholder="name@gmail.com"></div><div id="staffLoginFields" class="hidden"><label>Merchant Code</label><input id="merchantCode" autocomplete="username" placeholder="ဥပမာ A1B2C3D4E5F6"></div><div id="passwordLoginFields"><label>Password</label><input id="password" type="password" autocomplete="current-password" placeholder="Password"></div></div>
-<div class="row" style="margin-top:12px"><button id="loginBtn">အကောင့်ဝင်မည်</button><button id="ownerGoogleBtn" class="secondary">Google ဖြင့် Platform Owner ဝင်မည်</button><button id="resetBtn" class="secondary">စကားဝှက် ပြန်သတ်မှတ်ရန်</button></div>
+<div class="row" style="margin-top:12px"><button id="loginBtn">အကောင့်ဝင်မည်</button><button id="ownerGoogleBtn" class="secondary">Google ဖြင့် Platform Owner ဝင်မည်</button><button id="shopGoogleBtn" class="secondary hidden">Google ဖြင့် ဆိုင်ရှင်ဝင်မည်</button><button id="resetBtn" class="secondary">စကားဝှက် ပြန်သတ်မှတ်ရန်</button></div>
 <div id="status"></div>
 </section>
 <section id="ownerPanel" class="hidden">
@@ -216,21 +216,68 @@ function friendlyAuthError(e){
 }
 function isPlatformOwner(u=user){return !!u&&String(u.email||"").trim().toLowerCase()===OWNER}
 $("loginType").onchange=()=>{
- const mode=$("loginType").value,staff=mode==="staff",owner=mode==="owner";
+ const mode=$("loginType").value,staff=mode==="staff",owner=mode==="owner",shopGoogle=mode==="shopGoogle";
  $("emailLoginFields").classList.toggle("hidden",staff);
  $("staffLoginFields").classList.toggle("hidden",!staff);
  $("passwordLoginFields").classList.toggle("hidden",false);
 
  $("loginBtn").classList.toggle("hidden",owner);
  $("ownerGoogleBtn").classList.toggle("hidden",!owner);
- $("resetBtn").classList.toggle("hidden",staff||owner);
+ $("shopGoogleBtn").classList.toggle("hidden",!shopGoogle);
+ $("resetBtn").classList.toggle("hidden",staff||owner||shopGoogle);
  $("passwordLoginFields").classList.toggle("hidden",owner);
  $("email").readOnly=owner;
  if(owner)$("email").value=OWNER;
  else if($("email").value.toLowerCase()===OWNER)$("email").value="";
- status(owner?"Platform Owner အတွက် "+OWNER+" Google Login သာ အသုံးပြုပါ။":staff?"Merchant Code နှင့် Password ဖြည့်ပါ။":"ဆိုင်ရှင် Gmail နှင့် Password ဖြည့်ပါ။");
+ status(owner?"Platform Owner အတွက် "+OWNER+" Google Login သာ အသုံးပြုပါ။":shopGoogle?"Owner ဖန်တီးပေးထားသော ဆိုင်ရှင် Gmail ကို Google ဖြင့် အတည်ပြုပြီး ဝင်ပါ။ ပထမဆုံးချိတ်ဆက်ရာတွင် Owner သတ်မှတ်ပေးထားသော Password လိုနိုင်သည်။":staff?"Merchant Code နှင့် Password ဖြည့်ပါ။":"ဆိုင်ရှင် Gmail နှင့် Password ဖြည့်ပါ။");
 };
 $("loginType").onchange();
+$("shopGoogleBtn").onclick=async()=>{
+ const button=$("shopGoogleBtn");
+ try{
+  if(!auth)throw Error("Firebase စနစ် မစတင်ရသေးပါ။");
+  const expected=String($("email").value||"").trim().toLowerCase();
+  if(!expected||expected===OWNER)throw Error("Platform Owner မဟုတ်သော ဆိုင်ရှင် Gmail ကို ထည့်ပါ။");
+  button.disabled=true;button.textContent="ဆိုင်ရှင် Google Login စစ်ဆေးနေသည်...";
+  await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+  let credential=null,signed=null;
+  const cap=window.Capacitor,nativeAuth=cap&&cap.Plugins&&cap.Plugins.FirebaseAuthentication;
+  if(cap&&typeof cap.isNativePlatform==="function"&&cap.isNativePlatform()){
+   if(!nativeAuth||typeof nativeAuth.signInWithGoogle!=="function")throw Error("ဒီ APK တွင် Native Google Login Plugin မပါပါ။");
+   const result=await nativeAuth.signInWithGoogle({skipNativeAuth:true,useCredentialManager:false});
+   const idToken=result&&result.credential&&result.credential.idToken;
+   if(!idToken)throw Error("Google ID Token မရပါ။ Firebase Android SHA-1 / Google Provider ကိုစစ်ပါ။");
+   credential=firebase.auth.GoogleAuthProvider.credential(idToken);
+   try{signed=await auth.signInWithCredential(credential)}catch(e){
+    if(e.code!=="auth/account-exists-with-different-credential")throw e;
+    const password=$("password").value;
+    if(!password)throw Error("ဒီ Gmail ကို အရင်က Password နဲ့ ဖန်တီးထားသည်။ Password ဖြည့်ပြီး Google ချိတ်ဆက်ပါ။");
+    signed=await auth.signInWithEmailAndPassword(expected,password);
+    await signed.user.linkWithCredential(credential);
+   }
+  }else{
+   const provider=new firebase.auth.GoogleAuthProvider();provider.setCustomParameters({prompt:"select_account"});
+   try{signed=await auth.signInWithPopup(provider)}catch(e){
+    if(e.code!=="auth/account-exists-with-different-credential")throw e;
+    credential=firebase.auth.GoogleAuthProvider.credentialFromError(e);
+    const password=$("password").value;
+    if(!password)throw Error("ဒီ Gmail ကို အရင်က Password နဲ့ ဖန်တီးထားသည်။ Password ဖြည့်ပြီး Google ချိတ်ဆက်ပါ။");
+    signed=await auth.signInWithEmailAndPassword(expected,password);
+    await signed.user.linkWithCredential(credential);
+   }
+  }
+  const actual=String(signed&&signed.user&&signed.user.email||"").trim().toLowerCase();
+  if(!signed||!signed.user||actual!==expected||actual===OWNER||signed.user.emailVerified!==true){
+   await auth.signOut();throw Error("Google အတည်ပြုထားသော Gmail သည် ထည့်ထားသော ဆိုင်ရှင် Gmail နှင့် မကိုက်ညီပါ။");
+  }
+  const lic=await db.collection("licenses").doc(signed.user.uid).get();
+  if(!lic.exists||String(lic.data().email||"").trim().toLowerCase()!==actual){
+   await auth.signOut();throw Error("ဒီ Gmail ကို Platform Owner က ဆိုင်ရှင်အကောင့်အဖြစ် ဖန်တီးအတည်ပြုထားခြင်း မရှိပါ။");
+  }
+  status("Google Gmail အတည်ပြုပြီးပါပြီ။ ဆိုင် Dashboard ဖွင့်နေသည်...");
+ }catch(e){status("ဆိုင်ရှင် Google Login မအောင်မြင် ("+(e&&e.code||"")+"): "+friendlyAuthError(e))}
+ finally{button.disabled=false;button.textContent="Google ဖြင့် ဆိုင်ရှင်ဝင်မည်"}
+};
 $("ownerGoogleBtn").onclick=async()=>{
  const button=$("ownerGoogleBtn");
  try{
@@ -360,7 +407,8 @@ async function loadShop(){
   $("ownerControlBtn").classList.remove("hidden");
  }else{
   const lic=await db.collection("licenses").doc(shopId).get();
-  if(!lic.exists||lic.data().status!=="active"||!lic.data().expiresAt||lic.data().expiresAt.toDate()<=new Date())throw Error("ဆိုင်သက်တမ်းကုန်နေပါသည်။ Platform Owner ထံ သက်တမ်းတိုးရန် ဆက်သွယ်ပါ။");
+  if(!lic.exists||String(lic.data().email||"").trim().toLowerCase()!==String(user?.email||"").trim().toLowerCase())throw Error("ဤ Gmail သည် Platform Owner အတည်ပြုထားသော ဆိုင်လိုင်စင်နှင့် မကိုက်ညီပါ။");
+  if(lic.data().status!=="active"||!lic.data().expiresAt||lic.data().expiresAt.toDate()<=new Date())throw Error("ဆိုင်သက်တမ်းကုန်နေပါသည်။ Platform Owner ထံ သက်တမ်းတိုးရန် ဆက်သွယ်ပါ။");
   $("shopTitle").textContent=lic.data().shopName||"ဆိုင် Dashboard";
   $("licenseBadge").textContent="သက်တမ်းကုန်ရက် "+dateText(lic.data().expiresAt);
   $("ownerControlBtn").classList.add("hidden");

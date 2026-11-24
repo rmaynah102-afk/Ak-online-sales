@@ -182,7 +182,7 @@ async function staffList(request,origin) {
     return {uid:d.name.split("/").pop(),name:fields.name?.stringValue||"",role:fields.role?.stringValue||"",
       status:fields.status?.stringValue||"",merchantStaff:fields.merchantStaff?.booleanValue===true};
   }).filter(x=>x.merchantStaff);
-  return json({ok:true,maxStaff:3,members},200,origin);
+  return json({ok:true,maxStaff:2,members},200,origin);
 }
 async function staffRevoke(request,origin) {
   let body;try{body=await request.json()}catch{return json({ok:false,error:"invalid_json"},400,origin)}

@@ -5,6 +5,9 @@ on:
     branches: [ak-sale-v3-review]
     paths:
       - "cloudflare/**"
+      - "v2/index.html"
+      - "firestore.rules"
+      - "scripts/check-v3-ui.mjs"
       - ".github/workflows/ak-sale-v3.5-backend-verification.yml"
   pull_request:
     branches: [ak-sale-v3-review]
@@ -26,5 +29,7 @@ jobs:
           node-version: 22
       - name: Check Worker syntax
         run: node --check cloudflare/worker.js
+      - name: Check AK POS 3.5 browser UI syntax
+        run: node scripts/check-v3-ui.mjs
       - name: Run Worker authorization and provisioning tests
         run: node --test cloudflare/worker.test.mjs

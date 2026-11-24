@@ -5,9 +5,9 @@
 ## ၁။ စတင်အသုံးပြုခြင်း
 1. AK Sale App ကိုဖွင့်ပါ။ အခြေခံ POS ကို အင်တာနက်မရှိဘဲ Offline Local Mode ဖြင့် စမ်းသုံးနိုင်သည်။
 2. Offline Mode တွင် ဒေတာသည် ထိုဖုန်းထဲတွင်သာ သိမ်းဆည်းသည်။ ဖုန်းပျောက်ခြင်း၊ App Data ဖျက်ခြင်း၊ ဖုန်းပြောင်းခြင်းတို့တွင် ဒေတာဆုံးရှုံးနိုင်သဖြင့် Backup ပုံမှန်ထုတ်ပါ။
-3. Cloud Sync နှင့် POS အသုံးပြုခွင့်အတွက် Verified Gmail လိုအပ်သည်။ ပထမဆုံး ဆိုင်အကောင့် ၃၀ ခုကို Free Beta အဖြစ် အခမဲ့ဖွင့်ပေးမည်။ နေရာပြည့်ပါက Subscription လိုအပ်သည်။
-4. Owner အကောင့်ကို Code/Firestore Rules ထဲရှိ သတ်မှတ်ထားသော Verified Gmail ဖြင့်သာ အတည်ပြုသည်။
-5. Free-only ဗားရှင်းတွင် သီးခြားဝန်ထမ်းအကောင့်၊ Merchant Code နှင့် Role-based access ကို ပိတ်ထားသည်။ Owner Gmail Password ကို ဝန်ထမ်းများနှင့် မမျှဝေပါနှင့်။
+3. ဆိုင်ရှင်သည် Platform Owner ဖိတ်ခေါ်ထားသော Verified Google Gmail ဖြင့်သာ ဝင်ရမည်။ Platform capacity ကို Active ဆိုင် ၁၀၀ အထိ ရည်ရွယ်ထားပြီး Live Functions/Rules Deploy နှင့် စမ်းသပ်ပြီးမှ အတည်ပြုမည်။
+4. Platform Owner သည် `painglin102@gmail.com` Verified Google Account ဖြင့်သာ ဝင်ရမည်။
+5. Review source တွင် ဆိုင်တစ်ဆိုင်အတွက် Manager နှင့် Salesperson စုစုပေါင်း ၂ ဦးကို Merchant Code ဖြင့် ဖန်တီးနိုင်သည်။ Live Worker/Functions Deploy နှင့် လက်တွေ့စမ်းသပ်မှု မပြီးမချင်း ဝန်ထမ်းအကောင့်ကို production-ready ဟု မယူဆပါနှင့်။ Owner Google Account ကို ဝန်ထမ်းများနှင့် မမျှဝေပါနှင့်။
 
 ## ၂။ ဆိုင်အချက်အလက်
 ဆိုင်အမည်၊ မြို့၊ မြို့နယ်၊ လိပ်စာ၊ ဖုန်းနှင့် ငွေကြေးယူနစ်ကို ဆိုင်ဆက်တင်တွင် ဖြည့်ပါ။ ဘောင်ချာထုတ်ရာတွင် ထိုအချက်အလက်များကို အသုံးပြုသည်။
@@ -36,7 +36,7 @@
 - Cloud Conflict ပြပါက အဟောင်းဒေတာကို အလိုအလျောက်မဖျက်ပါနှင့်။ Backup ထုတ်ပြီးမှ နှိုင်းယှဉ်ပါ။
 
 ## ၈။ Payment / Subscription
-Free Beta ဆိုင်အကောင့် ၃၀ ခု ပြည့်ပြီးနောက် KBZPay Package များကို အသုံးပြုနိုင်သည်။ Package များမှာ ၁ လ 30,000 ကျပ်၊ ၃ လ 90,000 ကျပ်၊ ၆ လ 180,000 ကျပ်၊ ၁ နှစ် 360,000 ကျပ် ဖြစ်သည်။ ငွေလွှဲပြီး Transaction ID ကို ထည့်ပါ။ Firebase Storage မဖွင့်ထားသဖြင့် Screenshot Upload ကို ယာယီပိတ်ထားသည်။ Owner က KBZPay ထဲတွင် ငွေဝင်မှုကို ကိုယ်တိုင်စစ်ဆေးပြီးမှ Approve လုပ်မည်။
+Subscription သက်တမ်းကို Platform Owner က ကိုယ်တိုင်သတ်မှတ်/တိုးပေးမည်။ App ထဲတွင် KPay/WavePay checkout မပါဝင်ပါ။ Package များမှာ ၁ လ 30,000 ကျပ်၊ ၃ လ 90,000 ကျပ်၊ ၆ လ 180,000 ကျပ်၊ ၁ နှစ် 360,000 ကျပ် ဖြစ်သည်။ ငွေလွှဲပြီး Transaction ID ကို ထည့်ပါ။ Firebase Storage မဖွင့်ထားသဖြင့် Screenshot Upload ကို ယာယီပိတ်ထားသည်။ Owner က KBZPay ထဲတွင် ငွေဝင်မှုကို ကိုယ်တိုင်စစ်ဆေးပြီးမှ Approve လုပ်မည်။
 1. App တွင် ပြထားသော လက်ခံသူအချက်အလက်ကို စစ်ပါ။
 2. KBZPay App မှ ကိုယ်တိုင်ငွေလွှဲပါ။
 3. Transaction ID ကို ထည့်ပြီး တင်ပြပါ။ Screenshot Upload ကို လက်ရှိ Free-only ဗားရှင်းတွင် မရသေးပါ။
@@ -54,7 +54,7 @@ Screenshot တစ်ခုတည်းဖြင့် ငွေလက်ခံ�
 ## ၁၁။ လုံခြုံရေး
 - Gmail Password၊ OTP၊ Firebase Service Account JSON၊ Keystore၊ Signing Password များကို Chat၊ Viber၊ GitHub source ထဲ မတင်ပါနှင့်။
 - Owner Gmail သည် Verified ဖြစ်ရမည်။ Owner အီးမေးလ်ပြောင်းလဲမှုသည် Code၊ Firestore Rules၊ Storage Rules နှင့် Cloud Functions အားလုံးကို တစ်ပြိုင်နက်ညှိပြီးမှ ပြောင်းရမည်။
-- Free-only build တွင် ဆိုင်ရှင်၏ UID အောက်ရှိ Cloud data ကိုသာ အသုံးပြုနိုင်သည်။ ဝန်ထမ်းအကောင့်နှင့် Merchant Code ကို လုံခြုံစွာ အကောင်အထည်မဖော်နိုင်သေးသဖြင့် ပိတ်ထားသည်။
+- Review source တွင် Shop Owner Google Login နှင့် Merchant Code staff model ကို ပြင်ဆင်ထားသည်။ Production deploy နှင့် end-to-end စမ်းသပ်မှု မပြီးသေးပါ။
 - APK build အောင်မြင်ခြင်းသည် ဖုန်းတိုင်းတွင် Login/Cloud/Printer/Payment အလုပ်လုပ်ကြောင်း အာမခံချက်မဟုတ်ပါ။
 
 ## ၁၂။ မဖြစ်မနေ စမ်းသပ်ရန်

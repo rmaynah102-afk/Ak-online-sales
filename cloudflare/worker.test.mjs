@@ -34,7 +34,7 @@ test("provisions a Merchant Code staff account through Firebase Auth REST and at
     if(u.includes("/documents/licenses/"))return new Response(JSON.stringify({fields:{status:{stringValue:"active"},expiresAt:{timestampValue:"2099-01-01T00:00:00.000Z"}}}),{status:200});
     if(u.includes("/documents/shopStaffSlots/"))return new Response(JSON.stringify({error:{status:"NOT_FOUND"}}),{status:404});
     if(u.includes("accounts:signUp"))return new Response(JSON.stringify({localId:"staff-user-uid-123",idToken:"staff-created-id-token"}),{status:200});
-    if(u.includes("accounts:update"))return new Response(JSON.stringify({emailVerified:true}),{status:200});
+    if(u.includes("accounts:update"))return new Response(JSON.stringify({emailVerified:true,providerUserInfo:[{providerId:"google.com"}]}),{status:200});
     if(u.includes("documents:commit"))return new Response(JSON.stringify({writeResults:[{},{}]}),{status:200});
     throw new Error("Unexpected Firebase request: "+u);
   };
@@ -68,7 +68,7 @@ test("rejects legacy employee role when provisioning new Merchant Code staff", a
   const calls=[];
   globalThis.fetch=async(url)=>{
     const u=String(url);calls.push(u);
-    if(u.includes("accounts:lookup"))return new Response(JSON.stringify({users:[{localId:"shop-owner-uid-123",email:"shop@example.com",emailVerified:true}]}),{status:200});
+    if(u.includes("accounts:lookup"))return new Response(JSON.stringify({users:[{localId:"shop-owner-uid-123",email:"shop@example.com",emailVerified:true,providerUserInfo:[{providerId:"google.com"}]}]}),{status:200});
     throw new Error("No Firebase provisioning call should follow invalid role validation");
   };
   try{
@@ -86,7 +86,7 @@ test("refuses Merchant Code staff creation when the shop license is inactive", a
   const calls=[];
   globalThis.fetch=async(url)=>{
     const u=String(url);calls.push(u);
-    if(u.includes("accounts:lookup"))return new Response(JSON.stringify({users:[{localId:"shop-owner-uid-123",email:"shop@example.com",emailVerified:true}]}),{status:200});
+    if(u.includes("accounts:lookup"))return new Response(JSON.stringify({users:[{localId:"shop-owner-uid-123",email:"shop@example.com",emailVerified:true,providerUserInfo:[{providerId:"google.com"}]}]}),{status:200});
     if(u.includes("/documents/licenses/"))return new Response(JSON.stringify({fields:{status:{stringValue:"suspended"},expiresAt:{timestampValue:"2099-01-01T00:00:00.000Z"}}}),{status:200});
     throw new Error("No further Firebase call expected");
   };
@@ -104,7 +104,7 @@ test("enforces the two Merchant Code staff slot maximum before creating another 
   const calls=[];
   globalThis.fetch=async(url,options={})=>{
     const u=String(url);calls.push(u);
-    if(u.includes("accounts:lookup"))return new Response(JSON.stringify({users:[{localId:"shop-owner-uid-123",email:"shop@example.com",emailVerified:true}]}),{status:200});
+    if(u.includes("accounts:lookup"))return new Response(JSON.stringify({users:[{localId:"shop-owner-uid-123",email:"shop@example.com",emailVerified:true,providerUserInfo:[{providerId:"google.com"}]}]}),{status:200});
     if(u.includes("/documents/licenses/"))return new Response(JSON.stringify({fields:{status:{stringValue:"active"},expiresAt:{timestampValue:"2099-01-01T00:00:00.000Z"}}}),{status:200});
     if(u.includes("/documents/shopStaffSlots/"))return new Response(JSON.stringify({name:"existing-slot"}),{status:200});
     if(u.includes("accounts:signUp"))throw new Error("A third staff account must not be created");

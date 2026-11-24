@@ -100,9 +100,9 @@ footer{letter-spacing:.5px;color:#d9e2ec}
 <div class="stats"><div class="stat">လက်ရှိစာမျက်နှာရှိ ဆိုင်<b id="shopCount">0</b></div><div class="stat">Account စနစ်<b>Scalable</b></div></div>
 </div>
 <div class="card"><h2>ဆိုင်ရှင်အကောင့်အသစ် ဖန်တီးရန်</h2>
-<div class="grid"><div><label>ဆိုင်အမည်</label><input id="shopName" placeholder="AK Hardware"></div><div><label>ဆိုင်ရှင် Gmail</label><input id="newEmail" type="email" placeholder="owner@gmail.com"></div><div><label>ယာယီ Password (အနည်းဆုံး ၈ လုံး)</label><input id="newPassword" type="password" autocomplete="new-password"></div><div><label>Package</label><select id="plan"><option value="5-days">၅ ရက် အခမဲ့ Trial — ၀ ကျပ်</option><option value="30-days">၃၀ ရက် — ၃၀,၀၀၀ ကျပ်</option><option value="90-days">၉၀ ရက် — ၉၀,၀၀၀ ကျပ်</option><option value="180-days">၁၈၀ ရက် — ၁၈၀,၀၀၀ ကျပ်</option><option value="365-days">၃၆၅ ရက် — ၃၆၀,၀၀၀ ကျပ်</option></select></div></div>
+<div class="grid"><div><label>ဆိုင်အမည်</label><input id="shopName" placeholder="AK Hardware"></div><div><label>ဆိုင်ရှင် Google Gmail</label><input id="newEmail" type="email" placeholder="owner@gmail.com"></div><div><label>Package</label><select id="plan"><option value="5-days">၅ ရက် အခမဲ့ Trial — ၀ ကျပ်</option><option value="30-days">၃၀ ရက် — ၃၀,၀၀၀ ကျပ်</option><option value="90-days">၉၀ ရက် — ၉၀,၀၀၀ ကျပ်</option><option value="180-days">၁၈၀ ရက် — ၁၈၀,၀၀၀ ကျပ်</option><option value="365-days">၃၆၅ ရက် — ၃၆၀,၀၀၀ ကျပ်</option></select></div></div>
 <div class="row" style="margin-top:10px"><button id="createShopBtn">ဆိုင်ရှင်အကောင့် ဖန်တီးမည်</button></div>
-<p class="muted">အကောင့်ဖန်တီးပြီးနောက် ဆိုင်ရှင်၏ Gmail သို့ Verification Link ပို့မည်။ ငွေလက်ခံခြင်းကို App အပြင်တွင်သာ ဆောင်ရွက်ပါ။</p><div id="ownerStatus" class="muted"></div><button id="verifyOwnerBtn" class="secondary">Owner Gmail Verification Link ပြန်ပို့ရန်</button></div>
+<p class="muted">ဆိုင်ရှင်၏ Google Gmail ကို ဖိတ်ခေါ်စာရင်းသွင်းမည်။ ဆိုင်ရှင်သည် မိမိ Google အကောင့်ဖြင့်သာ Login ဝင်မည်။ Password မဖန်တီးပါ။ ငွေလက်ခံခြင်းကို App အပြင်တွင်သာ ဆောင်ရွက်ပါ။</p><div id="ownerStatus" class="muted"></div></div>
 <div class="card"><h2>ဆိုင်ရှင်စာရင်း / သက်တမ်းထိန်းချုပ်မှု</h2><div class="tablewrap"><table><thead><tr><th>ဆိုင် / Gmail</th><th>Package</th><th>သက်တမ်းကုန်ရက်</th><th>အခြေအနေ</th><th>လုပ်ဆောင်ချက်</th></tr></thead><tbody id="licenseRows"></tbody></table></div><div class="row" style="margin-top:10px"><button id="licensePrev" class="secondary" disabled>ယခင်စာမျက်နှာ</button><span id="licensePageInfo" class="muted">စာရင်းဖတ်နေသည်...</span><button id="licenseNext" class="secondary" disabled>နောက်စာမျက်နှာ</button></div></div>
 </section>
 <section id="shopPanel" class="hidden">
@@ -155,7 +155,7 @@ footer{letter-spacing:.5px;color:#d9e2ec}
 </main><footer><strong>AK POS 3.5</strong> · Professional Shop Management · MMK</footer>
 <script>
 const OWNER="painglin102@gmail.com", GATEWAY="https://ak-sale-backend.painglin102.workers.dev", PROJECT=window.AK_FIREBASE_PUBLIC_CONFIG;
-let auth,db,user,shopId="",staffRole="owner",products=[],sales=[],purchases=[],people=[],expenses=[],editingProduct=null,licenses=[],shopProfile={};
+let auth,db,functions,user,shopId="",staffRole="owner",products=[],sales=[],purchases=[],people=[],expenses=[],editingProduct=null,licenses=[],shopProfile={};
 const $=id=>document.getElementById(id), money=n=>(Number(n)||0).toLocaleString("en-US")+" ကျပ်", dateText=d=>{const x=d?.toDate?d.toDate():new Date(d||Date.now());return isNaN(x)? "-":x.toLocaleDateString("en-GB")};
 function status(msg,where="status"){ $(where).textContent=msg; }
 function show(id){$("loginPanel").classList.toggle("hidden",id!=="loginPanel");$("ownerPanel").classList.toggle("hidden",id!=="ownerPanel");$("shopPanel").classList.toggle("hidden",id!=="shopPanel");}
@@ -163,9 +163,9 @@ async function boot(){
  $("loginBtn").disabled=true;
  if(!PROJECT?.apiKey)throw Error("Firebase config မတွေ့ပါ");
  await new Promise((resolve,reject)=>{const x=document.createElement("script");x.src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js";x.onload=resolve;x.onerror=reject;document.head.appendChild(x)});
- await Promise.all(["firebase-auth-compat.js","firebase-firestore-compat.js"].map(name=>new Promise((resolve,reject)=>{const x=document.createElement("script");x.src="https://www.gstatic.com/firebasejs/10.12.2/"+name;x.onload=resolve;x.onerror=reject;document.head.appendChild(x)})));
+ await Promise.all(["firebase-auth-compat.js","firebase-firestore-compat.js","firebase-functions-compat.js"].map(name=>new Promise((resolve,reject)=>{const x=document.createElement("script");x.src="https://www.gstatic.com/firebasejs/10.12.2/"+name;x.onload=resolve;x.onerror=reject;document.head.appendChild(x)})));
  if(!firebase.apps.length)firebase.initializeApp(PROJECT);
- auth=firebase.auth();db=firebase.firestore();auth.languageCode="my";
+ auth=firebase.auth();db=firebase.firestore();functions=firebase.app().functions("us-central1");auth.languageCode="my";
  await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
  $("loginBtn").disabled=false;$("ownerGoogleBtn").disabled=false;
  auth.onAuthStateChanged(async u=>{
@@ -188,7 +188,7 @@ async function boot(){
     const memberSnap=await db.collection("shopMembers").doc(u.uid).get(),member=memberSnap.data()||{};
     if(!memberSnap.exists||member.merchantStaff!==true||member.status!=="active"||!member.shopId){await auth.signOut();show("loginPanel");status("ဝန်ထမ်းအကောင့် ပိတ်ထားခြင်း သို့မဟုတ် မမှန်ကန်ပါ။");return}
     shopId=member.shopId;staffRole=member.role||"employee";await loadShop()
-   }else{shopId=u.uid;staffRole="owner";await loadShop()}
+   }else{await ownerCallable("claimOwnerProvisioning",{},u);shopId=u.uid;staffRole="owner";await loadShop()}
   }catch(e){
    const email=(u.email||"").toLowerCase();
    if(email===OWNER){
@@ -232,52 +232,7 @@ $("loginType").onchange=()=>{
  status(owner?"Platform Owner အတွက် "+OWNER+" Google Login သာ အသုံးပြုပါ။":shopGoogle?"Owner ဖန်တီးပေးထားသော ဆိုင်ရှင် Gmail ကို Google ဖြင့် အတည်ပြုပြီး ဝင်ပါ။ ပထမဆုံးချိတ်ဆက်ရာတွင် Owner သတ်မှတ်ပေးထားသော Password လိုနိုင်သည်။":staff?"Merchant Code နှင့် Password ဖြည့်ပါ။":"ဆိုင်ရှင် Gmail နှင့် Password ဖြည့်ပါ။");
 };
 $("loginType").onchange();
-$("shopGoogleBtn").onclick=async()=>{
- const button=$("shopGoogleBtn");
- try{
-  if(!auth)throw Error("Firebase စနစ် မစတင်ရသေးပါ။");
-  const expected=String($("email").value||"").trim().toLowerCase();
-  if(!expected||expected===OWNER)throw Error("Platform Owner မဟုတ်သော ဆိုင်ရှင် Gmail ကို ထည့်ပါ။");
-  button.disabled=true;button.textContent="ဆိုင်ရှင် Google Login စစ်ဆေးနေသည်...";
-  await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-  let credential=null,signed=null;
-  const cap=window.Capacitor,nativeAuth=cap&&cap.Plugins&&cap.Plugins.FirebaseAuthentication;
-  if(cap&&typeof cap.isNativePlatform==="function"&&cap.isNativePlatform()){
-   if(!nativeAuth||typeof nativeAuth.signInWithGoogle!=="function")throw Error("ဒီ APK တွင် Native Google Login Plugin မပါပါ။");
-   const result=await nativeAuth.signInWithGoogle({skipNativeAuth:true,useCredentialManager:false});
-   const idToken=result&&result.credential&&result.credential.idToken;
-   if(!idToken)throw Error("Google ID Token မရပါ။ Firebase Android SHA-1 / Google Provider ကိုစစ်ပါ။");
-   credential=firebase.auth.GoogleAuthProvider.credential(idToken);
-   try{signed=await auth.signInWithCredential(credential)}catch(e){
-    if(e.code!=="auth/account-exists-with-different-credential")throw e;
-    const password=$("password").value;
-    if(!password)throw Error("ဒီ Gmail ကို အရင်က Password နဲ့ ဖန်တီးထားသည်။ Password ဖြည့်ပြီး Google ချိတ်ဆက်ပါ။");
-    signed=await auth.signInWithEmailAndPassword(expected,password);
-    await signed.user.linkWithCredential(credential);
-   }
-  }else{
-   const provider=new firebase.auth.GoogleAuthProvider();provider.setCustomParameters({prompt:"select_account"});
-   try{signed=await auth.signInWithPopup(provider)}catch(e){
-    if(e.code!=="auth/account-exists-with-different-credential")throw e;
-    credential=firebase.auth.GoogleAuthProvider.credentialFromError(e);
-    const password=$("password").value;
-    if(!password)throw Error("ဒီ Gmail ကို အရင်က Password နဲ့ ဖန်တီးထားသည်။ Password ဖြည့်ပြီး Google ချိတ်ဆက်ပါ။");
-    signed=await auth.signInWithEmailAndPassword(expected,password);
-    await signed.user.linkWithCredential(credential);
-   }
-  }
-  const actual=String(signed&&signed.user&&signed.user.email||"").trim().toLowerCase();
-  if(!signed||!signed.user||actual!==expected||actual===OWNER||signed.user.emailVerified!==true){
-   await auth.signOut();throw Error("Google အတည်ပြုထားသော Gmail သည် ထည့်ထားသော ဆိုင်ရှင် Gmail နှင့် မကိုက်ညီပါ။");
-  }
-  const lic=await db.collection("licenses").doc(signed.user.uid).get();
-  if(!lic.exists||String(lic.data().email||"").trim().toLowerCase()!==actual){
-   await auth.signOut();throw Error("ဒီ Gmail ကို Platform Owner က ဆိုင်ရှင်အကောင့်အဖြစ် ဖန်တီးအတည်ပြုထားခြင်း မရှိပါ။");
-  }
-  status("Google Gmail အတည်ပြုပြီးပါပြီ။ ဆိုင် Dashboard ဖွင့်နေသည်...");
- }catch(e){status("ဆိုင်ရှင် Google Login မအောင်မြင် ("+(e&&e.code||"")+"): "+friendlyAuthError(e))}
- finally{button.disabled=false;button.textContent="Google ဖြင့် ဆိုင်ရှင်ဝင်မည်"}
-};
+$("shopGoogleBtn").onclick=async()=>{const button=$("shopGoogleBtn");try{if(!auth)throw Error("Firebase စနစ် မစတင်ရသေးပါ။");button.disabled=true;button.textContent="Google အကောင့်ရွေးချယ်နေသည်...";await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);let signed;const cap=window.Capacitor,nativeAuth=cap&&cap.Plugins&&cap.Plugins.FirebaseAuthentication;if(cap&&typeof cap.isNativePlatform==="function"&&cap.isNativePlatform()){if(!nativeAuth||typeof nativeAuth.signInWithGoogle!=="function")throw Error("ဒီ APK တွင် Native Google Login Plugin မပါပါ။");const result=await nativeAuth.signInWithGoogle({skipNativeAuth:true,useCredentialManager:false});const idToken=result&&result.credential&&result.credential.idToken;if(!idToken)throw Error("Google ID Token မရပါ။ Android SHA-1 / Google Provider ကိုစစ်ရန်လိုသည်။");signed=await auth.signInWithCredential(firebase.auth.GoogleAuthProvider.credential(idToken));}else{const provider=new firebase.auth.GoogleAuthProvider();provider.setCustomParameters({prompt:"select_account"});signed=await auth.signInWithPopup(provider);}const actual=String(signed.user.email||"").trim().toLowerCase();if(!actual||actual===OWNER||signed.user.emailVerified!==true){await auth.signOut();throw Error("ဆိုင်ရှင်အတွက် Verified Google Gmail ကိုရွေးချယ်ပါ။");}status("Google Login အောင်မြင်သည်။ Owner ဖိတ်ခေါ်ချက်နှင့် ချိတ်ဆက်နေသည်...");}catch(e){status("ဆိုင်ရှင် Google Login မအောင်မြင် ("+(e&&e.code||"")+"): "+friendlyAuthError(e));}finally{button.disabled=false;button.textContent="Google ဖြင့် ဆိုင်ရှင်ဝင်မည်"}};
 $("ownerGoogleBtn").onclick=async()=>{
  const button=$("ownerGoogleBtn");
  try{
@@ -345,9 +300,9 @@ $("verifyOwnerBtn").onclick=async()=>{try{const current=auth.currentUser;if(!cur
 $("logoutOwner").onclick=$("logoutShop").onclick=()=>auth.signOut();
 function planDays(p){return Number(p.split("-")[0])}
 async function ownerToken(){const t=await user.getIdToken(true);return t}
-async function ownerCallable(name,data={}){const token=await ownerToken();const response=await fetch(GATEWAY+"/call/"+name,{method:"POST",headers:{"Authorization":"Bearer "+token,"Content-Type":"application/json"},body:JSON.stringify({data})});const body=await response.json().catch(()=>({}));if(!response.ok||body.error)throw Error(body.error?.message||body.message||"Owner server action မအောင်မြင်ပါ");return body.result||body}
+async function ownerCallable(name,data={},authUser=user){if(!authUser)throw Error("Google Login လိုအပ်သည်။");const callable=functions.httpsCallable(name);try{const response=await callable(data);return response.data||{}}catch(e){const code=String(e&&e.code||"").replace(/^functions\\//,"");const message=e&&e.message||"Firebase Server လုပ်ဆောင်ချက် မအောင်မြင်ပါ";throw Error(code?code+": "+message:message)}}
 // Account count is intentionally not capped in the client. License ownership and expiry remain enforced by Firestore rules.
-$("createShopBtn").onclick=async()=>{const out=$("ownerStatus");try{const email=$("newEmail").value.trim().toLowerCase(),password=$("newPassword").value,shopName=$("shopName").value.trim(),plan=$("plan").value;if(!shopName||!email||password.length<8)throw Error("ဆိုင်အမည်၊ Gmail နှင့် အနည်းဆုံး ၈ လုံး Password ဖြည့်ပါ");if(email===OWNER)throw Error("Owner Gmail ကို ဆိုင်ရှင်အဖြစ် မသုံးနိုင်ပါ");$("createShopBtn").disabled=true;out.textContent="အကောင့်ဖန်တီးနေသည်...";const token=await ownerToken();const resp=await fetch(GATEWAY+"/owner/provision",{method:"POST",headers:{"Authorization":"Bearer "+token,"Content-Type":"application/json"},body:JSON.stringify({email,password,apiKey:PROJECT.apiKey})});const data=await resp.json();if(!resp.ok||!data.ok){if(data.error==="shop_owner_email_exists_password_mismatch")throw Error("ဤ Gmail အကောင့်ရှိပြီးသားဖြစ်ပြီး ထည့်ထားသော Password မကိုက်ညီပါ။ မှန်ကန်သော Password ကိုအသုံးပြုပါ သို့မဟုတ် အခြား Gmail ဖြင့် ဖန်တီးပါ။");throw Error(data.error||"Account creation failed")}const lic=db.collection("licenses").doc(data.uid),existingLicense=await lic.get();if(existingLicense.exists)throw Error("ဤ Gmail အတွက် ဆိုင်လိုင်စင် ရှိပြီးသားဖြစ်သည်။ ဆိုင်ရှင်စာရင်းမှ သက်တမ်းတိုးပါ။");const days=planDays(plan),expires=new Date(Date.now()+days*86400000);await db.runTransaction(async tx=>{const [licenseSnap,counterSnap]=await Promise.all([tx.get(lic),tx.get(db.collection("platformMeta").doc("shopCapacity"))]);if(licenseSnap.exists)throw Error("ဤ Gmail အတွက် ဆိုင်လိုင်စင် ရှိပြီးသားဖြစ်သည်။ ဆိုင်ရှင်စာရင်းမှ သက်တမ်းတိုးပါ။");const count=counterSnap.exists?Number(counterSnap.data().activeShopCount):0;if(!Number.isInteger(count)||count<0)throw Error("ဆိုင်အရေအတွက် Counter မမှန်ပါ။");if(count>=100)throw Error("ဆိုင်အကောင့် အများဆုံး ၁၀၀ ခု ပြည့်နေပါပြီ။");tx.set(lic,{uid:data.uid,email,shopName,status:"active",plan,expiresAt:firebase.firestore.Timestamp.fromDate(expires),createdAt:firebase.firestore.FieldValue.serverTimestamp()});const counter=db.collection("platformMeta").doc("shopCapacity");tx.set(counter,{activeShopCount:count+1,lastIssuedUid:data.uid,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});});out.textContent=data.emailVerified?"ရှိပြီးသား Gmail အကောင့်ကို ပြန်ချိတ်ပြီး ဆိုင်လိုင်စင်ဖန်တီးပြီးပါပြီ။ သက်တမ်းကုန်ရက်: "+dateText(expires):"အကောင့်ဖန်တီးပြီးပါပြီ။ "+email+" သို့ Verification Link "+(data.verificationEmailSent?"ပို့ထားသည်။":"မပို့နိုင်ပါ။ "+(data.verificationError||""))+" သက်တမ်းကုန်ရက်: "+dateText(expires);$("newPassword").value="";await loadLicenses();}catch(e){out.textContent="မအောင်မြင်: "+errText(e)}finally{$("createShopBtn").disabled=false}};
+$("createShopBtn").onclick=async()=>{const out=$("ownerStatus");try{const email=$("newEmail").value.trim().toLowerCase(),shopName=$("shopName").value.trim(),plan=$("plan").value;if(!shopName||shopName.length<2||!email)throw Error("ဆိုင်အမည်နှင့် ဆိုင်ရှင်၏ Google Gmail ဖြည့်ပါ");if(email===OWNER)throw Error("Platform Owner Gmail ကို ဆိုင်ရှင်အဖြစ် မသုံးနိုင်ပါ");$("createShopBtn").disabled=true;out.textContent="Google အကောင့်ဖိတ်ခေါ်စာရင်း သွင်းနေသည်...";const days=planDays(plan),expires=new Date(Date.now()+days*86400000),expiresOn=expires.getFullYear()+"-"+String(expires.getMonth()+1).padStart(2,"0")+"-"+String(expires.getDate()).padStart(2,"0");const data=await ownerCallable("createShopOwnerAccount",{email,shopName,industryType:"hardware",expiresOn});out.textContent="Google အကောင့်ဖိတ်ခေါ်စာရင်းသွင်းပြီးပါပြီ။ "+email+" သည် AK Sale တွင် ဆိုင်ရှင် Google Login ဖြင့် ဝင်ရောက်နိုင်ပါပြီ။ သက်တမ်းကုန်ရက်: "+dateText(expires);await loadLicenses();}catch(e){out.textContent="မအောင်မြင်: "+errText(e)}finally{$("createShopBtn").disabled=false}};
 let licensePageCursor=null,licensePageStartCursor=null,licensePageStack=[],licensePageSize=50,licensePageNumber=1;
 async function loadLicenses(reset=true){
  if(reset){licensePageCursor=null;licensePageStack=[];licensePageNumber=1}

@@ -95,6 +95,15 @@ Build one all-inclusive AK Sale Professional product for Android phones/tablets 
 - Added a Firestore Rules regression case for owner-only shop profile changes and manager denial. The Firestore rules test file is syntax-checked in CI; the emulator-based rules suite has not yet been executed in this workflow.
 - Added a CI workflow that checks the embedded v2 JavaScript, Worker syntax, Firebase Functions syntax, Firestore test syntax, and all 9 Cloudflare Worker tests. The latest run for this branch passed.
 
+## Latest permission and first-login corrections
+
+- First login for a newly issued shop-owner account now initializes that shop's profile from its owner-issued license name. The shop owner can then add address, phone, and receipt settings; these remain tenant-scoped.
+- Salesperson accounts cannot edit stock or product fields in the UI, and Firestore Rules now deny product updates from cashier/salesperson accounts. Managers and shop owners retain product maintenance rights.
+- Cloudflare provisioning rejects the retired `employee` role for new Merchant Code accounts; supported staff roles are manager and cashier/salesperson. The three Merchant Code slots remain enforced server-side.
+- Owner login is restricted to the verified Google provider for the fixed Platform Owner account. Standard email/password login cannot elevate to Platform Owner.
+- The 5-day trial plan is included in the license create/update allow-list and has a Firestore Rules regression test.
+- Wi-Fi RAW TCP printer support is present in the native Android bridge, defaulting to port 9100; Bluetooth Classic ESC/POS and Android system printing are also represented in the code. Physical printer compatibility is still unverified.
+
 ## Explicitly not certified yet
 
 No claim is made that the full app, Owner account lifecycle, Firebase deployment, cross-device sync, physical printers, sensors, or Version 3.5.0 APK are complete. Those require the remaining source changes, automated test results, deployment verification, and device testing.

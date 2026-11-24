@@ -458,8 +458,26 @@ describe('AK Sale Firestore security baseline', function () {
     await assertSucceeds(setDoc(doc(db, 'shops', 'shop-a', 'pos', 'products', 'records', 'p1'), { name: 'Hammer' }));
     await assertSucceeds(setDoc(doc(db, 'shops', 'shop-a', 'pos', 'expenses', 'records', 'e1'), { amount: 500 }));
     await assertSucceeds(getDoc(doc(db, 'shops', 'shop-a', 'pos', 'settings', 'records', 'profile')));
+    await assertFails(setDoc(doc(db, 'shops', 'shop-a', 'pos', 'settings', 'records', 'profile'), { shopName: 'Unauthorized rename' }));
     await assertFails(getDoc(doc(db, 'shops', 'shop-b', 'pos', 'products', 'records', 'p1')));
     await assertFails(setDoc(doc(db, 'shops', 'shop-a', 'pos', 'settings', 'records', 'main'), { currency: 'MMK' }));
+  });
+
+
+  it('allows only the shop owner to create or update the shop identity profile', async () => {
+    await seedLicense('shop-a');
+    const owner = testEnv.authenticatedContext('shop-a', {
+      email: 'shop-a@example.com', email_verified: true,
+    }).firestore();
+    const profile = doc(owner, 'shops', 'shop-a', 'pos', 'settings', 'records', 'profile');
+    await assertSucceeds(setDoc(profile, {
+      shopName: 'AK Hardware & Electrical',
+      address: 'Mandalay',
+      phone: '09-000000000',
+    }));
+    await assertSucceeds(setDoc(profile, {
+      shopName: 'AK Hardware & Electrical 2',
+    }, { merge: true }));
   });
 
   it('denies POS collection access to staff after shop license expiry', async () => {

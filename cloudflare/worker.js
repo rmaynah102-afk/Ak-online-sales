@@ -1,4 +1,4 @@
-// AK Sale 3.5: shop provisioning, staff controls, and desktop workspace, spreadsheet grid, and receipt profile are syntax-checked in CI.
+// AK Sale 3.5: shop provisioning, staff controls, and desktop workspace, spreadsheet grid, and receipt profile are syntax-checked with Firestore authorization tests in CI.
 // AK Sale Cloudflare gateway for AK Sale POS 2.0 and the legacy Firebase callable backend.
 // Owner provisioning authorization and email validation hardened: 2026-11-13.
 // This is a restricted proxy, NOT a replacement for Firebase Functions.

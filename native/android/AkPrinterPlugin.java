@@ -207,6 +207,29 @@ public class AkPrinterPlugin extends Plugin {
     }
 
     @PluginMethod
+    public void shareText(PluginCall call) {
+        String body = call.getString("text", "");
+        String title = call.getString("title", "AK Sale");
+        if (body == null || body.trim().isEmpty()) {
+            call.reject("မျှဝေရန် စာသားမရှိပါ။");
+            return;
+        }
+        Intent sendIntent = new Intent(Intent.ACTION_SEND);
+        sendIntent.setType("text/plain");
+        sendIntent.putExtra(Intent.EXTRA_TEXT, body);
+        sendIntent.putExtra(Intent.EXTRA_SUBJECT, title == null ? "AK Sale" : title);
+        Intent chooser = Intent.createChooser(sendIntent, "Viber / အခြား App သို့ မျှဝေရန်");
+        getActivity().runOnUiThread(() -> {
+            try {
+                getActivity().startActivity(chooser);
+                call.resolve();
+            } catch (Exception e) {
+                call.reject("မျှဝေမရပါ: " + e.getMessage());
+            }
+        });
+    }
+
+@PluginMethod
     public void shareReceiptImage(PluginCall call) {
         String encoded = call.getString("data", "");
         String requestedName = call.getString("fileName", "AK-Receipt.png");

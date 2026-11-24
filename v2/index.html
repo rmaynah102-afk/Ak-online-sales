@@ -378,7 +378,7 @@ function backupSerialize(value){
 function backupRestoreDates(value,key=""){
  if(Array.isArray(value))return value.map(v=>backupRestoreDates(v,key));
  if(value&&typeof value==="object"){const out={};for(const [k,v] of Object.entries(value))out[k]=backupRestoreDates(v,k);return out}
- if(typeof value==="string"&&/(At|Date|Time)$/.test(key)&&/^\\d{4}-\\d{2}-\\d{2}T/.test(value)){const d=new Date(value);if(!Number.isNaN(d.getTime()))return d}
+ if(typeof value==="string"&&/(At|Date|Time)$/.test(key)&&/^\d{4}-\d{2}-\d{2}T/.test(value)){const d=new Date(value);if(!Number.isNaN(d.getTime()))return d}
  return value;
 }
 function validateBackupData(d){

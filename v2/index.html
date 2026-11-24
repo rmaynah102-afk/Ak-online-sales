@@ -703,7 +703,7 @@ function startCloudAutoBackup(){
 $("exportData").onclick=()=>{
  try{
   const data={format:"AK-SALE-BACKUP",version:2,exportedAt:new Date().toISOString(),shopId,
-   products:backupSerialize(products),sales:backupSerialize(sales),purchases:backupSerialize(purchases),people:backupSerialize(people),expenses:backupSerialize(expenses),
+   products:backupSerialize(products),sales:backupSerialize(sales),purchases:backupSerialize(purchases),people:backupSerialize(people),expenses:backupSerialize(expenses),payments:backupSerialize(payments),
    receiptSettings:receiptConfig(),printerProfiles:printerRead()};
   const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");
   a.href=url;a.download="ak-sale-backup-"+new Date().toISOString().slice(0,10)+".json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1500);

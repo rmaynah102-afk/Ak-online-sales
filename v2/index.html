@@ -2,7 +2,7 @@
 <html lang="my">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#102c55"><meta name="description" content="AK Sale POS 2.0 — Hardware & Electrical shop management">
+<meta name="theme-color" content="#071a34"><meta name="description" content="AK Sale POS 2.0 — Hardware & Electrical shop management">
 <link rel="manifest" href="./manifest.webmanifest"><title>AK Sale POS 2.0</title>
 <script src="../firebase-config.js"></script>
 <style>
@@ -25,6 +25,28 @@ button.secondary{background:#e9f0fa;color:#23456e;border:1px solid #d3dfef}butto
 footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
 @media(max-width:520px){main{padding:8px}header h1{font-size:17px}.card{padding:12px}.row>*{flex-basis:100%}}
 @media print{header,.tabs,.no-print,button{display:none!important}body{background:white}main{padding:0}.card{box-shadow:none;border:0}}
+
+/* AK Professional metallic navy/silver skin — CSS only; authentication logic untouched */
+:root{--navy:#071a34;--blue:#244c78;--gold:#b9c4d0;--bg:#071a34;--line:#c3ccd6;--ink:#14263c;--muted:#596b80;--green:#176548;--red:#a72e3b}
+body{background:radial-gradient(ellipse at 50% -12%,#dce3ea 0%,#8292a5 12%,#18365b 34%,#071a34 72%);background-attachment:fixed;color:#eaf0f6}
+header{background:linear-gradient(180deg,#e6ebf0 0%,#aab6c3 7%,#29496e 24%,#102b4d 58%,#07172d 100%);border-bottom:2px solid #d6dde5;box-shadow:0 5px 18px #020b18a8}
+header small{color:#e1e8ef}
+.brand img{border-color:#dce3ea;box-shadow:0 0 0 2px #71849a}
+main{color:#eaf0f6}
+.card{background:linear-gradient(180deg,#f2f5f8 0%,#fff 24%,#edf1f5 100%);border:1px solid #c4ced9;box-shadow:0 8px 22px #020b1845,inset 0 1px 0 #fff}
+h2{color:#102b4c}
+label{color:#42566e}
+input,select,textarea{border-color:#aebbc9;background:#fff;color:#14263c}
+button{background:linear-gradient(180deg,#607b98 0%,#17385e 48%,#0b2341 100%);border:1px solid #8e9eaf;color:#fff;box-shadow:inset 0 1px 0 #ffffff55}
+button.secondary{background:linear-gradient(180deg,#fff 0%,#dce3ea 100%);color:#17324f;border:1px solid #aebbc9}
+.tabs button.active{background:linear-gradient(180deg,#607b98,#102b4d);border-color:#d5dde6}
+.stat{background:linear-gradient(180deg,#f7f9fb,#e7edf3);border-color:#c4ced9}
+th{background:linear-gradient(180deg,#e8edf2,#cbd5df);color:#183451}
+#status,footer{color:#d2dce7}
+.notice{background:linear-gradient(180deg,#f2f5f8,#e0e7ee);color:#263e59;border:1px solid #bdc9d5}
+.pill{background:#e2eee9;color:#14583f}
+@media print{body{background:white;color:#14263c}#status,footer{color:#596b80}}
+
 </style>
 </head>
 <body>

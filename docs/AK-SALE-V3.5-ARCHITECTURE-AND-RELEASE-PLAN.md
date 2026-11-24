@@ -83,7 +83,7 @@ Build one all-inclusive AK Sale Professional product for Android phones/tablets 
 
 - Cloudflare Merchant Code staff slot lookup is now limited to three slots, matching the existing Firestore Rules and Firebase Functions capacity.
 - A regression test verifies that a fourth staff account is rejected before Firebase Auth account creation.
-- A dedicated GitHub Actions workflow was added to run Cloudflare Worker syntax and tests on this review branch. Its run result still needs to be observed.
+- A dedicated GitHub Actions workflow now runs Cloudflare Worker syntax and tests on this review branch. Run 45444322741 completed successfully after correcting the test fixture to require a verified Platform Owner.
 
 ## Explicitly not certified yet
 

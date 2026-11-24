@@ -2,7 +2,7 @@
 <html lang="my">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#071a34"><meta name="description" content="AK POS 3.5 Professional — Multi-device shop management">
+<meta name="theme-color" content="#080b09"><meta name="description" content="AK POS 3.5 Professional — Multi-device shop management">
 <link rel="manifest" href="./manifest.webmanifest"><title>AK POS 3.5 Professional</title>
 <script src="../firebase-config.js"></script>
 <style>
@@ -82,6 +82,140 @@ footer{letter-spacing:.5px;color:#d9e2ec}
 #tab-products tbody tr:hover{background:#e2edf8}
 #tab-products .cell-edit{min-width:82px;padding:7px 6px;font-variant-numeric:tabular-nums}
 @media(max-width:900px){#tab-products .tablewrap{max-height:60vh}}
+
+/* AK POS 3.5 — Black / Green / Red Professional UI */
+:root{
+ --ak-bg:#080b09;--ak-panel:#111713;--ak-panel-2:#17211b;--ak-border:#34463a;
+ --ak-green:#20b46a;--ak-green-dark:#11633d;--ak-green-soft:#dff5e9;
+ --ak-red:#df4650;--ak-red-dark:#a92d38;--ak-ink:#f0f5f1;--ak-muted:#b4c1b8;
+ --ak-field:#f8fbf9;--ak-field-ink:#14231a;--ak-line:#c8d5cc;
+}
+html{color-scheme:dark}
+body{
+ background:radial-gradient(ellipse at 50% -18%,#1d3828 0%,#101a13 28%,#080b09 70%) fixed!important;
+ color:var(--ak-ink)!important;
+}
+header{
+ background:linear-gradient(115deg,#080d0a 0%,#101b14 62%,#153522 100%)!important;
+ color:#f3faf5!important;border-bottom:2px solid var(--ak-green)!important;
+ box-shadow:0 5px 22px #000b!important;
+}
+header h1{color:#f5fff8!important}
+header small{color:#c4d8ca!important}
+.brand img{border:1px solid #4f9b70!important;box-shadow:0 0 0 2px #1b3827,0 4px 12px #0008}
+main{color:var(--ak-ink)!important}
+.card{
+ background:linear-gradient(155deg,#18211b 0%,#111713 65%,#0e1410 100%)!important;
+ color:var(--ak-ink)!important;border:1px solid var(--ak-border)!important;
+ border-radius:14px!important;box-shadow:0 9px 26px #0007,inset 0 1px #ffffff09!important;
+}
+h2,h3{color:#f1faf3!important}
+label{color:#c3d2c8!important}
+input,select,textarea{
+ background:var(--ak-field)!important;color:var(--ak-field-ink)!important;
+ border:1px solid #8da596!important;border-radius:8px!important;
+}
+input::placeholder,textarea::placeholder{color:#687a6e!important;opacity:1}
+input:focus,select:focus,textarea:focus{
+ outline:2px solid #36c77e!important;outline-offset:1px;border-color:#16874d!important;
+}
+button{
+ background:linear-gradient(180deg,#27bd72 0%,#16834d 100%)!important;
+ color:#07150d!important;border:1px solid #55d28f!important;
+ border-radius:9px!important;font-weight:750!important;
+ box-shadow:0 3px 9px #0005,inset 0 1px #ffffff38!important;
+}
+button:hover{filter:brightness(1.08)}
+button:active{transform:translateY(1px)}
+button.secondary{
+ background:linear-gradient(180deg,#29352d 0%,#1b261f 100%)!important;
+ color:#edf6ef!important;border:1px solid #52675a!important;
+ box-shadow:inset 0 1px #ffffff12!important;
+}
+button.danger{background:linear-gradient(180deg,#e6535c,#b72f3a)!important;color:#fff!important;border-color:#f07b82!important}
+button:disabled{opacity:.48!important;filter:grayscale(.35)}
+.tabs{gap:7px}
+#tabs{
+ background:linear-gradient(180deg,#111a14,#0c120e)!important;
+ border:1px solid #304638!important;box-shadow:0 8px 24px #0008!important;
+}
+#tabs button{
+ text-align:left;background:linear-gradient(180deg,#202c24,#172019)!important;
+ color:#dce9df!important;border:1px solid #34483a!important;
+ min-height:43px;padding:10px 12px!important;
+}
+#tabs button:before{
+ width:7px;height:7px;background:#28b66e!important;
+ box-shadow:0 0 0 3px #1c3a28;margin-right:11px!important;
+}
+#tabs button.active{
+ background:linear-gradient(100deg,#17663f,#10452c)!important;
+ color:#fff!important;border:1px solid #47cb83!important;
+ box-shadow:inset 3px 0 #8df0b5,0 3px 10px #0006!important;
+}
+#tabs button[data-tab="sales"]:before,#tabs button[data-tab="purchases"]:before{background:#35c87c!important}
+#tabs button[data-tab="backup"]:before{background:#e2ad45!important}
+#tabs button[data-tab="ads"]:before{background:#68a8f0!important}
+#tabs button[data-tab="shopprofile"]:before{background:#b4c4b9!important}
+.stats .stat,.stat{
+ background:linear-gradient(145deg,#1c2a20,#121a15)!important;
+ border:1px solid #3b5744!important;color:#dce9df!important;
+ border-radius:11px!important;
+}
+.stat b{color:#55d58e!important}
+th{background:linear-gradient(180deg,#294332,#1b2d21)!important;color:#f0fff4!important}
+td{color:#e4eee7!important;border-bottom:1px solid #34463a!important}
+table{background:#111813!important}
+tbody tr:nth-child(even){background:#172019!important}
+tbody tr:hover{background:#203328!important}
+#tab-products tbody tr:nth-child(even){background:#172019!important}
+#tab-products tbody tr:hover{background:#203b2b!important}
+#tab-products thead th{background:#294332!important;color:#f2fff5!important;box-shadow:0 1px 0 #587362!important}
+#shopPanel .tablewrap{border-color:#344b3b!important}
+#shopPanel .cell-edit{background:#f8fbf9!important;color:#14231a!important;border-color:#91a797!important}
+#status,.muted{color:var(--ak-muted)!important}
+.notice{
+ background:linear-gradient(120deg,#1b3022,#142219)!important;color:#e0f2e5!important;
+ border:1px solid #3c6d4d!important;
+}
+.pill{background:#174a30!important;color:#b9f3cf!important;border:1px solid #2e8756}
+#licenseRows button,#staffRows button{margin:2px}
+#receiptSettings{
+ background:linear-gradient(155deg,#f8fbf9,#e8f0eb)!important;
+ color:#14231a!important;border:1px solid #aebfb3!important;
+}
+#receiptSettings h3,#receiptSettings label,#receiptSettings .muted{color:#263e30!important}
+#receiptSettings input,#receiptSettings select{background:#fff!important;color:#14231a!important;border-color:#aebfb3!important}
+#receiptSettings button.secondary{background:#e6eee8!important;color:#183524!important;border-color:#9daf9f!important}
+#receiptSettingsStatus{color:#31533c!important}
+#tab-ads canvas{background:#fff!important;border:2px solid #4b6a55!important}
+#cloudBackupStatus{color:#c9dfd0!important}
+footer{color:#b8c9bd!important}
+#shopPanel>.card:first-child .stats .stat{min-height:76px}
+@media(max-width:900px){
+ #tabs{background:#101812!important}
+ #tabs button{flex:1 1 138px;text-align:left}
+}
+@media(max-width:520px){
+ header{padding:10px 12px!important}
+ .brand img{width:42px;height:42px}
+ header h1{font-size:16px!important}
+ #tabs button{flex:1 1 calc(50% - 6px);font-size:12px!important;padding:9px 7px!important}
+ .card{border-radius:11px!important}
+ button{min-height:42px}
+}
+@media print{
+ html{color-scheme:light}
+ body{background:#fff!important;color:#111!important}
+ header,footer,#tabs,.no-print,button{display:none!important}
+ .card{background:#fff!important;color:#111!important;border:0!important;box-shadow:none!important}
+ h2,h3,label,.muted,td,th{color:#111!important}
+ table,tbody tr,tbody tr:nth-child(even){background:#fff!important;color:#111!important}
+ th,td{border-bottom:1px solid #aaa!important}
+ #receiptSettings{background:#fff!important}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
 </style>
 </head>
 <body>

@@ -55,7 +55,7 @@ th{background:linear-gradient(180deg,#e8edf2,#cbd5df);color:#183451}
 <main>
 <section id="loginPanel" class="card">
 <h2>အကောင့်ဝင်ရန်</h2>
-<div class="notice">Platform Owner သည် မိမိသတ်မှတ်ထားသော Gmail/Password သို့မဟုတ် Google Login ဖြင့်ဝင်ပါ။ ဆိုင်ရှင်သည် Owner ပေးထားသော Gmail/Password ဖြင့်ဝင်ပါ။ ဝန်ထမ်းသည် Merchant Code/Password ဖြင့်ဝင်ပါ။</div>
+<div class="notice">Platform Owner သည် သတ်မှတ်ထားသော Google အကောင့် painglin102@gmail.com ဖြင့်သာ ဝင်ပါ။ ဆိုင်ရှင်သည် Owner ပေးထားသော Gmail/Password ဖြင့်ဝင်ပါ။ ဝန်ထမ်းသည် Merchant Code/Password ဖြင့်ဝင်ပါ။</div>
 <label>Login အမျိုးအစား</label><select id="loginType"><option value="shop">ဆိုင်ရှင်</option><option value="owner">Platform Owner · Google</option><option value="staff">ဝန်ထမ်း (Merchant Code)</option></select>
 <div class="grid"><div id="emailLoginFields"><label>Gmail</label><input id="email" type="email" autocomplete="username" placeholder="name@gmail.com"></div><div id="staffLoginFields" class="hidden"><label>Merchant Code</label><input id="merchantCode" autocomplete="username" placeholder="ဥပမာ A1B2C3D4E5F6"></div><div id="passwordLoginFields"><label>Password</label><input id="password" type="password" autocomplete="current-password" placeholder="Password"></div></div>
 <div class="row" style="margin-top:12px"><button id="loginBtn">အကောင့်ဝင်မည်</button><button id="ownerGoogleBtn" class="secondary">Google ဖြင့် Platform Owner ဝင်မည်</button><button id="resetBtn" class="secondary">စကားဝှက် ပြန်သတ်မှတ်ရန်</button></div>
@@ -75,7 +75,7 @@ th{background:linear-gradient(180deg,#e8edf2,#cbd5df);color:#183451}
 <div class="card"><div class="row"><div style="flex:2"><h2 id="shopTitle">ဆိုင် Dashboard</h2><span class="pill" id="licenseBadge">Active</span></div><button id="ownerControlBtn" class="secondary hidden">Owner Control Center</button><button id="logoutShop" class="secondary">Logout</button></div>
 <div class="stats"><div class="stat">ကုန်ပစ္စည်း<b id="productCount">0</b></div><div class="stat">ယနေ့အရောင်း<b id="todaySales">0 ကျပ်</b></div><div class="stat">လက်ကျန်တန်ဖိုး<b id="stockValue">0 ကျပ်</b></div><div class="stat">ကုန်နည်း<b id="lowStock">0</b></div></div></div>
 <nav class="tabs no-print" id="tabs"><button data-tab="products" class="active">ကုန်ပစ္စည်း</button><button data-tab="sales">အရောင်း</button><button data-tab="purchases">အဝယ်</button><button data-tab="people">ဖောက်သည်/ပေးသွင်းသူ</button><button data-tab="expenses">အသုံးစရိတ်</button><button data-tab="reports">စာရင်းချုပ်</button><button data-tab="printer">Printer</button><button data-tab="ads">ကြော်ငြာ</button><button data-tab="backup">Backup</button></nav>
-<section id="staffManagement" class="card hidden"><h2>ဝန်ထမ်းအကောင့် စီမံခန့်ခွဲမှု</h2><p class="muted">ဝန်ထမ်းအတွက် ကိုယ်ပိုင် Gmail မလိုပါ။ Merchant Code နှင့် Password ဖြင့် ဝင်နိုင်သည်။ ဝန်ထမ်း ၁၀၀ ဦးအထိ ဖန်တီးနိုင်သည်။ Code ကို တစ်ကြိမ်သာ ပြသမည်။</p><div class="grid"><div><label>ဝန်ထမ်းအမည်</label><input id="staffName" placeholder="ဝန်ထမ်းအမည်"></div><div><label>ရာထူး</label><select id="staffRole"><option value="cashier">ငွေကိုင်</option><option value="manager">မန်နေဂျာ</option><option value="employee">ပစ္စည်းကြည့်ရှုသူ</option></select></div><div><label>Password (အနည်းဆုံး ၈ လုံး)</label><input id="staffPassword" type="password" minlength="8"></div></div><div class="row" style="margin-top:10px"><button id="createStaffBtn">Merchant Code ဖန်တီးမည်</button><button id="refreshStaffBtn" class="secondary">စာရင်းပြန်ဖတ်မည်</button></div><div id="staffStatus" class="muted"></div><div class="tablewrap"><table><thead><tr><th>အမည်</th><th>ရာထူး</th><th>အခြေအနေ</th><th></th></tr></thead><tbody id="staffRows"></tbody></table></div></section><section id="tab-products" class="card">
+<section id="staffManagement" class="card hidden"><h2>ဝန်ထမ်းအကောင့် စီမံခန့်ခွဲမှု</h2><p class="muted">ဝန်ထမ်းအတွက် ကိုယ်ပိုင် Gmail မလိုပါ။ Merchant Code နှင့် Password ဖြင့် ဝင်နိုင်သည်။ ဝန်ထမ်းအကောင့် ၃ ခုအထိ ဖန်တီးနိုင်သည်။ Code ကို တစ်ကြိမ်သာ ပြသမည်။</p><div class="grid"><div><label>ဝန်ထမ်းအမည်</label><input id="staffName" placeholder="ဝန်ထမ်းအမည်"></div><div><label>ရာထူး</label><select id="staffRole"><option value="cashier">ငွေကိုင်</option><option value="manager">မန်နေဂျာ</option><option value="employee">ပစ္စည်းကြည့်ရှုသူ</option></select></div><div><label>Password (အနည်းဆုံး ၈ လုံး)</label><input id="staffPassword" type="password" minlength="8"></div></div><div class="row" style="margin-top:10px"><button id="createStaffBtn">Merchant Code ဖန်တီးမည်</button><button id="refreshStaffBtn" class="secondary">စာရင်းပြန်ဖတ်မည်</button></div><div id="staffStatus" class="muted"></div><div class="tablewrap"><table><thead><tr><th>အမည်</th><th>ရာထူး</th><th>အခြေအနေ</th><th></th></tr></thead><tbody id="staffRows"></tbody></table></div></section><section id="tab-products" class="card">
 <h2>ကုန်ပစ္စည်းစာရင်း</h2><div class="grid no-print" style="margin-bottom:10px"><div><label>ပစ္စည်းအမည် / SKU / Barcode ရှာရန်</label><input id="productSearch" type="search" placeholder="အမည် သို့မဟုတ် Barcode ရိုက်ရှာပါ"></div><div><label>တစ်မျက်နှာပြလမည့်အရေအတွက်</label><select id="productPageSize"><option value="25">25</option><option value="50" selected>50</option><option value="100">100</option></select></div></div><div class="row no-print" style="justify-content:space-between"><span id="productPageInfo" class="muted">စာရင်းပြင်ဆင်နေသည်...</span><div><button type="button" class="secondary" id="productPrev">ရှေ့</button> <button type="button" class="secondary" id="productNext">နောက်</button></div></div><div id="productForm"><div class="grid"><div><label>ပစ္စည်းအမည်</label><input id="pName"></div><div><label>SKU / Barcode</label><input id="pSku"><button type="button" class="secondary" id="scanProductBtn">ကင်မရာဖြင့် ဖတ်ရန်</button></div><div><label>အမျိုးအစား</label><select id="pCategory"><option>ကုန်မာ</option><option>လျှပ်စစ်</option></select></div><div><label>ဝယ်ဈေး</label><input id="pCost" type="number" min="0"></div><div><label>လက်လီဈေး</label><input id="pRetail" type="number" min="0"></div><div><label>လက်ကားဈေး</label><input id="pWholesale" type="number" min="0"></div><div><label>လက်ကျန်အရေအတွက်</label><input id="pStock" type="number" min="0"></div><div><label>ကုန်နည်းသတိပေးအဆင့်</label><input id="pAlert" type="number" min="0" value="5"></div></div>
 <div class="row" style="margin-top:10px"><button id="saveProduct">ပစ္စည်းသိမ်းမည်</button><button id="clearProduct" class="secondary">ရှင်းမည်</button></div></div>
 <div class="tablewrap"><table><thead><tr><th>ပစ္စည်း</th><th>အမျိုးအစား</th><th>လက်ကျန်</th><th>လက်လီ</th><th>လက်ကား</th><th>ဝယ်ဈေး</th><th></th></tr></thead><tbody id="productRows"></tbody></table></div>
@@ -137,7 +137,8 @@ async function boot(){
   user=u;if(!u){show("loginPanel");$("userBadge").textContent="";return}
   try{
    const email=(u.email||"").toLowerCase();
-   // Platform Owner is the fixed, password-authenticated control account; do not block Owner login on email verification.
+   // Platform Owner သည် Google Provider နှင့် Verified Gmail ဖြင့်သာ ဝင်ခွင့်ရှိသည်။
+   if(email===OWNER && (!u.emailVerified || !(u.providerData||[]).some(p=>p.providerId==="google.com"))){await auth.signOut();show("loginPanel");status("Platform Owner အတွက် Verified Google Login သာ ခွင့်ပြုထားသည်။");return}
    if(!u.emailVerified && email!==OWNER){await auth.signOut();show("loginPanel");status("အကောင့်အတည်ပြုမှု မပြီးသေးပါ။ Gmail Inbox/Spam မှ Verification Link ကိုအရင်ဖွင့်ပါ။");return}
    if(email===OWNER){
     await u.reload();
@@ -185,12 +186,13 @@ $("loginType").onchange=()=>{
  $("staffLoginFields").classList.toggle("hidden",!staff);
  $("passwordLoginFields").classList.toggle("hidden",false);
 
- $("loginBtn").classList.toggle("hidden",false);
- $("resetBtn").classList.toggle("hidden",staff);
+ $("loginBtn").classList.toggle("hidden",owner);
+ $("ownerGoogleBtn").classList.toggle("hidden",!owner);
+ $("resetBtn").classList.toggle("hidden",staff||owner);
  $("email").readOnly=owner;
  if(owner)$("email").value=OWNER;
  else if($("email").value.toLowerCase()===OWNER)$("email").value="";
- status(owner?"Platform Owner သည် "+OWNER+" Gmail နှင့် Password ဖြင့် ဝင်နိုင်သည်။ မရပါက Google Login ကို အသုံးပြုပါ။":staff?"Merchant Code နှင့် Password ဖြည့်ပါ။":"ဆိုင်ရှင် Gmail နှင့် Password ဖြည့်ပါ။");
+ status(owner?"Platform Owner အတွက် "+OWNER+" Google Login သာ အသုံးပြုပါ။":staff?"Merchant Code နှင့် Password ဖြည့်ပါ။":"ဆိုင်ရှင် Gmail နှင့် Password ဖြည့်ပါ။");
 };
 $("ownerGoogleBtn").onclick=async()=>{
  const button=$("ownerGoogleBtn");
@@ -236,6 +238,7 @@ $("ownerControlBtn").onclick=async()=>{try{show("ownerPanel");$("userBadge").tex
 $("loginType").onchange();
 $("loginBtn").onclick=async()=>{
  try{
+  if($("loginType").value==="owner")throw Error("Platform Owner သည် Google Login ဖြင့်သာ ဝင်နိုင်သည်။");
   status("Login စစ်ဆေးနေသည်...");
   const password=$("password").value;
   if($("loginType").value==="staff"){

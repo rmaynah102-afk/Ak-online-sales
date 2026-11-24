@@ -434,7 +434,7 @@ service cloud.firestore {
         && request.resource.data.uid == userId
         && request.resource.data.status == 'active'
         && request.resource.data.expiresAt is timestamp
-        && request.resource.data.plan in ['30-days','90-days','180-days','365-days']
+        && request.resource.data.plan in ['5-days','30-days','90-days','180-days','365-days']
         && exists(/databases/$(database)/documents/platformMeta/shopCapacity)
         && get(/databases/$(database)/documents/platformMeta/shopCapacity).data.activeShopCount is int
         && get(/databases/$(database)/documents/platformMeta/shopCapacity).data.activeShopCount < 100
@@ -446,7 +446,7 @@ service cloud.firestore {
         && request.resource.data.uid == userId
         && request.resource.data.status in ['active','suspended']
         && request.resource.data.expiresAt is timestamp
-        && request.resource.data.plan in ['30-days','90-days','180-days','365-days'];
+        && request.resource.data.plan in ['5-days','30-days','90-days','180-days','365-days'];
       allow delete: if false;
     }
 

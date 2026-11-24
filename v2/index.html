@@ -299,7 +299,7 @@ function applyRoleUI(){
  const manager=staffRole==="owner"||staffRole==="manager",cashier=staffRole==="cashier";
  $("staffManagement").classList.toggle("hidden",staffRole!=="owner"||isPlatformOwner());
  $("productForm").classList.toggle("hidden",!manager);
- const allowed={products:true,sales:manager||cashier,purchases:manager,people:manager||cashier,expenses:manager,reports:manager,printer:manager||cashier,ads:manager,backup:staffRole==="owner"};
+ const allowed={products:true,sales:manager||cashier,purchases:manager,people:manager||cashier,expenses:manager,reports:manager,printer:manager||cashier,ads:manager,backup:staffRole==="owner",shopprofile:staffRole==="owner"};
  for(const [tab,ok] of Object.entries(allowed)){const b=document.querySelector('#tabs button[data-tab="'+tab+'"]');if(b)b.classList.toggle("hidden",!ok);const panel=$("tab-"+tab);if(panel)panel.classList.toggle("hidden",!ok||tab!=="products")}
  document.querySelectorAll("#tabs button").forEach(b=>{if(!b.classList.contains("hidden"))b.classList.toggle("active",b.dataset.tab==="products")});
  ["saveSale","savePurchase","savePerson","saveExpense"].forEach(id=>{const b=$(id);if(b)b.disabled=(id==="saveSale"?! (manager||cashier):id==="savePurchase"||id==="saveExpense"?!manager:!(manager||cashier))});

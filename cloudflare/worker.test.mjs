@@ -192,3 +192,27 @@ test("refuses Merchant Code staff creation when the shop license is inactive", a
     assert.equal(calls.length,2);
   }finally{globalThis.fetch=originalFetch}
 });
+
+
+test("enforces the three Merchant Code staff slot maximum before creating another Firebase account", async () => {
+  const originalFetch=globalThis.fetch;
+  const calls=[];
+  globalThis.fetch=async(url,options={})=>{
+    const u=String(url);calls.push(u);
+    if(u.includes("accounts:lookup"))return new Response(JSON.stringify({users:[{localId:"shop-owner-uid-123",email:"shop@example.com",emailVerified:true}]}),{status:200});
+    if(u.includes("/documents/licenses/"))return new Response(JSON.stringify({fields:{status:{stringValue:"active"},expiresAt:{timestampValue:"2099-01-01T00:00:00.000Z"}}}),{status:200});
+    if(u.includes("/documents/shopStaffSlots/"))return new Response(JSON.stringify({name:"existing-slot"}),{status:200});
+    if(u.includes("accounts:signUp"))throw new Error("A fourth staff account must not be created");
+    throw new Error("Unexpected Firebase request: "+u);
+  };
+  try{
+    const response=await worker.fetch(staffRequest("/staff/provision",{
+      apiKey:"test-api-key",name:"Fourth Staff",role:"cashier",password:"strong-pass-123"
+    }),{});
+    const body=await response.json();
+    assert.equal(response.status,409);
+    assert.equal(body.error,"staff_limit_3_reached");
+    assert.equal(calls.filter(x=>x.includes("/documents/shopStaffSlots/")).length,3);
+    assert.equal(calls.some(x=>x.includes("accounts:signUp")),false);
+  }finally{globalThis.fetch=originalFetch}
+});

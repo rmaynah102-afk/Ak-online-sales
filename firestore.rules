@@ -264,7 +264,7 @@ service cloud.firestore {
         && !exists(/databases/$(database)/documents/shopInvites/$(code))
         && (!exists(/databases/$(database)/documents/shopStaffSlots/$(request.auth.uid + '_1'))
           || !exists(/databases/$(database)/documents/shopStaffSlots/$(request.auth.uid + '_2'))
-          || !exists(/databases/$(database)/documents/shopStaffSlots/$(request.auth.uid + '_3')));
+);
       allow update: if request.auth != null
         && resource.data.status == 'open'
         && resource.data.expiresAt is timestamp
@@ -284,7 +284,7 @@ service cloud.firestore {
     match /shopStaffSlots/{slotId} {
       allow read: if request.auth != null
         && ((resource.data != null && resource.data.uid == request.auth.uid)
-          || (slotId in [request.auth.uid + '_1', request.auth.uid + '_2', request.auth.uid + '_3']
+          || (slotId in [request.auth.uid + '_1', request.auth.uid + '_2']
             && activeShopLicense(request.auth.uid)));
       allow create: if (
         request.auth != null
@@ -292,10 +292,10 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly(['shopId','uid','slot','createdAt','inviteCode'])
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.shopId is string
-        && request.resource.data.slot in [1,2,3]
+        && request.resource.data.slot in [1,2]
         && ((request.resource.data.slot == 1 && slotId == request.resource.data.shopId + '_1')
           || (request.resource.data.slot == 2 && slotId == request.resource.data.shopId + '_2')
-          || (request.resource.data.slot == 3 && slotId == request.resource.data.shopId + '_3'))
+)
         && request.resource.data.createdAt == request.time
         && activeShopLicense(request.resource.data.shopId)
         && request.resource.data.inviteCode is string
@@ -318,7 +318,7 @@ service cloud.firestore {
         && request.resource.data.slot in [1,2,3]
         && ((request.resource.data.slot == 1 && slotId == request.auth.uid + '_1')
           || (request.resource.data.slot == 2 && slotId == request.auth.uid + '_2')
-          || (request.resource.data.slot == 3 && slotId == request.auth.uid + '_3'))
+)
         && request.resource.data.merchantStaff == true
         && request.resource.data.createdAt is timestamp
         && request.resource.data.createdAt <= request.time

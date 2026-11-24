@@ -1,0 +1,44 @@
+name: AK Sale 3.5 UI and backend checks
+
+on:
+  push:
+    branches: [ak-sale-v3-review]
+    paths:
+      - "v2/**"
+      - "cloudflare/**"
+      - "functions/**"
+      - "firestore.rules"
+      - ".github/workflows/ak-sale-v3.5-ui-ci.yml"
+      - ".github/scripts/check-v2-inline.mjs"
+  pull_request:
+    branches: [ak-sale-v3-review]
+    paths:
+      - "v2/**"
+      - "cloudflare/**"
+      - "functions/**"
+      - "firestore.rules"
+      - ".github/workflows/ak-sale-v3.5-ui-ci.yml"
+      - ".github/scripts/check-v2-inline.mjs"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  syntax-and-worker-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check v2 inline JavaScript syntax
+        run: |
+          node .github/scripts/check-v2-inline.mjs
+          node --check /tmp/ak-pos-v2-inline.js
+      - name: Check Cloudflare Worker syntax
+        run: node --check cloudflare/worker.js
+      - name: Run Cloudflare Worker tests
+        run: node --test cloudflare/worker.test.mjs
+      - name: Check Firebase Functions syntax
+        run: node --check functions/index.js

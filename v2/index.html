@@ -217,15 +217,15 @@ function friendlyAuthError(e){
 function isPlatformOwner(u=user){return !!u&&String(u.email||"").trim().toLowerCase()===OWNER}
 $("loginType").onchange=()=>{
  const mode=$("loginType").value,staff=mode==="staff",owner=mode==="owner",shopGoogle=mode==="shopGoogle";
- $("emailLoginFields").classList.toggle("hidden",staff);
+ $("emailLoginFields").classList.toggle("hidden",staff||shopGoogle);
  $("staffLoginFields").classList.toggle("hidden",!staff);
  $("passwordLoginFields").classList.toggle("hidden",false);
 
- $("loginBtn").classList.toggle("hidden",owner);
+ $("loginBtn").classList.toggle("hidden",owner||shopGoogle);
  $("ownerGoogleBtn").classList.toggle("hidden",!owner);
  $("shopGoogleBtn").classList.toggle("hidden",!shopGoogle);
  $("resetBtn").classList.toggle("hidden",staff||owner||shopGoogle);
- $("passwordLoginFields").classList.toggle("hidden",owner);
+ $("passwordLoginFields").classList.toggle("hidden",owner||shopGoogle);
  $("email").readOnly=owner;
  if(owner)$("email").value=OWNER;
  else if($("email").value.toLowerCase()===OWNER)$("email").value="";

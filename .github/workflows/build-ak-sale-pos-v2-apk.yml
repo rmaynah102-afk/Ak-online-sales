@@ -59,7 +59,7 @@ jobs:
           cat > capacitor.config.json <<'JSON'
           {
             "appId": "com.ak.hardware.sales",
-            "appName": "AK Sale POS 2.1.318",
+            "appName": "AK Sale POS 3.5.0",
             "webDir": "www",
             "bundledWebRuntime": false,
             "server": { "androidScheme": "https" },
@@ -82,7 +82,7 @@ jobs:
           if(!scripts.length)throw new Error('No inline JavaScript found');
           scripts.forEach(([, , code],i)=>new vm.Script(code,{filename:'v2-inline-'+(i+1)}));
           if(!html.includes('id="ownerGoogleBtn"')||!html.includes('nativeAuth.signInWithGoogle({skipNativeAuth:true,useCredentialManager:false})')||!html.includes('GoogleAuthProvider.credential(idToken)')) throw new Error('Native Google Platform Owner login bridge is missing');
-          if(!html.includes('function isPlatformOwner')||!html.includes('AK Hardware & Electrical · Owner POS')||!html.includes('ownerControlBtn')) throw new Error('Separate Owner POS and Control Center routing is missing');
+          if(!html.includes('function isPlatformOwner')||!html.includes('shopProfile.shopName||\"AK POS\"')||!html.includes('ownerControlBtn')||!html.includes('function switchPosTab(tab)')||!html.includes('id="tab-shopprofile"')) throw new Error('Separate Owner POS and Control Center routing is missing');
           if(!html.includes('async function akStartBarcodeScanner')||!html.includes('window.akPrintRawToDefault')||!html.includes('shareReceiptImage')||!html.includes('shareText')||!html.includes('id="adCanvas"')||!html.includes('id="exportCsv"')||!html.includes('id="exportExcel"')||!html.includes('function exportExcelWorkbook')||!html.includes('function saveInlineProductField')) throw new Error('Barcode, native printer, social sharing, Excel workbook or inline product editing modules are missing');
           const config=JSON.parse(fs.readFileSync('capacitor.config.json','utf8'));
           if(config.appId!=='com.ak.hardware.sales'||config.plugins?.FirebaseAuthentication?.providers?.includes('google.com')!==true) throw new Error('Capacitor Android package or Google provider config is invalid');
@@ -132,7 +132,7 @@ jobs:
           const fs=require('fs');
           const run=Number(process.env.GITHUB_RUN_NUMBER||1);
           const versionCode=1000000+run;
-          const versionName='2.1.318';
+          const versionName='3.5.0';
           const p='android/app/build.gradle';
           let g=fs.readFileSync(p,'utf8');
           if(!/versionCode\s+\d+/.test(g)||!/versionName\s+"[^"]+"/.test(g)) throw new Error('Android version fields not found');

@@ -140,6 +140,7 @@ async function verifyShopOwner(request, body, origin) {
   const payload = await response.json().catch(()=>({}));
   const user = payload.users && payload.users[0];
   if (!response.ok || !user || user.emailVerified !== true || !user.localId ||
+      !Array.isArray(user.providerUserInfo) || !user.providerUserInfo.some(p => p.providerId === "google.com") ||
       !String(user.email||"").includes("@") || String(user.email).toLowerCase() === "painglin102@gmail.com") {
     return { response: json({ok:false,error:"verified_shop_owner_required"},403,origin) };
   }

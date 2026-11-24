@@ -151,7 +151,7 @@ test("provisions a Merchant Code staff account through Firebase Auth REST and at
   };
   try{
     const response=await worker.fetch(staffRequest("/staff/provision",{
-      apiKey:"test-api-key",name:"Cashier One",role:"cashier",password:"strong-pass-123"
+      apiKey:"test-api-key",name:"Cashier One",role:"cashier"
     }),{});
     const body=await response.json();
     assert.equal(response.status,200);
@@ -161,6 +161,7 @@ test("provisions a Merchant Code staff account through Firebase Auth REST and at
     assert.equal(body.slot,1);
     const signUp= calls.find(x=>x.url.includes("accounts:signUp"));
     assert.equal(JSON.parse(signUp.options.body).email,"staff."+body.code.toLowerCase()+"@akstaff.app");
+    assert.equal(JSON.parse(signUp.options.body).password,body.code.toLowerCase());
     const update= calls.find(x=>x.url.includes("accounts:update"));
     assert.equal(JSON.parse(update.options.body).emailVerified,true);
     const commit=calls.find(x=>x.url.includes("documents:commit"));
@@ -209,7 +210,7 @@ test("refuses Merchant Code staff creation when the shop license is inactive", a
 });
 
 
-test("enforces the three Merchant Code staff slot maximum before creating another Firebase account", async () => {
+test("enforces the two Merchant Code staff slot maximum before creating another Firebase account", async () => {
   const originalFetch=globalThis.fetch;
   const calls=[];
   globalThis.fetch=async(url,options={})=>{
@@ -222,12 +223,12 @@ test("enforces the three Merchant Code staff slot maximum before creating anothe
   };
   try{
     const response=await worker.fetch(staffRequest("/staff/provision",{
-      apiKey:"test-api-key",name:"Fourth Staff",role:"cashier",password:"strong-pass-123"
+      apiKey:"test-api-key",name:"Third Staff",role:"cashier"
     }),{});
     const body=await response.json();
     assert.equal(response.status,409);
-    assert.equal(body.error,"staff_limit_3_reached");
-    assert.equal(calls.filter(x=>x.includes("/documents/shopStaffSlots/")).length,3);
+    assert.equal(body.error,"staff_limit_2_reached");
+    assert.equal(calls.filter(x=>x.includes("/documents/shopStaffSlots/")).length,2);
     assert.equal(calls.some(x=>x.includes("accounts:signUp")),false);
   }finally{globalThis.fetch=originalFetch}
 });

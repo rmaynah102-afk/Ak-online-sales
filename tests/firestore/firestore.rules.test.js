@@ -72,6 +72,70 @@ describe('AK Sale Firestore security baseline', function () {
     await assertFails(getDoc(doc(db, 'shopMembers', 'another-user')));
   });
 
+  it('allows an active shop owner to create and read a private cloud backup, but not overwrite or cross-read', async () => {
+    await seedLicense('shop-a');
+    await seedLicense('shop-b');
+    const owner = testEnv.authenticatedContext('shop-a', {
+      email: 'shop-a@example.com', email_verified: true,
+    }).firestore();
+    const backup = doc(owner, 'users', 'shop-a', 'backups', 'auto-123');
+    await assertSucceeds(setDoc(backup, {
+      createdBy: 'shop-a',
+      createdAt: serverTimestamp(),
+      sizeBytes: 120,
+      data: { format: 'AK-SALE-BACKUP', version: 2, shopId: 'shop-a', products: [] },
+    }));
+    await assertSucceeds(getDoc(backup));
+    await assertFails(setDoc(backup, {
+      createdBy: 'shop-a', createdAt: serverTimestamp(), sizeBytes: 121,
+      data: { format: 'AK-SALE-BACKUP', version: 2, shopId: 'shop-a', products: [] },
+    }, { merge: true }));
+    await assertFails(getDoc(doc(owner, 'users', 'shop-b', 'backups', 'auto-123')));
+  });
+
+  it('rejects oversized and forged cloud backups', async () => {
+    await seedLicense('shop-a');
+    const owner = testEnv.authenticatedContext('shop-a', {
+      email: 'shop-a@example.com', email_verified: true,
+    }).firestore();
+    await assertFails(setDoc(doc(owner, 'users', 'shop-a', 'backups', 'too-large'), {
+      createdBy: 'shop-a', createdAt: serverTimestamp(), sizeBytes: 700001,
+      data: { format: 'AK-SALE-BACKUP', version: 2, shopId: 'shop-a' },
+    }));
+    await assertFails(setDoc(doc(owner, 'users', 'shop-a', 'backups', 'forged'), {
+      createdBy: 'shop-b', createdAt: serverTimestamp(), sizeBytes: 100,
+      data: { format: 'AK-SALE-BACKUP', version: 2, shopId: 'shop-a' },
+    }));
+  });
+
+  it('retains cloud backup records after expiry and restores access after owner renewal', async () => {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), 'licenses', 'shop-a'), {
+        uid: 'shop-a', status: 'active',
+        expiresAt: Timestamp.fromMillis(Date.now() - 60_000), plan: '30-days',
+      });
+      await setDoc(doc(context.firestore(), 'users', 'shop-a', 'backups', 'auto-123'), {
+        createdBy: 'shop-a', createdAt: Timestamp.now(), sizeBytes: 100,
+        data: { format: 'AK-SALE-BACKUP', version: 2, shopId: 'shop-a', products: [{ id: 'p1' }] },
+      });
+    });
+    const owner = testEnv.authenticatedContext('shop-a', {
+      email: 'shop-a@example.com', email_verified: true,
+    }).firestore();
+    const backup = doc(owner, 'users', 'shop-a', 'backups', 'auto-123');
+    await assertFails(getDoc(backup));
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), 'licenses', 'shop-a'), {
+        uid: 'shop-a', status: 'active', expiresAt: futureTimestamp(30), plan: '30-days',
+      });
+    });
+    const restoredOwner = testEnv.authenticatedContext('shop-a', {
+      email: 'shop-a@example.com', email_verified: true,
+    }).firestore();
+    const snapshot = await assertSucceeds(getDoc(doc(restoredOwner, 'users', 'shop-a', 'backups', 'auto-123')));
+    assert.equal(snapshot.data().data.products[0].id, 'p1');
+  });
+
   it('denies anonymous access to private POS data', async () => {
     await seedPrivateData('shop-a');
     const db = testEnv.unauthenticatedContext().firestore();

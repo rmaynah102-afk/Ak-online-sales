@@ -90,7 +90,7 @@ test("reuses an existing shop-owner account when the Owner-supplied password aut
   } finally { globalThis.fetch = originalFetch; }
 });
 
-test("sends password recovery for an existing account when the entered password does not match", async () => {
+test("refuses an existing shop email when the platform owner supplied the wrong password without sending a reset", async () => {
   const originalFetch = globalThis.fetch;
   const calls = [];
   globalThis.fetch = async (url, options) => {
@@ -98,20 +98,16 @@ test("sends password recovery for an existing account when the entered password 
     if (u.includes("accounts:lookup")) return new Response(JSON.stringify({ users: [{ email: "painglin102@gmail.com", emailVerified: true }] }), { status: 200 });
     if (u.includes("accounts:signUp")) return new Response(JSON.stringify({ error: { message: "EMAIL_EXISTS" } }), { status: 400 });
     if (u.includes("accounts:signInWithPassword")) return new Response(JSON.stringify({ error: { message: "INVALID_LOGIN_CREDENTIALS" } }), { status: 400 });
-    if (u.includes("accounts:sendOobCode")) return new Response(JSON.stringify({ email: "shop@example.com" }), { status: 200 });
-    throw new Error("Unexpected Firebase request: " + u);
+    throw new Error("Password reset must not be sent");
   };
   try {
     const response = await worker.fetch(request({ email: "shop@example.com", password: "wrong-pass-123", apiKey: "test-api-key" }), {});
     const body = await response.json();
     assert.equal(response.status, 409);
-    assert.equal(body.error, "shop_owner_email_exists_password_reset_sent");
-    assert.equal(body.passwordResetSent, true);
-    const reset = calls.find(x => x.url.includes("accounts:sendOobCode"));
-    assert.equal(JSON.parse(reset.options.body).requestType, "PASSWORD_RESET");
+    assert.equal(body.error, "shop_owner_email_exists_password_mismatch");
+    assert.equal(calls.some(x => x.url.includes("accounts:sendOobCode")), false);
   } finally { globalThis.fetch = originalFetch; }
 });
-
 test("rejects an unverified or non-Platform Owner caller", async () => {
   const originalFetch = globalThis.fetch;
   let calls = 0;

@@ -509,8 +509,7 @@ async function runCloudAutoBackup(){
  finally{akCloudBackupBusy=false}
 }
 function startCloudAutoBackup(){
- if(staffRole!=="owner"||!user||!shopId)return;
- if(akCloudBackupTimer)clearInterval(akCloudBackupTimer);
+ if(staffRole!=="owner"||!user||!shopId||akCloudBackupTimer)return;
  runCloudAutoBackup();
  akCloudBackupTimer=setInterval(runCloudAutoBackup,6*60*60*1000);
 }

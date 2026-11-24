@@ -195,25 +195,24 @@ async function cleanupStaffAuth(apiKey,idToken) {
 async function staffProvision(request,origin) {
   let body;try{body=await request.json()}catch{return json({ok:false,error:"invalid_json"},400,origin)}
   const owner=await verifyShopOwner(request,body,origin);if(owner.response)return owner.response;
-  const name=String(body.name||"").trim().slice(0,80),role=String(body.role||"cashier").toLowerCase(),password=String(body.password||"");
+  const name=String(body.name||"").trim().slice(0,80),role=String(body.role||"cashier").toLowerCase();
   if(name.length<2)return json({ok:false,error:"staff_name_required"},400,origin);
   if(!["manager","cashier"].includes(role))return json({ok:false,error:"invalid_staff_role"},400,origin);
-  if(password.length<8||password.length>128)return json({ok:false,error:"password_must_be_8_to_128_characters"},400,origin);
   if(!await verifyActiveShopLicense(owner.shopId,owner.idToken))return json({ok:false,error:"active_shop_license_required"},403,origin);
-  const slots=await Promise.all(Array.from({length:3},(_,i)=>i+1).map(async slot=>{
+  const slots=await Promise.all(Array.from({length:2},(_,i)=>i+1).map(async slot=>{
     const result=await firestoreGet("shopStaffSlots/"+encodeURIComponent(owner.shopId+"_"+slot),owner.idToken);
     if(result.response.status===404)return slot;
     if(!result.response.ok)throw new Error("staff_slot_read_failed");
     return null;
   }));
   const slot=slots.find(x=>x!==null);
-  if(!slot)return json({ok:false,error:"staff_limit_3_reached"},409,origin);
+  if(!slot)return json({ok:false,error:"staff_limit_2_reached"},409,origin);
   let created;
   try {
     let lastError;
     for(let attempt=0;attempt<4;attempt++){
       const code=randomMerchantCode();
-      try{created=await firebaseCreateStaff(owner.apiKey,code,password,name);created.code=code;break}
+      try{created=await firebaseCreateStaff(owner.apiKey,code,code.toLowerCase(),name);created.code=code;break}
       catch(e){lastError=e;if(e.message!=="merchant_code_collision")throw e}
     }
     if(!created)throw lastError||new Error("staff_account_create_failed");

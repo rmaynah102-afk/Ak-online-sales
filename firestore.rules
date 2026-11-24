@@ -105,7 +105,7 @@ service cloud.firestore {
 
     function canUpdatePosCollection(shopId, collection) {
       return isPosShopOwner(shopId)
-        || (collection == 'products' && hasShopMemberRole(shopId, ['manager','cashier']))
+        || (collection == 'products' && hasShopMemberRole(shopId, ['manager']))
         || (collection == 'sales' && hasShopMemberRole(shopId, ['manager']))
         || (collection == 'purchases' && hasShopMemberRole(shopId, ['manager']))
         || (collection == 'people' && hasShopMemberRole(shopId, ['manager','cashier']))

@@ -49,6 +49,7 @@ if (fs.existsSync(javaMain)) {
 const manifestPath = path.join(root, 'android', 'app', 'src', 'main', 'AndroidManifest.xml');
 let manifest = fs.readFileSync(manifestPath, 'utf8');
 const permissions = [
+  '    <uses-permission android:name="android.permission.INTERNET" />',
   '    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />',
   '    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />',
   '    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />',

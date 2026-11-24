@@ -41,7 +41,7 @@ test("rejects malformed shop-owner email before contacting Firebase", async () =
   } finally { globalThis.fetch = originalFetch; }
 });
 
-test("creates a shop owner after Platform Owner lookup even if the Owner Gmail is unverified", async () => {
+test("creates a shop owner only after verified Platform Owner lookup", async () => {
   const originalFetch = globalThis.fetch;
   const calls = [];
   globalThis.fetch = async (url, options) => {
@@ -71,7 +71,7 @@ test("reuses an existing shop-owner account when the Owner-supplied password aut
   const calls = [];
   globalThis.fetch = async (url, options) => {
     const u = String(url); calls.push({ url: u, options });
-    if (u.includes("accounts:lookup") && calls.length === 1) return new Response(JSON.stringify({ users: [{ email: "painglin102@gmail.com" }] }), { status: 200 });
+    if (u.includes("accounts:lookup") && calls.length === 1) return new Response(JSON.stringify({ users: [{ email: "painglin102@gmail.com", emailVerified: true }] }), { status: 200 });
     if (u.includes("accounts:signUp")) return new Response(JSON.stringify({ error: { message: "EMAIL_EXISTS" } }), { status: 400 });
     if (u.includes("accounts:signInWithPassword")) return new Response(JSON.stringify({ localId: "existing-shop-uid", idToken: "existing-shop-token" }), { status: 200 });
     if (u.includes("accounts:lookup")) return new Response(JSON.stringify({ users: [{ localId: "existing-shop-uid", email: "shop@example.com", emailVerified: true }] }), { status: 200 });
@@ -95,7 +95,7 @@ test("sends password recovery for an existing account when the entered password 
   const calls = [];
   globalThis.fetch = async (url, options) => {
     const u = String(url); calls.push({ url: u, options });
-    if (u.includes("accounts:lookup")) return new Response(JSON.stringify({ users: [{ email: "painglin102@gmail.com" }] }), { status: 200 });
+    if (u.includes("accounts:lookup")) return new Response(JSON.stringify({ users: [{ email: "painglin102@gmail.com", emailVerified: true }] }), { status: 200 });
     if (u.includes("accounts:signUp")) return new Response(JSON.stringify({ error: { message: "EMAIL_EXISTS" } }), { status: 400 });
     if (u.includes("accounts:signInWithPassword")) return new Response(JSON.stringify({ error: { message: "INVALID_LOGIN_CREDENTIALS" } }), { status: 400 });
     if (u.includes("accounts:sendOobCode")) return new Response(JSON.stringify({ email: "shop@example.com" }), { status: 200 });

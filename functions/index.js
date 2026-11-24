@@ -86,7 +86,15 @@ exports.createShopOwnerAccount = functions.https.onCall(async (data, context) =>
     if (member.exists) throw new functions.https.HttpsError("failed-precondition", "ဤ Gmail သည် ဝန်ထမ်းအကောင့်ဖြစ်နေသည်။");
   }
   const emailKey = crypto.createHash("sha256").update(email).digest("hex");
+  if (existing) {
+    const existingLicense = await db.collection("licenses").doc(existing.uid).get();
+    if (existingLicense.exists) throw new functions.https.HttpsError("already-exists", "ဤ Gmail အတွက် ဆိုင်လိုင်စင် ရှိပြီးဖြစ်သည်။ ဆိုင်စာရင်းမှ သက်တမ်းတိုးပါ။");
+  }
   const inviteRef = db.collection("pendingOwnerInvites").doc(emailKey);
+  const priorInvite = await inviteRef.get();
+  if (priorInvite.exists && priorInvite.data()?.status === "claimed") {
+    throw new functions.https.HttpsError("already-exists", "ဤ Gmail Invitation ကို အသုံးပြုပြီးဖြစ်သည်။ ဆိုင်စာရင်းမှ သက်တမ်းတိုးပါ။");
+  }
   const invite = {
     email, shopName, industryType, plan, status: "pending",
     expiresAt: admin.firestore.Timestamp.fromDate(expiryDate),
@@ -119,8 +127,11 @@ exports.claimOwnerProvisioning = functions.https.onCall(async (data, context) =>
       throw new functions.https.HttpsError("permission-denied", "Owner က အကောင့်ပိတ်ထားသည် သို့မဟုတ် သက်တမ်းကုန်နေသည်။");
     }
     const licenseRef = db.collection("licenses").doc(context.auth.uid);
+    const capacityRef = db.collection("platformMeta").doc("shopCapacity");
     await db.runTransaction(async tx => {
-      const currentInviteSnap = await tx.get(inviteRef);
+      const [currentInviteSnap, existingLicenseSnap, capacitySnap] = await Promise.all([
+        tx.get(inviteRef), tx.get(licenseRef), tx.get(capacityRef)
+      ]);
       if (!currentInviteSnap.exists) throw new functions.https.HttpsError("permission-denied", "Gmail Invitation မရှိတော့ပါ။");
       const currentInvite = currentInviteSnap.data() || {};
       if (currentInvite.email !== email || currentInvite.status !== "pending") {
@@ -129,19 +140,29 @@ exports.claimOwnerProvisioning = functions.https.onCall(async (data, context) =>
       if (!currentInvite.expiresAt || currentInvite.expiresAt.toMillis() <= Date.now()) {
         throw new functions.https.HttpsError("failed-precondition", "အကောင့်သက်တမ်းကုန်နေသည်။ Owner ထံ ဆက်သွယ်ပါ။");
       }
-      const existingLicenseSnap = await tx.get(licenseRef);
-      const existingLicense = existingLicenseSnap.exists ? existingLicenseSnap.data() || {} : {};
-      if (existingLicenseSnap.exists && existingLicense.email &&
-          String(existingLicense.email).toLowerCase() !== email) {
-        throw new functions.https.HttpsError("permission-denied", "ဤ Firebase အကောင့်သည် အခြား Gmail ဆိုင်အကောင့်နှင့် ချိတ်ထားပြီးဖြစ်သည်။");
+      if (existingLicenseSnap.exists) {
+        const existingLicense = existingLicenseSnap.data() || {};
+        if (String(existingLicense.email || "").toLowerCase() !== email) {
+          throw new functions.https.HttpsError("permission-denied", "ဤ Firebase အကောင့်သည် အခြား Gmail ဆိုင်အကောင့်နှင့် ချိတ်ထားပြီးဖြစ်သည်။");
+        }
+        throw new functions.https.HttpsError("already-exists", "ဤ Google အကောင့်တွင် ဆိုင်လိုင်စင် ရှိပြီးဖြစ်သည်။ Platform Owner ထံ သက်တမ်းတိုးရန် ဆက်သွယ်ပါ။");
       }
-      tx.set(licenseRef, {
+      const currentCount = capacitySnap.exists ? Number(capacitySnap.data()?.activeShopCount) : 0;
+      if (!Number.isInteger(currentCount) || currentCount < 0 || currentCount >= 100) {
+        throw new functions.https.HttpsError("resource-exhausted", "ဆိုင်အကောင့် ၁၀၀ ခု ပြည့်နေပါပြီ။");
+      }
+      tx.create(licenseRef, {
         uid: context.auth.uid, email, shopName: currentInvite.shopName, industryType: currentInvite.industryType,
         status: "active", plan: currentInvite.plan || "30-days", expiresAt: currentInvite.expiresAt,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
         provisionedBy: currentInvite.invitedBy, provisionedAt: admin.firestore.FieldValue.serverTimestamp(),
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
-      }, { merge: true });
+      });
       tx.update(inviteRef, { status: "claimed", claimedUid: context.auth.uid, claimedAt: admin.firestore.FieldValue.serverTimestamp() });
+      tx.set(capacityRef, {
+        activeShopCount: currentCount + 1, lastIssuedUid: context.auth.uid,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
     });
     await db.collection("platformAuditLogs").add({
       action: "shop_owner_email_verified_and_activated", targetUid: context.auth.uid, targetEmail: email,

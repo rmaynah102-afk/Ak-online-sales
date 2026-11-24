@@ -457,6 +457,7 @@ describe('AK Sale Firestore security baseline', function () {
     }).firestore();
     await assertSucceeds(setDoc(doc(db, 'shops', 'shop-a', 'pos', 'products', 'records', 'p1'), { name: 'Hammer' }));
     await assertSucceeds(setDoc(doc(db, 'shops', 'shop-a', 'pos', 'expenses', 'records', 'e1'), { amount: 500 }));
+    await assertSucceeds(getDoc(doc(db, 'shops', 'shop-a', 'pos', 'settings', 'records', 'profile')));
     await assertFails(getDoc(doc(db, 'shops', 'shop-b', 'pos', 'products', 'records', 'p1')));
     await assertFails(setDoc(doc(db, 'shops', 'shop-a', 'pos', 'settings', 'records', 'main'), { currency: 'MMK' }));
   });

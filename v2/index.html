@@ -310,8 +310,8 @@ function applyRoleUI(){
  $("staffManagement").classList.toggle("hidden",staffRole!=="owner"||isPlatformOwner());
  $("productForm").classList.toggle("hidden",!manager);
  const allowed={products:true,sales:manager||cashier,purchases:manager,people:manager||cashier,expenses:manager,reports:manager,printer:manager||cashier,ads:manager,backup:staffRole==="owner",shopprofile:staffRole==="owner"};
- for(const [tab,ok] of Object.entries(allowed)){const b=document.querySelector('#tabs button[data-tab="'+tab+'"]');if(b)b.classList.toggle("hidden",!ok);const panel=$("tab-"+tab);if(panel)panel.classList.toggle("hidden",!ok||tab!=="products")}
- document.querySelectorAll("#tabs button").forEach(b=>{if(!b.classList.contains("hidden"))b.classList.toggle("active",b.dataset.tab==="products")});
+ for(const [tab,ok] of Object.entries(allowed)){const b=document.querySelector('#tabs button[data-tab="'+tab+'"]');if(b)b.classList.toggle("hidden",!ok)}
+ switchPosTab("products");
  ["saveSale","savePurchase","savePerson","saveExpense"].forEach(id=>{const b=$(id);if(b)b.disabled=(id==="saveSale"?! (manager||cashier):id==="savePurchase"||id==="saveExpense"?!manager:!(manager||cashier))});
 }
 async function staffGateway(path,data={}){
@@ -434,7 +434,8 @@ $("savePurchase").onclick=async()=>{
 };
 $("savePerson").onclick=async()=>{try{if(!$("personName").value.trim())throw Error("အမည်ဖြည့်ပါ");await col("people").add({name:$("personName").value.trim(),phone:$("personPhone").value.trim(),type:$("personType").value,createdAt:firebase.firestore.FieldValue.serverTimestamp()});await reloadAll()}catch(e){alert(errText(e))}};
 $("saveExpense").onclick=async()=>{try{if(!$("expenseName").value.trim()||+$("expenseAmount").value<=0)throw Error("အချက်အလက် ဖြည့်ပါ");await col("expenses").add({name:$("expenseName").value.trim(),amount:+$("expenseAmount").value,createdAt:firebase.firestore.FieldValue.serverTimestamp()});await reloadAll()}catch(e){alert(errText(e))}};
-$("tabs").onclick=e=>{const b=e.target.closest("button[data-tab]");if(!b)return;document.querySelectorAll("#tabs button").forEach(x=>x.classList.toggle("active",x===b));["products","sales","purchases","people","expenses","reports","backup"].forEach(t=>$("tab-"+t).classList.toggle("hidden",t!==b.dataset.tab))};
+function switchPosTab(tab){const button=document.querySelector('#tabs button[data-tab="'+tab+'"]');if(!button||button.classList.contains("hidden"))return;document.querySelectorAll("#tabs button[data-tab]").forEach(x=>x.classList.toggle("active",x===button));document.querySelectorAll('#shopPanel > section[id^="tab-"]').forEach(panel=>panel.classList.toggle("hidden",panel.id!=="tab-"+tab));}
+$("tabs").onclick=e=>{const b=e.target.closest("button[data-tab]");if(!b)return;switchPosTab(b.dataset.tab)};
 function backupSerialize(value){
  if(value&&typeof value.toDate==="function")return value.toDate().toISOString();
  if(Array.isArray(value))return value.map(backupSerialize);

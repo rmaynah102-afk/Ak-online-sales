@@ -178,7 +178,7 @@ describe('AK Sale Firestore security baseline', function () {
 
   it('enforces the 100-shop capacity limit and rejects a counter-only increment', async () => {
     const db = testEnv.authenticatedContext('platform-owner-uid', {
-      email: 'painglin102@gmail.com', email_verified: false,
+      email: 'painglin102@gmail.com', email_verified: true,
     }).firestore();
     const counter = doc(db, 'platformMeta', 'shopCapacity');
     await assertSucceeds(setDoc(counter, { activeShopCount: 100, updatedAt: serverTimestamp() }));

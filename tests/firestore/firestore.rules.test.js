@@ -176,6 +176,23 @@ describe('AK Sale Firestore security baseline', function () {
     await assertSucceeds(batch.commit());
   });
 
+
+  it('allows the Platform Owner to issue a five-day trial license with the capacity counter atomically', async () => {
+    const db = testEnv.authenticatedContext('platform-owner-uid', {
+      email: 'painglin102@gmail.com', email_verified: true,
+    }).firestore();
+    const counter = doc(db, 'platformMeta', 'shopCapacity');
+    await assertSucceeds(setDoc(counter, { activeShopCount: 0, updatedAt: serverTimestamp() }));
+    const batch = writeBatch(db);
+    batch.set(doc(db, 'licenses', 'trial-shop'), {
+      uid: 'trial-shop', status: 'active', expiresAt: futureTimestamp(5), plan: '5-days',
+    });
+    batch.update(counter, {
+      activeShopCount: 1, lastIssuedUid: 'trial-shop', updatedAt: serverTimestamp(),
+    });
+    await assertSucceeds(batch.commit());
+  });
+
   it('enforces the 100-shop capacity limit and rejects a counter-only increment', async () => {
     const db = testEnv.authenticatedContext('platform-owner-uid', {
       email: 'painglin102@gmail.com', email_verified: true,

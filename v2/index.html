@@ -577,7 +577,8 @@ async function akStartBarcodeScanner(target="product",cameraId=""){
  }catch(e){await akStopBarcodeScanner();alert("Camera ဖွင့်မရပါ။ Permission ခွင့်ပြုပြီး ပြန်စမ်းပါ။ "+(e.message||""))}
 }
 function selectSaleByBarcode(raw){const code=String(raw||"").trim();if(!code)return false;const found=products.find(p=>String(p.sku||"").trim().toLowerCase()===code.toLowerCase());if(!found){alert("ဒီ Barcode နှင့် ကိုက်ညီသော ပစ္စည်းမတွေ့ပါ: "+code);$("saleBarcodeInput").select();return false}$("saleProduct").value=found.id;$("saleQty").focus();$("saleBarcodeInput").value="";return true;}
-$("saleBarcodeInput").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();selectSaleByBarcode(e.currentTarget.value)}});\n$("scanProductBtn").onclick=()=>akStartBarcodeScanner("product");
+$("saleBarcodeInput").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();selectSaleByBarcode(e.currentTarget.value)}});
+$("scanProductBtn").onclick=()=>akStartBarcodeScanner("product");
 $("scanSaleBtn").onclick=()=>akStartBarcodeScanner("sale");
 
 // Printer profiles are isolated per shop on this device.

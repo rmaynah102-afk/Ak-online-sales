@@ -64,7 +64,7 @@ jobs:
           cat > capacitor.config.json <<'JSON'
           {
             "appId": "com.ak.hardware.sales",
-            "appName": "AK Sale POS 3.5.0",
+            "appName": "AK Sale POS 3.6.8",
             "webDir": "www",
             "bundledWebRuntime": false,
             "server": { "androidScheme": "https" },
@@ -86,6 +86,7 @@ jobs:
           const scripts=[...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)].filter(([,a])=>!/\bsrc\s*=/.test(a));
           if(!scripts.length)throw new Error('No inline JavaScript found');
           if(!html.includes('firebase-sdk.bundle.js')||!fs.existsSync('www/firebase-sdk.bundle.js'))throw new Error('Locally bundled Firebase SDK is missing from APK web assets');
+          if(!html.includes('window.AK_FIREBASE_PUBLIC_CONFIG||{')||!html.includes('Callable Functions မရရှိလျှင်လည်း Firebase Authentication ကို မပိတ်ပါ')) throw new Error('Firebase config fallback or independent Auth startup guard is missing');
           scripts.forEach(([, , code],i)=>new vm.Script(code,{filename:'v2-inline-'+(i+1)}));
           if(!html.includes('id="ownerGoogleBtn"')||!html.includes('nativeAuth.signInWithGoogle({skipNativeAuth:true,useCredentialManager:false})')||!html.includes('GoogleAuthProvider.credential(idToken)')) throw new Error('Native Google Platform Owner login bridge is missing');
           if(!html.includes('function isPlatformOwner')||!html.includes('shopProfile.shopName||\"AK POS\"')||!html.includes('ownerControlBtn')||!html.includes('function switchPosTab(tab)')||!html.includes('id="tab-shopprofile"')) throw new Error('Separate Owner POS and Control Center routing is missing');

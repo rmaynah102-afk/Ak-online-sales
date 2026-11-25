@@ -460,7 +460,7 @@ async function loadLicenses(reset=true){
 }
 $("licenseNext").onclick=()=>{if(!licensePageCursor)return;licensePageStack.push(licensePageCursor);licensePageNumber++;loadLicenses(false)};
 $("licensePrev").onclick=()=>{if(!licensePageStack.length)return;licensePageCursor=licensePageStack.pop();licensePageNumber=Math.max(1,licensePageNumber-1);loadLicenses(false)};
-window.renewLicense=async id=>{try{const p=prompt("သက်တမ်းတိုးမည့်ရက် (30 / 90 / 180 / 365)");if(!["30","90","180","365"].includes(p))return;await ownerCallable("grantSubscription",{uid:id,days:Number(p)});await loadLicenses()}catch(e){alert(errText(e))}};
+window.renewLicense=async id=>{try{const p=prompt("သက်တမ်းကုန်မည့်ရက်ကို YYYY-MM-DD ပုံစံဖြင့် ထည့်ပါ။");if(!p)return;if(!/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(p))throw Error("ရက်စွဲပုံစံ YYYY-MM-DD ဖြစ်ရမည်။");await ownerCallable("grantSubscription",{uid:id,expiresOn:p});await loadLicenses()}catch(e){alert(errText(e))}};
 window.toggleLicense=async id=>{try{const x=licenses.find(a=>a.id===id),action=x.status==="suspended"?"reactivate":"suspend";if(!confirm(action==="suspend"?"ဤဆိုင်အကောင့်ကို Firebase Login အပါအဝင် ပိတ်မလား။":"ဤဆိုင်အကောင့်ကို ပြန်ဖွင့်မလား။ သက်တမ်းကျန်ရှိရမည်။"))return;await ownerCallable("setPlatformUserAccess",{uid:id,action});await loadLicenses()}catch(e){alert(errText(e))}};
 
 function applyRoleUI(){

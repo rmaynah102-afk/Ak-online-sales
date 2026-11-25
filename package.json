@@ -11,10 +11,12 @@
     "@capacitor/android": "8.6.0",
     "@capacitor/core": "8.6.0",
     "@capacitor-firebase/authentication": "^8.0.0",
-    "@zxing/library": "0.21.3"
+    "@zxing/library": "0.21.3",
+    "firebase": "10.12.2"
   },
   "devDependencies": {
     "@capacitor/cli": "8.6.0",
-    "sharp": "^0.33.5"
+    "sharp": "^0.33.5",
+    "esbuild": "0.24.2"
   }
 }

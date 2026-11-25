@@ -3,7 +3,7 @@ name: Build AK Sale POS 2.0 Android APK
 
 on:
   push:
-    branches: [ak-sale-pos-v2-main, main, ak-pos-2.1.317-professional-base, ak-sale-v3-review]
+    branches: [ak-sale-pos-v2-main, main, ak-pos-2.1.317-professional-base, ak-sale-v3-review, "apk/fix-v3.5-update-version-code-20261125"]
     paths:
       - "v2/**"
       - "firebase-config.js"
@@ -136,7 +136,9 @@ jobs:
           node - <<'NODE'
           const fs=require('fs');
           const run=Number(process.env.GITHUB_RUN_NUMBER||1);
-          const versionCode=1000000+run;
+          const legacyVersionCodeFloor=1000693;
+          const versionCode=2000000+run;
+          if(versionCode<=legacyVersionCodeFloor) throw new Error('APK versionCode must exceed legacy APK versionCode '+legacyVersionCodeFloor);
           const versionName='3.5.0';
           const p='android/app/build.gradle';
           let g=fs.readFileSync(p,'utf8');
@@ -145,7 +147,10 @@ jobs:
           g=g.replace(/versionName\s+"[^"]+"/,'versionName "'+versionName+'"');
           if(!g.includes('applicationId "com.ak.hardware.sales"')) throw new Error('APK package ID is not the registered AK Sale app');
           fs.writeFileSync(p,g);
-          console.log('AK Sale Android version',versionName,'code',versionCode);
+          const written=fs.readFileSync(p,'utf8');
+          const codeMatch=written.match(/versionCode\\s+(\\d+)/),nameMatch=written.match(/versionName\\s+\"([^\"]+)\"/);
+          if(Number(codeMatch?.[1])!==versionCode||nameMatch?.[1]!==versionName) throw new Error('APK versionCode/versionName verification failed');
+          console.log('AK Sale Android version',versionName,'code',versionCode,'(verified above legacy)');
           NODE
       - name: Install AK native Bluetooth / Wi-Fi printer bridge
         run: node scripts/install-native-printer.js

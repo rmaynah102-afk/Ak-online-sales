@@ -393,7 +393,7 @@ $("ownerGoogleBtn").onclick=async()=>{
   status("Platform Owner Google Login စစ်ဆေးနေသည်...");
   try{await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)}catch(persistenceError){console.warn("Owner login continuing without persistent storage",persistenceError)}
   let signed;
-  const cap=window.Capacitor,nativeAuth=cap&&cap.Plugins&&cap.Plugins.FirebaseAuthentication;
+  const cap=window.Capacitor,nativeAuth=window.AKFirebaseAuthentication||(cap&&cap.Plugins&&cap.Plugins.FirebaseAuthentication);
   if(cap&&typeof cap.isNativePlatform==="function"&&cap.isNativePlatform()){
    if(!nativeAuth||typeof nativeAuth.signInWithGoogle!=="function")throw Error("ဒီ APK ထဲတွင် Native Google Login Plugin မပါပါ။ Google Login ပါဝင်သော APK အသစ်ကို Install လုပ်ပါ။");
    try{await nativeAuth.signOut?.()}catch(_){}

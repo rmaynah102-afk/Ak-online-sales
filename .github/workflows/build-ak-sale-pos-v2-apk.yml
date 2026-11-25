@@ -1,5 +1,5 @@
 # AK Sale Professional release: Google-only shop owners, verified Owner invitations, and Merchant Code-only staff.
-name: Build AK Sale POS 2.0 Android APK
+name: Build AK Sale POS 3.6.8 Android APK
 
 on:
   push:
@@ -140,7 +140,7 @@ jobs:
           const legacyVersionCodeFloor=1000693;
           const versionCode=2000000+run;
           if(versionCode<=legacyVersionCodeFloor) throw new Error('APK versionCode must exceed legacy APK versionCode '+legacyVersionCodeFloor);
-          const versionName='3.5.0';
+          const versionName='3.6.8';
           const p='android/app/build.gradle';
           let g=fs.readFileSync(p,'utf8');
           if(!/versionCode\s+\d+/.test(g)||!/versionName\s+"[^"]+"/.test(g)) throw new Error('Android version fields not found');

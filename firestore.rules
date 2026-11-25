@@ -189,7 +189,7 @@ service cloud.firestore {
         && request.resource.data.inviteCode is string
         && request.resource.data.inviteCode.size() == 32
         && !request.resource.data.inviteCode.matches('.*[^A-F0-9].*')
-        && request.resource.data.slotId in [request.resource.data.shopId + '_1', request.resource.data.shopId + '_2']
+        && request.resource.data.slotId in [request.resource.data.shopId + '_1', request.resource.data.shopId + '_2', request.resource.data.shopId + '_3']
         && activeShopLicense(request.resource.data.shopId)
         && exists(/databases/$(database)/documents/shopInvites/$(request.resource.data.inviteCode))
         && get(/databases/$(database)/documents/shopInvites/$(request.resource.data.inviteCode)).data.shopId == request.resource.data.shopId
@@ -219,7 +219,7 @@ service cloud.firestore {
         && request.resource.data.merchantCodeHash is string
         && request.resource.data.merchantCodeHash.size() == 64
         && !request.resource.data.merchantCodeHash.matches('.*[^a-f0-9].*')
-        && request.resource.data.slotId in [request.auth.uid + '_1', request.auth.uid + '_2']
+        && request.resource.data.slotId in [request.auth.uid + '_1', request.auth.uid + '_2', request.auth.uid + '_3']
         && existsAfter(/databases/$(database)/documents/shopStaffSlots/$(request.resource.data.slotId))
         && getAfter(/databases/$(database)/documents/shopStaffSlots/$(request.resource.data.slotId)).data.uid == memberUid
         && getAfter(/databases/$(database)/documents/shopStaffSlots/$(request.resource.data.slotId)).data.shopId == request.auth.uid
@@ -265,6 +265,7 @@ service cloud.firestore {
         && !exists(/databases/$(database)/documents/shopInvites/$(code))
         && (!exists(/databases/$(database)/documents/shopStaffSlots/$(request.auth.uid + '_1'))
           || !exists(/databases/$(database)/documents/shopStaffSlots/$(request.auth.uid + '_2'))
+          || !exists(/databases/$(database)/documents/shopStaffSlots/$(request.auth.uid + '_3'))
 );
       allow update: if request.auth != null
         && resource.data.status == 'open'
@@ -285,7 +286,7 @@ service cloud.firestore {
     match /shopStaffSlots/{slotId} {
       allow read: if request.auth != null
         && ((resource.data != null && resource.data.uid == request.auth.uid)
-          || (slotId in [request.auth.uid + '_1', request.auth.uid + '_2']
+          || (slotId in [request.auth.uid + '_1', request.auth.uid + '_2', request.auth.uid + '_3']
             && activeShopLicense(request.auth.uid)));
       allow create: if (
         request.auth != null
@@ -293,9 +294,10 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly(['shopId','uid','slot','createdAt','inviteCode'])
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.shopId is string
-        && request.resource.data.slot in [1,2]
+        && request.resource.data.slot in [1,2,3]
         && ((request.resource.data.slot == 1 && slotId == request.resource.data.shopId + '_1')
           || (request.resource.data.slot == 2 && slotId == request.resource.data.shopId + '_2')
+          || (request.resource.data.slot == 3 && slotId == request.resource.data.shopId + '_3')
 )
         && request.resource.data.createdAt == request.time
         && activeShopLicense(request.resource.data.shopId)
@@ -319,6 +321,7 @@ service cloud.firestore {
         && request.resource.data.slot in [1,2,3]
         && ((request.resource.data.slot == 1 && slotId == request.auth.uid + '_1')
           || (request.resource.data.slot == 2 && slotId == request.auth.uid + '_2')
+          || (request.resource.data.slot == 3 && slotId == request.auth.uid + '_3')
 )
         && request.resource.data.merchantStaff == true
         && request.resource.data.createdAt is timestamp

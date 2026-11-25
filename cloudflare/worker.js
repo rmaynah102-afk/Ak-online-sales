@@ -116,16 +116,16 @@ async function staffProvision(request,origin) {
   const owner=await verifyShopOwner(request,body,origin);if(owner.response)return owner.response;
   const name=String(body.name||"").trim().slice(0,80),role=String(body.role||"cashier").toLowerCase();
   if(name.length<2)return json({ok:false,error:"staff_name_required"},400,origin);
-  if(!["manager","cashier"].includes(role))return json({ok:false,error:"invalid_staff_role"},400,origin);
+  if(!["manager","cashier","employee"].includes(role))return json({ok:false,error:"invalid_staff_role"},400,origin);
   if(!await verifyActiveShopLicense(owner.shopId,owner.idToken))return json({ok:false,error:"active_shop_license_required"},403,origin);
-  const slots=await Promise.all(Array.from({length:2},(_,i)=>i+1).map(async slot=>{
+  const slots=await Promise.all(Array.from({length:3},(_,i)=>i+1).map(async slot=>{
     const result=await firestoreGet("shopStaffSlots/"+encodeURIComponent(owner.shopId+"_"+slot),owner.idToken);
     if(result.response.status===404)return slot;
     if(!result.response.ok)throw new Error("staff_slot_read_failed");
     return null;
   }));
   const slot=slots.find(x=>x!==null);
-  if(!slot)return json({ok:false,error:"staff_limit_2_reached"},409,origin);
+  if(!slot)return json({ok:false,error:"staff_limit_3_reached"},409,origin);
   let created;
   try {
     let lastError;
@@ -182,7 +182,7 @@ async function staffList(request,origin) {
     return {uid:d.name.split("/").pop(),name:fields.name?.stringValue||"",role:fields.role?.stringValue||"",
       status:fields.status?.stringValue||"",merchantStaff:fields.merchantStaff?.booleanValue===true};
   }).filter(x=>x.merchantStaff);
-  return json({ok:true,maxStaff:2,members},200,origin);
+  return json({ok:true,maxStaff:3,members},200,origin);
 }
 async function staffRevoke(request,origin) {
   let body;try{body=await request.json()}catch{return json({ok:false,error:"invalid_json"},400,origin)}

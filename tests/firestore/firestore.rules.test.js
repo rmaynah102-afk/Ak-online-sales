@@ -388,6 +388,15 @@ describe('AK Sale Firestore security baseline', function () {
     }));
   });
 
+  it('allows a verified staff member to claim the third staff slot', async () => {
+    await seedLicense('shop-a');
+    const code = 'CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC';
+    await seedInvite('shop-a', code);
+    const db = await claimInvite('staff-c', 'staff-c@example.com', 'shop-a', code, 3);
+    await assertSucceeds(getDoc(doc(db, 'shopMembers', 'staff-c')));
+    await assertSucceeds(getDoc(doc(db, 'shopStaffSlots', 'shop-a_3')));
+  });
+
   it('allows staff to claim a one-time invite atomically without custom claims', async () => {
     await seedLicense('shop-a');
     await seedInvite('shop-a', '0123456789ABCDEF0123456789ABCDEF');
@@ -450,11 +459,11 @@ describe('AK Sale Firestore security baseline', function () {
       '0123456789ABCDEF0123456789ABCDEF'));
   });
 
-  it('enforces the two staff slot maximum', async () => {
+  it('enforces the three staff slot maximum', async () => {
     await seedLicense('shop-a');
     await testEnv.withSecurityRulesDisabled(async (context) => {
       const db = context.firestore();
-      for (let n = 1; n <= 2; n++) {
+      for (let n = 1; n <= 3; n++) {
         await setDoc(doc(db, 'shopStaffSlots', 'shop-a_' + n), {
           shopId: 'shop-a', uid: 'existing-' + n, slot: n,
           inviteCode: 'seed' + n, createdAt: Timestamp.now(),

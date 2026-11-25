@@ -13,6 +13,7 @@ on:
       - "capacitor.config.json"
       - "package.json"
       - "package-lock.json"
+      - "scripts/firebase-compat-bundle.js"
       - ".github/workflows/build-ak-sale-pos-v2-apk.yml"
   workflow_dispatch:
 permissions:
@@ -83,6 +84,7 @@ jobs:
           const html=fs.readFileSync('www/index.html','utf8');
           const scripts=[...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)].filter(([,a])=>!/\bsrc\s*=/.test(a));
           if(!scripts.length)throw new Error('No inline JavaScript found');
+          if(!html.includes('firebase-sdk.bundle.js')||!fs.existsSync('www/firebase-sdk.bundle.js'))throw new Error('Locally bundled Firebase SDK is missing from APK web assets');
           scripts.forEach(([, , code],i)=>new vm.Script(code,{filename:'v2-inline-'+(i+1)}));
           if(!html.includes('id="ownerGoogleBtn"')||!html.includes('nativeAuth.signInWithGoogle({skipNativeAuth:true,useCredentialManager:false})')||!html.includes('GoogleAuthProvider.credential(idToken)')) throw new Error('Native Google Platform Owner login bridge is missing');
           if(!html.includes('function isPlatformOwner')||!html.includes('shopProfile.shopName||\"AK POS\"')||!html.includes('ownerControlBtn')||!html.includes('function switchPosTab(tab)')||!html.includes('id="tab-shopprofile"')) throw new Error('Separate Owner POS and Control Center routing is missing');

@@ -81,11 +81,25 @@ let auth,db,user,shopId="",staffRole="owner",products=[],sales=[],purchases=[],p
 const $=id=>document.getElementById(id), money=n=>(Number(n)||0).toLocaleString("en-US")+" ကျပ်", dateText=d=>{const x=d?.toDate?d.toDate():new Date(d||Date.now());return isNaN(x)? "-":x.toLocaleDateString("en-GB")};
 function status(msg,where="status"){ $(where).textContent=msg; }
 function show(id){$("loginPanel").classList.toggle("hidden",id!=="loginPanel");$("ownerPanel").classList.toggle("hidden",id!=="ownerPanel");$("shopPanel").classList.toggle("hidden",id!=="shopPanel");}
+async function loadFirebaseSdk(src,label){
+ return new Promise((resolve,reject)=>{
+  const existing=[...document.scripts].find(s=>s.src===src);
+  if(existing){if(window.firebase?.auth&&window.firebase?.firestore)return resolve();existing.remove();}
+  const x=document.createElement("script");let settled=false;
+  const finish=(fn,v)=>{if(settled)return;settled=true;clearTimeout(timer);fn(v)};
+  const timer=setTimeout(()=>finish(reject,Error(label+" အချိန်ကျော်သွားပါသည်။ Internet/DNS သို့မဟုတ် WebView network ကိုစစ်ပါ။")),15000);
+  x.src=src;x.async=true;x.onload=()=>finish(resolve);x.onerror=()=>finish(reject,Error(label+" download မရပါ။ Internet ချိတ်ဆက်မှု၊ DNS သို့မဟုတ် WebView ကိုစစ်ပါ။"));document.head.appendChild(x);
+ });
+}
 async function boot(){
- $("loginBtn").disabled=true;
- if(!PROJECT?.apiKey)throw Error("Firebase config မတွေ့ပါ။ firebase-config.js ထဲက AK_FIREBASE_PUBLIC_CONFIG ကိုစစ်ပါ။");
- await new Promise((resolve,reject)=>{const x=document.createElement("script");x.src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js";x.onload=resolve;x.onerror=()=>reject(Error("Firebase SDK မရပါ။ Internet ချိတ်ဆက်မှု စစ်ပါ။"));document.head.appendChild(x)});
- await Promise.all(["firebase-auth-compat.js","firebase-firestore-compat.js"].map(name=>new Promise((resolve,reject)=>{const x=document.createElement("script");x.src="https://www.gstatic.com/firebasejs/10.12.2/"+name;x.onload=resolve;x.onerror=()=>reject(Error(name+" မရပါ။ Internet ချိတ်ဆက်မှု စစ်ပါ။"));document.head.appendChild(x)})));
+ $("loginBtn").disabled=true;$("ownerGoogleBtn").disabled=true;
+ if(!PROJECT||!PROJECT.apiKey||!PROJECT.authDomain||!PROJECT.projectId)throw Error("Firebase Config မပြည့်စုံပါ။ firebase-config.js / AK_FIREBASE_PUBLIC_CONFIG ကိုစစ်ပါ။");
+ const base="https://www.gstatic.com/firebasejs/10.12.2/";
+ await loadFirebaseSdk(base+"firebase-app-compat.js","Firebase App SDK");
+ if(!window.firebase||typeof firebase.initializeApp!=="function")throw Error("Firebase App SDK တက်လာသော်လည်း initialize API မရပါ။");
+ await loadFirebaseSdk(base+"firebase-auth-compat.js","Firebase Auth SDK");
+ await loadFirebaseSdk(base+"firebase-firestore-compat.js","Firebase Firestore SDK");
+ if(typeof firebase.auth!=="function"||typeof firebase.firestore!=="function")throw Error("Firebase Auth/Firestore SDK API မပြည့်စုံပါ။");
  if(!firebase.apps.length)firebase.initializeApp(PROJECT);
  auth=firebase.auth();db=firebase.firestore();auth.languageCode="my";
  await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
@@ -496,6 +510,6 @@ $("exportCsv").onclick=()=>{
  const csv="\uFEFF"+rows.map(row=>row.map(v=>'"'+String(v??"").replace(/"/g,'""')+'"').join(",")).join("\r\n"),blob=new Blob([csv],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="AK-Sale-"+new Date().toISOString().slice(0,10)+".csv";a.click();URL.revokeObjectURL(a.href);
 };
 
-boot().catch(e=>{ $("loginBtn").disabled=false;$("ownerGoogleBtn").disabled=false; status("Firebase စနစ်စတင်မရပါ: "+friendlyAuthError(e)+"\\n\\nစစ်ရန်: Internet, firebase-config.js, Firebase Auth Provider, APK Native Google plugin နှင့် Android SHA-1/SHA-256."); });
+boot().catch(e=>{const detail=e?.message||String(e);$("loginBtn").disabled=false;$("ownerGoogleBtn").disabled=false;status("Firebase စတင်မှု မအောင်မြင်ပါ: "+detail+"\\n\\nစစ်ရန်: Internet ချိတ်ဆက်မှု၊ firebase-config.js၊ Firebase Auth/Firestore SDK နှင့် Android WebView။");});
 if("serviceWorker" in navigator)navigator.serviceWorker.register("./sw.js").catch(()=>{});
 </script></body></html>

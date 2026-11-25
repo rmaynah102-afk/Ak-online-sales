@@ -148,7 +148,7 @@ jobs:
           if(!g.includes('applicationId "com.ak.hardware.sales"')) throw new Error('APK package ID is not the registered AK Sale app');
           fs.writeFileSync(p,g);
           const written=fs.readFileSync(p,'utf8');
-          const codeMatch=written.match(/versionCode\\s+(\\d+)/),nameMatch=written.match(/versionName\\s+\"([^\"]+)\"/);
+          const codeMatch=written.match(/versionCode\s+(\d+)/),nameMatch=written.match(/versionName\s+"([^"]+)"/);
           if(Number(codeMatch?.[1])!==versionCode||nameMatch?.[1]!==versionName) throw new Error('APK versionCode/versionName verification failed');
           console.log('AK Sale Android version',versionName,'code',versionCode,'(verified above legacy)');
           NODE

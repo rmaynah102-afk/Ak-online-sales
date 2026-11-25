@@ -282,7 +282,7 @@ footer{color:#b8c9bd!important}
 <div><label>ဆိုင်လိပ်စာ</label><input id="receiptAddress" placeholder="ဆိုင်လိပ်စာ"></div>
 <div><label>ဖုန်းနံပါတ်</label><input id="receiptPhone" placeholder="09xxxxxxxxx"></div>
 <div><label>ဆိုင် Logo</label><input id="receiptLogo" type="file" accept="image/*"></div>
-<div><label>ဘောင်ချာ QR Code</label><select id="receiptQr"><option value="yes" selected>ထည့်မည်</option><option value="no">မထည့်ပါ</option></select></div>
+<div><label>ဘောင်ချာ QR Code</label><select id="receiptQr"><option value="yes" selected>ထည့်မည်</option><option value="no">မထည့်ပါ</option></select></div><div><label>Printer Auto-cut</label><select id="receiptAutoCut"><option value="yes" selected>ဖွင့်မည်</option><option value="no">ပိတ်မည်</option></select></div>
 </div>
 <div class="row" style="margin-top:10px"><button id="saveReceiptSettings">ဘောင်ချာပုံစံ သိမ်းမည်</button><button id="previewReceipt" class="secondary">နမူနာကြည့်ရန်</button></div>
 <p class="muted">58/80 mm အပူခံစက္ကူနှင့် A5/A4 စာရွက်အတွက် စာသားအကျယ်ကို အလိုအလျောက်ညှိပေးမည်။ စက်၏ဖြတ်တောက်စနစ်ရှိမှသာ အလိုအလျောက်ဖြတ်တောက်မှု အလုပ်လုပ်မည်။</p>
@@ -897,15 +897,27 @@ function buildReceiptEscPos(s,paper="80mm"){
  for(const l of lines){ctx.font=(l.bold?"bold ":"")+l.size+"px 'Noto Sans Myanmar',Arial,sans-serif";const w=ctx.measureText(l.text).width,x=l.align==="center"?Math.max(pad,(width-w)/2):pad;ctx.fillText(l.text,x,y);y+=l.size+12}
  const img=ctx.getImageData(0,0,width,height),bpr=Math.ceil(width/8),raster=new Uint8Array(bpr*height);
  for(let yy=0;yy<height;yy++)for(let xx=0;xx<width;xx++){const k=(yy*width+xx)*4,g=(img.data[k]*299+img.data[k+1]*587+img.data[k+2]*114)/1000;if(g<175)raster[yy*bpr+(xx>>3)]|=0x80>>(xx&7)}
- const head=Uint8Array.from([27,64,29,118,48,0,bpr&255,(bpr>>8)&255,height&255,(height>>8)&255]),tail=Uint8Array.from([10,10,10,29,86,0]),out=new Uint8Array(head.length+raster.length+tail.length);out.set(head);out.set(raster,head.length);out.set(tail,head.length+raster.length);return out;
+ const head=Uint8Array.from([27,64,29,118,48,0,bpr&255,(bpr>>8)&255,height&255,(height>>8)&255]);
+ const parts=[head,raster];
+ if(cfg.qr!=="no"){
+  const data=new TextEncoder().encode("AK-SALE-RECEIPT:"+String(s.id||""));
+  const n=data.length+3,lo=n&255,hi=(n>>8)&255;
+  parts.push(Uint8Array.from([29,40,107,4,0,49,65,50,0]));
+  parts.push(Uint8Array.from([29,40,107,3,0,49,67,6]));
+  parts.push(Uint8Array.from([29,40,107,3,0,49,69,48]));
+  parts.push(Uint8Array.from([29,40,107,lo,hi,49,80,48]),data);
+  parts.push(Uint8Array.from([29,40,107,3,0,49,81,48]));
+ }
+ parts.push(Uint8Array.from(cfg.autoCut===false?[10,10,10]:[10,10,10,29,86,0]));
+ const total=parts.reduce((n,p)=>n+p.length,0),out=new Uint8Array(total);let offset=0;for(const part of parts){out.set(part,offset);offset+=part.length}return out;
 }
 function receiptConfig(){try{return JSON.parse(localStorage.getItem("ak_pos_receipt_settings_"+(shopId||user?.uid||"local"))||"{}")}catch(_){return{}}}
 function receiptReadForm(){
  const paper=$("receiptPaper").value,width=Number($("receiptWidth").value)||80,height=Number($("receiptHeight").value)||0,margin=Number($("receiptMargin").value)||0,copies=Math.min(5,Math.max(1,Number($("receiptCopies").value)||1));
  if(width<30||width>300||height<0||height>1000||margin>30)throw Error("စာရွက်အရွယ်အစားနှင့် အနားလွတ်ကို မှန်ကန်စွာ ဖြည့်ပါ။");
- return {paper,width,height,margin,font:$("receiptFont").value,orientation:$("receiptOrientation").value,copies,shopName:$("receiptShopName").value.trim()||shopProfile.shopName||"AK POS Shop",address:$("receiptAddress").value.trim()||shopProfile.address||"",phone:$("receiptPhone").value.trim()||shopProfile.phone||"",logo:receiptConfig().logo||"",qr:$("receiptQr").value};
+ return {paper,width,height,margin,font:$("receiptFont").value,orientation:$("receiptOrientation").value,copies,shopName:$("receiptShopName").value.trim()||shopProfile.shopName||"AK POS Shop",address:$("receiptAddress").value.trim()||shopProfile.address||"",phone:$("receiptPhone").value.trim()||shopProfile.phone||"",logo:receiptConfig().logo||"",qr:$("receiptQr").value,autoCut:$("receiptAutoCut").value!=="no"};
 }
-function receiptLoadForm(){const c=receiptConfig();$("receiptPaper").value=c.paper||"80mm";$("receiptWidth").value=c.width||80;$("receiptHeight").value=c.height||0;$("receiptMargin").value=c.margin??3;$("receiptFont").value=c.font||"normal";$("receiptOrientation").value=c.orientation||"portrait";$("receiptCopies").value=c.copies||1;$("receiptShopName").value=shopProfile.shopName||c.shopName||"";$("receiptAddress").value=shopProfile.address||c.address||"";$("receiptPhone").value=shopProfile.phone||c.phone||"";$("receiptQr").value=c.qr||"yes"}
+function receiptLoadForm(){const c=receiptConfig();$("receiptPaper").value=c.paper||"80mm";$("receiptWidth").value=c.width||80;$("receiptHeight").value=c.height||0;$("receiptMargin").value=c.margin??3;$("receiptFont").value=c.font||"normal";$("receiptOrientation").value=c.orientation||"portrait";$("receiptCopies").value=c.copies||1;$("receiptShopName").value=shopProfile.shopName||c.shopName||"";$("receiptAddress").value=shopProfile.address||c.address||"";$("receiptPhone").value=shopProfile.phone||c.phone||"";$("receiptQr").value=c.qr||"yes";$("receiptAutoCut").value=c.autoCut===false?"no":"yes"}
 $("receiptPaper").onchange=()=>{const v=$("receiptPaper").value;if(v==="58mm")$("receiptWidth").value=58;else if(v==="80mm")$("receiptWidth").value=80;else if(v==="A5"){$("receiptWidth").value=148;$("receiptHeight").value=210}else if(v==="A4"){$("receiptWidth").value=210;$("receiptHeight").value=297}};
 $("saveReceiptSettings").onclick=async()=>{try{const c=receiptReadForm(),file=$("receiptLogo").files[0];if(file){if(file.size>450000)throw Error("Logo ဖိုင် 450 KB ထက် မကြီးရပါ။ Cloud Sync အတွက် ကန့်သတ်ထားသည်။");c.logo=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result));r.onerror=reject;r.readAsDataURL(file)})}localStorage.setItem("ak_pos_receipt_settings_"+(shopId||user?.uid||"local"),JSON.stringify(c));if(staffRole==="owner"){await shopProfileRef().set({shopName:c.shopName,address:c.address,phone:c.phone,receiptSettings:c,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});shopProfile={...shopProfile,shopName:c.shopName,address:c.address,phone:c.phone,receiptSettings:c};$("brandShopName").textContent=c.shopName;$("receiptSettingsStatus").textContent="ဘောင်ချာပုံစံကို Cloud ထဲ သိမ်းပြီးပါပြီ။ အခြားစက်များတွင်လည်း Sync ဖြစ်မည်။"}else $("receiptSettingsStatus").textContent="ဒီစက်အတွက် ဘောင်ချာပုံစံ သိမ်းပြီးပါပြီ။ Cloud Sync ကို ဆိုင်ရှင်ကသာ ပြုလုပ်နိုင်သည်။"}catch(e){$("receiptSettingsStatus").textContent=errText(e)}};
 function receiptItems(s){if(Array.isArray(s.items)&&s.items.length)return s.items;if(Array.isArray(s.lines)&&s.lines.length)return s.lines;return [{name:s.productName||"ပစ္စည်း",qty:Number(s.qty||0),price:Number(s.price||0),total:Number(s.total||0)}]}

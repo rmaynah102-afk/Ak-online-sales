@@ -316,7 +316,7 @@ async function boot(){
  // Callable Functions မရရှိလျှင်လည်း Firebase Authentication ကို မပိတ်ပါ။
  try{if(typeof app.functions==="function")functions=app.functions("us-central1");}catch(functionsError){functions=null;console.warn("AK POS callable functions unavailable",functionsError);}
  auth.languageCode="my";
- await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+ try{await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)}catch(persistenceError){console.warn("Firebase Auth persistence unavailable; continue with session auth",persistenceError)}
  $("loginBtn").disabled=false;$("ownerGoogleBtn").disabled=false;
  status("Firebase စတင်ပြီးပါပြီ။ Platform Owner Google Login ဝင်နိုင်ပါပြီ။");
  auth.onAuthStateChanged(async u=>{
@@ -348,6 +348,10 @@ async function boot(){
   }
  });
 }
+// Start Firebase immediately after defining boot(), before later UI setup can interrupt startup.
+boot().catch(e=>{firebaseBootError=(e&&e.message)||String(e);$("loginBtn").disabled=true;$("ownerGoogleBtn").disabled=false;const detail=(e&&e.message)||String(e);status("Firebase စတင်မရပါ: "+detail+" (Project: "+(PROJECT&&PROJECT.projectId||"unknown")+")");console.error("AK POS Firebase boot failed",e);});
+window.addEventListener("error",e=>{console.error("AK POS startup runtime error",e.error||e.message);if(!auth)status("App စတင်မှုအမှား: "+(e.message||"JavaScript error")+" · Firebase startup ကိုစစ်ဆေးပါ။")});
+window.addEventListener("unhandledrejection",e=>{console.error("AK POS unhandled promise rejection",e.reason);});
 function errText(e){return e?.message||String(e)}
 function friendlyAuthError(e){
  const code=e?.code||"",map={
@@ -384,10 +388,10 @@ $("shopGoogleBtn").onclick=async()=>{const button=$("shopGoogleBtn");try{if(!aut
 $("ownerGoogleBtn").onclick=async()=>{
  const button=$("ownerGoogleBtn");
  try{
-  if(!auth)throw Error("Firebase စနစ် မစတင်ရသေးပါ။");
+  if(!auth)throw Error(firebaseBootError||"Firebase Auth ကို မစတင်နိုင်ပါ။ App ကိုပိတ်ဖွင့်ပြီး ပြန်စမ်းပါ။");
   button.disabled=true;button.textContent="Google အကောင့်အတည်ပြုနေသည်...";
   status("Platform Owner Google Login စစ်ဆေးနေသည်...");
-  await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+  try{await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)}catch(persistenceError){console.warn("Owner login continuing without persistent storage",persistenceError)}
   let signed;
   const cap=window.Capacitor,nativeAuth=cap&&cap.Plugins&&cap.Plugins.FirebaseAuthentication;
   if(cap&&typeof cap.isNativePlatform==="function"&&cap.isNativePlatform()){
@@ -1036,6 +1040,6 @@ $("exportCsv").onclick=()=>{
 };
 
 $("saveShopProfile").onclick=async()=>{try{await saveShopProfile()}catch(e){$("shopProfileStatus").textContent="သိမ်းမရပါ: "+errText(e)}};
-boot().catch(e=>{ firebaseBootError=(e&&e.message)||String(e);$("loginBtn").disabled=true;$("ownerGoogleBtn").disabled=false; const detail=(e&&e.message)||String(e);status("Firebase စနစ်စတင်မရပါ: "+detail+" (Project: "+(PROJECT&&PROJECT.projectId||"unknown")+")");console.error("AK POS Firebase boot failed",e); });
+// Firebase boot is started immediately after the boot() declaration above.
 if("serviceWorker" in navigator)navigator.serviceWorker.register("./sw.js").catch(()=>{});
 </script></body></html>

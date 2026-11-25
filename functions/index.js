@@ -120,7 +120,7 @@ exports.createShopOwnerAccount = functions.https.onCall(async (data, context) =>
   return { ok: true, uid: authUser.uid, email, shopName, industryType, plan, expiresAt: expiryDate.toISOString(), loginMode: "email-password", emailVerificationRequired: !authUser.emailVerified };
 });
 
-// Called only after Firebase Google sign-in has verified the exact invited Gmail.
+// Called after Firebase email/password or Google sign-in has verified the exact invited Gmail.
 exports.claimOwnerProvisioning = functions.https.onCall(async (data, context) => {
   if (!context.auth || context.auth.token.email_verified !== true || !["google.com","password"].includes(context.auth.token.firebase?.sign_in_provider)) throw new functions.https.HttpsError("unauthenticated", "Owner ဖန်တီးပေးထားသော Gmail + Password ဖြင့် Login ဝင်ပြီး Gmail ကို အတည်ပြုပါ။");
   const email = String(context.auth.token.email || "").trim().toLowerCase();

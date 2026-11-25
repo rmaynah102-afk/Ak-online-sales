@@ -519,7 +519,7 @@ exports.grantSubscription = functions.https.onCall(async (data, context) => {
   const uid = String(data.uid || "").trim();
   const days = Number(data.days);
   const expiryDateText = String(data.expiresOn || "").trim();
-  const manualExpiry = /^\\d{4}-\\d{2}-\\d{2}$/.test(expiryDateText)
+  const manualExpiry = /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(expiryDateText)
     ? new Date(expiryDateText + "T23:59:59.999+06:30") : null;
   if (!uid || uid.length > 128 || (!manualExpiry && ![30, 90, 180, 365].includes(days)) ||
       (expiryDateText && (!manualExpiry || !Number.isFinite(manualExpiry.getTime()) || manualExpiry.getTime() <= Date.now()))) {

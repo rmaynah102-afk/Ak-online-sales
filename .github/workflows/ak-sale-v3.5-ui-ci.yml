@@ -2,7 +2,7 @@ name: AK Sale 3.5 UI and backend checks
 
 on:
   push:
-    branches: [ak-sale-v3-review]
+    branches: [ak-sale-v3-review, "fix/v3.5-merchant-login-license-check-20261125"]
     paths:
       - "v2/**"
       - "cloudflare/**"
@@ -12,7 +12,7 @@ on:
       - ".github/workflows/ak-sale-v3.5-ui-ci.yml"
       - ".github/scripts/check-v2-inline.mjs"
   pull_request:
-    branches: [ak-sale-v3-review]
+    branches: [ak-sale-v3-review, "fix/v3.5-merchant-login-license-check-20261125"]
     paths:
       - "v2/**"
       - "cloudflare/**"

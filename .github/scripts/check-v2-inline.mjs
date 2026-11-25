@@ -21,5 +21,6 @@ for (const tab of tabNames) {
 }
 if (!html.includes("function switchPosTab(tab)") || !html.includes("switchPosTab(b.dataset.tab)")) throw new Error("POS navigation does not switch all declared tabs");
 if (!html.includes('<option value="employee">')) throw new Error("Employee role must be available to staff accounts");
+if (!html.includes('staffRole==="owner"&&String(license.email||"").trim().toLowerCase()!==String(user?.email||"").trim().toLowerCase()')) throw new Error("Merchant login must not compare staff @akstaff.app email with the shop-owner license email");
 writeFileSync("/tmp/ak-pos-v2-inline.js", scripts.join("\n;\n"));
 console.log("Extracted", scripts.length, "inline script block(s)");

@@ -504,8 +504,12 @@ async function loadShop(){
   $("ownerControlBtn").classList.remove("hidden");
  }else{
   const lic=await db.collection("licenses").doc(shopId).get();
-  if(!lic.exists||String(lic.data().email||"").trim().toLowerCase()!==String(user?.email||"").trim().toLowerCase())throw Error("ဤ Gmail သည် Platform Owner အတည်ပြုထားသော ဆိုင်လိုင်စင်နှင့် မကိုက်ညီပါ။");
-  if(lic.data().status!=="active"||!lic.data().expiresAt||lic.data().expiresAt.toDate()<=new Date())throw Error("ဆိုင်သက်တမ်းကုန်နေပါသည်။ Platform Owner ထံ သက်တမ်းတိုးရန် ဆက်သွယ်ပါ။");
+  if(!lic.exists)throw Error("ဆိုင်လိုင်စင် မတွေ့ပါ။ Platform Owner ထံ ဆက်သွယ်ပါ။");
+  const license=lic.data();
+  // Shop-owner Gmail must match its license. Merchant staff sign in with @akstaff.app,
+  // so validate their active membership and shop license without comparing staff email to owner email.
+  if(staffRole==="owner"&&String(license.email||"").trim().toLowerCase()!==String(user?.email||"").trim().toLowerCase())throw Error("ဤ Gmail သည် Platform Owner အတည်ပြုထားသော ဆိုင်လိုင်စင်နှင့် မကိုက်ညီပါ။");
+  if(license.status!=="active"||!license.expiresAt||license.expiresAt.toDate()<=new Date())throw Error("ဆိုင်သက်တမ်းကုန်နေပါသည်။ Platform Owner ထံ သက်တမ်းတိုးရန် ဆက်သွယ်ပါ။");
   $("shopTitle").textContent=lic.data().shopName||"ဆိုင် Dashboard";
   $("licenseBadge").textContent="သက်တမ်းကုန်ရက် "+dateText(lic.data().expiresAt);
   $("ownerControlBtn").classList.add("hidden");

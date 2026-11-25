@@ -2,7 +2,7 @@ name: AK Sale 3.5 Professional backend verification
 
 on:
   push:
-    branches: [ak-sale-v3-review]
+    branches: [ak-sale-v3-review, "fix/v3.5-merchant-login-license-check-20261125"]
     paths:
       - "cloudflare/**"
       - "v2/index.html"
@@ -11,7 +11,7 @@ on:
       - "tests/firestore/**"
       - ".github/workflows/ak-sale-v3.5-backend-verification.yml"
   pull_request:
-    branches: [ak-sale-v3-review]
+    branches: [ak-sale-v3-review, "fix/v3.5-merchant-login-license-check-20261125"]
     paths:
       - "cloudflare/**"
       - ".github/workflows/ak-sale-v3.5-backend-verification.yml"

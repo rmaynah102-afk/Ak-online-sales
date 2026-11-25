@@ -2,7 +2,7 @@
 <html lang="my">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#080b09"><meta name="description" content="AK POS 3.5 Professional — Multi-device shop management">
+<meta name="theme-color" content="#080b09"><meta name="description" content="AK POS 3.6.8 Professional — Multi-device shop management">
 <link rel="manifest" href="./manifest.webmanifest"><title>AK POS 3.5 Professional</title>
 <script src="../firebase-config.js"></script>
 <script src="./firebase-sdk.bundle.js"></script>
@@ -296,21 +296,29 @@ footer{color:#b8c9bd!important}
 </section>
 <section id="tab-backup" class="card hidden"><h2>ဒေတာအရန်သိမ်းဆည်းခြင်း / ပြန်လည်ရယူခြင်း</h2><p class="muted">ဆိုင်ဒေတာကို JSON ဖိုင်အဖြစ် သိမ်းနိုင်သည်။ Restore လုပ်ရာတွင် Backup ထဲရှိ ID များကို Update လုပ်ပြီး မပါသောအဟောင်းဒေတာများကို မဖျက်ပါ။</p><div id="cloudBackupStatus" class="muted">Cloud Auto Backup စနစ် စစ်ဆေးနေသည်။</div><div class="row"><button id="exportData">ဒေတာအရန်ဖိုင် သိမ်းရန်</button><button id="restoreCloudBackup" class="secondary">Cloud Backup နောက်ဆုံးအရန်မှ ပြန်ယူရန်</button></div><div class="row"><input id="importFile" type="file" accept="application/json"><button id="restoreData" class="danger">ဖိုင်မှ ဒေတာပြန်ယူရန်</button></div><p class="muted">Cloud Backup ကို ၆ နာရီခြား အလိုအလျောက် သိမ်းမည်။ နောက်ဆုံး ၂၈ ခုကို ထိန်းသိမ်းမည်။ သက်တမ်းကုန်ခြင်းကြောင့် ဆိုင်ဒေတာကို မဖျက်ပါ။</p></section>
 </section>
-</main><footer><strong>AK POS 3.5</strong> · Professional Shop Management · MMK</footer>
+</main><footer><strong>AK POS 3.6.8</strong> · Professional Shop Management · MMK</footer>
 <script>
-const OWNER="painglin102@gmail.com", GATEWAY="https://ak-sale-backend.painglin102.workers.dev", PROJECT=window.AK_FIREBASE_PUBLIC_CONFIG;
+const OWNER="painglin102@gmail.com", GATEWAY="https://ak-sale-backend.painglin102.workers.dev";
+const PROJECT=window.AK_FIREBASE_PUBLIC_CONFIG||{apiKey:"AIzaSyDz7_oxLjumHVBus8eiVWM6kqXYjChK2z8",authDomain:"ak-onlin-sales.firebaseapp.com",projectId:"ak-onlin-sales",storageBucket:"ak-onlin-sales.firebasestorage.app",messagingSenderId:"1046694954841",appId:"1:1046694954841:web:6ce468cba9dd884833ae48",measurementId:"G-TR2R1454Y0"};
 let auth,db,functions,user,shopId="",staffRole="owner",products=[],sales=[],purchases=[],people=[],expenses=[],payments=[],editingProduct=null,licenses=[],shopProfile={},saleCart=[];
 const $=id=>document.getElementById(id), money=n=>(Number(n)||0).toLocaleString("en-US")+" ကျပ်", dateText=d=>{const x=d?.toDate?d.toDate():new Date(d||Date.now());return isNaN(x)? "-":x.toLocaleDateString("en-GB")};
 function status(msg,where="status"){ $(where).textContent=msg; }
 function show(id){$("loginPanel").classList.toggle("hidden",id!=="loginPanel");$("ownerPanel").classList.toggle("hidden",id!=="ownerPanel");$("shopPanel").classList.toggle("hidden",id!=="shopPanel");}
 async function boot(){
- $("loginBtn").disabled=true;
- if(!PROJECT?.apiKey)throw Error("Firebase config မတွေ့ပါ");
- if(!window.firebase||!firebase.auth||!firebase.firestore||!firebase.functions)throw Error("APK ထဲပါ Firebase SDK bundle မတက်ပါ။ APK Build ကိုပြန်စစ်ရန်လိုသည်။");
- if(!firebase.apps.length)firebase.initializeApp(PROJECT);
- auth=firebase.auth();db=firebase.firestore();functions=firebase.app().functions("us-central1");auth.languageCode="my";
+ $("loginBtn").disabled=true;$("ownerGoogleBtn").disabled=true;
+ status("Firebase SDK နှင့် Config ကို စတင်စစ်ဆေးနေသည်...");
+ if(!PROJECT?.apiKey||!PROJECT?.authDomain||!PROJECT?.projectId||!PROJECT?.appId)throw Error("Firebase Public Config မပြည့်စုံပါ။");
+ if(!window.firebase||typeof firebase.initializeApp!=="function"||typeof firebase.auth!=="function")throw Error("Firebase Auth SDK မတင်နိုင်ပါ။ APK ထဲရှိ firebase-sdk.bundle.js ကိုစစ်ပါ။");
+ if(!firebase.apps||!firebase.apps.length)firebase.initializeApp(PROJECT);
+ const app=firebase.app();
+ auth=app.auth();
+ if(typeof firebase.firestore==="function")db=app.firestore();
+ // Callable Functions မရရှိလျှင်လည်း Firebase Authentication ကို မပိတ်ပါ။
+ try{if(typeof app.functions==="function")functions=app.functions("us-central1");}catch(functionsError){functions=null;console.warn("AK POS callable functions unavailable",functionsError);}
+ auth.languageCode="my";
  await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
  $("loginBtn").disabled=false;$("ownerGoogleBtn").disabled=false;
+ status("Firebase စတင်ပြီးပါပြီ။ Platform Owner Google Login ဝင်နိုင်ပါပြီ။");
  auth.onAuthStateChanged(async u=>{
   user=u;if(!u){show("loginPanel");$("userBadge").textContent="";return}
   try{
@@ -1028,6 +1036,6 @@ $("exportCsv").onclick=()=>{
 };
 
 $("saveShopProfile").onclick=async()=>{try{await saveShopProfile()}catch(e){$("shopProfileStatus").textContent="သိမ်းမရပါ: "+errText(e)}};
-boot().catch(e=>{ $("loginBtn").disabled=true;$("ownerGoogleBtn").disabled=true; status("စနစ်စတင်မရပါ: "+friendlyAuthError(e)); });
+boot().catch(e=>{ auth=null;$("loginBtn").disabled=true;$("ownerGoogleBtn").disabled=false; const detail=(e&&e.message)||String(e);status("Firebase စနစ်စတင်မရပါ: "+detail+" (Project: "+(PROJECT&&PROJECT.projectId||"unknown")+")");console.error("AK POS Firebase boot failed",e); });
 if("serviceWorker" in navigator)navigator.serviceWorker.register("./sw.js").catch(()=>{});
 </script></body></html>

@@ -3,7 +3,7 @@ name: Build AK Sale POS 3.6.8 Android APK
 
 on:
   push:
-    branches: [ak-sale-pos-v2-main, main, ak-pos-2.1.317-professional-base, ak-sale-v3-review, "apk/fix-v3.5-update-version-code-20261125", "fix/v3.5-merchant-login-license-check-20261125"]
+    branches: [ak-sale-pos-v2-main, main, ak-pos-2.1.317-professional-base, ak-sale-v3-review, "apk/fix-v3.5-update-version-code-20261125", "fix/v3.5-merchant-login-license-check-20261125", "fix/v3.6.8-firebase-owner-login-20261126"]
     paths:
       - "v2/**"
       - "firebase-config.js"

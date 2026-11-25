@@ -349,7 +349,7 @@ async function boot(){
  });
 }
 // Start Firebase immediately after defining boot(), before later UI setup can interrupt startup.
-boot().catch(e=>{firebaseBootError=(e&&e.message)||String(e);$("loginBtn").disabled=true;$("ownerGoogleBtn").disabled=false;const detail=(e&&e.message)||String(e);status("Firebase စတင်မရပါ: "+detail+" (Project: "+(PROJECT&&PROJECT.projectId||"unknown")+")");console.error("AK POS Firebase boot failed",e);});
+// boot() is deferred until the full script finishes initializing all dependent declarations.
 window.addEventListener("error",e=>{console.error("AK POS startup runtime error",e.error||e.message);if(!auth)status("App စတင်မှုအမှား: "+(e.message||"JavaScript error")+" · Firebase startup ကိုစစ်ဆေးပါ။")});
 window.addEventListener("unhandledrejection",e=>{console.error("AK POS unhandled promise rejection",e.reason);});
 function errText(e){return e?.message||String(e)}
@@ -1042,4 +1042,5 @@ $("exportCsv").onclick=()=>{
 $("saveShopProfile").onclick=async()=>{try{await saveShopProfile()}catch(e){$("shopProfileStatus").textContent="သိမ်းမရပါ: "+errText(e)}};
 // Firebase boot is started immediately after the boot() declaration above.
 if("serviceWorker" in navigator)navigator.serviceWorker.register("./sw.js").catch(()=>{});
+boot().catch(e=>{firebaseBootError=(e&&e.message)||String(e);$("loginBtn").disabled=true;$("ownerGoogleBtn").disabled=false;const detail=(e&&e.message)||String(e);status("Firebase စတင်မရပါ: "+detail+" (Project: "+(PROJECT&&PROJECT.projectId||"unknown")+")");console.error("AK POS Firebase boot failed",e);});
 </script></body></html>

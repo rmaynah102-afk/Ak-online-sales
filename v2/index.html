@@ -5,6 +5,7 @@
 <meta name="theme-color" content="#080b09"><meta name="description" content="AK POS 3.5 Professional — Multi-device shop management">
 <link rel="manifest" href="./manifest.webmanifest"><title>AK POS 3.5 Professional</title>
 <script src="../firebase-config.js"></script>
+<script src="./firebase-sdk.bundle.js"></script>
 <style>
 :root{--navy:#071a34;--blue:#244d78;--silver:#dce3ec;--silver-hi:#f4f7fb;--bg:#071a34;--line:#aebdce;--ink:#14263c;--muted:#52647a;--green:#13764d;--red:#a8323a}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% -12%,#f4f7fb 0%,#aebdce 16%,#173354 39%,#071a34 76%) fixed;color:var(--ink);font:15px system-ui,"Noto Sans Myanmar",sans-serif;min-height:100vh}
@@ -305,8 +306,7 @@ function show(id){$("loginPanel").classList.toggle("hidden",id!=="loginPanel");$
 async function boot(){
  $("loginBtn").disabled=true;
  if(!PROJECT?.apiKey)throw Error("Firebase config မတွေ့ပါ");
- await new Promise((resolve,reject)=>{const x=document.createElement("script");x.src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js";x.onload=resolve;x.onerror=reject;document.head.appendChild(x)});
- await Promise.all(["firebase-auth-compat.js","firebase-firestore-compat.js","firebase-functions-compat.js"].map(name=>new Promise((resolve,reject)=>{const x=document.createElement("script");x.src="https://www.gstatic.com/firebasejs/10.12.2/"+name;x.onload=resolve;x.onerror=reject;document.head.appendChild(x)})));
+ if(!window.firebase||!firebase.auth||!firebase.firestore||!firebase.functions)throw Error("APK ထဲပါ Firebase SDK bundle မတက်ပါ။ APK Build ကိုပြန်စစ်ရန်လိုသည်။");
  if(!firebase.apps.length)firebase.initializeApp(PROJECT);
  auth=firebase.auth();db=firebase.firestore();functions=firebase.app().functions("us-central1");auth.languageCode="my";
  await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);

@@ -74,7 +74,7 @@ exports.createShopOwnerAccount = functions.https.onCall(async (data, context) =>
   if (!allowedPlans.has(plan)) throw new functions.https.HttpsError("invalid-argument", "Subscription Package မမှန်ပါ။");
   if (!/^\d{4}-\d{2}-\d{2}$/.test(expiryDateText)) throw new functions.https.HttpsError("invalid-argument", "သက်တမ်းကုန်မည့်ရက်ကို ရွေးပါ။");
   const expiryDate = new Date(expiryDateText + "T23:59:59.999+06:30");
-  if (!Number.isFinite(expiryDate.getTime()) || expiryDate.getTime() <= Date.now()) throw new functions.https.HttpsError("invalid-argument", "သက်တမ်းကုန်မည့်ရက်သည် ယနေ့ထက် နောက်ကျရမည်။");
+  if (!Number.isFinite(expiryDate.getTime()) || expiryDate.toISOString().slice(0, 10) !== expiryDateText || expiryDate.getTime() <= Date.now()) throw new functions.https.HttpsError("invalid-argument", "သက်တမ်းကုန်မည့်ရက်သည် မှန်ကန်ပြီး ယနေ့ထက် နောက်ကျရမည်။");
   let existing = null;
   try { existing = await admin.auth().getUserByEmail(email); } catch (e) { if (e.code !== "auth/user-not-found") throw e; }
   if (existing && (existing.uid === context.auth.uid || existing.customClaims?.platformAdmin === true || existing.customClaims?.shopId)) {
@@ -522,7 +522,7 @@ exports.grantSubscription = functions.https.onCall(async (data, context) => {
   const manualExpiry = /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(expiryDateText)
     ? new Date(expiryDateText + "T23:59:59.999+06:30") : null;
   if (!uid || uid.length > 128 || (!manualExpiry && ![30, 90, 180, 365].includes(days)) ||
-      (expiryDateText && (!manualExpiry || !Number.isFinite(manualExpiry.getTime()) || manualExpiry.getTime() <= Date.now()))) {
+      (expiryDateText && (!manualExpiry || !Number.isFinite(manualExpiry.getTime()) || manualExpiry.toISOString().slice(0, 10) !== expiryDateText || manualExpiry.getTime() <= Date.now()))) {
     throw new functions.https.HttpsError("invalid-argument", "Customer အကောင့် သို့မဟုတ် သက်တမ်းကုန်မည့်ရက် မမှန်ပါ။");
   }
   if (uid === context.auth.uid) {

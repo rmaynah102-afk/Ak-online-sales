@@ -63,7 +63,7 @@ test("provisions a Merchant Code staff account through Firebase Auth REST and at
 });
 
 
-test("rejects legacy employee role when provisioning new Merchant Code staff", async () => {
+test("rejects unsupported role when provisioning new Merchant Code staff", async () => {
   const originalFetch=globalThis.fetch;
   const calls=[];
   globalThis.fetch=async(url)=>{
@@ -73,7 +73,7 @@ test("rejects legacy employee role when provisioning new Merchant Code staff", a
   };
   try{
     const response=await worker.fetch(staffRequest("/staff/provision",{
-      apiKey:"test-api-key",name:"Legacy Role",role:"employee",password:"strong-pass-123"
+      apiKey:"test-api-key",name:"Unsupported Role",role:"owner",password:"strong-pass-123"
     }),{});
     assert.equal(response.status,400);
     assert.equal((await response.json()).error,"invalid_staff_role");

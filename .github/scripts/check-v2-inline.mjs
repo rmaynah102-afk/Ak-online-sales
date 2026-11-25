@@ -20,6 +20,6 @@ for (const tab of tabNames) {
   if (!html.includes('id="tab-' + tab + '"')) throw new Error("Missing panel for POS tab: " + tab);
 }
 if (!html.includes("function switchPosTab(tab)") || !html.includes("switchPosTab(b.dataset.tab)")) throw new Error("POS navigation does not switch all declared tabs");
-if (html.includes('<option value="employee">')) throw new Error("Legacy employee role must not be offered to new staff accounts");
+if (!html.includes('<option value="employee">')) throw new Error("Employee role must be available to staff accounts");
 writeFileSync("/tmp/ak-pos-v2-inline.js", scripts.join("\n;\n"));
 console.log("Extracted", scripts.length, "inline script block(s)");

@@ -14,6 +14,7 @@ on:
       - "package.json"
       - "package-lock.json"
       - "scripts/firebase-compat-bundle.js"
+      - ".github/scripts/check-v2-inline.mjs"
       - ".github/workflows/build-ak-sale-pos-v2-apk.yml"
   workflow_dispatch:
 permissions:

@@ -48,6 +48,8 @@ jobs:
           "$SDKMANAGER" --sdk_root="$ANDROID_HOME" "platform-tools" "platforms;android-36" "build-tools;36.0.0"
       - name: Install dependencies
         run: npm install
+      - name: Bundle Firebase compat SDK locally for APK
+        run: npx esbuild scripts/firebase-compat-bundle.js --bundle --platform=browser --format=iife --outfile=www/firebase-sdk.bundle.js
       - name: Prepare clean v2 web bundle
         run: |
           mkdir -p www

@@ -1027,3 +1027,4 @@ $("saveShopProfile").onclick=async()=>{try{await saveShopProfile()}catch(e){$("s
 boot().catch(e=>{ $("loginBtn").disabled=true;$("ownerGoogleBtn").disabled=true; status("စနစ်စတင်မရပါ: "+friendlyAuthError(e)); });
 if("serviceWorker" in navigator)navigator.serviceWorker.register("./sw.js").catch(()=>{});
 </script></body></html>
+<!-- APK build requested: retain existing Merchant Code staff login in release bundle. -->

@@ -83,9 +83,9 @@ function status(msg,where="status"){ $(where).textContent=msg; }
 function show(id){$("loginPanel").classList.toggle("hidden",id!=="loginPanel");$("ownerPanel").classList.toggle("hidden",id!=="ownerPanel");$("shopPanel").classList.toggle("hidden",id!=="shopPanel");}
 async function boot(){
  $("loginBtn").disabled=true;
- if(!PROJECT?.apiKey)throw Error("Firebase config မတွေ့ပါ");
- await new Promise((resolve,reject)=>{const x=document.createElement("script");x.src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js";x.onload=resolve;x.onerror=reject;document.head.appendChild(x)});
- await Promise.all(["firebase-auth-compat.js","firebase-firestore-compat.js"].map(name=>new Promise((resolve,reject)=>{const x=document.createElement("script");x.src="https://www.gstatic.com/firebasejs/10.12.2/"+name;x.onload=resolve;x.onerror=reject;document.head.appendChild(x)})));
+ if(!PROJECT?.apiKey)throw Error("Firebase config မတွေ့ပါ။ firebase-config.js ထဲက AK_FIREBASE_PUBLIC_CONFIG ကိုစစ်ပါ။");
+ await new Promise((resolve,reject)=>{const x=document.createElement("script");x.src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js";x.onload=resolve;x.onerror=()=>reject(Error("Firebase SDK မရပါ။ Internet ချိတ်ဆက်မှု စစ်ပါ။"));document.head.appendChild(x)});
+ await Promise.all(["firebase-auth-compat.js","firebase-firestore-compat.js"].map(name=>new Promise((resolve,reject)=>{const x=document.createElement("script");x.src="https://www.gstatic.com/firebasejs/10.12.2/"+name;x.onload=resolve;x.onerror=()=>reject(Error(name+" မရပါ။ Internet ချိတ်ဆက်မှု စစ်ပါ။"));document.head.appendChild(x)})));
  if(!firebase.apps.length)firebase.initializeApp(PROJECT);
  auth=firebase.auth();db=firebase.firestore();auth.languageCode="my";
  await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
@@ -496,6 +496,6 @@ $("exportCsv").onclick=()=>{
  const csv="\uFEFF"+rows.map(row=>row.map(v=>'"'+String(v??"").replace(/"/g,'""')+'"').join(",")).join("\r\n"),blob=new Blob([csv],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="AK-Sale-"+new Date().toISOString().slice(0,10)+".csv";a.click();URL.revokeObjectURL(a.href);
 };
 
-boot().catch(e=>{ $("loginBtn").disabled=true;$("ownerGoogleBtn").disabled=true; status("စနစ်စတင်မရပါ: "+friendlyAuthError(e)); });
+boot().catch(e=>{ $("loginBtn").disabled=false;$("ownerGoogleBtn").disabled=false; status("Firebase စနစ်စတင်မရပါ: "+friendlyAuthError(e)+"\\n\\nစစ်ရန်: Internet, firebase-config.js, Firebase Auth Provider, APK Native Google plugin နှင့် Android SHA-1/SHA-256."); });
 if("serviceWorker" in navigator)navigator.serviceWorker.register("./sw.js").catch(()=>{});
 </script></body></html>

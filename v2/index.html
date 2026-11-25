@@ -1036,6 +1036,6 @@ $("exportCsv").onclick=()=>{
 };
 
 $("saveShopProfile").onclick=async()=>{try{await saveShopProfile()}catch(e){$("shopProfileStatus").textContent="သိမ်းမရပါ: "+errText(e)}};
-boot().catch(e=>{ auth=null;firebaseBootError=(e&&e.message)||String(e);$("loginBtn").disabled=true;$("ownerGoogleBtn").disabled=false; const detail=(e&&e.message)||String(e);status("Firebase စနစ်စတင်မရပါ: "+detail+" (Project: "+(PROJECT&&PROJECT.projectId||"unknown")+")");console.error("AK POS Firebase boot failed",e); });
+boot().catch(e=>{ firebaseBootError=(e&&e.message)||String(e);$("loginBtn").disabled=true;$("ownerGoogleBtn").disabled=false; const detail=(e&&e.message)||String(e);status("Firebase စနစ်စတင်မရပါ: "+detail+" (Project: "+(PROJECT&&PROJECT.projectId||"unknown")+")");console.error("AK POS Firebase boot failed",e); });
 if("serviceWorker" in navigator)navigator.serviceWorker.register("./sw.js").catch(()=>{});
 </script></body></html>

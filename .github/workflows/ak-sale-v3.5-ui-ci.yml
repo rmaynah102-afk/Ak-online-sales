@@ -50,6 +50,6 @@ jobs:
           distribution: temurin
           java-version: "21"
       - name: Install Firestore emulator test dependencies
-        run: npm install --no-save firebase@12.6.0 firebase-tools @firebase/rules-unit-testing
+        run: npm install --no-save firebase@12.6.0 firebase-tools @firebase/rules-unit-testing mocha
       - name: Run Firestore security rules tests in emulator
-        run: npx firebase emulators:exec --only firestore --project demo-ak-sale-rules "node --test tests/firestore/firestore.rules.test.js"
+        run: npx firebase emulators:exec --only firestore --project demo-ak-sale-rules "npx mocha tests/firestore/firestore.rules.test.js --timeout 30000"

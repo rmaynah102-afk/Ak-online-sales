@@ -334,12 +334,9 @@ async function boot(){
    }else{await ownerCallable("claimOwnerProvisioning",{},u);shopId=u.uid;staffRole="owner";await loadShop()}
   }catch(e){
    const email=(u.email||"").toLowerCase();
-   if(email===OWNER){
-    show("ownerPanel");$("userBadge").textContent="Platform Owner";
-    $("ownerStatus").textContent="Owner Login အောင်မြင်သော်လည်း Dashboard ဒေတာဖတ်မရပါ: "+friendlyAuthError(e);
-   }else{
-    await auth.signOut();show("loginPanel");status("ဝင်ရောက်မှု မအောင်မြင်: "+friendlyAuthError(e));
-   }
+   await auth.signOut();
+   show("loginPanel");$("userBadge").textContent="";
+   status(email===OWNER?"Owner Login ပြီးနောက် POS/Control Center ဖွင့်မရပါ: "+friendlyAuthError(e):"ဝင်ရောက်မှု မအောင်မြင်: "+friendlyAuthError(e));
   }
  });
 }

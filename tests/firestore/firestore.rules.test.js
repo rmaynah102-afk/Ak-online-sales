@@ -450,11 +450,11 @@ describe('AK Sale Firestore security baseline', function () {
       '0123456789ABCDEF0123456789ABCDEF'));
   });
 
-  it('enforces the three staff slot maximum', async () => {
+  it('enforces the two staff slot maximum', async () => {
     await seedLicense('shop-a');
     await testEnv.withSecurityRulesDisabled(async (context) => {
       const db = context.firestore();
-      for (let n = 1; n <= 3; n++) {
+      for (let n = 1; n <= 2; n++) {
         await setDoc(doc(db, 'shopStaffSlots', 'shop-a_' + n), {
           shopId: 'shop-a', uid: 'existing-' + n, slot: n,
           inviteCode: 'seed' + n, createdAt: Timestamp.now(),

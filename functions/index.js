@@ -518,8 +518,12 @@ exports.grantSubscription = functions.https.onCall(async (data, context) => {
   const actor = requireAdmin(context);
   const uid = String(data.uid || "").trim();
   const days = Number(data.days);
-  if (!uid || uid.length > 128 || ![30, 90, 180, 365].includes(days)) {
-    throw new functions.https.HttpsError("invalid-argument", "Customer အကောင့် သို့မဟုတ် သက်တမ်းကာလ မမှန်ပါ။");
+  const expiryDateText = String(data.expiresOn || "").trim();
+  const manualExpiry = /^\\d{4}-\\d{2}-\\d{2}$/.test(expiryDateText)
+    ? new Date(expiryDateText + "T23:59:59.999+06:30") : null;
+  if (!uid || uid.length > 128 || (!manualExpiry && ![30, 90, 180, 365].includes(days)) ||
+      (expiryDateText && (!manualExpiry || !Number.isFinite(manualExpiry.getTime()) || manualExpiry.getTime() <= Date.now()))) {
+    throw new functions.https.HttpsError("invalid-argument", "Customer အကောင့် သို့မဟုတ် သက်တမ်းကုန်မည့်ရက် မမှန်ပါ။");
   }
   if (uid === context.auth.uid) {
     throw new functions.https.HttpsError("permission-denied", "Platform Owner ကို Customer License မပေးနိုင်ပါ။");
@@ -536,9 +540,11 @@ exports.grantSubscription = functions.https.onCall(async (data, context) => {
     await enforceCustomerShopCapacity(tx, uid, snap);
     const oldExpiry = old.expiresAt && typeof old.expiresAt.toMillis === "function"
       ? old.expiresAt.toMillis() : 0;
-    const expiresAt = admin.firestore.Timestamp.fromMillis(Math.max(Date.now(), oldExpiry) + days * 86400000);
+    const expiresAt = manualExpiry
+      ? admin.firestore.Timestamp.fromDate(manualExpiry)
+      : admin.firestore.Timestamp.fromMillis(Math.max(Date.now(), oldExpiry) + days * 86400000);
     tx.set(ref, {
-      uid, email, status: "active", plan: days + "-days",
+      uid, email, status: "active", plan: manualExpiry ? "manual-date" : days + "-days",
       expiresAt, grantedBy: actor, grantedAt: admin.firestore.FieldValue.serverTimestamp(),
       updatedAt: admin.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
@@ -546,10 +552,10 @@ exports.grantSubscription = functions.https.onCall(async (data, context) => {
   });
   await db.collection("platformAuditLogs").add({
     action: "subscription_manually_granted", targetUid: uid, targetEmail: email,
-    days, expiresAt: result, actor,
+    days: manualExpiry ? null : days, expiresAt: result, actor,
     createdAt: admin.firestore.FieldValue.serverTimestamp()
   });
-  return { ok: true, uid, email, days, expiresAt: result.toDate().toISOString() };
+  return { ok: true, uid, email, days: manualExpiry ? null : days, expiresAt: result.toDate().toISOString() };
 });
 
 exports.setPlatformUserAccess = functions.https.onCall(async (data, context) => {

@@ -50,7 +50,7 @@ jobs:
           "$SDKMANAGER" --sdk_root="$ANDROID_HOME" "platform-tools" "platforms;android-36" "build-tools;36.0.0"
       - name: Install dependencies
         run: npm install
-      - name: Bundle Firebase compat SDK locally for APK
+      - name: Bundle Firebase compat SDK and native Google Auth plugin locally for APK
         run: mkdir -p www && npx esbuild scripts/firebase-compat-bundle.js --bundle --platform=browser --format=iife --outfile=www/firebase-sdk.bundle.js
       - name: Prepare clean v2 web bundle
         run: |
@@ -86,6 +86,8 @@ jobs:
           const scripts=[...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)].filter(([,a])=>!/\bsrc\s*=/.test(a));
           if(!scripts.length)throw new Error('No inline JavaScript found');
           if(!html.includes('firebase-sdk.bundle.js')||!fs.existsSync('www/firebase-sdk.bundle.js'))throw new Error('Locally bundled Firebase SDK is missing from APK web assets');
+          const authBundle=fs.readFileSync('scripts/firebase-compat-bundle.js','utf8');
+          if(!authBundle.includes("@capacitor-firebase/authentication")||!authBundle.includes('window.AKFirebaseAuthentication')) throw new Error('Native Firebase Authentication plugin is not registered in the APK JavaScript bundle');
           if(!html.includes('window.AK_FIREBASE_PUBLIC_CONFIG||{')||!html.includes('Callable Functions မရရှိလျှင်လည်း Firebase Authentication ကို မပိတ်ပါ')) throw new Error('Firebase config fallback or independent Auth startup guard is missing');
           scripts.forEach(([, , code],i)=>new vm.Script(code,{filename:'v2-inline-'+(i+1)}));
           if(!html.includes('id="ownerGoogleBtn"')||!html.includes('nativeAuth.signInWithGoogle({skipNativeAuth:true,useCredentialManager:false})')||!html.includes('GoogleAuthProvider.credential(idToken)')) throw new Error('Native Google Platform Owner login bridge is missing');

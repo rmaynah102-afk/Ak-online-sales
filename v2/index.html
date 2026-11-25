@@ -465,7 +465,8 @@ window.toggleLicense=async id=>{try{const x=licenses.find(a=>a.id===id),action=x
 function applyRoleUI(){
  const manager=staffRole==="owner"||staffRole==="manager",cashier=staffRole==="cashier";
  $("staffManagement").classList.toggle("hidden",staffRole!=="owner"||isPlatformOwner());
- $("productForm").classList.toggle("hidden",!manager);\n $("productImportTools")?.classList.toggle("hidden",!manager);
+ $("productForm").classList.toggle("hidden",!manager);
+ $("productImportTools")?.classList.toggle("hidden",!manager);
  const allowed={products:true,sales:manager||cashier,purchases:manager,people:manager||cashier,expenses:manager,reports:manager,printer:manager||cashier,ads:manager,backup:staffRole==="owner",shopprofile:staffRole==="owner"};$("debtCollectionBox").classList.toggle("hidden",!manager);
  for(const [tab,ok] of Object.entries(allowed)){const b=document.querySelector('#tabs button[data-tab="'+tab+'"]');if(b)b.classList.toggle("hidden",!ok)}
  switchPosTab("products");

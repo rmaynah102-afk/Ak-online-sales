@@ -45,3 +45,7 @@ jobs:
         run: node --check functions/index.js
       - name: Check Firestore rules test syntax
         run: node --check tests/firestore/firestore.rules.test.js
+      - name: Install Firestore emulator test dependencies
+        run: npm install --no-save firebase@12.6.0 firebase-tools @firebase/rules-unit-testing
+      - name: Run Firestore security rules tests in emulator
+        run: npx firebase emulators:exec --only firestore --project demo-ak-sale-rules "node --test tests/firestore/firestore.rules.test.js"

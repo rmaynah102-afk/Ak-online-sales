@@ -1,4 +1,5 @@
 # AK Sale Professional release: Google-only shop owners, verified Owner invitations, and Merchant Code-only staff.
+# Rebuild trigger: package the source-verified 3.6.8 branch head after Firebase contract checks.
 name: Build AK Sale POS 3.6.8 Android APK
 
 on:

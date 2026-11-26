@@ -4,11 +4,11 @@ on:
   push:
     branches: ["fix/v3.6.8-firebase-owner-login-20261126"]
     paths:
-      - "app.html"
+      - "v2/**"
       - "functions/**"
       - "firestore.rules"
-      - "scripts/validate-firebase-contract.js"
-      - "scripts/validate-apk-contract.js"
+      - "firebase-config.js"
+      - "scripts/firebase-compat-bundle.js"
       - "tests/firestore/**"
       - ".github/workflows/ak-sale-v3.6.8-verification.yml"
   workflow_dispatch:
@@ -26,10 +26,32 @@ jobs:
           node-version: 22
       - name: Check callable backend syntax
         run: node --check functions/index.js
-      - name: Validate Firebase and POS contract
-        run: node scripts/validate-firebase-contract.js
-      - name: Validate APK integration contract
-        run: node scripts/validate-apk-contract.js
+      - name: Validate the actual 3.6.8 APK source
+        run: |
+          node - <<'NODE'
+          const fs=require('fs'),vm=require('vm');
+          const html=fs.readFileSync('v2/index.html','utf8');
+          const blocks=[...html.matchAll(/<script\\b([^>]*)>([\\s\\S]*?)<\\/script>/gi)].filter(([,attrs])=>!/\\bsrc\\s*=/.test(attrs));
+          if(!blocks.length)throw Error('No inline JavaScript found in v2/index.html');
+          blocks.forEach(([, ,code],i)=>new vm.Script(code,{filename:'v2-inline-'+(i+1)}));
+          const required=[
+            ['Platform Owner Google login','id="ownerGoogleBtn"'],
+            ['Shop Owner Google login','id="shopGoogleBtn"'],
+            ['Owner invitation callable','createShopOwnerAccount'],
+            ['Owner provisioning claim','claimOwnerProvisioning'],
+            ['Staff membership separation','shopMembers'],
+            ['Local printer bridge','window.akPrintRawToDefault'],
+            ['Receipt sharing','shareReceiptImage'],
+            ['Barcode scanner','akStartBarcodeScanner'],
+            ['CSV export','exportCsv'],
+            ['Excel export','exportExcel']
+          ];
+          for(const [label,marker] of required)if(!html.includes(marker))throw Error('Missing APK source feature: '+label);
+          const config=fs.readFileSync('firebase-config.js','utf8');
+          new vm.Script(config,{filename:'firebase-config.js'});
+          if(!html.includes('AK_FIREBASE_PUBLIC_CONFIG')||!config.includes('ak-onlin-sales'))throw Error('Firebase project config is not linked to the APK source');
+          console.log('Validated',blocks.length,'inline JavaScript blocks and 3.6.8 APK feature markers');
+          NODE
       - name: Install Firestore rules test dependencies
         working-directory: tests/firestore
         run: npm install

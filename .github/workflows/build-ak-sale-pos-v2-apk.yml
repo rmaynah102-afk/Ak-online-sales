@@ -1,10 +1,10 @@
-# AK Sale Professional release: Google-only shop owners, verified Owner invitations, and Merchant Code-only staff.
+# AK Sale Professional release: Owner-assigned Gmail/password shop owners, verified email, and Merchant Code-only staff.
 # Rebuild trigger: package the source-verified 3.6.8 branch head after Firebase contract checks.
 name: Build AK Sale POS 3.6.8 Android APK
 
 on:
   push:
-    branches: [ak-sale-pos-v2-main, main, ak-pos-2.1.317-professional-base, ak-sale-v3-review, "apk/fix-v3.5-update-version-code-20261125", "fix/v3.5-merchant-login-license-check-20261125", "fix/v3.6.8-firebase-owner-login-20261126"]
+    branches: [ak-sale-pos-v2-main, main, ak-pos-2.1.317-professional-base, ak-sale-v3-review, "apk/fix-v3.5-update-version-code-20261125", "fix/v3.5-merchant-login-license-check-20261125", "fix/v3.6.8-firebase-owner-login-20261126", "fix/v3.6.8-owner-set-password-20261126"]
     paths:
       - "v2/**"
       - "firebase-config.js"

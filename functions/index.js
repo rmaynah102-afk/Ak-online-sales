@@ -106,7 +106,15 @@ exports.createShopOwnerAccount = functions.https.onCall(async (data, context) =>
     expiresAt: admin.firestore.Timestamp.fromDate(expiryDate),
     invitedBy: actor, updatedAt: admin.firestore.FieldValue.serverTimestamp()
   };
-  await inviteRef.set(invite, { merge: true });\n  await db.collection("platformAuditLogs").add({\n    action: "shop_owner_google_invite_created", targetEmail: email, shopName, industryType,\n    expiresAt: invite.expiresAt, actor, createdAt: admin.firestore.FieldValue.serverTimestamp()\n  });\n  return { ok: true, email, shopName, industryType, plan, expiresAt: expiryDate.toISOString(), loginMode: "google", googleLoginRequired: true };\n});\n\n// Called after Firebase email/password or Google sign-in has verified the exact invited Gmail.
+  await inviteRef.set(invite, { merge: true });
+  await db.collection("platformAuditLogs").add({
+    action: "shop_owner_google_invite_created", targetEmail: email, shopName, industryType,
+    expiresAt: invite.expiresAt, actor, createdAt: admin.firestore.FieldValue.serverTimestamp()
+  });
+  return { ok: true, email, shopName, industryType, plan, expiresAt: expiryDate.toISOString(), loginMode: "google", googleLoginRequired: true };
+});
+
+// Called after Firebase email/password or Google sign-in has verified the exact invited Gmail.
 exports.claimOwnerProvisioning = functions.https.onCall(async (data, context) => {
   if (!context.auth || context.auth.token.email_verified !== true || context.auth.token.firebase?.sign_in_provider !== "google.com") throw new functions.https.HttpsError("unauthenticated", "ဆိုင်ရှင်သည် Gmail အတည်ပြုပြီး Google Login ဖြင့်သာ ဝင်နိုင်ပါသည်။");
   const email = String(context.auth.token.email || "").trim().toLowerCase();

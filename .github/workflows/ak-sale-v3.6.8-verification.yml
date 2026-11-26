@@ -34,4 +34,4 @@ jobs:
         working-directory: tests/firestore
         run: npm install
       - name: Run Firestore rules tests in emulator
-        run: npx --yes firebase-tools emulators:exec --only firestore --project demo-ak-sale-368 --config tests/firestore/firebase.json "npm --prefix tests/firestore test"
+        run: npx --yes firebase-tools emulators:exec --only firestore --project demo-ak-sale-368 --config firebase.json "npm --prefix tests/firestore test"

@@ -1177,7 +1177,7 @@ async function workspaceIdentity(context) {
   if (!context.auth) throw new functions.https.HttpsError("unauthenticated","Login လိုအပ်သည်။");
   const claims=context.auth.token||{};
   const email=String(context.auth.token.email||"").trim().toLowerCase();
-  const isPlatformOwner=email===OWNER_EMAIL && context.auth.token.email_verified===true;
+  const isPlatformOwner=email===OWNER_EMAIL && context.auth.token.email_verified===true && context.auth.token.firebase && context.auth.token.firebase.sign_in_provider==="google.com";
   if (isPlatformOwner) return {shopId:context.auth.uid,role:"owner",isOwner:true};
   if (claims.shopId && context.auth.token.email_verified === true &&
       WORKSPACE_READ_ROLES.includes(String(claims.shopRole||""))) {

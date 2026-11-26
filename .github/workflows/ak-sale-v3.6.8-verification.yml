@@ -2,7 +2,7 @@ name: AK Sale 3.6.8 Source Verification
 
 on:
   push:
-    branches: ["fix/v3.6.8-firebase-owner-login-20261126"]
+    branches: ["fix/v3.6.8-firebase-owner-login-20261126", "fix/v3.6.8-owner-set-password-20261126"]
     paths:
       - "v2/**"
       - "functions/**"

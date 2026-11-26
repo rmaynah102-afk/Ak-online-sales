@@ -39,6 +39,8 @@ jobs:
             ['Shop Owner Google login','id="shopGoogleBtn"'],
             ['Owner invitation callable','createShopOwnerAccount'],
             ['Owner provisioning claim','claimOwnerProvisioning'],
+            ['Owner-assigned password field','id="newShopPassword"'],
+            ['Shop owner password login mode','value="shopPassword"'],
             ['Staff membership separation','shopMembers'],
             ['Local printer bridge','window.akPrintRawToDefault'],
             ['Receipt sharing','shareReceiptImage'],
@@ -47,6 +49,12 @@ jobs:
             ['Excel export','exportExcel']
           ];
           for(const [label,marker] of required)if(!html.includes(marker))throw Error('Missing APK source feature: '+label);
+          const backend=fs.readFileSync('functions/index.js','utf8');
+          for(const [label,marker] of [
+            ['Owner creates Firebase Auth email/password account','admin.auth().createUser({ email, password })'],
+            ['Owner can set password on an existing eligible account','admin.auth().updateUser(existing.uid, { password })'],
+            ['Provisioning accepts verified password login','["password", "google.com"].includes(context.auth.token.firebase?.sign_in_provider)']
+          ])if(!backend.includes(marker))throw Error('Missing owner password backend behavior: '+label);
           const config=fs.readFileSync('firebase-config.js','utf8');
           new vm.Script(config,{filename:'firebase-config.js'});
           if(!html.includes('AK_FIREBASE_PUBLIC_CONFIG')||!config.includes('ak-onlin-sales'))throw Error('Firebase project config is not linked to the APK source');

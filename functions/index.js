@@ -122,7 +122,7 @@ exports.createShopOwnerAccount = functions.https.onCall(async (data, context) =>
 
 // Called after Firebase email/password or Google sign-in has verified the exact invited Gmail.
 exports.claimOwnerProvisioning = functions.https.onCall(async (data, context) => {
-  if (!context.auth || context.auth.token.email_verified !== true || !["google.com","password"].includes(context.auth.token.firebase?.sign_in_provider)) throw new functions.https.HttpsError("unauthenticated", "Owner ဖန်တီးပေးထားသော Gmail + Password ဖြင့် Login ဝင်ပြီး Gmail ကို အတည်ပြုပါ။");
+  if (!context.auth || context.auth.token.email_verified !== true || context.auth.token.firebase?.sign_in_provider !== "google.com") throw new functions.https.HttpsError("unauthenticated", "ဆိုင်ရှင်သည် Gmail အတည်ပြုပြီး Google Login ဖြင့်သာ ဝင်နိုင်ပါသည်။");
   const email = String(context.auth.token.email || "").trim().toLowerCase();
   if (!email || email === OWNER_EMAIL) throw new functions.https.HttpsError("permission-denied", "Customer Gmail မမှန်ပါ။");
   const emailKey = crypto.createHash("sha256").update(email).digest("hex");

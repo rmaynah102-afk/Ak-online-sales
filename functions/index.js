@@ -129,23 +129,31 @@ exports.claimOwnerProvisioning = functions.https.onCall(async (data, context) =>
       if (!currentInvite.expiresAt || currentInvite.expiresAt.toMillis() <= Date.now()) {
         throw new functions.https.HttpsError("failed-precondition", "အကောင့်သက်တမ်းကုန်နေသည်။ Owner ထံ ဆက်သွယ်ပါ။");
       }
+      let preexistingPendingLicense = false;
       if (existingLicenseSnap.exists) {
         const existingLicense = existingLicenseSnap.data() || {};
-        if (String(existingLicense.email || "").toLowerCase() !== email) {
+        if (String(existingLicense.email || "").trim().toLowerCase() !== email) {
           throw new functions.https.HttpsError("permission-denied", "ဤ Firebase အကောင့်သည် အခြား Gmail ဆိုင်အကောင့်နှင့် ချိတ်ထားပြီးဖြစ်သည်။");
         }
-        throw new functions.https.HttpsError("already-exists", "ဤ Google အကောင့်တွင် ဆိုင်လိုင်စင် ရှိပြီးဖြစ်သည်။ Platform Owner ထံ သက်တမ်းတိုးရန် ဆက်သွယ်ပါ။");
+        // The auth onCreate startTrial trigger may create a pending_payment license
+        // before the invited shop owner claims the invite. Allow only that safe
+        // same-email placeholder to be finalized; reject all other existing licenses.
+        if (existingLicense.status === "pending_payment" || existingLicense.status === "pending") {
+          preexistingPendingLicense = true;
+        } else {
+          throw new functions.https.HttpsError("already-exists", "ဤ Google အကောင့်တွင် ဆိုင်လိုင်စင် ရှိပြီးဖြစ်သည်။ Platform Owner ထံ သက်တမ်းတိုးရန် ဆက်သွယ်ပါ။");
+        }
       }
       // Count live, unexpired active licenses under the same transaction lock
       // used by manual renewals and reactivations to avoid divergent counters.
       await enforceCustomerShopCapacity(tx, context.auth.uid, existingLicenseSnap);
-      tx.create(licenseRef, {
+      tx.set(licenseRef, {
         uid: context.auth.uid, email, shopName: currentInvite.shopName, industryType: currentInvite.industryType,
         status: "active", plan: currentInvite.plan || "30-days", expiresAt: currentInvite.expiresAt,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        ...(preexistingPendingLicense ? {} : { createdAt: admin.firestore.FieldValue.serverTimestamp() }),
         provisionedBy: currentInvite.invitedBy, provisionedAt: admin.firestore.FieldValue.serverTimestamp(),
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
-      });
+      }, { merge: preexistingPendingLicense });
       tx.update(inviteRef, { status: "claimed", claimedUid: context.auth.uid, claimedAt: admin.firestore.FieldValue.serverTimestamp() });
 
     });

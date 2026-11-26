@@ -84,21 +84,12 @@ exports.createShopOwnerAccount = functions.https.onCall(async (data, context) =>
     throw new functions.https.HttpsError("failed-precondition", "ဤ Gmail တွင် အသုံးပြုနိုင်သော Google သို့မဟုတ် Email/Password အကောင့် မရှိပါ။");
   }
   if (existing) {
-    try { await admin.auth().updateUser(existing.uid, { password }); }
-    catch (error) { throw new functions.https.HttpsError("failed-precondition", "ဆိုင်ရှင် Password သတ်မှတ်မရပါ: " + (error.message || error.code)); }
-  } else {
-    try { existing = await admin.auth().createUser({ email, password }); }
-    catch (error) { throw new functions.https.HttpsError("internal", "ဆိုင်ရှင် Login အကောင့် ဖန်တီးမရပါ: " + (error.message || error.code)); }
-  }
-  if (existing) {
     const member = await db.collection("shopMembers").doc(existing.uid).get();
     if (member.exists) throw new functions.https.HttpsError("failed-precondition", "ဤ Gmail သည် ဝန်ထမ်းအကောင့်ဖြစ်နေသည်။");
     const existingLicense = await db.collection("licenses").doc(existing.uid).get();
     if (existingLicense.exists) {
       const licenseData = existingLicense.data() || {};
       const licenseEmail = String(licenseData.email || "").trim().toLowerCase();
-      // Permit owner invitation only for an unused, same-email pending auth-trigger placeholder.
-      // Active, suspended, expired, or mismatched licenses must be managed via the owner list.
       if (licenseEmail !== email || !["pending_payment", "pending"].includes(licenseData.status)) {
         throw new functions.https.HttpsError("already-exists", "ဤ Gmail အတွက် ဆိုင်လိုင်စင် ရှိပြီးဖြစ်သည်။ ဆိုင်စာရင်းမှ သက်တမ်းတိုးပါ။");
       }
@@ -109,6 +100,14 @@ exports.createShopOwnerAccount = functions.https.onCall(async (data, context) =>
   const priorInvite = await inviteRef.get();
   if (priorInvite.exists && priorInvite.data()?.status === "claimed") {
     throw new functions.https.HttpsError("already-exists", "ဤ Gmail Invitation ကို အသုံးပြုပြီးဖြစ်သည်။ ဆိုင်စာရင်းမှ သက်တမ်းတိုးပါ။");
+  }
+  // Never store the password in Firestore. Admin SDK writes it only to Firebase Authentication.
+  if (existing) {
+    try { await admin.auth().updateUser(existing.uid, { password }); }
+    catch (error) { throw new functions.https.HttpsError("failed-precondition", "ဆိုင်ရှင် Password သတ်မှတ်မရပါ: " + (error.message || error.code)); }
+  } else {
+    try { existing = await admin.auth().createUser({ email, password }); }
+    catch (error) { throw new functions.https.HttpsError("internal", "ဆိုင်ရှင် Login အကောင့် ဖန်တီးမရပါ: " + (error.message || error.code)); }
   }
   const invite = {
     email, shopName, industryType, plan, status: "pending",

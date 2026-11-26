@@ -31,7 +31,7 @@ jobs:
           node - <<'NODE'
           const fs=require('fs'),vm=require('vm');
           const html=fs.readFileSync('v2/index.html','utf8');
-          const blocks=[...html.matchAll(/<script\\b([^>]*)>([\\s\\S]*?)<\\/script>/gi)].filter(([,attrs])=>!/\\bsrc\\s*=/.test(attrs));
+          const blocks=[...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)].filter(([,attrs])=>!/\bsrc\s*=/.test(attrs));
           if(!blocks.length)throw Error('No inline JavaScript found in v2/index.html');
           blocks.forEach(([, ,code],i)=>new vm.Script(code,{filename:'v2-inline-'+(i+1)}));
           const required=[

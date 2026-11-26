@@ -85,7 +85,15 @@ exports.createShopOwnerAccount = functions.https.onCall(async (data, context) =>
     const member = await db.collection("shopMembers").doc(existing.uid).get();
     if (member.exists) throw new functions.https.HttpsError("failed-precondition", "ဤ Gmail သည် ဝန်ထမ်းအကောင့်ဖြစ်နေသည်။");
     const existingLicense = await db.collection("licenses").doc(existing.uid).get();
-    if (existingLicense.exists) throw new functions.https.HttpsError("already-exists", "ဤ Gmail အတွက် ဆိုင်လိုင်စင် ရှိပြီးဖြစ်သည်။ ဆိုင်စာရင်းမှ သက်တမ်းတိုးပါ။");
+    if (existingLicense.exists) {
+      const licenseData = existingLicense.data() || {};
+      const licenseEmail = String(licenseData.email || "").trim().toLowerCase();
+      // Permit owner invitation only for an unused, same-email pending auth-trigger placeholder.
+      // Active, suspended, expired, or mismatched licenses must be managed via the owner list.
+      if (licenseEmail !== email || !["pending_payment", "pending"].includes(licenseData.status)) {
+        throw new functions.https.HttpsError("already-exists", "ဤ Gmail အတွက် ဆိုင်လိုင်စင် ရှိပြီးဖြစ်သည်။ ဆိုင်စာရင်းမှ သက်တမ်းတိုးပါ။");
+      }
+    }
   }
   const emailKey = crypto.createHash("sha256").update(email).digest("hex");
   const inviteRef = db.collection("pendingOwnerInvites").doc(emailKey);

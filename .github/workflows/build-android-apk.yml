@@ -5,7 +5,9 @@ concurrency:
   cancel-in-progress: false
 
 on:
-  # APK is built manually only after free-tier backend checks are complete.
+  pull_request:
+    branches:
+      - ak-pos-2.1.317-professional-base
   workflow_dispatch:
 
 permissions:

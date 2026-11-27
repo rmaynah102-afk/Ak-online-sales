@@ -60,58 +60,38 @@ async function enforceCustomerShopCapacity(tx, uid, currentLicenseSnap) {
 exports.createShopOwnerAccount = functions.https.onCall(async (data, context) => {
   const actor = requireAdmin(context);
   const email = String(data.email || "").trim().toLowerCase();
+  const password = String(data.password || "");
   const shopName = String(data.shopName || "").trim().slice(0, 100);
   const industryType = String(data.industryType || "general").trim().toLowerCase();
   const allowedIndustryTypes = new Set(["general","grocery","hardware","electronics","mobile","gold","restaurant","cosmetics","fashion","auto_parts","pharmacy","construction","wholesale","beauty","hotel","laundry","stationery","online","other"]);
-  const expiryDateText = String(data.expiresOn || "").trim();
-  const plan = String(data.plan || "").trim();
+  const expiryDateText = String(data.expiresOn || "").trim(), plan = String(data.plan || "").trim();
   const allowedPlans = new Set(["5-days","30-days","90-days","180-days","365-days"]);
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email === OWNER_EMAIL) throw new functions.https.HttpsError("invalid-argument", "ဆိုင်ရှင် Gmail လိပ်စာ မမှန်ပါ။");
+  if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email) || email === OWNER_EMAIL) throw new functions.https.HttpsError("invalid-argument", "ဆိုင်ရှင် Gmail လိပ်စာ မမှန်ပါ။");
+  if (password.length < 8) throw new functions.https.HttpsError("invalid-argument", "Password အနည်းဆုံး ၈ လုံး ထည့်ပါ။");
   if (shopName.length < 2) throw new functions.https.HttpsError("invalid-argument", "ဆိုင်အမည် အနည်းဆုံး ၂ လုံးထည့်ပါ။");
-  if (!allowedIndustryTypes.has(industryType)) throw new functions.https.HttpsError("invalid-argument", "ဆိုင်အမျိုးအစား မမှန်ပါ။");
-  if (!allowedPlans.has(plan)) throw new functions.https.HttpsError("invalid-argument", "Subscription Package မမှန်ပါ။");
+  if (!allowedIndustryTypes.has(industryType) || !allowedPlans.has(plan)) throw new functions.https.HttpsError("invalid-argument", "ဆိုင်အမျိုးအစား သို့မဟုတ် Package မမှန်ပါ။");
   if (!/^\d{4}-\d{2}-\d{2}$/.test(expiryDateText)) throw new functions.https.HttpsError("invalid-argument", "သက်တမ်းကုန်မည့်ရက်ကို ရွေးပါ။");
   const expiryDate = new Date(expiryDateText + "T23:59:59.999+06:30");
-  if (!Number.isFinite(expiryDate.getTime()) || expiryDate.toISOString().slice(0, 10) !== expiryDateText || expiryDate.getTime() <= Date.now()) throw new functions.https.HttpsError("invalid-argument", "သက်တမ်းကုန်မည့်ရက်သည် မှန်ကန်ပြီး ယနေ့ထက် နောက်ကျရမည်။");
-  let existing = null;
-  try { existing = await admin.auth().getUserByEmail(email); } catch (e) { if (e.code !== "auth/user-not-found") throw e; }
-  if (existing && (existing.uid === context.auth.uid || existing.customClaims?.platformAdmin === true || existing.customClaims?.shopId)) {
-    throw new functions.https.HttpsError("permission-denied", "ဤ Gmail ကို ဆိုင်ရှင်အကောင့်အဖြစ် မသတ်မှတ်နိုင်ပါ။");
+  if (!Number.isFinite(expiryDate.getTime()) || expiryDate.toISOString().slice(0,10)!==expiryDateText || expiryDate.getTime()<=Date.now()) throw new functions.https.HttpsError("invalid-argument", "သက်တမ်းကုန်မည့်ရက် မှားနေပါသည်။");
+  let existing=null;
+  try { existing=await admin.auth().getUserByEmail(email); } catch(e) { if(e.code!=="auth/user-not-found") throw e; }
+  if(existing && (existing.uid===context.auth.uid || existing.customClaims?.platformAdmin===true || existing.customClaims?.shopId)) throw new functions.https.HttpsError("permission-denied","ဤ Gmail ကို ဆိုင်ရှင်အကောင့်အဖြစ် မသတ်မှတ်နိုင်ပါ။");
+  if(existing){
+    const member=await db.collection("shopMembers").doc(existing.uid).get();
+    if(member.exists) throw new functions.https.HttpsError("failed-precondition","ဤ Gmail သည် ဝန်ထမ်းအကောင့်ဖြစ်နေသည်။");
+    const ls=await db.collection("licenses").doc(existing.uid).get(), ld=ls.data()||{};
+    if(ls.exists && (String(ld.email||"").toLowerCase()!==email || !["pending_payment","pending"].includes(ld.status))) throw new functions.https.HttpsError("already-exists","ဤ Gmail အတွက် ဆိုင်လိုင်စင် ရှိပြီးဖြစ်သည်။ ဆိုင်စာရင်းမှ သက်တမ်းတိုးပါ။");
   }
-  if (existing && !(existing.providerData || []).some(provider => provider.providerId === "google.com")) {
-    throw new functions.https.HttpsError("failed-precondition", "ဤ Gmail တွင် Google Login အကောင့်မရှိသေးပါ။ Google အကောင့်ကို အသုံးပြုရန် အရင်စစ်ဆေးပါ။");
-  }
-  if (existing) {
-    const member = await db.collection("shopMembers").doc(existing.uid).get();
-    if (member.exists) throw new functions.https.HttpsError("failed-precondition", "ဤ Gmail သည် ဝန်ထမ်းအကောင့်ဖြစ်နေသည်။");
-    const existingLicense = await db.collection("licenses").doc(existing.uid).get();
-    if (existingLicense.exists) {
-      const licenseData = existingLicense.data() || {};
-      const licenseEmail = String(licenseData.email || "").trim().toLowerCase();
-      // Permit owner invitation only for an unused, same-email pending auth-trigger placeholder.
-      // Active, suspended, expired, or mismatched licenses must be managed via the owner list.
-      if (licenseEmail !== email || !["pending_payment", "pending"].includes(licenseData.status)) {
-        throw new functions.https.HttpsError("already-exists", "ဤ Gmail အတွက် ဆိုင်လိုင်စင် ရှိပြီးဖြစ်သည်။ ဆိုင်စာရင်းမှ သက်တမ်းတိုးပါ။");
-      }
-    }
-  }
-  const emailKey = crypto.createHash("sha256").update(email).digest("hex");
-  const inviteRef = db.collection("pendingOwnerInvites").doc(emailKey);
-  const priorInvite = await inviteRef.get();
-  if (priorInvite.exists && priorInvite.data()?.status === "claimed") {
-    throw new functions.https.HttpsError("already-exists", "ဤ Gmail Invitation ကို အသုံးပြုပြီးဖြစ်သည်။ ဆိုင်စာရင်းမှ သက်တမ်းတိုးပါ။");
-  }
-  const invite = {
-    email, shopName, industryType, plan, status: "pending",
-    expiresAt: admin.firestore.Timestamp.fromDate(expiryDate),
-    invitedBy: actor, updatedAt: admin.firestore.FieldValue.serverTimestamp()
-  };
-  await inviteRef.set(invite, { merge: true });
-  await db.collection("platformAuditLogs").add({
-    action: "shop_owner_google_invite_created", targetEmail: email, shopName, industryType,
-    expiresAt: invite.expiresAt, actor, createdAt: admin.firestore.FieldValue.serverTimestamp()
+  const userRecord=existing ? await admin.auth().updateUser(existing.uid,{password,emailVerified:true,displayName:shopName}) : await admin.auth().createUser({email,password,emailVerified:true,displayName:shopName});
+  const uid=userRecord.uid, licenseRef=db.collection("licenses").doc(uid);
+  await db.runTransaction(async tx=>{
+    const latest=await tx.get(licenseRef);
+    if(latest.exists && !["pending_payment","pending"].includes((latest.data()||{}).status)) throw new functions.https.HttpsError("already-exists","ဤ Gmail အတွက် လိုင်စင်ရှိပြီးဖြစ်သည်။");
+    await enforceCustomerShopCapacity(tx,uid,latest);
+    tx.set(licenseRef,{uid,email,shopName,industryType,status:"active",plan,expiresAt:admin.firestore.Timestamp.fromDate(expiryDate),...(latest.exists && latest.data().createdAt?{}:{createdAt:admin.firestore.FieldValue.serverTimestamp()}),provisionedBy:actor,provisionedAt:admin.firestore.FieldValue.serverTimestamp(),updatedAt:admin.firestore.FieldValue.serverTimestamp()},{merge:true});
   });
-  return { ok: true, email, shopName, industryType, plan, expiresAt: expiryDate.toISOString(), loginMode: "google", googleLoginRequired: true };
+  await db.collection("platformAuditLogs").add({action:"shop_owner_password_account_created",targetUid:uid,targetEmail:email,shopName,industryType,expiresAt:admin.firestore.Timestamp.fromDate(expiryDate),actor,createdAt:admin.firestore.FieldValue.serverTimestamp()});
+  return {ok:true,uid,email,shopName,plan,expiresAt:expiryDate.toISOString(),loginMode:"password"};
 });
 
 // Called after Firebase email/password or Google sign-in has verified the exact invited Gmail.

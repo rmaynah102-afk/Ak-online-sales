@@ -308,15 +308,16 @@ async function boot(){
  $("loginBtn").disabled=true;$("ownerGoogleBtn").disabled=true;
  status("Firebase SDK နှင့် Config ကို စတင်စစ်ဆေးနေသည်...");
  if(!PROJECT?.apiKey||!PROJECT?.authDomain||!PROJECT?.projectId||!PROJECT?.appId)throw Error("Firebase Public Config မပြည့်စုံပါ။");
- if(!window.firebase||typeof firebase.initializeApp!=="function"||typeof firebase.auth!=="function")throw Error("Firebase Auth SDK မတင်နိုင်ပါ။ APK ထဲရှိ firebase-sdk.bundle.js ကိုစစ်ပါ။");
+ const loadScript=function(src){return new Promise((resolve,reject)=>{const x=document.createElement("script");x.src=src;x.onload=resolve;x.onerror=()=>reject(Error("Firebase SDK download မအောင်မြင်: "+src));document.head.appendChild(x);});};
+ if(!window.firebase||typeof firebase.initializeApp!=="function")await loadScript("https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js");
+ if(typeof firebase.auth!=="function")await loadScript("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js");
+ if(typeof firebase.firestore!=="function")await loadScript("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js");
+ if(typeof firebase.functions!=="function")await loadScript("https://www.gstatic.com/firebasejs/10.12.2/firebase-functions-compat.js");
  if(!firebase.apps||!firebase.apps.length)firebase.initializeApp(PROJECT);
- const app=firebase.app();
- auth=app.auth();
- if(typeof firebase.firestore==="function")db=app.firestore();
- // Callable Functions မရရှိလျှင်လည်း Firebase Authentication ကို မပိတ်ပါ။
- try{if(typeof app.functions==="function")functions=app.functions("us-central1");}catch(functionsError){functions=null;console.warn("AK POS callable functions unavailable",functionsError);}
+ const app=firebase.app();auth=app.auth();db=app.firestore();
+ try{functions=app.functions("us-central1")}catch(e){functions=null;console.warn("Functions SDK unavailable",e);}
  auth.languageCode="my";
- try{await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)}catch(persistenceError){console.warn("Firebase Auth persistence unavailable; continue with session auth",persistenceError)}
+ try{await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)}catch(e){console.warn("Persistence fallback",e);}
  $("loginBtn").disabled=false;$("ownerGoogleBtn").disabled=false;
  status("Firebase စတင်ပြီးပါပြီ။ Platform Owner Google Login ဝင်နိုင်ပါပြီ။");
  auth.onAuthStateChanged(async u=>{
@@ -352,6 +353,7 @@ async function boot(){
 // boot() is deferred until the full script finishes initializing all dependent declarations.
 window.addEventListener("error",e=>{console.error("AK POS startup runtime error",e.error||e.message);if(!auth)status("App စတင်မှုအမှား: "+(e.message||"JavaScript error")+" · Firebase startup ကိုစစ်ဆေးပါ။")});
 window.addEventListener("unhandledrejection",e=>{console.error("AK POS unhandled promise rejection",e.reason);});
+
 function errText(e){return e?.message||String(e)}
 function friendlyAuthError(e){
  const code=e?.code||"",map={

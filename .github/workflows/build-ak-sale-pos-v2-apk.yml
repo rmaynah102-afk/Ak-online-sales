@@ -1,9 +1,10 @@
 # AK Sale Professional release: Google-only shop owners, verified Owner invitations, and Merchant Code-only staff.
-name: Build AK Sale POS 2.0 Android APK
+# Rebuild trigger: package the source-verified 3.6.8 branch head after Firebase contract checks.
+name: Build AK Sale POS 3.6.8 Android APK
 
 on:
   push:
-    branches: [ak-sale-pos-v2-main, main, ak-pos-2.1.317-professional-base, ak-sale-v3-review, "apk/fix-v3.5-update-version-code-20261125", "fix/v3.5-merchant-login-license-check-20261125"]
+    branches: [ak-sale-pos-v2-main, main, ak-pos-2.1.317-professional-base, ak-sale-v3-review, "apk/fix-v3.5-update-version-code-20261125", "fix/v3.5-merchant-login-license-check-20261125", "fix/v3.6.8-firebase-owner-login-20261126"]
     paths:
       - "v2/**"
       - "firebase-config.js"
@@ -50,7 +51,7 @@ jobs:
           "$SDKMANAGER" --sdk_root="$ANDROID_HOME" "platform-tools" "platforms;android-36" "build-tools;36.0.0"
       - name: Install dependencies
         run: npm install
-      - name: Bundle Firebase compat SDK locally for APK
+      - name: Bundle Firebase compat SDK and native Google Auth plugin locally for APK
         run: mkdir -p www && npx esbuild scripts/firebase-compat-bundle.js --bundle --platform=browser --format=iife --outfile=www/firebase-sdk.bundle.js
       - name: Prepare clean v2 web bundle
         run: |
@@ -64,7 +65,7 @@ jobs:
           cat > capacitor.config.json <<'JSON'
           {
             "appId": "com.ak.hardware.sales",
-            "appName": "AK Sale POS 3.5.0",
+            "appName": "AK Sale POS 3.6.8",
             "webDir": "www",
             "bundledWebRuntime": false,
             "server": { "androidScheme": "https" },
@@ -86,6 +87,9 @@ jobs:
           const scripts=[...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)].filter(([,a])=>!/\bsrc\s*=/.test(a));
           if(!scripts.length)throw new Error('No inline JavaScript found');
           if(!html.includes('firebase-sdk.bundle.js')||!fs.existsSync('www/firebase-sdk.bundle.js'))throw new Error('Locally bundled Firebase SDK is missing from APK web assets');
+          const authBundle=fs.readFileSync('scripts/firebase-compat-bundle.js','utf8');
+          if(!authBundle.includes("@capacitor-firebase/authentication")||!authBundle.includes('window.AKFirebaseAuthentication')) throw new Error('Native Firebase Authentication plugin is not registered in the APK JavaScript bundle');
+          if(!html.includes('APK အတွင်းထည့်ထားသော Firebase SDK စတင်နေသည်')||!html.includes('window.firebase')||!authBundle.includes('firebase/compat/auth')||!authBundle.includes('firebase/compat/firestore')||!authBundle.includes('firebase/compat/functions')) throw new Error('Bundled Firebase Web compat SDK startup is missing');
           scripts.forEach(([, , code],i)=>new vm.Script(code,{filename:'v2-inline-'+(i+1)}));
           if(!html.includes('id="ownerGoogleBtn"')||!html.includes('nativeAuth.signInWithGoogle({skipNativeAuth:true,useCredentialManager:false})')||!html.includes('GoogleAuthProvider.credential(idToken)')) throw new Error('Native Google Platform Owner login bridge is missing');
           if(!html.includes('function isPlatformOwner')||!html.includes('shopProfile.shopName||\"AK POS\"')||!html.includes('ownerControlBtn')||!html.includes('function switchPosTab(tab)')||!html.includes('id="tab-shopprofile"')) throw new Error('Separate Owner POS and Control Center routing is missing');
@@ -140,7 +144,7 @@ jobs:
           const legacyVersionCodeFloor=1000693;
           const versionCode=2000000+run;
           if(versionCode<=legacyVersionCodeFloor) throw new Error('APK versionCode must exceed legacy APK versionCode '+legacyVersionCodeFloor);
-          const versionName='3.5.0';
+          const versionName='3.6.8';
           const p='android/app/build.gradle';
           let g=fs.readFileSync(p,'utf8');
           if(!/versionCode\s+\d+/.test(g)||!/versionName\s+"[^"]+"/.test(g)) throw new Error('Android version fields not found');

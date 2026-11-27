@@ -56,3 +56,8 @@ The repository CI validates JavaScript, runs POS adapter unit tests and Firestor
 
 
 Owner sign-in is available directly on the login screen through the always-visible Google Owner button; selecting the login type is not required for Platform Owner access.
+
+
+## Version 3.6.8 Firebase startup recovery
+
+The Android build initializes Firebase Authentication independently from optional callable Functions. If local persistence setup fails after Auth has initialized, the initialized Auth instance is retained so the Owner Google Login handler can still report or proceed with the actual authentication error. The APK build validates the Firebase config fallback and uses a new service-worker cache key.

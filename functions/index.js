@@ -167,7 +167,7 @@ function requireAdmin(context) {
   return callerEmail;
 }
 
-async async function requireActiveShop(context) {
+async function requireActiveShop(context) {
   if (!context.auth) throw new functions.https.HttpsError("unauthenticated", "Login လိုအပ်သည်။");
   const uid = context.auth.uid;
   const email = String(context.auth.token.email || "").trim().toLowerCase();

@@ -2,7 +2,7 @@ name: Build AK Sale POS 2.0 Android APK
 
 on:
   push:
-    branches: [ak-sale-pos-v2-main, main]
+    branches: [ak-sale-pos-v2-main, main, ak-sale-317-login-rebuild-20261127]
     paths:
       - "v2/**"
       - "firebase-config.js"
@@ -131,8 +131,8 @@ jobs:
           node - <<'NODE'
           const fs=require('fs');
           const run=Number(process.env.GITHUB_RUN_NUMBER||1);
-          const versionCode=1000000+run;
-          const versionName='2.0.'+run;
+          const versionCode=2000000+run;
+          const versionName='3.6.9';
           const p='android/app/build.gradle';
           let g=fs.readFileSync(p,'utf8');
           if(!/versionCode\s+\d+/.test(g)||!/versionName\s+"[^"]+"/.test(g)) throw new Error('Android version fields not found');

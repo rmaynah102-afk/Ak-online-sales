@@ -47,6 +47,9 @@ jobs:
       - name: Install Firebase CLI
         run: npm install --global firebase-tools
 
+      - name: Validate Firebase Functions JavaScript syntax
+        run: node --check functions/index.js
+
       - name: Validate app JavaScript before deployment
         run: |
           node - <<'NODE'

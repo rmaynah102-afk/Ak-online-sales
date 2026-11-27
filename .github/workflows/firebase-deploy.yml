@@ -68,4 +68,4 @@ jobs:
           NODE
 
       - name: Deploy Hosting, Firestore rules/indexes, and APK owner provisioning functions
-        run: firebase deploy --only hosting,firestore:rules,firestore:indexes,functions:createShopOwnerAccount,functions:claimOwnerProvisioning,functions:listPlatformUsers,functions:setPlatformUserAccess,functions:grantSubscription,functions:createShopInviteCode,functions:claimShopInviteCode,functions:listShopStaff,functions:setShopStaffPrintPermission --project ak-onlin-sales --non-interactive
+        run: firebase deploy --only hosting,firestore:rules,firestore:indexes,functions:createShopOwnerAccount,functions:claimOwnerProvisioning,functions:listPlatformUsers,functions:setPlatformUserAccess,functions:grantSubscription,functions:createShopInviteCode,functions:claimShopInviteCode,functions:listShopStaff,functions:setShopStaffPrintPermission,functions:assignShopStaffRole,functions:removeShopStaff,functions:publishShopAnnouncement,functions:listShopAnnouncements --project ak-onlin-sales --non-interactive

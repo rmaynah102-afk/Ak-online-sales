@@ -19,6 +19,18 @@ const required = [
   'const AK_PLAN_AMOUNTS={30:30000,90:90000,180:180000,365:360000};',
   'async function firebaseGoogleLogin()'
 ];
+const legacyPaymentLogic = required.every(item => html.includes(item));
+const builtInLicenseGate = [
+  'let currentLicense=null',
+  'id="akPaywallNotice"',
+  'id="akLicensePanel"',
+  'function akSetLicenseGate(',
+  'function akIsPlatformOwner('
+].every(item => html.includes(item));
+if (!legacyPaymentLogic && builtInLicenseGate) {
+  console.log('APK-only compatibility: legacy payment UI injection skipped because this APK source already has its built-in license gate. KBZPay screenshot submission/approval remains a separate unverified feature.');
+  process.exit(0);
+}
 for (const item of required) if (!html.includes(item)) throw new Error('Required existing payment/auth logic missing: ' + item);
 if (html.includes('id="payPlan"') && html.includes('id="adminPaymentRows"') && html.includes('id="akCustomerPaymentPanel"')) {
   const nativeOld = 'const nativeAuth=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.FirebaseAuthentication;if(!nativeAuth||typeof nativeAuth.signInWithGoogle!=="function")throw Error("Native Google Login Plugin မတွေ့ပါ။ APK အသစ်ကို Install လုပ်ပါ။");$("fbStatus").textContent="Google အကောင့်ရွေးချယ်ရန် ဖွင့်နေသည်...";const nativeResult=await nativeAuth.signInWithGoogle({skipNativeAuth:true});';

@@ -26,11 +26,8 @@ function replaceExactly(oldText, newText, expected = 1) {
 const rootTag = '<html lang="my" class="ak-apk-pos-only">';
 replaceExactly(rootTag, '<html lang="my" class="ak-apk-pos-only" data-ak-apk-edition="universal">');
 
-// Keep the staff Merchant Code control in the POS login panel, never in the public Market.
-replaceExactly(
-  '<div class="notice" style="margin-top:10px"><b>ဝန်ထမ်း Merchant Code ဖြင့် ဆိုင်ချိတ်ရန်</b>',
-  '<div class="notice" id="akMerchantJoinPanel" style="margin-top:10px"><b>ဝန်ထမ်း Merchant Code ဖြင့် ဆိုင်ချိတ်ရန်</b>'
-);
+// The current 2.1.317 source uses a dedicated staff-join view and login code field.
+// Do not inject an obsolete panel marker; role navigation is already guarded.
 
 // Remove unsupported AI panels from the APK while preserving ordinary ad sharing.
 for (const token of ['<h3>AI ကြော်ငြာစာသား</h3>', '<h2>AI လုံခြုံရေးစစ်ဆေးမှု</h2>']) {

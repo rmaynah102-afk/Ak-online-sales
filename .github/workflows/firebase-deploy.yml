@@ -47,6 +47,9 @@ jobs:
       - name: Install Firebase CLI
         run: npm install --global firebase-tools
 
+      - name: Validate Firebase Functions JavaScript syntax
+        run: node --check functions/index.js
+
       - name: Validate app JavaScript before deployment
         run: |
           node - <<'NODE'
@@ -68,4 +71,4 @@ jobs:
           NODE
 
       - name: Deploy Hosting, Firestore rules/indexes, and APK owner provisioning functions
-        run: firebase deploy --only hosting,firestore:rules,firestore:indexes,functions:createShopOwnerAccount,functions:claimOwnerProvisioning,functions:listPlatformUsers,functions:setPlatformUserAccess,functions:grantSubscription --project ak-onlin-sales --non-interactive
+        run: firebase deploy --only hosting,firestore:rules,firestore:indexes,functions:createShopOwnerAccount,functions:claimOwnerProvisioning,functions:listPlatformUsers,functions:setPlatformUserAccess,functions:grantSubscription,functions:createShopInviteCode,functions:claimShopInviteCode,functions:listShopStaff,functions:setShopStaffPrintPermission,functions:assignShopStaffRole,functions:removeShopStaff,functions:publishShopAnnouncement,functions:listShopAnnouncements --project ak-onlin-sales --non-interactive

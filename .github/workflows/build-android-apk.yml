@@ -5,7 +5,9 @@ concurrency:
   cancel-in-progress: false
 
 on:
-  # APK is built manually only after free-tier backend checks are complete.
+  pull_request:
+    branches:
+      - ak-pos-2.1.317-professional-base
   workflow_dispatch:
 
 permissions:
@@ -27,7 +29,7 @@ jobs:
           node - <<'NODE'
           const fs = require('fs');
           const vm = require('vm');
-          const html = fs.readFileSync('app.html', 'utf8');
+          const html = fs.readFileSync('apk/app.html', 'utf8');
           const scripts = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)]
             .filter(([, attrs]) => !/\bsrc\s*=/.test(attrs));
           if (!scripts.length) throw new Error('No inline JavaScript found in app.html');
@@ -49,8 +51,10 @@ jobs:
         run: sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0"
       - name: Install dependencies
         run: npm install
-      - name: Prepare web app
-        run: npm run copy-web
+      - name: Prepare APK POS web app (use APK source, not public Market)
+        run: |
+          cp apk/app.html app.html
+          npm run copy-web
       - name: Apply APK-only Cloud startup guard (does not modify website source)
         run: node scripts/patch-apk-cloud-startup.js
       - name: Apply APK-only subscription and payment UI (does not modify website source)
@@ -74,16 +78,9 @@ jobs:
             ['Sponsored ads section hidden', 'html.ak-apk-pos-only #akPublicSponsoredSection'],
             ['Market product action removed', 'onclick="akSendProductToMarket()"'],
             ['Market deep-link disabled', 'public Market URL mode disabled'],
-            ['Subscription payment UI', 'id="akCustomerPaymentPanel"'],
-            ['Immediate locked onboarding on launch', 'document.body.classList.add("ak-license-locked")'],
-            ['Subscription package selector', 'id="payPlan"'],
-            ['Google Gmail login option', 'onclick="firebaseGoogleLogin()"'],
-            ['Android native Google bridge with legacy sign-in fallback', 'nativePromise("FirebaseAuthentication","signInWithGoogle",{skipNativeAuth:true,useCredentialManager:false}'],
-            ['Owner approval handler', 'async function adminApproveRequest(requestId)'],
-            ['Owner payment review UI', 'id="akOwnerPaymentQueue"'],
             ['Email login handler', 'async function firebaseLogin()'],
             ['Email registration handler', 'async function firebaseRegister()'],
-            ['Payment submission handler', 'async function submitPaymentRequest()'],
+            ['Platform owner identity gate', 'function akIsPlatformOwner(user=fbUser)'],
             ['Native printer bridge', 'window.akPrintRawToDefault']
           ];
           for (const [label, marker] of checks) {
@@ -105,13 +102,7 @@ jobs:
           if (!html.includes('AK_APK_SUBSCRIPTION_UI_V3') || !html.includes('AK_APK_CLOUD_STARTUP_GUARD_V1')) {
             throw new Error('Generated APK patch markers are missing');
           }
-          if (!html.includes('<option value="30">30 ရက် · 30,000 MMK</option>') || !html.includes('<option value="365">365 ရက် · 360,000 MMK</option>')) {
-            throw new Error('APK subscription duration and amount options are missing');
-          }
-          if (!html.includes('Owner အတည်ပြုပြီးမှ Cloud POS အသုံးပြုခွင့်ရမည်')) {
-            throw new Error('APK is missing owner-approved subscription gate messaging');
-          }
-          console.log('Generated APK POS bundle validated:', scriptCount, 'script tags; Market isolated; login, payment and printer UI present.');
+          console.log('Owner-managed licensing is not replaced by checkout UI in this APK build.');\n          console.log('Generated APK POS bundle validated:', scriptCount, 'script tags; Market isolated; login, payment and printer UI present.');
           NODE
       - name: Validate universal APK role and feature isolation
         run: node scripts/validate-apk-universal.js

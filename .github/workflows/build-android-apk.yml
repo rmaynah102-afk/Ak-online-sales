@@ -29,7 +29,7 @@ jobs:
           node - <<'NODE'
           const fs = require('fs');
           const vm = require('vm');
-          const html = fs.readFileSync('app.html', 'utf8');
+          const html = fs.readFileSync('apk/app.html', 'utf8');
           const scripts = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)]
             .filter(([, attrs]) => !/\bsrc\s*=/.test(attrs));
           if (!scripts.length) throw new Error('No inline JavaScript found in app.html');
@@ -51,8 +51,10 @@ jobs:
         run: sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0"
       - name: Install dependencies
         run: npm install
-      - name: Prepare web app
-        run: npm run copy-web
+      - name: Prepare APK POS web app (use APK source, not public Market)
+        run: |
+          cp apk/app.html app.html
+          npm run copy-web
       - name: Apply APK-only Cloud startup guard (does not modify website source)
         run: node scripts/patch-apk-cloud-startup.js
       - name: Apply APK-only subscription and payment UI (does not modify website source)
